@@ -15,6 +15,12 @@ namespace Block
 
             enum {BLOCK_SIZE = 512};
             enum Kind {NONE, READ, WRITE, SYNC};
+            enum Status {
+                RAW,
+                OK,
+                ERROR,
+                ACK
+            };
 
             struct Request
             {
@@ -22,7 +28,7 @@ namespace Block
                 Genode::uint8_t uid[16];
                 Genode::uint64_t start;
                 Genode::uint64_t length;
-                bool success;
+                Status status;
             };
 
             Client();
@@ -35,12 +41,11 @@ namespace Block
                     Genode::uint8_t *data,
                     Genode::uint64_t length);
             Request next();
-            void acknowledge_read(
-                    Request req,
+            void read(
+                    Request &req,
                     Genode::uint8_t *data,
                     Genode::uint64_t length);
-            void acknowledge_sync(Request req);
-            void acknowledge_write(Request req);
+            void acknowledge(Request req);
     };
 }
 

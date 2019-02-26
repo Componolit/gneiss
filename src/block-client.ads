@@ -6,6 +6,8 @@ package Block.Client
 is
 
    type Request_Kind is (None, Read, Write, Sync);
+   type Request_Status is (Raw, Ok, Error, Acknowledged);
+
    type Private_Data is private;
 
    type Request (Kind : Request_Kind) is record
@@ -16,7 +18,7 @@ is
          when Read | Write =>
             Start : Block_Id;
             Length : Block_Count;
-            Success : Boolean;
+            Status : Request_Status;
       end case;
    end record;
 
@@ -29,24 +31,30 @@ is
    procedure Finalize_Device (D : in out Device);
 
    procedure Submit_Read (D : Device; R : Request)
-      with Pre => R.Kind = Read;
+      with
+      Pre => R.Kind = Read and R.Status = Raw;
 
    procedure Submit_Sync (D : Device; R : Request)
-      with Pre => R.Kind = Sync;
+      with
+      Pre => R.Kind = Sync and R.Status = Raw;
 
    procedure Submit_Write (D : Device; R : Request; B : Buffer)
-      with Pre => R.Kind = Write;
+      with
+      Pre => R.Kind = Write and R.Status = Raw;
 
-   function Next (D : Device) return Request;
+   function Next (D : Device) return Request
+      with
+      Post => (if Next'Result.Kind /= None then Next'Result.Status /= Acknowledged else True);
 
-   procedure Acknowledge_Read (D : Device; R : Request; B : out Buffer)
-      with Pre => R.Kind = Read;
+   procedure Read (D : Device; R : in out Request; B : out Buffer)
+      with
+      Pre => R.Kind = Read and R.Status = Ok,
+      Post => R.Status = Ok or R.Status = Error;
 
-   procedure Acknowledge_Sync (D : Device; R : Request)
-      with Pre => R.Kind = Sync;
-
-   procedure Acknowledge_Write (D : Device; R : Request)
-      with Pre => R.Kind = Write;
+   procedure Acknowledge (D : Device; R : in out Request)
+      with
+      Pre => R.Kind /= None and (R.Status = Error or R.Status = Ok),
+      Post => R.Status = Acknowledged;
 
 private
 

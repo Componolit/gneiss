@@ -42,10 +42,8 @@ struct Genode_Packet
     }
 };
 
-Block::Client::Client()
-{
-    _device = 0;
-}
+Block::Client::Client() : _device(0)
+{ }
 
 void Block::Client::initialize(const char *device)
 {
@@ -108,21 +106,21 @@ void Block::Client::submit_write(
 
 Block::Client::Request Block::Client::next()
 {
-    Block::Client::Request req = {NONE, {}, 0, 0, 0};
+    Block::Client::Request req = {NONE, {}, 0, 0, RAW};
     Block::Client::Kind genode_request_id[3] = {READ, WRITE, SYNC};
     if(blk(_device)->tx()->ack_avail()){
         Block::Packet_descriptor packet = blk(_device)->tx()->get_acked_packet();
         req.kind = genode_request_id[packet.operation()];
         req.start = packet.block_number();
         req.length = packet.block_count();
-        req.success = packet.succeeded();
+        req.status = packet.succeeded() ? OK : ERROR;
         Genode_Packet(packet.offset(), packet.size()).uid(req.uid);
     }
     return req;
 }
 
-void Block::Client::acknowledge_read(
-        Block::Client::Request req,
+void Block::Client::read(
+        Block::Client::Request &req,
         Genode::uint8_t *data,
         Genode::uint64_t length)
 {
@@ -139,18 +137,32 @@ void Block::Client::acknowledge_read(
             opcode[req.kind],
             req.start,
             req.length);
-    if(length > packet.size()){
-        Genode::error (length, " > ", packet.size());
-        throw Ada::Exception::Length_Check();
+    if(length < packet.size()){
+        Genode::error (length, " < ", packet.size());
+        req.status = ERROR;
+    }else{
+        Genode::memcpy(data, blk(_device)->tx()->packet_content(packet), packet.size());
+        req.status = OK;
     }
-    Genode::memcpy(data, blk(_device)->tx()->packet_content(packet), length);
-    blk(_device)->tx()->release_packet(packet);
 }
 
-void Block::Client::acknowledge_sync(Block::Client::Request )
+void Block::Client::acknowledge(Block::Client::Request req)
 {
+    Block::Packet_descriptor::Opcode opcode[4] = {
+        Block::Packet_descriptor::READ,
+        Block::Packet_descriptor::READ,
+        Block::Packet_descriptor::WRITE,
+        Block::Packet_descriptor::END,
+    };
+    Block::Packet_descriptor packet(
+            Block::Packet_descriptor(
+                ((Genode_Packet*)&req.uid)->offset,
+                ((Genode_Packet*)&req.uid)->size),
+            opcode[req.kind],
+            req.start,
+            req.length);
+    if(packet.operation() == Block::Packet_descriptor::READ){
+        blk(_device)->tx()->release_packet(packet);
+    }
 }
 
-void Block::Client::acknowledge_write(Block::Client::Request )
-{
-}
