@@ -9,6 +9,10 @@ is
       type Kind is (None, Read, Write, Sync)
       with Size => Cxx.Unsigned_Int'Size;
       for Kind use (None => 0, Read => 1, Write => 2, Sync => 3);
+      type Status is (Raw, Ok, Error, Ack)
+      with Size => Cxx.Unsigned_Int'Size;
+      for Status use (Raw => 0, Ok => 1, Error => 2, Ack => 3);
+
       package Request
          with SPARK_Mode => On
       is
@@ -18,17 +22,13 @@ is
             Uid : Cxx.Genode.Uint8_T_Array (1 .. 16);
             Start : Cxx.Genode.Uint64_T;
             Length : Cxx.Genode.Uint64_T;
-            Success : Cxx.Bool;
+            Status : Cxx.Block.Client.Status;
          end record;
          pragma Convention (C_Pass_By_Copy, Class);
 
          type Class_Address is private;
          type Class_Array is array (Natural range <>) of Class;
          type Class_Address_Array is array (Natural range <>) of Class_Address;
-
---         function Constructor return Class
---         with Global => null;
---         pragma Cpp_Constructor (Constructor, "_ZN5Block6Client7RequestC1Ev");
 
       private
          pragma SPARK_Mode (Off);
@@ -74,14 +74,11 @@ is
       function Next (This : Class) return Cxx.Block.Client.Request.Class
       with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client4nextEv";
 
-      procedure Acknowledge_Read (This : Class; Req : Cxx.Block.Client.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client16acknowledge_readENS0_7RequestEPhy";
+      procedure Read (This : Class; Req : in out Cxx.Block.Client.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client4readERNS0_7RequestEPhy";
 
-      procedure Acknowledge_Sync (This : Class; Req : Cxx.Block.Client.Request.Class)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client16acknowledge_syncENS0_7RequestE";
-
-      procedure Acknowledge_Write (This : Class; Req : Cxx.Block.Client.Request.Class)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client17acknowledge_writeENS0_7RequestE";
+      procedure Acknowledge (This : Class; Req : Cxx.Block.Client.Request.Class)
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11acknowledgeENS0_7RequestE";
 
    private
       pragma SPARK_Mode (Off);

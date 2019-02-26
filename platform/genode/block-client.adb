@@ -32,23 +32,36 @@ package body Block.Client is
 
    function Convert_Request (R : Request) return Cxx.Block.Client.Request.Class
    is
-   begin
-      return Cxx.Block.Client.Request.Class'(
-         Kind => (case R.Kind is
-                  when None => Cxx.Block.Client.None,
-                  when Read => Cxx.Block.Client.Read,
-                  when Write => Cxx.Block.Client.Write,
-                  when Sync => Cxx.Block.Client.Sync),
+      Cr : Cxx.Block.Client.Request.Class := Cxx.Block.Client.Request.Class' (
+         Kind => Cxx.Block.Client.None,
          Uid => Cxx.Unsigned_Char_Array (R.Priv),
-         Start => (case R.Kind is
-                  when None | Sync => 0,
-                  when Read | Write => Cxx.Genode.Uint64_T (R.Start)),
-         Length => (case R.Kind is
-                  when None | Sync => 0,
-                  when Read | Write => Cxx.Genode.Uint64_T (R.Length)),
-         Success => (case R.Kind is
-                  when None | Sync => 0,
-                  when Read | Write => Cxx.Bool (if R.Success then 1 else 0)));
+         Start => 0,
+         Length => 0,
+         Status => Cxx.Block.Client.Raw);
+   begin
+      case R.Kind is
+         when None =>
+            null;
+         when Sync =>
+            Cr.Kind := Cxx.Block.Client.Sync;
+         when Read | Write =>
+            Cr.Kind := (if R.Kind = Read then Cxx.Block.Client.Read else Cxx.Block.Client.Write);
+            Cr.Start := Cxx.Genode.Uint64_T (R.Start);
+            Cr.Length := Cxx.Genode.Uint64_T (R.Length);
+            if R.Status = Raw then
+               Cr.Status := Cxx.Block.Client.Raw;
+            end if;
+            if R.Status = Ok then
+               Cr.Status := Cxx.Block.Client.Ok;
+            end if;
+            if R.Status = Error then
+               Cr.Status := Cxx.Block.Client.Error;
+            end if;
+            if R.Status = Acknowledged then
+               Cr.Status := Cxx.Block.Client.Ack;
+            end if;
+      end case;
+      return Cr;
    end Convert_Request;
 
    function Convert_Request (CR : Cxx.Block.Client.Request.Class) return Request
@@ -66,7 +79,12 @@ package body Block.Client is
          when Read | Write =>
             R.Start := Block_Id (CR.Start);
             R.Length := Block_Count (CR.Length);
-            R.Success := (if CR.Success = 0 then False else True);
+            R.Status :=
+               (case CR.Status is
+                  when Cxx.Block.Client.Raw => Raw,
+                  when Cxx.Block.Client.Ok => Ok,
+                  when Cxx.Block.Client.Error => Error,
+                  when Cxx.Block.Client.Ack => Acknowledged);
       end case;
       return R;
    end Convert_Request;
@@ -103,31 +121,28 @@ package body Block.Client is
       return Convert_Request (Cxx.Block.Client.Next (D.Instance));
    end Next;
 
-   procedure Acknowledge_Read (D : Device; R : Request; B : out Buffer)
+   procedure Read (D : Device; R : in out Request; B : out Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
       function Convert_Buffer is new Ada.Unchecked_Conversion (Local_U8_Array, Local_Buffer);
       Data : Local_U8_Array := (others => 0);
+      Req : Cxx.Block.Client.Request.Class := Convert_Request (R);
    begin
-      Cxx.Block.Client.Acknowledge_Read (
+      Cxx.Block.Client.Read (
          D.Instance,
-         Convert_Request (R),
+         Req,
          Data,
          Cxx.Genode.Uint64_T (B'Length));
       B := Convert_Buffer (Data);
-   end Acknowledge_Read;
+      R := Convert_Request (Req);
+   end Read;
 
-   procedure Acknowledge_Sync (D : Device; R : Request)
+   procedure Acknowledge (D : Device; R : in out Request)
    is
    begin
-      Cxx.Block.Client.Acknowledge_Sync (D.Instance, Convert_Request (R));
-   end Acknowledge_Sync;
-
-   procedure Acknowledge_Write (D : Device; R : Request)
-   is
-   begin
-      Cxx.Block.Client.Acknowledge_Write (D.Instance, Convert_Request (R));
-   end Acknowledge_Write;
+      Cxx.Block.Client.Acknowledge (D.Instance, Convert_Request (R));
+      R.Status := Ok;
+   end Acknowledge;
 
 end Block.Client;
