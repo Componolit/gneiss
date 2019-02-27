@@ -16,8 +16,8 @@ is
          when None | Sync =>
             null;
          when Read | Write =>
-            Start : Block_Id;
-            Length : Block_Count;
+            Start : Id;
+            Length : Count;
             Status : Request_Status;
       end case;
    end record;
@@ -55,6 +55,11 @@ is
       with
       Pre => R.Kind /= None and (R.Status = Error or R.Status = Ok),
       Post => R.Status = Acknowledged;
+
+   function Writable (D : Device) return Boolean;
+   function Block_Count (D : Device) return Count;
+   function Block_Size (D : Device) return Size;
+   function Maximal_Transfer_Size (D : Device) return Unsigned_Long;
 
 private
 

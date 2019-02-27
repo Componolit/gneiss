@@ -77,8 +77,8 @@ package body Block.Client is
          when None | Sync =>
             null;
          when Read | Write =>
-            R.Start := Block_Id (CR.Start);
-            R.Length := Block_Count (CR.Length);
+            R.Start := Id (CR.Start);
+            R.Length := Count (CR.Length);
             R.Status :=
                (case CR.Status is
                   when Cxx.Block.Client.Raw => Raw,
@@ -144,5 +144,29 @@ package body Block.Client is
       Cxx.Block.Client.Acknowledge (D.Instance, Convert_Request (R));
       R.Status := Ok;
    end Acknowledge;
+
+   function Writable (D : Device) return Boolean
+   is
+   begin
+      return Cxx.Block.Client.Writable (D.Instance) /= 0;
+   end Writable;
+
+   function Block_Count (D : Device) return Count
+   is
+   begin
+      return Count (Cxx.Block.Client.Block_Count (D.Instance));
+   end Block_Count;
+
+   function Block_Size (D : Device) return Size
+   is
+   begin
+      return Size (Cxx.Block.Client.Block_Size (D.Instance));
+   end Block_Size;
+
+   function Maximal_Transfer_Size (D : Device) return Unsigned_Long
+   is
+   begin
+      return 1024 * 1024;
+   end Maximal_Transfer_Size;
 
 end Block.Client;
