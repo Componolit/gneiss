@@ -10,6 +10,8 @@ namespace Block
     {
         private:
             Genode::uint64_t _device;
+            Genode::uint64_t _block_count;
+            Genode::uint64_t _block_size;
 
         public:
 
