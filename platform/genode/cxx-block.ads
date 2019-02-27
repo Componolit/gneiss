@@ -44,6 +44,8 @@ is
       type Class is
       limited record
          Private_X_Device : Private_Uint64_T;
+         Private_X_Block_Count : Private_Uint64_T;
+         Private_X_Block_Size : Private_Uint64_T;
       end record
       with Import, Convention => CPP;
 

@@ -42,12 +42,16 @@ struct Genode_Packet
     }
 };
 
-Block::Client::Client() : _device(0)
+Block::Client::Client() :
+    _device(0),
+    _block_count(0),
+    _block_size(0)
 { }
 
 void Block::Client::initialize(const char *device)
 {
     const char default_device[] = "";
+    Genode::size_t blk_size;
     if(component_env){
         _heap.construct(component_env->ram(), component_env->rm());
         _alloc.construct(&*_heap);
@@ -56,6 +60,9 @@ void Block::Client::initialize(const char *device)
                 &*_alloc,
                 128 * 1024,
                 device ? device : default_device));
+        Block::Session::Operations ops;
+        blk(_device)->info(&_block_count, &blk_size, &ops);
+        _block_size = blk_size;
     }else{
         Genode::error("Failed to construct block session");
     }
@@ -178,19 +185,11 @@ bool Block::Client::writable()
 
 Genode::uint64_t Block::Client::block_count()
 {
-    Block::sector_t sector;
-    Genode::size_t size;
-    Block::Session::Operations ops;
-    blk(_device)->info(&sector, &size, &ops);
-    return static_cast<Genode::uint64_t>(sector);
+    return _block_count;
 }
 
 Genode::uint64_t Block::Client::block_size()
 {
-    Block::sector_t sector;
-    Genode::size_t size;
-    Block::Session::Operations ops;
-    blk(_device)->info(&sector, &size, &ops);
-    return static_cast<Genode::uint64_t>(size);
+    return _block_size;
 }
 
