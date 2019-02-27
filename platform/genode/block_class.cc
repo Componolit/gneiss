@@ -80,7 +80,6 @@ void Block::Client::submit_read(Block::Client::Request req)
             Block::Packet_descriptor::READ,
             req.start, req.length);
     blk(_device)->tx()->submit_packet(packet);
-    Genode_Packet(packet.offset(), packet.size()).uid(req.uid);
 }
 
 void Block::Client::submit_sync(Block::Client::Request req)
@@ -90,7 +89,6 @@ void Block::Client::submit_sync(Block::Client::Request req)
             Block::Packet_descriptor::END,
             req.start, req.length);
     blk(_device)->tx()->submit_packet(packet);
-    Genode_Packet(packet.offset(), packet.size()).uid(req.uid);
 }
 
 void Block::Client::submit_write(
@@ -108,7 +106,6 @@ void Block::Client::submit_write(
             req.start, req.length);
     Genode::memcpy(blk(_device)->tx()->packet_content(packet), data, length);
     blk(_device)->tx()->submit_packet(packet);
-    Genode_Packet(packet.offset(), packet.size()).uid(req.uid);
 }
 
 Block::Client::Request Block::Client::next()

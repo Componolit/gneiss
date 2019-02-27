@@ -165,6 +165,7 @@ package body Block.Client is
 
    function Maximal_Transfer_Size (D : Device) return Unsigned_Long
    is
+      pragma Unreferenced (D);
    begin
       return 1024 * 1024;
    end Maximal_Transfer_Size;
