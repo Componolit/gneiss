@@ -36,7 +36,6 @@ is
          type Class_Address is access Class;
 
       end Request;
-      Block_Size : constant := 512;
       type Private_Uint64_T is limited private;
       type Private_Uint64_T_Address is limited private;
       type Private_Uint64_T_Array is array (Natural range <>) of Private_Uint64_T;
@@ -79,6 +78,15 @@ is
 
       procedure Acknowledge (This : Class; Req : Cxx.Block.Client.Request.Class)
       with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11acknowledgeENS0_7RequestE";
+
+      function Writable (This : Class) return Cxx.Bool
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client8writableEv";
+
+      function Block_Count (This : Class) return Cxx.Genode.Uint64_T
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11block_countEv";
+
+      function Block_Size (This : Class) return Cxx.Genode.Uint64_T
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client10block_sizeEv";
 
    private
       pragma SPARK_Mode (Off);

@@ -13,7 +13,6 @@ namespace Block
 
         public:
 
-            enum {BLOCK_SIZE = 512};
             enum Kind {NONE, READ, WRITE, SYNC};
             enum Status {
                 RAW,
@@ -46,6 +45,9 @@ namespace Block
                     Genode::uint8_t *data,
                     Genode::uint64_t length);
             void acknowledge(Request req);
+            bool writable();
+            Genode::uint64_t block_count();
+            Genode::uint64_t block_size();
     };
 }
 

@@ -69,7 +69,7 @@ void Block::Client::finalize()
 void Block::Client::submit_read(Block::Client::Request req)
 {
     Block::Packet_descriptor packet(
-            blk(_device)->dma_alloc_packet(BLOCK_SIZE * req.length),
+            blk(_device)->dma_alloc_packet(block_size() * req.length),
             Block::Packet_descriptor::READ,
             req.start, req.length);
     blk(_device)->tx()->submit_packet(packet);
@@ -79,7 +79,7 @@ void Block::Client::submit_read(Block::Client::Request req)
 void Block::Client::submit_sync(Block::Client::Request req)
 {
     Block::Packet_descriptor packet(
-            blk(_device)->dma_alloc_packet(BLOCK_SIZE * req.length),
+            blk(_device)->dma_alloc_packet(block_size() * req.length),
             Block::Packet_descriptor::END,
             req.start, req.length);
     blk(_device)->tx()->submit_packet(packet);
@@ -91,7 +91,7 @@ void Block::Client::submit_write(
         Genode::uint8_t *data,
         Genode::uint64_t length)
 {
-    if(length > req.length * BLOCK_SIZE){
+    if(length > req.length * block_size()){
         throw Ada::Exception::Length_Check();
     }
 
@@ -161,8 +161,36 @@ void Block::Client::acknowledge(Block::Client::Request req)
             opcode[req.kind],
             req.start,
             req.length);
-    if(packet.operation() == Block::Packet_descriptor::READ){
+    if(packet.operation() == Block::Packet_descriptor::READ
+            || packet.operation() == Block::Packet_descriptor::WRITE){
         blk(_device)->tx()->release_packet(packet);
     }
+}
+
+bool Block::Client::writable()
+{
+    Block::sector_t sector;
+    Genode::size_t size;
+    Block::Session::Operations ops;
+    blk(_device)->info(&sector, &size, &ops);
+    return ops.supported(Block::Packet_descriptor::WRITE);
+}
+
+Genode::uint64_t Block::Client::block_count()
+{
+    Block::sector_t sector;
+    Genode::size_t size;
+    Block::Session::Operations ops;
+    blk(_device)->info(&sector, &size, &ops);
+    return static_cast<Genode::uint64_t>(sector);
+}
+
+Genode::uint64_t Block::Client::block_size()
+{
+    Block::sector_t sector;
+    Genode::size_t size;
+    Block::Session::Operations ops;
+    blk(_device)->info(&sector, &size, &ops);
+    return static_cast<Genode::uint64_t>(size);
 }
 
