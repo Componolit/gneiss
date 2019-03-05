@@ -5,23 +5,6 @@ package Block.Client
    with SPARK_Mode
 is
 
-   type Request_Kind is (None, Read, Write, Sync);
-   type Request_Status is (Raw, Ok, Error, Acknowledged);
-
-   type Private_Data is private;
-
-   type Request (Kind : Request_Kind) is record
-      Priv : Private_Data;
-      case Kind is
-         when None | Sync =>
-            null;
-         when Read | Write =>
-            Start : Id;
-            Length : Count;
-            Status : Request_Status;
-      end case;
-   end record;
-
    type Device is limited private;
 
    function Create_Device return Device;
@@ -64,6 +47,5 @@ is
 private
 
    type Device is new Internals.Block.Device;
-   type Private_Data is new Internals.Block.Private_Data;
 
 end Block.Client;
