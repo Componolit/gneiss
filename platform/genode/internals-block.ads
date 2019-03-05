@@ -1,6 +1,6 @@
 
 with Cxx;
-with Cxx.Block;
+with Cxx.Block.Client;
 
 package Internals.Block is
 
