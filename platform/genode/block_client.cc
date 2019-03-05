@@ -28,6 +28,7 @@ inline ::Block::Connection *blk(Genode::uint64_t device)
     if (device){
         return reinterpret_cast<::Block::Connection *>(device);
     }else{
+        Genode::error("Block connection device not initialized.");
         throw Ada::Exception::Access_Check();
     }
 }
@@ -61,6 +62,7 @@ void Cai::Block::Client::initialize(const char *device)
 void Cai::Block::Client::finalize()
 {
     Genode::destroy (*_heap, reinterpret_cast<::Block::Connection *>(_device));
+    _device = 0;
 }
 
 void Cai::Block::Client::submit_read(Cai::Block::Request req)
