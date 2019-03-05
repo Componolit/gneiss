@@ -55,40 +55,40 @@ is
 
       function Constructor return Class
       with Global => null;
-      pragma Cpp_Constructor (Constructor, "_ZN5Block6ClientC1Ev");
+      pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ClientC1Ev");
 
       procedure Initialize (This : Class; Device : Cxx.Char_Array)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client10initializeEPKc";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10initializeEPKc";
 
       procedure Finalize (This : Class)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client8finalizeEv";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8finalizeEv";
 
       procedure Submit_Read (This : Class; Req : Cxx.Block.Client.Request.Class)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11submit_readENS0_7RequestE";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11submit_readENS0_7RequestE";
 
       procedure Submit_Sync (This : Class; Req : Cxx.Block.Client.Request.Class)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11submit_syncENS0_7RequestE";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11submit_syncENS0_7RequestE";
 
       procedure Submit_Write (This : Class; Req : Cxx.Block.Client.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client12submit_writeENS0_7RequestEPhy";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12submit_writeENS0_7RequestEPhy";
 
       function Next (This : Class) return Cxx.Block.Client.Request.Class
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client4nextEv";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4nextEv";
 
       procedure Read (This : Class; Req : in out Cxx.Block.Client.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client4readERNS0_7RequestEPhy";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4readERNS0_7RequestEPhy";
 
       procedure Acknowledge (This : Class; Req : Cxx.Block.Client.Request.Class)
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11acknowledgeENS0_7RequestE";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11acknowledgeENS0_7RequestE";
 
       function Writable (This : Class) return Cxx.Bool
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client8writableEv";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8writableEv";
 
       function Block_Count (This : Class) return Cxx.Genode.Uint64_T
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client11block_countEv";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11block_countEv";
 
       function Block_Size (This : Class) return Cxx.Genode.Uint64_T
-      with Global => null, Import, Convention => CPP, External_Name => "_ZN5Block6Client10block_sizeEv";
+      with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10block_sizeEv";
 
    private
       pragma SPARK_Mode (Off);
