@@ -2,6 +2,7 @@
 with Ada.Unchecked_Conversion;
 with Cxx;
 with Cxx.Block;
+with Cxx.Block.Client;
 with Cxx.Genode;
 use all type Cxx.Bool;
 
@@ -30,47 +31,47 @@ package body Block.Client is
       Cxx.Block.Client.Finalize (D.Instance);
    end Finalize_Device;
 
-   function Convert_Request (R : Request) return Cxx.Block.Client.Request.Class
+   function Convert_Request (R : Request) return Cxx.Block.Request.Class
    is
-      Cr : Cxx.Block.Client.Request.Class := Cxx.Block.Client.Request.Class' (
-         Kind => Cxx.Block.Client.None,
+      Cr : Cxx.Block.Request.Class := Cxx.Block.Request.Class' (
+         Kind => Cxx.Block.None,
          Uid => Cxx.Unsigned_Char_Array (R.Priv),
          Start => 0,
          Length => 0,
-         Status => Cxx.Block.Client.Raw);
+         Status => Cxx.Block.Raw);
    begin
       case R.Kind is
          when None =>
             null;
          when Sync =>
-            Cr.Kind := Cxx.Block.Client.Sync;
+            Cr.Kind := Cxx.Block.Sync;
          when Read | Write =>
-            Cr.Kind := (if R.Kind = Read then Cxx.Block.Client.Read else Cxx.Block.Client.Write);
+            Cr.Kind := (if R.Kind = Read then Cxx.Block.Read else Cxx.Block.Write);
             Cr.Start := Cxx.Genode.Uint64_T (R.Start);
             Cr.Length := Cxx.Genode.Uint64_T (R.Length);
             if R.Status = Raw then
-               Cr.Status := Cxx.Block.Client.Raw;
+               Cr.Status := Cxx.Block.Raw;
             end if;
             if R.Status = Ok then
-               Cr.Status := Cxx.Block.Client.Ok;
+               Cr.Status := Cxx.Block.Ok;
             end if;
             if R.Status = Error then
-               Cr.Status := Cxx.Block.Client.Error;
+               Cr.Status := Cxx.Block.Error;
             end if;
             if R.Status = Acknowledged then
-               Cr.Status := Cxx.Block.Client.Ack;
+               Cr.Status := Cxx.Block.Ack;
             end if;
       end case;
       return Cr;
    end Convert_Request;
 
-   function Convert_Request (CR : Cxx.Block.Client.Request.Class) return Request
+   function Convert_Request (CR : Cxx.Block.Request.Class) return Request
    is
       R : Request ((case CR.Kind is
-                     when Cxx.Block.Client.None => None,
-                     when Cxx.Block.Client.Read => Read,
-                     when Cxx.Block.Client.Write => Write,
-                     when Cxx.Block.Client.Sync => Sync));
+                     when Cxx.Block.None => None,
+                     when Cxx.Block.Read => Read,
+                     when Cxx.Block.Write => Write,
+                     when Cxx.Block.Sync => Sync));
    begin
       R.Priv := Private_Data (CR.Uid);
       case R.Kind is
@@ -81,10 +82,10 @@ package body Block.Client is
             R.Length := Count (CR.Length);
             R.Status :=
                (case CR.Status is
-                  when Cxx.Block.Client.Raw => Raw,
-                  when Cxx.Block.Client.Ok => Ok,
-                  when Cxx.Block.Client.Error => Error,
-                  when Cxx.Block.Client.Ack => Acknowledged);
+                  when Cxx.Block.Raw => Raw,
+                  when Cxx.Block.Ok => Ok,
+                  when Cxx.Block.Error => Error,
+                  when Cxx.Block.Ack => Acknowledged);
       end case;
       return R;
    end Convert_Request;
@@ -127,7 +128,7 @@ package body Block.Client is
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
       function Convert_Buffer is new Ada.Unchecked_Conversion (Local_U8_Array, Local_Buffer);
       Data : Local_U8_Array := (others => 0);
-      Req : Cxx.Block.Client.Request.Class := Convert_Request (R);
+      Req : Cxx.Block.Request.Class := Convert_Request (R);
    begin
       Cxx.Block.Client.Read (
          D.Instance,
