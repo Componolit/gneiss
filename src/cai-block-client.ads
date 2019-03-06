@@ -17,13 +17,11 @@ is
       with
       Pre => R.Kind = Read and R.Status = Raw;
 
-   procedure Submit_Sync (D : Device; R : Request)
-      with
-      Pre => R.Kind = Sync and R.Status = Raw;
-
    procedure Submit_Write (D : Device; R : Request; B : Buffer)
       with
       Pre => R.Kind = Write and R.Status = Raw;
+
+   procedure Sync (D : Device);
 
    function Next (D : Device) return Request
       with

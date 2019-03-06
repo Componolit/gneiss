@@ -14,12 +14,11 @@ package body Cxx.Block.Server is
       Req : Cai.Block.Request ((case R.Kind is
                      when None => Cai.Block.None,
                      when Read => Cai.Block.Read,
-                     when Write => Cai.Block.Write,
-                     when Sync => Cai.Block.Sync));
+                     when Write => Cai.Block.Write));
    begin
       Req.Priv := Convert_Uid (R.Uid);
       case Req.Kind is
-         when Cai.Block.None | Cai.Block.Sync =>
+         when Cai.Block.None =>
             null;
          when Cai.Block.Read | Cai.Block.Write =>
             Req.Start := Cai.Block.Id (R.Start);
@@ -42,11 +41,10 @@ package body Cxx.Block.Server is
       Req.Kind := (case R.Kind is
                      when Cai.Block.None => None,
                      when Cai.Block.Read => Read,
-                     when Cai.Block.Write => Write,
-                     when Cai.Block.Sync => Sync);
+                     when Cai.Block.Write => Write);
       Req.Uid := Convert_Uid (R.Priv);
       case R.Kind is
-         when Cai.Block.None | Cai.Block.Sync =>
+         when Cai.Block.None =>
             Req.Start := 0;
             Req.Length := 0;
             Req.Status := Ok;
@@ -135,15 +133,6 @@ package body Cxx.Block.Server is
       Req := Convert_Request (R);
    end Read;
 
-   procedure Sync (This : Class; Req : in out Cxx.Block.Request.Class) is
-      Dev : Cai.Component.Block_Server_Device
-      with Address => This.State;
-      R : Cai.Block.Request := Convert_Request (Req);
-   begin
-      Server_Component.Sync (Dev, R);
-      Req := Convert_Request (R);
-   end Sync;
-
    procedure Write (This : Class;
                     Buffer : Cxx.Void_Address;
                     Size : Cxx.Genode.Uint64_T;
@@ -157,6 +146,13 @@ package body Cxx.Block.Server is
       Server_Component.Write (Dev, Data, R);
       Req := Convert_Request (R);
    end Write;
+
+   procedure Sync (This : Class) is
+      Dev : Cai.Component.Block_Server_Device
+      with Address => This.State;
+   begin
+      Server_Component.Sync (Dev);
+   end Sync;
 
    function State_Size return Cxx.Genode.Uint64_T
    is

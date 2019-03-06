@@ -49,7 +49,9 @@ struct Block_session_component : Genode::Rpc_object<Block::Session>, Block::Requ
         }
     }
 
-    void sync() override { }
+    void sync() override {
+        _server.sync();
+    }
 
     Genode::Capability<Tx> tx_cap() override
     {
@@ -84,7 +86,7 @@ struct Root : Genode::Rpc_object<Genode::Typed_root<Block::Session>>
                                 _server->write(static_cast<Genode::uint8_t *>(ptr), size, cai_request);
                                 break;
                             case Block::Request::Operation::SYNC:
-                                _server->sync(cai_request);
+                                _server->sync();
                                 break;
                             default:
                                 Genode::warning("Invalid packet");

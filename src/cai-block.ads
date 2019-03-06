@@ -17,7 +17,7 @@ is
       with Size => 8;
    type Buffer is array (Unsigned_Long range <>) of Byte;
 
-   type Request_Kind is (None, Read, Write, Sync);
+   type Request_Kind is (None, Read, Write);
    type Request_Status is (Raw, Ok, Error, Acknowledged);
 
    type Private_Data is private;
@@ -25,7 +25,7 @@ is
    type Request (Kind : Request_Kind) is record
       Priv : Private_Data;
       case Kind is
-         when None | Sync =>
+         when None =>
             null;
          when Read | Write =>
             Start : Id;
