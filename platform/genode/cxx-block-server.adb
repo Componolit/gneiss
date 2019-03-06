@@ -76,6 +76,7 @@ package body Cxx.Block.Server is
       with Address => Label;
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       Server_Component.Initialize (Dev, Lbl, Cai.Block.Context (This.Session));
    end Initialize;
@@ -83,6 +84,7 @@ package body Cxx.Block.Server is
    procedure Finalize (This : Class) is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       Server_Component.Finalize (Dev);
    end Finalize;
@@ -90,6 +92,7 @@ package body Cxx.Block.Server is
    function Block_Count (This : Class) return Cxx.Genode.Uint64_T is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       return Cxx.Genode.Uint64_T (Server_Component.Block_Count (Dev));
    end Block_Count;
@@ -97,6 +100,7 @@ package body Cxx.Block.Server is
    function Block_Size (This : Class) return Cxx.Genode.Uint64_T is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       return Cxx.Genode.Uint64_T (Server_Component.Block_Size (Dev));
    end Block_Size;
@@ -104,6 +108,7 @@ package body Cxx.Block.Server is
    function Writable (This : Class) return Cxx.Bool is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       if Server_Component.Writable (Dev) then
          return 1;
@@ -115,6 +120,7 @@ package body Cxx.Block.Server is
    function Maximal_Transfer_Size (This : Class) return Cxx.Genode.Uint64_T is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       return Cxx.Genode.Uint64_T (Server_Component.Maximal_Transfer_Size (Dev));
    end Maximal_Transfer_Size;
@@ -127,6 +133,7 @@ package body Cxx.Block.Server is
       with Address => Buffer;
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
       R : Cai.Block.Request := Convert_Request (Req);
    begin
       Server_Component.Read (Dev, Data, R);
@@ -141,6 +148,7 @@ package body Cxx.Block.Server is
       with Address => Buffer;
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
       R : Cai.Block.Request := Convert_Request (Req);
    begin
       Server_Component.Write (Dev, Data, R);
@@ -150,6 +158,7 @@ package body Cxx.Block.Server is
    procedure Sync (This : Class) is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
+      pragma Import (C, Dev);
    begin
       Server_Component.Sync (Dev);
    end Sync;
