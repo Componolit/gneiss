@@ -129,14 +129,12 @@ package body Cxx.Block.Server is
                    Buffer : Cxx.Void_Address;
                    Size : Cxx.Genode.Uint64_T;
                    Req : in out Cxx.Block.Request.Class) is
-      Data : Cai.Block.Buffer (1 .. Cai.Block.Unsigned_Long (Size))
-      with Address => Buffer;
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
       pragma Import (C, Dev);
       R : Cai.Block.Request := Convert_Request (Req);
    begin
-      Server_Component.Read (Dev, Data, R);
+      Server_Component.Read (Dev, Buffer, Cai.Block.Unsigned_Long (Size), R);
       Req := Convert_Request (R);
    end Read;
 

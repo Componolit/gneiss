@@ -16,7 +16,7 @@ package Cai.Block.Server is
 
    function Maximal_Transfer_Size (D : Component.Block_Server_Device) return Unsigned_Long;
 
-   procedure Read (D : in out Component.Block_Server_Device; B : out Buffer; R : in out Request);
+   procedure Read (D : in out Component.Block_Server_Device; B : System.Address; L : Unsigned_Long; R : in out Request);
 
    procedure Write (D : in out Component.Block_Server_Device; B : Buffer; R : in out Request);
 
