@@ -18,8 +18,8 @@ package Cai.Block.Server is
 
    procedure Read (D : in out Component.Block_Server_Device; B : out Buffer; R : in out Request);
 
-   procedure Sync (D : in out Component.Block_Server_Device; R : in out Request);
-
    procedure Write (D : in out Component.Block_Server_Device; B : Buffer; R : in out Request);
+
+   procedure Sync (D : in out Component.Block_Server_Device);
 
 end Cai.Block.Server;

@@ -43,8 +43,6 @@ package body Cai.Block.Client is
       case R.Kind is
          when None =>
             null;
-         when Sync =>
-            Cr.Kind := Cxx.Block.Sync;
          when Read | Write =>
             Cr.Kind := (if R.Kind = Read then Cxx.Block.Read else Cxx.Block.Write);
             Cr.Start := Cxx.Genode.Uint64_T (R.Start);
@@ -70,12 +68,11 @@ package body Cai.Block.Client is
       R : Request ((case CR.Kind is
                      when Cxx.Block.None => None,
                      when Cxx.Block.Read => Read,
-                     when Cxx.Block.Write => Write,
-                     when Cxx.Block.Sync => Sync));
+                     when Cxx.Block.Write => Write));
    begin
       R.Priv := Private_Data (CR.Uid);
       case R.Kind is
-         when None | Sync =>
+         when None =>
             null;
          when Read | Write =>
             R.Start := Id (CR.Start);
@@ -96,12 +93,6 @@ package body Cai.Block.Client is
       Cxx.Block.Client.Submit_Read (D.Instance, Convert_Request (R));
    end Submit_Read;
 
-   procedure Submit_Sync (D : Device; R : Request)
-   is
-   begin
-      Cxx.Block.Client.Submit_Sync (D.Instance, Convert_Request (R));
-   end Submit_Sync;
-
    procedure Submit_Write (D : Device; R : Request; B : Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
@@ -115,6 +106,12 @@ package body Cai.Block.Client is
          Data,
          Cxx.Genode.Uint64_T (B'Length));
    end Submit_Write;
+
+   procedure Sync (D : Device)
+   is
+   begin
+      Cxx.Block.Client.Sync (D.Instance);
+   end Sync;
 
    function Next (D : Device) return Request
    is

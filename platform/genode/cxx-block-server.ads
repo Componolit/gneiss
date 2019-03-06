@@ -37,8 +37,8 @@ is
    procedure Read (This : Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Req : in out Cxx.Block.Request.Class)
    with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4readEPhyRNS0_7RequestE";
 
-   procedure Sync (This : Class; Req : in out Cxx.Block.Request.Class)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4syncERNS0_7RequestE";
+   procedure Sync (This : Class)
+   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4syncEv";
 
    procedure Write (This : Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Req : in out Cxx.Block.Request.Class)
    with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server5writeEPhyRNS0_7RequestE";

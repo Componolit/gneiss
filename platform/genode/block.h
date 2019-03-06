@@ -6,7 +6,7 @@
 
 namespace Block
 {
-    enum Kind {NONE, READ, WRITE, SYNC};
+    enum Kind {NONE, READ, WRITE};
     enum Status {RAW, OK, ERROR, ACK};
     struct Request
     {

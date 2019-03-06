@@ -31,11 +31,11 @@ is
    procedure Submit_Read (This : Class; Req : Cxx.Block.Request.Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11submit_readENS0_7RequestE";
 
-   procedure Submit_Sync (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11submit_syncENS0_7RequestE";
-
    procedure Submit_Write (This : Class; Req : Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12submit_writeENS0_7RequestEPhy";
+
+   procedure Sync (This : Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4syncEv";
 
    function Next (This : Class) return Cxx.Block.Request.Class
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4nextEv";

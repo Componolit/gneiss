@@ -74,15 +74,6 @@ void Cai::Block::Client::submit_read(Cai::Block::Request req)
     blk(_device)->tx()->submit_packet(packet);
 }
 
-void Cai::Block::Client::submit_sync(Cai::Block::Request req)
-{
-    ::Block::Packet_descriptor packet(
-            blk(_device)->dma_alloc_packet(block_size() * req.length),
-            ::Block::Packet_descriptor::END,
-            req.start, req.length);
-    blk(_device)->tx()->submit_packet(packet);
-}
-
 void Cai::Block::Client::submit_write(
         Cai::Block::Request req,
         Genode::uint8_t *data,
@@ -99,6 +90,9 @@ void Cai::Block::Client::submit_write(
     Genode::memcpy(blk(_device)->tx()->packet_content(packet), data, length);
     blk(_device)->tx()->submit_packet(packet);
 }
+
+void Cai::Block::Client::sync()
+{ }
 
 Cai::Block::Request Cai::Block::Client::next()
 {

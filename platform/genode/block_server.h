@@ -30,12 +30,11 @@ namespace Block
                     Genode::uint8_t buffer[],
                     Genode::uint64_t size,
                     Request &req);
-            Ada void sync(
-                    Request &req);
             Ada void write(
                     Genode::uint8_t buffer[],
                     Genode::uint64_t size,
                     Request &req);
+            Ada void sync();
             void acknowledge(Request &req);
             static Ada Genode::uint64_t state_size();
     };
