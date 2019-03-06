@@ -6,7 +6,7 @@ with Cxx.Block.Client;
 with Cxx.Genode;
 use all type Cxx.Bool;
 
-package body Block.Client is
+package body Cai.Block.Client is
 
    function Create_Device return Device
    is
@@ -171,4 +171,4 @@ package body Block.Client is
       return 1024 * 1024;
    end Maximal_Transfer_Size;
 
-end Block.Client;
+end Cai.Block.Client;

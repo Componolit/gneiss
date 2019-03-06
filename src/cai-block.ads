@@ -2,7 +2,7 @@
 with System;
 with Internals.Block;
 
-package Block
+package Cai.Block
    with SPARK_Mode
 is
    type Unsigned_Long is range 0 .. 2 ** 63 - 1
@@ -40,4 +40,4 @@ private
 
    type Private_Data is new Internals.Block.Private_Data;
 
-end Block;
+end Cai.Block;
