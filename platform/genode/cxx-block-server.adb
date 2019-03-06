@@ -64,7 +64,7 @@ package body Cxx.Block.Server is
 
    procedure Ack (D : in out Cai.Component.Block_Server_Device; R : Cai.Block.Request; C : Cai.Block.Context)
    is
-      This : Class := (Session => Cxx.Void_Address (C), State => D'Address);
+      This : constant Class := (Session => Cxx.Void_Address (C), State => D'Address);
       Req : Cxx.Block.Request.Class := Convert_Request (R);
    begin
       Acknowledge (This, Req);
@@ -72,7 +72,7 @@ package body Cxx.Block.Server is
 
    package Server_Component is new Cai.Block.Server (Ack);
 
-   procedure Initialize (This : in out Class; Label : Cxx.Void_Address; Length : Cxx.Genode.Uint64_T)
+   procedure Initialize (This : Class; Label : Cxx.Void_Address; Length : Cxx.Genode.Uint64_T)
    is
       Lbl : String(1 .. Integer(Length))
       with Address => Label;
@@ -82,7 +82,7 @@ package body Cxx.Block.Server is
       Server_Component.Initialize (Dev, Lbl, Cai.Block.Context (This.Session));
    end Initialize;
 
-   procedure Finalize (This : in out Class) is
+   procedure Finalize (This : Class) is
       Dev : Cai.Component.Block_Server_Device
       with Address => This.State;
    begin

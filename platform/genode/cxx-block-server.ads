@@ -8,14 +8,18 @@ is
    end record
    with Import, Convention => CPP;
 
+   function Default_Constructor return Class
+   with Global => null;
+   pragma Cpp_Constructor (Default_Constructor, "_ZN3Cai5Block6ServerC1Ev");
+
    function Constructor (Session : Cxx.Void_Address; State : Cxx.Void_Address) return Class
    with Global => null;
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ServerC1EPvS1_");
 
-   procedure Initialize (This : in out Class; Label : Cxx.Void_Address; Length : Cxx.Genode.Uint64_T)
+   procedure Initialize (This : Class; Label : Cxx.Void_Address; Length : Cxx.Genode.Uint64_T)
    with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10initializeEPKcy";
 
-   procedure Finalize (This : in out Class)
+   procedure Finalize (This : Class)
    with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server8finalizeEv";
 
    function Block_Count (This : Class) return Cxx.Genode.Uint64_T
