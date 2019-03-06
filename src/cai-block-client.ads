@@ -1,7 +1,7 @@
 
 private with Internals.Block;
 
-package Block.Client
+package Cai.Block.Client
    with SPARK_Mode
 is
 
@@ -48,4 +48,4 @@ private
 
    type Device is new Internals.Block.Device;
 
-end Block.Client;
+end Cai.Block.Client;
