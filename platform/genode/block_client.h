@@ -13,14 +13,22 @@ namespace Block
     class Client
     {
         private:
-            Genode::uint64_t _device;
             Genode::uint64_t _block_count;
             Genode::uint64_t _block_size;
+            void *_device;
+            void *_callback;
+            void *_callback_state;
+
+        protected:
+            void callback();
 
         public:
 
             Client();
-            void initialize(const char *device = nullptr);
+            void initialize(
+                    const char *device = nullptr,
+                    void *callback = nullptr,
+                    void *callback_state = nullptr);
             void finalize();
             void submit_read(Request req);
             void submit_write(
