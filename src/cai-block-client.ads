@@ -6,6 +6,8 @@ package Cai.Block.Client
    with SPARK_Mode
 is
 
+   type Request is new Block.Request;
+
    function Create_Device return Device;
 
    procedure Initialize_Device (D : in out Device; Path : String; S : in out State_Type);
