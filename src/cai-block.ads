@@ -21,6 +21,7 @@ is
    type Request_Status is (Raw, Ok, Error, Acknowledged);
 
    type Private_Data is private;
+   Null_Data : constant Private_Data;
 
    type Request (Kind : Request_Kind) is record
       Priv : Private_Data;
@@ -42,5 +43,6 @@ private
 
    type Device is new Internals.Block.Device;
    type Private_Data is new Internals.Block.Private_Data;
+   Null_Data : constant Private_Data := Private_Date(Internals.Block.Null_Data);
 
 end Cai.Block;
