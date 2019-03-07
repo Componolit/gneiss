@@ -5,12 +5,15 @@ is
    type Private_Uint64_T_Address is limited private;
    type Private_Uint64_T_Array is array (Natural range <>) of Private_Uint64_T;
    type Private_Uint64_T_Address_Array is array (Natural range <>) of Private_Uint64_T_Address;
+   type Private_Void is limited private;
 
    type Class is
    limited record
-      Private_X_Device : Private_Uint64_T;
       Private_X_Block_Count : Private_Uint64_T;
       Private_X_Block_Size : Private_Uint64_T;
+      Private_X_Device : Private_Void;
+      Private_X_Callback : Private_Void;
+      Private_X_Callback_State : Private_Void;
    end record
    with Import, Convention => CPP;
 
@@ -22,8 +25,8 @@ is
    with Global => null;
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ClientC1Ev");
 
-   procedure Initialize (This : Class; Device : Cxx.Char_Array)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10initializeEPKc";
+   procedure Initialize (This : Class; Device : Cxx.Char_Array; Callback : Cxx.Void_Address; Callback_State : Cxx.Void_Address)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10initializeEPKcPvS4_";
 
    procedure Finalize (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8finalizeEv";
@@ -61,5 +64,6 @@ private
    type Class_Address is access Class;
    type Private_Uint64_T is new Cxx.Genode.Uint64_T;
    type Private_Uint64_T_Address is access Private_Uint64_T;
+   type Private_Void is new Cxx.Void;
 end Cxx.Block.Client;
 

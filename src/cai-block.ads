@@ -36,8 +36,11 @@ is
 
    subtype Context is System.Address;
 
+   type Device is limited private;
+
 private
 
+   type Device is new Internals.Block.Device;
    type Private_Data is new Internals.Block.Private_Data;
 
 end Cai.Block;

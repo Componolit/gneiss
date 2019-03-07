@@ -14,15 +14,14 @@ package body Cai.Block.Client is
       return Device' (Instance => Cxx.Block.Client.Constructor);
    end Create_Device;
 
-   procedure Initialize_Device (D : in out Device; Path : String)
+   procedure Initialize_Device (D : in out Device; Path : String; S : in out State_Type)
    is
       C_Path : constant String := Path & Character'Val(0);
       subtype C_Path_String is String (1 .. C_Path'Length);
       subtype C_String is Cxx.Char_Array (1 .. C_Path'Length);
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String, C_String);
    begin
-
-      Cxx.Block.Client.Initialize (D.Instance, To_C_String (C_Path));
+      Cxx.Block.Client.Initialize (D.Instance, To_C_String (C_Path), Callback'Address, S'Address);
    end Initialize_Device;
 
    procedure Finalize_Device (D : in out Device)
