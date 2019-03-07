@@ -43,6 +43,6 @@ private
 
    type Device is new Internals.Block.Device;
    type Private_Data is new Internals.Block.Private_Data;
-   Null_Data : constant Private_Data := Private_Date(Internals.Block.Null_Data);
+   Null_Data : constant Private_Data := Private_Data (Internals.Block.Null_Data);
 
 end Cai.Block;
