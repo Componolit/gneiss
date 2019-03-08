@@ -1,6 +1,6 @@
 
 with System;
-with Internals.Block;
+private with Cai.Internal.Block;
 
 package Cai.Block
    with SPARK_Mode
@@ -23,7 +23,7 @@ is
    type Private_Data is private;
    Null_Data : constant Private_Data;
 
-   type Request (Kind : Request_Kind) is record
+   type Request (Kind : Request_Kind := None) is record
       Priv : Private_Data;
       case Kind is
          when None =>
@@ -37,12 +37,10 @@ is
 
    subtype Context is System.Address;
 
-   type Device is limited private;
 
 private
 
-   type Device is new Internals.Block.Device;
-   type Private_Data is new Internals.Block.Private_Data;
-   Null_Data : constant Private_Data := Private_Data (Internals.Block.Null_Data);
+   type Private_Data is new Cai.Internal.Block.Private_Data;
+   Null_Data : constant Private_Data := Private_Data (Cai.Internal.Block.Null_Data);
 
 end Cai.Block;

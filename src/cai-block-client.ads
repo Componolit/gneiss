@@ -1,16 +1,18 @@
+private with Cai.Internal.Block;
 
 generic
-   type State_Type is limited private;
-   with procedure Callback (S : in out  State_Type);
+   type State is limited private;
+   with procedure Event (S : in out  State);
 package Cai.Block.Client
    with SPARK_Mode
 is
 
+   type Device is limited private;
    type Request is new Block.Request;
 
    function Create_Device return Device;
 
-   procedure Initialize_Device (D : in out Device; Path : String; S : in out State_Type);
+   procedure Initialize_Device (D : in out Device; Path : String; S : in out State);
 
    procedure Finalize_Device (D : in out Device);
 
@@ -45,6 +47,6 @@ is
 
 private
 
-   Callback_State : System.Address;
+   type Device is new Cai.Internal.Block.Device;
 
 end Cai.Block.Client;
