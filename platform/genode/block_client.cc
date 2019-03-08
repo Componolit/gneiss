@@ -11,6 +11,8 @@ namespace Cai {
 #include <block_client.h>
 }
 
+#include <factory.h>
+
 extern "C"
 {
     void __gnat_rcheck_CE_Access_Check()
@@ -20,23 +22,25 @@ extern "C"
 }
 
 Genode::Env *component_env __attribute__((weak)) = nullptr;
-Genode::Constructible<Genode::Sliced_heap> _heap;
-Genode::Constructible<Genode::Allocator_avl> _alloc;
+Genode::Constructible<Factory> _factory;
 
 class Block_session
 {
     private:
+        Genode::Heap _heap;
+        Genode::Allocator_avl _alloc;
         Block::Connection _block;
         Genode::Io_signal_handler<Cai::Block::Client> _event;
     public:
         Block_session(
                 Genode::Env &env,
-                Genode::Allocator_avl *alloc,
                 Genode::size_t size,
                 const char *device,
                 Cai::Block::Client *client,
                 void (Cai::Block::Client::*callback) ()) :
-            _block(env, alloc, size, device),
+            _heap(env.ram(), env.rm()),
+            _alloc(&_heap),
+            _block(env, &_alloc, size, device),
             _event(env.ep(), *client, callback)
         {
             _block.tx_channel()->sigh_ack_avail(_event);
@@ -75,15 +79,13 @@ void Cai::Block::Client::initialize(
     const char default_device[] = "";
     Genode::size_t blk_size;
     if(component_env){
-        _heap.construct(component_env->ram(), component_env->rm());
-        _alloc.construct(&*_heap);
-        _device = reinterpret_cast<void *>(new (*_heap) Block_session(
+        _factory.construct(*component_env);
+        _device = _factory->create<Block_session>(
                 *component_env,
-                &*_alloc,
                 128 * 1024,
                 device ? device : default_device,
                 this,
-                &Client::callback));
+                &Client::callback);
         ::Block::Session::Operations ops;
         blk(_device)->info(&_block_count, &blk_size, &ops);
         _block_size = blk_size;
@@ -96,7 +98,9 @@ void Cai::Block::Client::initialize(
 
 void Cai::Block::Client::finalize()
 {
-    Genode::destroy (*_heap, reinterpret_cast<Block_session *>(_device));
+    if(_factory.constructed()){
+        _factory->destroy<Block_session>(_device);
+    }
     _device = nullptr;
     _callback = nullptr;
     _callback_state = nullptr;
