@@ -37,10 +37,16 @@ is
 
    subtype Context is System.Address;
 
+   type Client_Session is limited private;
+   type Dispatcher_Session is limited private;
+   type Server_Session is limited private;
 
 private
 
    type Private_Data is new Cai.Internal.Block.Private_Data;
    Null_Data : constant Private_Data := Private_Data (Cai.Internal.Block.Null_Data);
+   type Client_Session is new Cai.Internal.Block.Device;
+   type Dispatcher_Session is new Cai.Internal.Block.Dispatcher;
+   type Server_Session is null record;
 
 end Cai.Block;
