@@ -45,8 +45,8 @@ private
 
    type Private_Data is new Cai.Internal.Block.Private_Data;
    Null_Data : constant Private_Data := Private_Data (Cai.Internal.Block.Null_Data);
-   type Client_Session is new Cai.Internal.Block.Device;
+   type Client_Session is new Cai.Internal.Block.Client;
    type Dispatcher_Session is new Cai.Internal.Block.Dispatcher;
-   type Server_Session is null record;
+   type Server_Session is new Cai.Internal.Block.Server;
 
 end Cai.Block;

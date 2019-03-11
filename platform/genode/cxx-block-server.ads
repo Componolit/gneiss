@@ -5,6 +5,10 @@ is
    limited record
       Session : Cxx.Void_Address;
       State : Cxx.Void_Address;
+      Callback : Cxx.Void_Address;
+      Block_Count : Cxx.Void_Address;
+      Block_Size : Cxx.Void_Address;
+      Writable : Cxx.Void_Address;
    end record
    with Import, Convention => CPP;
 
@@ -12,41 +16,32 @@ is
    with Global => null;
    pragma Cpp_Constructor (Default_Constructor, "_ZN3Cai5Block6ServerC1Ev");
 
-   function Constructor (Session : Cxx.Void_Address; State : Cxx.Void_Address) return Class
-   with Global => null;
-   pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ServerC1EPvS1_");
-
-   procedure Initialize (This : Class; Label : Cxx.Void_Address; Length : Cxx.Genode.Uint64_T)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10initializeEPKcy";
+   procedure Initialize (This : Class;
+                         Label : Cxx.Void_Address;
+                         Length : Cxx.Genode.Uint64_T;
+                         Callback : Cxx.Void_Address;
+                         Block_Count : Cxx.Void_Address;
+                         Block_Size : Cxx.Void_Address;
+                         Maximal_Transfer_Size : Cxx.Void_Address;
+                         Writable : Cxx.Void_Address)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10initializeEPKcyPvS4_S4_S4_S4_S4_";
 
    procedure Finalize (This : Class)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server8finalizeEv";
-
-   function Block_Count (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server11block_countEv";
-
-   function Block_Size (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10block_sizeEv";
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server8finalizeEv";
 
    function Writable (This : Class) return Cxx.Bool
    with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server8writableEv";
 
-   function Maximal_Transfer_Size (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server21maximal_transfer_sizeEv";
+   procedure Next_Request (This : Class; Request : out Cxx.Block.Request.Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server12next_requestEPNS0_7RequestE";
 
-   procedure Read (This : Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Req : in out Cxx.Block.Request.Class)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4readEPhyRNS0_7RequestE";
+   procedure Read (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Success : out Cxx.Bool)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4readENS0_7RequestEPvyPb";
 
-   procedure Sync (This : Class)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4syncEv";
+   procedure Write (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Success : out Cxx.Bool)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server5writeENS0_7RequestEPvyPb";
 
-   procedure Write (This : Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Req : in out Cxx.Block.Request.Class)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server5writeEPhyRNS0_7RequestE";
-
-   procedure Acknowledge (This : Class; Req : in out Cxx.Block.Request.Class)
+   procedure Acknowledge (This : Class; Request : in out Cxx.Block.Request.Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server11acknowledgeERNS0_7RequestE";
-
-   function State_Size return Cxx.Genode.Uint64_T
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10state_sizeEv";
 
 end Cxx.Block.Server;
