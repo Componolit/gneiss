@@ -8,27 +8,27 @@ use all type Cxx.Bool;
 
 package body Cai.Block.Client is
 
-   function Create_Device return Device
+   function Create return Client_Session
    is
    begin
-      return Device' (Instance => Cxx.Block.Client.Constructor);
-   end Create_Device;
+      return Client_Session' (Instance => Cxx.Block.Client.Constructor);
+   end Create;
 
-   procedure Initialize_Device (D : in out Device; Path : String; S : in out State)
+   procedure Initialize (C : in out Client_Session; Path : String; S : in out State)
    is
       C_Path : constant String := Path & Character'Val(0);
       subtype C_Path_String is String (1 .. C_Path'Length);
       subtype C_String is Cxx.Char_Array (1 .. C_Path'Length);
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String, C_String);
    begin
-      Cxx.Block.Client.Initialize (D.Instance, To_C_String (C_Path), Event'Address, S'Address);
-   end Initialize_Device;
+      Cxx.Block.Client.Initialize (C.Instance, To_C_String (C_Path), Event'Address, S'Address);
+   end Initialize;
 
-   procedure Finalize_Device (D : in out Device)
+   procedure Finalize (C : in out Client_Session)
    is
    begin
-      Cxx.Block.Client.Finalize (D.Instance);
-   end Finalize_Device;
+      Cxx.Block.Client.Finalize (C.Instance);
+   end Finalize;
 
    function Convert_Request (R : Request) return Cxx.Block.Request.Class
    is
@@ -86,13 +86,13 @@ package body Cai.Block.Client is
       return R;
    end Convert_Request;
 
-   procedure Submit_Read (D : Device; R : Request)
+   procedure Submit_Read (C : Client_Session; R : Request)
    is
    begin
-      Cxx.Block.Client.Submit_Read (D.Instance, Convert_Request (R));
+      Cxx.Block.Client.Submit_Read (C.Instance, Convert_Request (R));
    end Submit_Read;
 
-   procedure Submit_Write (D : Device; R : Request; B : Buffer)
+   procedure Submit_Write (C : Client_Session; R : Request; B : Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
@@ -100,25 +100,25 @@ package body Cai.Block.Client is
       Data : Local_U8_Array := Convert_Buffer (B);
    begin
       Cxx.Block.Client.Submit_Write (
-         D.Instance,
+         C.Instance,
          Convert_Request (R),
          Data,
          Cxx.Genode.Uint64_T (B'Length));
    end Submit_Write;
 
-   procedure Sync (D : Device)
+   procedure Sync (C : Client_Session)
    is
    begin
-      Cxx.Block.Client.Sync (D.Instance);
+      Cxx.Block.Client.Sync (C.Instance);
    end Sync;
 
-   function Next (D : Device) return Request
+   function Next (C : Client_Session) return Request
    is
    begin
-      return Convert_Request (Cxx.Block.Client.Next (D.Instance));
+      return Convert_Request (Cxx.Block.Client.Next (C.Instance));
    end Next;
 
-   procedure Read (D : Device; R : in out Request; B : out Buffer)
+   procedure Read (C : Client_Session; R : in out Request; B : out Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
@@ -127,7 +127,7 @@ package body Cai.Block.Client is
       Req : Cxx.Block.Request.Class := Convert_Request (R);
    begin
       Cxx.Block.Client.Read (
-         D.Instance,
+         C.Instance,
          Req,
          Data,
          Cxx.Genode.Uint64_T (B'Length));
@@ -135,34 +135,34 @@ package body Cai.Block.Client is
       R := Convert_Request (Req);
    end Read;
 
-   procedure Acknowledge (D : Device; R : in out Request)
+   procedure Acknowledge (C : Client_Session; R : in out Request)
    is
    begin
-      Cxx.Block.Client.Acknowledge (D.Instance, Convert_Request (R));
+      Cxx.Block.Client.Acknowledge (C.Instance, Convert_Request (R));
       R.Status := Ok;
    end Acknowledge;
 
-   function Writable (D : Device) return Boolean
+   function Writable (C : Client_Session) return Boolean
    is
    begin
-      return Cxx.Block.Client.Writable (D.Instance) /= 0;
+      return Cxx.Block.Client.Writable (C.Instance) /= 0;
    end Writable;
 
-   function Block_Count (D : Device) return Count
+   function Block_Count (C : Client_Session) return Count
    is
    begin
-      return Count (Cxx.Block.Client.Block_Count (D.Instance));
+      return Count (Cxx.Block.Client.Block_Count (C.Instance));
    end Block_Count;
 
-   function Block_Size (D : Device) return Size
+   function Block_Size (C : Client_Session) return Size
    is
    begin
-      return Size (Cxx.Block.Client.Block_Size (D.Instance));
+      return Size (Cxx.Block.Client.Block_Size (C.Instance));
    end Block_Size;
 
-   function Maximal_Transfer_Size (D : Device) return Unsigned_Long
+   function Maximal_Transfer_Size (C : Client_Session) return Unsigned_Long
    is
-      pragma Unreferenced (D);
+      pragma Unreferenced (C);
    begin
       return 1024 * 1024;
    end Maximal_Transfer_Size;
