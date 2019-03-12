@@ -22,7 +22,7 @@ extern "C"
 }
 
 Genode::Env *component_env __attribute__((weak)) = nullptr;
-Genode::Constructible<Factory> _factory;
+static Genode::Constructible<Factory> _factory;
 
 class Block_session
 {
@@ -79,7 +79,9 @@ void Cai::Block::Client::initialize(
     const char default_device[] = "";
     Genode::size_t blk_size;
     if(component_env){
-        _factory.construct(*component_env);
+        if(!_factory.constructed()){
+            _factory.construct(*component_env);
+        }
         _device = _factory->create<Block_session>(
                 *component_env,
                 128 * 1024,

@@ -15,9 +15,9 @@ namespace Block
         private:
             Genode::uint64_t _block_count;
             Genode::uint64_t _block_size;
-            void *_device;
-            void *_callback;
-            void *_callback_state;
+            void *_device; //Block_session in block_client.cc
+            void *_callback; //procedure Event (S : in out State);
+            void *_callback_state; //State
 
         protected:
             void callback();
