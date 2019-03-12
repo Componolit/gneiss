@@ -7,24 +7,11 @@ use all type Cxx.Genode.Uint64_T;
 
 package body Cai.Block.Server is
 
-   procedure Initialize (S : in out Server_Session; L : String; C : in out State)
+   function Create return Server_Session
    is
    begin
-      Cxx.Block.Server.Initialize (S.Instance,
-                                   L'Address,
-                                   Cxx.Genode.Uint64_T (L'Length),
-                                   Event'Address,
-                                   Block_Count'Address,
-                                   Block_Size'Address,
-                                   Maximal_Transfer_Size'Address,
-                                   Writable'Address);
-   end Initialize;
-
-   procedure Finalize (S : in out Server_Session)
-   is
-   begin
-      Cxx.Block.Server.Finalize (S.Instance);
-   end Finalize;
+      return Server_Session' (Instance => Cxx.Block.Server.Constructor);
+   end Create;
 
    function Convert_Request (R : Cxx.Block.Request.Class) return Cai.Block.Request
    is
@@ -110,5 +97,11 @@ package body Cai.Block.Server is
       Cxx.Block.Server.Acknowledge (S.Instance, Req);
       R := Convert_Request (Req);
    end Acknowledge;
+
+   function Initialized (S : Server_Session) return Boolean
+   is
+   begin
+      return Cxx.Block.Server.Initialized (S.Instance) = 1;
+   end Initialized;
 
 end Cai.Block.Server;

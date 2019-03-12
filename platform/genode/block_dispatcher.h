@@ -10,9 +10,9 @@ namespace Block
     {
         friend class Root;
         private:
-            void *_root;
-            void *_handler;
-            void *_state;
+            void *_root; //Cai::Block::Root in block_dispatcher.cc
+            void *_handler; //procedure Event(S : in out State);
+            void *_state; //State
 
         public:
             Dispatcher();
@@ -21,10 +21,12 @@ namespace Block
                     void *state = nullptr);
             void finalize();
             void announce();
-            __attribute__((annotate("ada"))) void dispatch(
-                    const char *label,
-                    Genode::uint64_t length,
-                    void **session);
+            __attribute__((annotate("ada"))) void dispatch();
+            char *label_content();
+            Genode::uint64_t label_length();
+            Genode::uint64_t session_size();
+            void session_accept(void *session);
+            bool session_cleanup(void *session);
     };
 }
 

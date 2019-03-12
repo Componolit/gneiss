@@ -6,11 +6,13 @@ generic
    with function Block_Size (S : State) return Size;
    with function Writable (S : State) return Boolean;
    with function Maximal_Transfer_Size (S : State) return Unsigned_Long;
+   with procedure Initialize (S : in out Server_Session; L : String; C : in out State);
+   with procedure Finalize (S : in out Server_Session);
 package Cai.Block.Server is
 
-   procedure Initialize (S : in out Server_Session; L : String; C : in out State);
+   function Create return Server_Session;
 
-   procedure Finalize (S : in out Server_Session);
+   function Initialized (S : Server_Session) return Boolean;
 
    procedure Next_Request (S : in out Server_Session; R : out Request);
 
