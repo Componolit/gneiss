@@ -12,10 +12,9 @@ namespace Block
 
     class Server
     {
+        friend class Block_session_component;
+        friend class Block_root;
         private:
-            friend class Block_session_component;
-            friend class Block_root;
-
              void *_session;
              void *_state;
              void *_callback;
@@ -25,7 +24,6 @@ namespace Block
              void *_writable;
 
         public:
-
             Server();
             void initialize(
                     const char *label,

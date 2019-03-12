@@ -9,11 +9,14 @@
 namespace Cai
 {
 #include <block_server.h>
-    struct Block_session_component;
-    struct Block_root;
+    namespace Block
+    {
+        struct Block_session_component;
+        struct Block_root;
+    }
 }
 
-struct Cai::Block_session_component : Genode::Rpc_object<::Block::Session>, ::Block::Request_stream
+struct Cai::Block::Block_session_component : Genode::Rpc_object<::Block::Session>, ::Block::Request_stream
 {
     Genode::Entrypoint &_ep;
     Cai::Block::Server &_server;
@@ -31,16 +34,16 @@ struct Cai::Block_session_component : Genode::Rpc_object<::Block::Session>, ::Bl
 
     void sync() override;
 
-    Genode::Capability<Tx> tx_cap() override;
+    Genode::Capability<::Block::Session::Tx> tx_cap() override;
 };
 
-struct Cai::Block_root
+struct Cai::Block::Block_root
 {
     Genode::Env &_env;
-    Genode::Signal_handler<Cai::Block_root> _sigh;
+    Genode::Signal_handler<Cai::Block::Block_root> _sigh;
     Cai::Block::Server &_server;
     Genode::Attached_ram_dataspace _ds;
-    Cai::Block_session_component _session;
+    Cai::Block::Block_session_component _session;
 
     Block_root(Genode::Env &env, Cai::Block::Server &server, Genode::size_t ds_size);
     void handler();
