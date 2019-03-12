@@ -190,7 +190,7 @@ Genode::uint64_t Cai::Block::Client::block_size()
 
 void Cai::Block::Client::callback()
 {
-    if(_callback){
-        ((void (*)(void *))_callback)(_callback_state);
+    if(_callback && _callback_state){
+        Call(_callback, _callback_state);
     }
 }

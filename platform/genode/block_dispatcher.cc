@@ -9,19 +9,21 @@
 #include <factory.h>
 namespace Cai{
 #include <block_dispatcher.h>
-    struct Root;
+    namespace Block{
+        struct Root;
+    }
 }
 
 Genode::Env *component_env __attribute__((weak)) = nullptr;
 static Genode::Constructible<Factory> _factory;
 
-struct Cai::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
+struct Cai::Block::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
 {
     Genode::Env &_env;
     Cai::Block::Dispatcher *_dispatcher;
     Root(Genode::Env &, Cai::Block::Dispatcher *);
-    Genode::Capability<Genode::Session> session(Cai::Root::Session_args const &args, Genode::Affinity const &) override;
-    void upgrade(Genode::Capability<Genode::Session>, Cai::Root::Upgrade_args const &) override;
+    Genode::Capability<Genode::Session> session(Cai::Block::Root::Session_args const &args, Genode::Affinity const &) override;
+    void upgrade(Genode::Capability<Genode::Session>, Cai::Block::Root::Upgrade_args const &) override;
     void close(Genode::Capability<Genode::Session>) override;
 
     private:
@@ -29,12 +31,12 @@ struct Cai::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
         Root &operator = (Root const &);
 };
 
-Cai::Root::Root(Genode::Env &env, Cai::Block::Dispatcher *dispatcher) :
+Cai::Block::Root::Root(Genode::Env &env, Cai::Block::Dispatcher *dispatcher) :
     _env(env),
     _dispatcher(dispatcher)
 { }
 
-Genode::Capability<Genode::Session> Cai::Root::session(Cai::Root::Session_args const &args, Genode::Affinity const &)
+Genode::Capability<Genode::Session> Cai::Block::Root::session(Cai::Block::Root::Session_args const &args, Genode::Affinity const &)
 {
     Genode::size_t const ds_size = Genode::Arg_string::find_arg(args.string(), "tx_buf_size").ulong_value(0);
     Genode::Ram_quota const ram_quota = Genode::ram_quota_from_args(args.string());
@@ -56,10 +58,10 @@ Genode::Capability<Genode::Session> Cai::Root::session(Cai::Root::Session_args c
     }
 }
 
-void Cai::Root::upgrade(Genode::Capability<Genode::Session>, Cai::Root::Upgrade_args const &)
+void Cai::Block::Root::upgrade(Genode::Capability<Genode::Session>, Cai::Block::Root::Upgrade_args const &)
 { }
 
-void Cai::Root::close(Genode::Capability<Genode::Session>)
+void Cai::Block::Root::close(Genode::Capability<Genode::Session>)
 { }
 
 Cai::Block::Dispatcher::Dispatcher() :
@@ -76,7 +78,7 @@ void Cai::Block::Dispatcher::initialize(
         if(!_factory.constructed()){
             _factory.construct(*component_env);
         }
-        _root = _factory->create<Cai::Root>(*component_env, this);
+        _root = _factory->create<Cai::Block::Root>(*component_env, this);
     }else{
         Genode::error("Failed to construct block root");
     }
@@ -88,7 +90,7 @@ void Cai::Block::Dispatcher::initialize(
 void Cai::Block::Dispatcher::finalize()
 {
     if(_factory.constructed()){
-        _factory->destroy<Cai::Root>(_root);
+        _factory->destroy<Cai::Block::Root>(_root);
     }
     _root = nullptr;
     _handler = nullptr;
@@ -98,6 +100,6 @@ void Cai::Block::Dispatcher::finalize()
 void Cai::Block::Dispatcher::announce()
 {
     if(component_env){
-        component_env->parent().announce(component_env->ep().manage(*reinterpret_cast<Cai::Root*>(_root)));
+        component_env->parent().announce(component_env->ep().manage(*reinterpret_cast<Cai::Block::Root*>(_root)));
     }
 }
