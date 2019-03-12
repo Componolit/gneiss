@@ -199,7 +199,7 @@ void Cai::Block::Server::read(Cai::Block::Request request, void *buffer, Genode:
                 if(size < sz){
                     *success = false;
                 }else{
-                    Genode::memcpy(buffer, ptr, sz);
+                    Genode::memcpy(ptr, buffer, sz);
                     *success = true;
                 }
         });
@@ -211,10 +211,10 @@ void Cai::Block::Server::write(Cai::Block::Request request, void *buffer, Genode
     ::Block::Request req = create_genode_block_request(request);
     if(_session){
         blk(_session).with_content(req, [&] (void *ptr, Genode::size_t sz){
-                if(sz < size){
+                if(size < sz){
                     *success = false;
                 }else{
-                    Genode::memcpy(ptr, buffer, size);
+                    Genode::memcpy(buffer, ptr, size);
                     *success = true;
                 }
         });

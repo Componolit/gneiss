@@ -13,11 +13,11 @@ package body Cai.Block.Server is
       return Server_Session' (Instance => Cxx.Block.Server.Constructor);
    end Create;
 
-   function Convert_Request (R : Cxx.Block.Request.Class) return Cai.Block.Request
+   function Convert_Request (R : Cxx.Block.Request.Class) return Request
    is
       subtype Uid_Type is Cxx.Genode.Uint8_T_Array (1 .. 16);
       function Convert_Uid is new Ada.Unchecked_Conversion (Uid_Type, Cai.Block.Private_Data);
-      Req : Cai.Block.Request ((case R.Kind is
+      Req : Request ((case R.Kind is
                      when Cxx.Block.None => Cai.Block.None,
                      when Cxx.Block.Read => Cai.Block.Read,
                      when Cxx.Block.Write => Cai.Block.Write));
@@ -38,7 +38,7 @@ package body Cai.Block.Server is
       return Req;
    end Convert_Request;
 
-   function Convert_Request (R : Cai.Block.Request) return Cxx.Block.Request.Class
+   function Convert_Request (R : Request) return Cxx.Block.Request.Class
    is
       subtype Uid_Type is Cxx.Genode.Uint8_T_Array (1 .. 16);
       function Convert_Uid is new Ada.Unchecked_Conversion (Cai.Block.Private_Data, Uid_Type);
@@ -74,7 +74,7 @@ package body Cai.Block.Server is
       R := Convert_Request (Req);
    end Next_Request;
 
-   procedure Read (S : in out Server_Session; R : Request; B : out Buffer; Success : out Boolean)
+   procedure Read (S : in out Server_Session; R : Request; B : Buffer; Success : out Boolean)
    is
       Succ : Cxx.Bool;
    begin
@@ -82,7 +82,7 @@ package body Cai.Block.Server is
       Success := Succ = 1;
    end Read;
 
-   procedure Write (S : in out Server_Session; R : Request; B : Buffer; Success : out Boolean)
+   procedure Write (S : in out Server_Session; R : Request; B : out Buffer; Success : out Boolean)
    is
       Succ : Cxx.Bool;
    begin
