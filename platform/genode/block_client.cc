@@ -67,18 +67,27 @@ Cai::Block::Client::Client() :
     _block_count(0),
     _block_size(0),
     _device(nullptr),
-    _callback(nullptr),
-    _callback_state(nullptr)
+    _callback(nullptr)
 { }
+
+void *Cai::Block::Client::get_instance()
+{
+    return reinterpret_cast<void *>(this);
+}
+
+bool Cai::Block::Client::initialized()
+{
+    return _device && _callback;
+}
 
 void Cai::Block::Client::initialize(
         const char *device,
-        void *callback,
-        void *callback_state)
+        void *callback)
 {
     const char default_device[] = "";
     Genode::size_t blk_size;
     if(component_env){
+        _callback = callback;
         if(!_factory.constructed()){
             _factory.construct(*component_env);
         }
@@ -94,8 +103,6 @@ void Cai::Block::Client::initialize(
     }else{
         Genode::error("Failed to construct block session");
     }
-    _callback = callback;
-    _callback_state = callback_state;
 }
 
 void Cai::Block::Client::finalize()
@@ -105,7 +112,6 @@ void Cai::Block::Client::finalize()
     }
     _device = nullptr;
     _callback = nullptr;
-    _callback_state = nullptr;
 }
 
 void Cai::Block::Client::submit_read(Cai::Block::Request req)
@@ -192,7 +198,7 @@ Genode::uint64_t Cai::Block::Client::block_size()
 
 void Cai::Block::Client::callback()
 {
-    if(_callback && _callback_state){
-        Call(_callback, _callback_state);
+    if(_callback){
+        Call(_callback);
     }
 }

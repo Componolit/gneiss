@@ -11,7 +11,7 @@ package body Cxx.Block.Server is
          Import,
          Address => This.Writable;
    begin
-      return (if Writable (This.State) then 1 else 0);
+      return (if Writable (Cxx.Block.Server.Get_Instance (This)) then 1 else 0);
    end Writable;
 
 end Cxx.Block.Server;

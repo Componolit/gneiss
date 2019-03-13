@@ -11,14 +11,13 @@ namespace Block
         friend class Root;
         private:
             void *_root; //Cai::Block::Root in block_dispatcher.cc
-            void *_handler; //procedure Event(S : in out State);
-            void *_state; //State
+            void *_handler; //procedure Event(S : Instance);
 
         public:
             Dispatcher();
+            void *get_instance();
             void initialize(
-                    void *callback = nullptr,
-                    void *state = nullptr);
+                    void *callback = nullptr);
             void finalize();
             void announce();
             __attribute__((annotate("ada"))) void dispatch();

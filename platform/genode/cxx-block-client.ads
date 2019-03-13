@@ -13,7 +13,6 @@ is
       Private_X_Block_Size : Private_Uint64_T;
       Private_X_Device : Private_Void;
       Private_X_Callback : Private_Void;
-      Private_X_Callback_State : Private_Void;
    end record
    with Import, Convention => CPP;
 
@@ -25,8 +24,14 @@ is
    with Global => null;
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ClientC1Ev");
 
-   procedure Initialize (This : Class; Device : Cxx.Char_Array; Callback : Cxx.Void_Address; Callback_State : Cxx.Void_Address)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10initializeEPKcPvS4_";
+   function Get_Instance (This : Class) return Cxx.Void_Address
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12get_instanceEv";
+
+   function Initialized (This : Class) return Cxx.Bool
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11initializedEv";
+
+   procedure Initialize (This : Class; Device : Cxx.Char_Array; Callback : Cxx.Void_Address)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10initializeEPKcPv";
 
    procedure Finalize (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8finalizeEv";

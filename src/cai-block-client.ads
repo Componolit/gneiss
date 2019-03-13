@@ -1,7 +1,6 @@
 
 generic
-   type State is limited private;
-   with procedure Event (S : in out  State);
+   with procedure Event;
 package Cai.Block.Client
    with SPARK_Mode
 is
@@ -10,7 +9,11 @@ is
 
    function Create return Client_Session;
 
-   procedure Initialize (C : in out Client_Session; Path : String; S : in out State);
+   function Get_Instance (C : Client_Session) return Client_Instance;
+
+   function Initialized (C : Client_Session) return Boolean;
+
+   procedure Initialize (C : in out Client_Session; Path : String);
 
    procedure Finalize (C : in out Client_Session);
 

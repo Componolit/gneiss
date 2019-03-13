@@ -86,15 +86,19 @@ void Cai::Block::Root::close(Genode::Capability<Genode::Session> close_cap)
 
 Cai::Block::Dispatcher::Dispatcher() :
     _root(nullptr),
-    _handler(nullptr),
-    _state(nullptr)
+    _handler(nullptr)
 { }
 
+void *Cai::Block::Dispatcher::get_instance()
+{
+    return reinterpret_cast<void *>(this);
+}
+
 void Cai::Block::Dispatcher::initialize(
-        void *callback,
-        void *state)
+        void *callback)
 {
     if(component_env){
+        _handler = callback;
         if(!_factory.constructed()){
             _factory.construct(*component_env);
         }
@@ -102,8 +106,6 @@ void Cai::Block::Dispatcher::initialize(
     }else{
         Genode::error("Failed to construct block root");
     }
-    _handler = callback;
-    _state = state;
 }
 
 void Cai::Block::Dispatcher::finalize()
@@ -113,7 +115,6 @@ void Cai::Block::Dispatcher::finalize()
     }
     _root = nullptr;
     _handler = nullptr;
-    _state = nullptr;
 }
 
 void Cai::Block::Dispatcher::announce()

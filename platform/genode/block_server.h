@@ -18,18 +18,17 @@ namespace Block
         friend class Dispatcher;
         private:
              void *_session; //Cai::Block::Block_root in block_root.h
-             void *_state; //State
-             void *_callback; //procedure Event (S : in out State);
-             void *_block_count; //function Block_Count return Cai.Block.Count;
-             void *_block_size; //function Block_Size return Cai.Block.Size;
-             void *_maximal_transfer_size; //function Maximal_Transfer_Size return Cai.Block.Unsigned_long;
-             void *_writable; //function Writable return Boolean
+             void *_callback; //procedure Event (S : Instance);
+             void *_block_count; //function Block_Count (S : Instance) return Cai.Block.Count;
+             void *_block_size; //function Block_Size (S : Instance) return Cai.Block.Size;
+             void *_maximal_transfer_size; //function Maximal_Transfer_Size (S : Instance) return Cai.Block.Unsigned_long;
+             void *_writable; //function Writable (S : Instance) return Boolean
 
         public:
             Server();
+            void *get_instance();
             void initialize(
                     Genode::uint64_t size,
-                    void *state,
                     void *callback,
                     void *block_count,
                     void *block_size,
@@ -37,7 +36,8 @@ namespace Block
                     void *writable);
             void finalize();
             Ada bool writable();
-            void next_request(Request *request);
+            Request head();
+            void discard();
             void read(Request request, void *buffer, Genode::uint64_t size, bool *success);
             void write(Request request, void *buffer, Genode::uint64_t size, bool *success);
             void acknowledge(Request &request);

@@ -16,8 +16,7 @@ namespace Block
             Genode::uint64_t _block_count;
             Genode::uint64_t _block_size;
             void *_device; //Block_session in block_client.cc
-            void *_callback; //procedure Event (S : in out State);
-            void *_callback_state; //State
+            void *_callback; //procedure Event (S : Instance);
 
         protected:
             void callback();
@@ -25,10 +24,11 @@ namespace Block
         public:
 
             Client();
+            void *get_instance();
+            bool initialized();
             void initialize(
                     const char *device = nullptr,
-                    void *callback = nullptr,
-                    void *callback_state = nullptr);
+                    void *callback = nullptr);
             void finalize();
             void submit_read(Request req);
             void submit_write(

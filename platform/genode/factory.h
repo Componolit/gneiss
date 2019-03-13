@@ -44,6 +44,6 @@ class Factory
  * void attr(void *);
  * ans calls it with state as argument
  */
-#define Call(attr, state) ((void (*)(void *))attr)(state)
+#define Call(attr) ((void (*)(void ))attr)()
 
 #endif /* ifndef _CAI_FACTORY_H_ */
