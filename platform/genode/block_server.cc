@@ -25,7 +25,7 @@ Cai::Block::Block_session_component::Block_session_component(
         Genode::Entrypoint &ep,
         Genode::Signal_context_capability sigh,
         Cai::Block::Server &server) :
-    Request_stream(rm, ds, ep, sigh, Get_attr_64(server._block_size, server._state)),
+    Request_stream(rm, ds, ep, sigh, Get_attr_64(server._block_size, server.get_instance())),
     _ep(ep),
     _server(server)
 {
@@ -39,8 +39,8 @@ Cai::Block::Block_session_component::~Block_session_component()
 
 void Cai::Block::Block_session_component::info(::Block::sector_t *count, Genode::size_t *size, ::Block::Session::Operations *ops)
 {
-    *count = Get_attr_64(_server._block_count, _server._state);
-    *size = Get_attr_64(_server._block_size, _server._state);
+    *count = Get_attr_64(_server._block_count, _server.get_instance());
+    *size = Get_attr_64(_server._block_size, _server.get_instance());
     *ops = ::Block::Session::Operations();
     ops->set_operation(::Block::Packet_descriptor::Opcode::READ);
     if(_server.writable()){
@@ -66,8 +66,8 @@ Cai::Block::Block_root::Block_root(Genode::Env &env, Cai::Block::Server &server,
 
 void Cai::Block::Block_root::handler()
 {
-    if(_server._callback && _server._state){
-        Call(_server._callback, _server._state);
+    if(_server._callback){
+        Call(_server._callback);
     }
     _session.wakeup_client();
 }
@@ -79,7 +79,6 @@ Genode::Capability<Genode::Session> Cai::Block::Block_root::cap()
 
 Cai::Block::Server::Server() :
     _session(nullptr),
-    _state(nullptr),
     _callback(nullptr),
     _block_count(nullptr),
     _block_size(nullptr),
@@ -87,9 +86,13 @@ Cai::Block::Server::Server() :
     _writable(nullptr)
 { }
 
+void *Cai::Block::Server::get_instance()
+{
+    return reinterpret_cast<void *>(this);
+}
+
 void Cai::Block::Server::initialize(
         Genode::uint64_t size,
-        void *state,
         void *callback,
         void *block_count,
         void *block_size,
@@ -97,7 +100,6 @@ void Cai::Block::Server::initialize(
         void *writable)
 {
     if(component_env){
-        _state = state;
         _callback = callback;
         _block_count = block_count;
         _block_size = block_size;
@@ -119,7 +121,6 @@ void Cai::Block::Server::finalize()
         _factory->destroy<Cai::Block::Block_root>(_session);
     }
     _session = nullptr;
-    _state = nullptr;
     _callback = nullptr;
     _block_count = nullptr;
     _block_size = nullptr;
@@ -130,7 +131,6 @@ void Cai::Block::Server::finalize()
 bool Cai::Block::Server::initialized()
 {
     return _session
-        && _state
         && _callback
         && _block_count
         && _block_size
@@ -150,44 +150,65 @@ typedef Genode::Packet_stream_sink<Block::Session::Tx_policy> Tx_sink;
  * #4
  */
 
+class Discard_Request { };
+
 namespace Block {
 
     template <>
-        void Request_stream::try_acknowledge(Cai::Block::Request const &req)
-        {
-            Cai::Block::Request &request = const_cast<Cai::Block::Request &>(req);
-            Tx_sink &tx_sink = *_tx.sink();
-            if(tx_sink.ack_slots_free()){
-                ::Block::Request_stream::Ack ack(tx_sink, _payload._block_size);
-                if(request.status != Cai::Block::ACK){
-                    ack.submit(create_genode_block_request(req));
-                    if(ack._submitted){
-                        request.status = Cai::Block::ACK;
-                    }
+    void Request_stream::try_acknowledge(Cai::Block::Request const &req)
+    {
+        Cai::Block::Request &request = const_cast<Cai::Block::Request &>(req);
+        Tx_sink &tx_sink = *_tx.sink();
+        if(tx_sink.ack_slots_free()){
+            ::Block::Request_stream::Ack ack(tx_sink, _payload._block_size);
+            if(request.status != Cai::Block::ACK){
+                ack.submit(create_genode_block_request(req));
+                if(ack._submitted){
+                    request.status = Cai::Block::ACK;
                 }
             }
         }
+    }
 
     template <>
-        void Request_stream::with_requests(Cai::Block::Request const &req)
-        {
-            Cai::Block::Request &request = const_cast<Cai::Block::Request &>(req);
-            Tx_sink &tx_sink = *_tx.sink();
-            if(tx_sink.packet_avail()){
-                request = create_cai_block_request(tx_sink.try_get_packet());
-            }
+    void Request_stream::with_requests(Cai::Block::Request const &req)
+    {
+        Cai::Block::Request &request = const_cast<Cai::Block::Request &>(req);
+        Tx_sink &tx_sink = *_tx.sink();
+        if(tx_sink.packet_avail()){
+            request = create_cai_block_request(tx_sink.peek_packet());
         }
+        request.status = Cai::Block::RAW;
+    }
+
+    template <>
+    void Request_stream::with_requests(Discard_Request const &)
+    {
+        Tx_sink &tx_sink = *_tx.sink();
+        if(tx_sink.packet_avail()){
+            (void)tx_sink.try_get_packet();
+        }
+    }
 
 }
 
 /*
  */
 
-void Cai::Block::Server::next_request(Cai::Block::Request *request)
+Cai::Block::Request Cai::Block::Server::head()
 {
-    *request = Cai::Block::Request {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
+    Request request = Cai::Block::Request {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
     if(_session){
-        blk(_session).with_requests(*request);
+        blk(_session).with_requests(request);
+    }
+    return request;
+}
+
+void Cai::Block::Server::discard()
+{
+    Discard_Request dr;
+    if(_session){
+        blk(_session).with_requests(dr);
     }
 }
 

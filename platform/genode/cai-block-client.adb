@@ -14,14 +14,26 @@ package body Cai.Block.Client is
       return Client_Session' (Instance => Cxx.Block.Client.Constructor);
    end Create;
 
-   procedure Initialize (C : in out Client_Session; Path : String; S : in out State)
+   function Get_Instance (C : Client_Session) return Client_Instance
+   is
+   begin
+      return Client_Instance (Cxx.Block.Client.Get_Instance (C.Instance));
+   end Get_Instance;
+
+   function Initialized (C : Client_Session) return Boolean
+   is
+   begin
+      return Cxx.Block.Client.Initialized (C.Instance) = 1;
+   end Initialized;
+
+   procedure Initialize (C : in out Client_Session; Path : String)
    is
       C_Path : constant String := Path & Character'Val(0);
       subtype C_Path_String is String (1 .. C_Path'Length);
       subtype C_String is Cxx.Char_Array (1 .. C_Path'Length);
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String, C_String);
    begin
-      Cxx.Block.Client.Initialize (C.Instance, To_C_String (C_Path), Event'Address, S'Address);
+      Cxx.Block.Client.Initialize (C.Instance, To_C_String (C_Path), Event'Address);
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)

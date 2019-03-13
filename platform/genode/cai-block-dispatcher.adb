@@ -14,10 +14,16 @@ is
       return Dispatcher_Session' (Instance => Cxx.Block.Dispatcher.Constructor);
    end Create;
 
-   procedure Initialize (D : in out Dispatcher_Session; C : in out Server.State)
+   function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance
    is
    begin
-      Cxx.Block.Dispatcher.Initialize (D.Instance, Dispatch'Address, C'Address);
+      return Dispatcher_Instance (Cxx.Block.Dispatcher.Get_Instance (D.Instance));
+   end Get_Instance;
+
+   procedure Initialize (D : in out Dispatcher_Session)
+   is
+   begin
+      Cxx.Block.Dispatcher.Initialize (D.Instance, Dispatch'Address);
    end Initialize;
 
    procedure Finalize (D : in out Dispatcher_Session)
@@ -59,20 +65,18 @@ is
 
    procedure Session_Accept (D : in out Dispatcher_Session;
                              I : in out Server_Session;
-                             L : String;
-                             S : in out Server.State)
+                             L : String)
    is
    begin
       Cxx.Block.Server.Initialize (I.Instance,
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance),
-                                   S'Address,
                                    Server.Event'Address,
                                    Server.Block_Count'Address,
                                    Server.Block_Size'Address,
                                    Server.Maximal_Transfer_Size'Address,
                                    Server.Writable'Address);
       Cxx.Block.Dispatcher.Session_Accept (D.Instance, I.Instance);
-      Server.Initialize (I, L, S);
+      Server.Initialize (Server.Get_Instance (I), L);
    end Session_Accept;
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;
@@ -80,7 +84,7 @@ is
    is
    begin
       if Cxx.Block.Dispatcher.Session_Cleanup (D.Instance, I.Instance) = 1 then
-         Server.Finalize (I);
+         Server.Finalize (Server.Get_Instance (I));
          Cxx.Block.Server.Finalize (I.Instance);
       end if;
    end Session_Cleanup;

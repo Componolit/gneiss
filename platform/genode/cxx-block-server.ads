@@ -4,10 +4,10 @@ is
    type Class is
    limited record
       Session : Cxx.Void_Address;
-      State : Cxx.Void_Address;
       Callback : Cxx.Void_Address;
       Block_Count : Cxx.Void_Address;
       Block_Size : Cxx.Void_Address;
+      Maximal_Transfer_Size : Cxx.Void_Address;
       Writable : Cxx.Void_Address;
    end record
    with Import, Convention => CPP;
@@ -16,15 +16,17 @@ is
    with Global => null;
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ServerC1Ev");
 
+   function Get_Instance (This : Class) return Cxx.Void_Address
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server12get_instanceEv";
+
    procedure Initialize (This : Class;
                          Size : Cxx.Genode.Uint64_T;
-                         State : Cxx.Void_Address;
                          Callback : Cxx.Void_Address;
                          Block_Count : Cxx.Void_Address;
                          Block_Size : Cxx.Void_Address;
                          Maximal_Transfer_Size : Cxx.Void_Address;
                          Writable : Cxx.Void_Address)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10initializeEyPvS2_S2_S2_S2_S2_";
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server10initializeEyPvS2_S2_S2_S2_";
 
    procedure Finalize (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server8finalizeEv";
@@ -32,8 +34,11 @@ is
    function Writable (This : Class) return Cxx.Bool
    with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block6Server8writableEv";
 
-   procedure Next_Request (This : Class; Request : out Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server12next_requestEPNS0_7RequestE";
+   function Head (This : Class) return Cxx.Block.Request.Class
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4headEv";
+
+   procedure Discard (This : Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server7discardEv";
 
    procedure Read (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Success : out Cxx.Bool)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4readENS0_7RequestEPvyPb";
