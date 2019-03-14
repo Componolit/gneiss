@@ -52,8 +52,8 @@ package body Cai.Block.Client is
          Status => Cxx.Block.Raw);
    begin
       case R.Kind is
-         when None =>
-            null;
+         when None | Sync =>
+            Cr.Kind := (if R.Kind = None then Cxx.Block.None else Cxx.Block.Sync);
          when Read | Write =>
             Cr.Kind := (if R.Kind = Read then Cxx.Block.Read else Cxx.Block.Write);
             Cr.Start := Cxx.Genode.Uint64_T (R.Start);
@@ -78,12 +78,13 @@ package body Cai.Block.Client is
    is
       R : Request ((case CR.Kind is
                      when Cxx.Block.None => None,
+                     when Cxx.Block.Sync => Sync,
                      when Cxx.Block.Read => Read,
                      when Cxx.Block.Write => Write));
    begin
       R.Priv := Private_Data (CR.Uid);
       case R.Kind is
-         when None =>
+         when None | Sync =>
             null;
          when Read | Write =>
             R.Start := Id (CR.Start);
@@ -98,31 +99,42 @@ package body Cai.Block.Client is
       return R;
    end Convert_Request;
 
-   procedure Submit_Read (C : Client_Session; R : Request)
+   function Ready (C : Client_Session) return Boolean
    is
    begin
-      Cxx.Block.Client.Submit_Read (C.Instance, Convert_Request (R));
-   end Submit_Read;
+      return Cxx.Block.Client.Ready (C.Instance) = 1;
+   end Ready;
 
-   procedure Submit_Write (C : Client_Session; R : Request; B : Buffer)
+   procedure Enqueue_Read (C : Client_Session; R : Request)
+   is
+   begin
+      Cxx.Block.Client.Enqueue_Read (C.Instance, Convert_Request (R));
+   end Enqueue_Read;
+
+   procedure Enqueue_Write (C : Client_Session; R : Request; B : Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
       function Convert_Buffer is new Ada.Unchecked_Conversion (Local_Buffer, Local_U8_Array);
       Data : Local_U8_Array := Convert_Buffer (B);
    begin
-      Cxx.Block.Client.Submit_Write (
+      Cxx.Block.Client.Enqueue_Write (
          C.Instance,
          Convert_Request (R),
-         Data,
-         Cxx.Genode.Uint64_T (B'Length));
-   end Submit_Write;
+         Data);
+   end Enqueue_Write;
 
-   procedure Sync (C : Client_Session)
+   procedure Enqueue_Sync (C : Client_Session; R : Request)
    is
    begin
-      Cxx.Block.Client.Sync (C.Instance);
-   end Sync;
+      Cxx.Block.Client.Enqueue_Sync (C.Instance, Convert_Request (R));
+   end Enqueue_Sync;
+
+   procedure Submit (C : Client_Session)
+   is
+   begin
+      Cxx.Block.Client.Submit (C.Instance);
+   end Submit;
 
    function Next (C : Client_Session) return Request
    is
@@ -130,29 +142,25 @@ package body Cai.Block.Client is
       return Convert_Request (Cxx.Block.Client.Next (C.Instance));
    end Next;
 
-   procedure Read (C : Client_Session; R : in out Request; B : out Buffer)
+   procedure Read (C : Client_Session; R : Request; B : out Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
       function Convert_Buffer is new Ada.Unchecked_Conversion (Local_U8_Array, Local_Buffer);
       Data : Local_U8_Array := (others => 0);
-      Req : Cxx.Block.Request.Class := Convert_Request (R);
    begin
       Cxx.Block.Client.Read (
          C.Instance,
-         Req,
-         Data,
-         Cxx.Genode.Uint64_T (B'Length));
+         Convert_Request (R),
+         Data);
       B := Convert_Buffer (Data);
-      R := Convert_Request (Req);
    end Read;
 
-   procedure Acknowledge (C : Client_Session; R : in out Request)
+   procedure Release (C : Client_Session; R : in out Request)
    is
    begin
-      Cxx.Block.Client.Acknowledge (C.Instance, Convert_Request (R));
-      R.Status := Ok;
-   end Acknowledge;
+      Cxx.Block.Client.Release (C.Instance, Convert_Request (R));
+   end Release;
 
    function Writable (C : Client_Session) return Boolean
    is

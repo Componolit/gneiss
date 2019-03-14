@@ -114,7 +114,12 @@ void Cai::Block::Client::finalize()
     _callback = nullptr;
 }
 
-void Cai::Block::Client::submit_read(Cai::Block::Request req)
+bool Cai::Block::Client::ready()
+{
+    return _device && blk(_device)->tx()->ready_to_submit();
+}
+
+void Cai::Block::Client::enqueue_read(Cai::Block::Request req)
 {
     ::Block::Packet_descriptor packet(
             blk(_device)->dma_alloc_packet(block_size() * req.length),
@@ -123,58 +128,66 @@ void Cai::Block::Client::submit_read(Cai::Block::Request req)
     blk(_device)->tx()->submit_packet(packet);
 }
 
-void Cai::Block::Client::submit_write(
+void Cai::Block::Client::enqueue_write(
         Cai::Block::Request req,
-        Genode::uint8_t *data,
-        Genode::uint64_t length)
+        Genode::uint8_t *data)
 {
-    if(length > req.length * block_size()){
-        throw Ada::Exception::Length_Check();
-    }
-
     ::Block::Packet_descriptor packet(
-            blk(_device)->dma_alloc_packet(length),
+            blk(_device)->dma_alloc_packet(req.length * block_size()),
             ::Block::Packet_descriptor::WRITE,
             req.start, req.length);
-    Genode::memcpy(blk(_device)->tx()->packet_content(packet), data, length);
+    Genode::memcpy(blk(_device)->tx()->packet_content(packet), data, req.length * block_size());
     blk(_device)->tx()->submit_packet(packet);
 }
 
-void Cai::Block::Client::sync()
+void Cai::Block::Client::enqueue_sync(Cai::Block::Request)
 { }
+
+void Cai::Block::Client::submit()
+{ }
+
+static const ::Block::Packet_descriptor empty_packet = ::Block::Packet_descriptor();
+
+static bool packet_empty(::Block::Packet_descriptor const &packet)
+{
+    return packet.operation() == empty_packet.operation()
+        && packet.block_number() == empty_packet.block_number()
+        && packet.block_count() == empty_packet.block_count()
+        && packet.succeeded() == empty_packet.succeeded();
+}
+
+static ::Block::Packet_descriptor last_ack = empty_packet;
 
 Cai::Block::Request Cai::Block::Client::next()
 {
     Cai::Block::Request req = {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
-    if(blk(_device)->tx()->ack_avail()){
-        ::Block::Packet_descriptor packet = blk(_device)->tx()->get_acked_packet();
-        req = create_cai_block_request(packet);
+    if(packet_empty(last_ack)){
+        if(blk(_device)->tx()->ack_avail()){
+            last_ack = blk(_device)->tx()->get_acked_packet();
+            req = create_cai_block_request (last_ack);
+        }
+    }else{
+        req = create_cai_block_request (last_ack);
     }
     return req;
 }
 
 void Cai::Block::Client::read(
-        Cai::Block::Request &req,
-        Genode::uint8_t *data,
-        Genode::uint64_t length)
+        Cai::Block::Request req,
+        Genode::uint8_t *data)
 {
     ::Block::Packet_descriptor packet = create_packet_descriptor(req);
-    if(length < packet.size()){
-        Genode::error (length, " < ", packet.size());
-        req.status = ERROR;
-    }else{
-        Genode::memcpy(data, blk(_device)->tx()->packet_content(packet), packet.size());
-        req.status = OK;
-    }
+    Genode::memcpy(data, blk(_device)->tx()->packet_content(packet), packet.size());
 }
 
-void Cai::Block::Client::acknowledge(Cai::Block::Request req)
+
+void Cai::Block::Client::release(Cai::Block::Request)
 {
-    ::Block::Packet_descriptor packet = create_packet_descriptor(req);
-    if(packet.operation() == ::Block::Packet_descriptor::READ
-            || packet.operation() == ::Block::Packet_descriptor::WRITE){
-        blk(_device)->tx()->release_packet(packet);
+    if(last_ack.operation() == ::Block::Packet_descriptor::READ
+            || last_ack.operation() == ::Block::Packet_descriptor::WRITE){
+        blk(_device)->tx()->release_packet(last_ack);
     }
+    last_ack = empty_packet;
 }
 
 bool Cai::Block::Client::writable()

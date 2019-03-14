@@ -17,29 +17,45 @@ is
 
    procedure Finalize (C : in out Client_Session);
 
-   procedure Submit_Read (C : Client_Session; R : Request)
-      with
-      Pre => R.Kind = Read and R.Status = Raw;
+   function Ready (C : Client_Session) return Boolean with
+      Volatile_Function;
 
-   procedure Submit_Write (C : Client_Session; R : Request; B : Buffer)
-      with
-      Pre => R.Kind = Write and R.Status = Raw;
+   procedure Enqueue_Read (C : Client_Session; R : Request) with
+      Pre => R.Kind = Read
+             and R.Status = Raw
+             and Ready (C);
 
-   procedure Sync (C : Client_Session);
+   procedure Enqueue_Write (C : Client_Session; R : Request; B : Buffer) with
+      Pre => R.Kind = Write
+             and R.Status = Raw
+             and B'Length = R.Length * Block_Size (C)
+             and Ready (C);
 
-   function Next (C : Client_Session) return Request
-      with
-      Post => (if Next'Result.Kind /= None then Next'Result.Status /= Acknowledged else True);
+   procedure Enqueue_Sync (C : Client_Session; R : Request) with
+      Pre => R.Kind = Sync
+             and R.Status = Raw
+             and Ready (C);
 
-   procedure Read (C : Client_Session; R : in out Request; B : out Buffer)
-      with
-      Pre => R.Kind = Read and R.Status = Ok,
-      Post => R.Status = Ok or R.Status = Error;
+   procedure Submit (C : Client_Session);
 
-   procedure Acknowledge (C : Client_Session; R : in out Request)
-      with
-      Pre => R.Kind /= None and (R.Status = Error or R.Status = Ok),
-      Post => R.Status = Acknowledged;
+   function Next (C : Client_Session) return Request with
+      Volatile_Function,
+      Post => (if
+                  Next'Result.Kind /= None
+               then
+                  Next'Result.Status = Ok
+                  or Next'Result.Status = Error
+               else
+                  True);
+
+   procedure Read (C : Client_Session; R : Request; B : out Buffer) with
+      Pre => R.Kind = Read
+             and R.Status = Ok
+             and B'Length >= R.Length * Block_Size (C);
+
+   procedure Release (C : Client_Session; R : in out Request) with
+      Pre => R.Kind /= None
+             and (R.Status = Ok or R.Status = Error);
 
    function Writable (C : Client_Session) return Boolean;
    function Block_Count (C : Client_Session) return Count;
