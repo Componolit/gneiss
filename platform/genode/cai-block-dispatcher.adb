@@ -14,6 +14,12 @@ is
       return Dispatcher_Session' (Instance => Cxx.Block.Dispatcher.Constructor);
    end Create;
 
+   function Initialized (D : Dispatcher_Session) return Boolean
+   is
+   begin
+      return Cxx.Block.Dispatcher.Initialized (D.Instance) = 1;
+   end Initialized;
+
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance
    is
    begin
