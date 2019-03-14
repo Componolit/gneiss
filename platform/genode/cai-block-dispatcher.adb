@@ -68,6 +68,7 @@ is
                              L : String)
    is
    begin
+      Server.Initialize (Server.Get_Instance (I), L);
       Cxx.Block.Server.Initialize (I.Instance,
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance),
                                    Server.Event'Address,
@@ -76,7 +77,6 @@ is
                                    Server.Maximal_Transfer_Size'Address,
                                    Server.Writable'Address);
       Cxx.Block.Dispatcher.Session_Accept (D.Instance, I.Instance);
-      Server.Initialize (Server.Get_Instance (I), L);
    end Session_Accept;
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;
