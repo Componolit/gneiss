@@ -176,7 +176,7 @@ package body Cai.Block.Client is
    is
       pragma Unreferenced (C);
    begin
-      return 1024 * 1024;
+      return 1024 ** 2;
    end Maximal_Transfer_Size;
 
 end Cai.Block.Client;
