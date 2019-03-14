@@ -56,7 +56,7 @@ Genode::Capability<Genode::Session> Cai::Block::Root::session(Cai::Block::Root::
 
     if(ds_size >= ram_quota.value){
         Genode::warning("communication buffer size exceeds session quota");
-        return Genode::Capability<Genode::Session>();
+        throw Genode::Insufficient_ram_quota();
     }
 
     _ds_size = ds_size;
@@ -70,7 +70,7 @@ Genode::Capability<Genode::Session> Cai::Block::Root::session(Cai::Block::Root::
         return _block_root->cap();
     }else{
         Genode::warning("Failed to create block session");
-        return Genode::Capability<Genode::Session>();
+        throw Genode::Service_denied();
     }
 }
 
