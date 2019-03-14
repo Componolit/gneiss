@@ -89,6 +89,11 @@ Cai::Block::Dispatcher::Dispatcher() :
     _handler(nullptr)
 { }
 
+bool Cai::Block::Dispatcher::initialized()
+{
+    return _root && _handler;
+}
+
 void *Cai::Block::Dispatcher::get_instance()
 {
     return reinterpret_cast<void *>(this);

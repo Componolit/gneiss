@@ -15,6 +15,7 @@ namespace Block
 
         public:
             Dispatcher();
+            bool initialized();
             void *get_instance();
             void initialize(
                     void *callback = nullptr);
