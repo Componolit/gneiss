@@ -40,11 +40,11 @@ is
    procedure Discard (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server7discardEv";
 
-   procedure Read (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Success : out Cxx.Bool)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4readENS0_7RequestEPvyPb";
+   procedure Read (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server4readENS0_7RequestEPv";
 
-   procedure Write (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address; Size : Cxx.Genode.Uint64_T; Success : out Cxx.Bool)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server5writeENS0_7RequestEPvyPb";
+   procedure Write (This : Class; Request : Cxx.Block.Request.Class; Buffer : Cxx.Void_Address)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server5writeENS0_7RequestEPv";
 
    procedure Acknowledge (This : Class; Request : in out Cxx.Block.Request.Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Server11acknowledgeERNS0_7RequestE";
