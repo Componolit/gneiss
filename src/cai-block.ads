@@ -17,6 +17,18 @@ is
       with Size => 8;
    type Buffer is array (Unsigned_Long range <>) of Byte;
 
+   function "*" (Left : Count; Right : Size) return Unsigned_Long is
+      (Unsigned_Long (Left * Count (Right)));
+   function "*" (Left : Size; Right : Count) return Unsigned_Long is
+      (Right * Left);
+   function "+" (Left : Id; Right : Count) return Id is
+      (Left + Id (Right));
+   function "-" (Left : Id; Right : Count) return Id is
+      (Left - Id (Right));
+   function "-" (Left : Id; Right : Id) return Count is
+      (Count (Left) - Count (Right)) with
+      Pre => Left >= Right;
+
    type Request_Kind is (None, Read, Write);
    type Request_Status is (Raw, Ok, Error, Acknowledged);
 
