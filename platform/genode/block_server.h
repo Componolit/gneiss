@@ -38,8 +38,8 @@ namespace Block
             Ada bool writable();
             Request head();
             void discard();
-            void read(Request request, void *buffer, Genode::uint64_t size, bool *success);
-            void write(Request request, void *buffer, Genode::uint64_t size, bool *success);
+            void read(Request request, void *buffer);
+            void write(Request request, void *buffer);
             void acknowledge(Request &request);
             bool initialized();
     };

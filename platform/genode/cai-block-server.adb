@@ -25,12 +25,13 @@ package body Cai.Block.Server is
       function Convert_Uid is new Ada.Unchecked_Conversion (Uid_Type, Cai.Block.Private_Data);
       Req : Request ((case R.Kind is
                      when Cxx.Block.None => Cai.Block.None,
+                     when Cxx.Block.Sync => Cai.Block.Sync,
                      when Cxx.Block.Read => Cai.Block.Read,
                      when Cxx.Block.Write => Cai.Block.Write));
    begin
       Req.Priv := Convert_Uid (R.Uid);
       case Req.Kind is
-         when Cai.Block.None =>
+         when Cai.Block.None | Cai.Block.Sync =>
             null;
          when Cai.Block.Read | Cai.Block.Write =>
             Req.Start := Cai.Block.Id (R.Start);
@@ -52,11 +53,12 @@ package body Cai.Block.Server is
    begin
       Req.Kind := (case R.Kind is
                      when Cai.Block.None => Cxx.Block.None,
+                     when Cai.Block.Sync => Cxx.Block.Sync,
                      when Cai.Block.Read => Cxx.Block.Read,
                      when Cai.Block.Write => Cxx.Block.Write);
       Req.Uid := Convert_Uid (R.Priv);
       case R.Kind is
-         when Cai.Block.None =>
+         when Cai.Block.None | Cai.Block.Sync =>
             Req.Start := 0;
             Req.Length := 0;
             Req.Status := Cxx.Block.Ok;
@@ -84,20 +86,16 @@ package body Cai.Block.Server is
       Cxx.Block.Server.Discard (S.Instance);
    end Discard;
 
-   procedure Read (S : in out Server_Session; R : Request; B : Buffer; Success : out Boolean)
+   procedure Read (S : in out Server_Session; R : Request; B : Buffer)
    is
-      Succ : Cxx.Bool;
    begin
-      Cxx.Block.Server.Read (S.Instance, Convert_Request (R), B'Address, B'Length, Succ);
-      Success := Succ = 1;
+      Cxx.Block.Server.Read (S.Instance, Convert_Request (R), B'Address);
    end Read;
 
-   procedure Write (S : in out Server_Session; R : Request; B : out Buffer; Success : out Boolean)
+   procedure Write (S : in out Server_Session; R : Request; B : out Buffer)
    is
-      Succ : Cxx.Bool;
    begin
-      Cxx.Block.Server.Write (S.Instance, Convert_Request (R), B'Address, B'Length, Succ);
-      Success := Succ = 1;
+      Cxx.Block.Server.Write (S.Instance, Convert_Request (R), B'Address);
    end Write;
 
    procedure Acknowledge (S : in out Server_Session; R : in out Request)

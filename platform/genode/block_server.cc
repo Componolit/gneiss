@@ -198,55 +198,33 @@ namespace Block {
 Cai::Block::Request Cai::Block::Server::head()
 {
     Request request = Cai::Block::Request {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
-    if(_session){
-        blk(_session).with_requests(request);
-    }
+    blk(_session).with_requests(request);
     return request;
 }
 
 void Cai::Block::Server::discard()
 {
     Discard_Request dr;
-    if(_session){
-        blk(_session).with_requests(dr);
-    }
+    blk(_session).with_requests(dr);
 }
 
-void Cai::Block::Server::read(Cai::Block::Request request, void *buffer, Genode::uint64_t size, bool *success)
+void Cai::Block::Server::read(Cai::Block::Request request, void *buffer)
 {
     ::Block::Request req = create_genode_block_request(request);
-    if(_session){
-        blk(_session).with_content(req, [&] (void *ptr, Genode::size_t sz){
-                if(size < sz){
-                    *success = false;
-                }else{
-                    Genode::memcpy(ptr, buffer, sz);
-                    *success = true;
-                }
-        });
-    }
+    blk(_session).with_content(req, [&] (void *ptr, Genode::size_t size){
+        Genode::memcpy(ptr, buffer, size);
+    });
 }
 
-void Cai::Block::Server::write(Cai::Block::Request request, void *buffer, Genode::uint64_t size, bool *success)
+void Cai::Block::Server::write(Cai::Block::Request request, void *buffer)
 {
     ::Block::Request req = create_genode_block_request(request);
-    if(_session){
-        blk(_session).with_content(req, [&] (void *ptr, Genode::size_t sz){
-                if(size < sz){
-                    *success = false;
-                }else{
-                    Genode::memcpy(buffer, ptr, size);
-                    *success = true;
-                }
-        });
-    }
+    blk(_session).with_content(req, [&] (void *ptr, Genode::size_t size){
+        Genode::memcpy(buffer, ptr, size);
+    });
 }
 
 void Cai::Block::Server::acknowledge(Cai::Block::Request &req)
 {
-    if(_session){
-        blk(_session).try_acknowledge(req);
-    }else{
-        Genode::error("Failed to acknowledge, session not initialized");
-    }
+    blk(_session).try_acknowledge(req);
 }
