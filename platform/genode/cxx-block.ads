@@ -3,9 +3,9 @@ with Cxx.Genode;
 package Cxx.Block
    with SPARK_Mode => On
 is
-   type Kind is (None, Read, Write)
+   type Kind is (None, Read, Write, Sync)
    with Size => Cxx.Unsigned_Int'Size;
-   for Kind use (None => 0, Read => 1, Write => 2);
+   for Kind use (None => 0, Read => 1, Write => 2, Sync => 3);
    type Status is (Raw, Ok, Error, Ack)
    with Size => Cxx.Unsigned_Int'Size;
    for Status use (Raw => 0, Ok => 1, Error => 2, Ack => 3);

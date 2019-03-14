@@ -30,18 +30,18 @@ namespace Block
                     const char *device = nullptr,
                     void *callback = nullptr);
             void finalize();
-            void submit_read(Request req);
-            void submit_write(
+            bool ready();
+            void enqueue_read(Request req);
+            void enqueue_write(
                     Request req,
-                    Genode::uint8_t *data,
-                    Genode::uint64_t length);
+                    Genode::uint8_t *data);
+            void enqueue_sync(Request req);
+            void submit();
             void read(
-                    Request &req,
-                    Genode::uint8_t *data,
-                    Genode::uint64_t length);
-            void sync();
+                    Request req,
+                    Genode::uint8_t *data);
             Request next();
-            void acknowledge(Request req);
+            void release(Request req);
             bool writable();
             Genode::uint64_t block_count();
             Genode::uint64_t block_size();

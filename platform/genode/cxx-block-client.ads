@@ -36,23 +36,29 @@ is
    procedure Finalize (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8finalizeEv";
 
-   procedure Submit_Read (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11submit_readENS0_7RequestE";
+   function Ready (This : Class) return Cxx.Bool
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client5readyEv";
 
-   procedure Submit_Write (This : Class; Req : Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12submit_writeENS0_7RequestEPhy";
+   procedure Enqueue_Read (This : Class; Req : Cxx.Block.Request.Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_readENS0_7RequestE";
 
-   procedure Sync (This : Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4syncEv";
+   procedure Enqueue_Write (This : Class; Req : Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client13enqueue_writeENS0_7RequestEPh";
+
+   procedure Enqueue_Sync (This : Class; Req : Cxx.Block.Request.Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_syncENS0_7RequestE";
+
+   procedure Submit (This : Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client6submitEv";
 
    function Next (This : Class) return Cxx.Block.Request.Class
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4nextEv";
 
-   procedure Read (This : Class; Req : in out Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array; Length : Cxx.Genode.Uint64_T)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4readERNS0_7RequestEPhy";
+   procedure Read (This : Class; Req : Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4readENS0_7RequestEPh";
 
-   procedure Acknowledge (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11acknowledgeENS0_7RequestE";
+   procedure Release (This : Class; Req : Cxx.Block.Request.Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client7releaseENS0_7RequestE";
 
    function Writable (This : Class) return Cxx.Bool
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8writableEv";

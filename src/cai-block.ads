@@ -29,7 +29,7 @@ is
       (Count (Left) - Count (Right)) with
       Pre => Left >= Right;
 
-   type Request_Kind is (None, Read, Write);
+   type Request_Kind is (None, Read, Write, Sync);
    type Request_Status is (Raw, Ok, Error, Acknowledged);
 
    type Private_Data is private;
@@ -38,7 +38,7 @@ is
    type Request (Kind : Request_Kind := None) is record
       Priv : Private_Data;
       case Kind is
-         when None =>
+         when None | Sync =>
             null;
          when Read | Write =>
             Start : Id;
