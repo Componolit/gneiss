@@ -143,69 +143,28 @@ static Cai::Block::Block_session_component &blk(void *session)
     return static_cast<Cai::Block::Block_root *>(session)->_session;
 }
 
-typedef Genode::Packet_stream_sink<Block::Session::Tx_policy> Tx_sink;
-
-/*
- * http://www.gotw.ca/gotw/076.htm
- * #4
- */
-
-class Discard_Request { };
-
-namespace Block {
-
-    template <>
-    void Request_stream::try_acknowledge(Cai::Block::Request const &req)
-    {
-        Cai::Block::Request &request = const_cast<Cai::Block::Request &>(req);
-        Tx_sink &tx_sink = *_tx.sink();
-        if(tx_sink.ack_slots_free()){
-            ::Block::Request_stream::Ack ack(tx_sink, _payload._block_size);
-            if(request.status != Cai::Block::ACK){
-                ack.submit(create_genode_block_request(req));
-                if(ack._submitted){
-                    request.status = Cai::Block::ACK;
-                }
-            }
-        }
-    }
-
-    template <>
-    void Request_stream::with_requests(Cai::Block::Request const &req)
-    {
-        Cai::Block::Request &request = const_cast<Cai::Block::Request &>(req);
-        Tx_sink &tx_sink = *_tx.sink();
-        if(tx_sink.packet_avail()){
-            request = create_cai_block_request(tx_sink.peek_packet());
-        }
-        request.status = Cai::Block::RAW;
-    }
-
-    template <>
-    void Request_stream::with_requests(Discard_Request const &)
-    {
-        Tx_sink &tx_sink = *_tx.sink();
-        if(tx_sink.packet_avail()){
-            (void)tx_sink.try_get_packet();
-        }
-    }
-
-}
-
-/*
- */
-
 Cai::Block::Request Cai::Block::Server::head()
 {
     Request request = Cai::Block::Request {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
-    blk(_session).with_requests(request);
+    blk(_session).with_requests([&] (::Block::Request req) {
+        request = create_cai_block_request (req);
+        request.status = Cai::Block::RAW;
+        return Cai::Block::Block_session_component::Response::RETRY;
+    });
     return request;
 }
 
 void Cai::Block::Server::discard()
 {
-    Discard_Request dr;
-    blk(_session).with_requests(dr);
+    bool accepted = false;
+    blk(_session).with_requests([&] (::Block::Request) {
+        if(accepted){
+            return Cai::Block::Block_session_component::Response::RETRY;
+        }else{
+            accepted = true;
+            return Cai::Block::Block_session_component::Response::ACCEPTED;
+        }
+    });
 }
 
 void Cai::Block::Server::read(Cai::Block::Request request, void *buffer)
@@ -226,5 +185,13 @@ void Cai::Block::Server::write(Cai::Block::Request request, void *buffer)
 
 void Cai::Block::Server::acknowledge(Cai::Block::Request &req)
 {
-    blk(_session).try_acknowledge(req);
+    bool acked = false;
+    blk(_session).try_acknowledge([&] (Cai::Block::Block_session_component::Ack &ack){
+        if (acked) {
+            req.status = Cai::Block::ACK;
+        } else {
+            ack.submit(create_genode_block_request(req));
+            acked = true;
+        }
+    });
 }
