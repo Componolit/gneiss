@@ -52,8 +52,10 @@ package body Cai.Block.Client is
          Status => Cxx.Block.Raw);
    begin
       case R.Kind is
-         when None | Sync =>
-            Cr.Kind := (if R.Kind = None then Cxx.Block.None else Cxx.Block.Sync);
+         when None =>
+            Cr.Kind := Cxx.Block.None;
+         when Sync =>
+            Cr.Kind := Cxx.Block.Sync;
          when Read | Write =>
             Cr.Kind := (if R.Kind = Read then Cxx.Block.Read else Cxx.Block.Write);
             Cr.Start := Cxx.Genode.Uint64_T (R.Start);
