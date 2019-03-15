@@ -2,7 +2,7 @@ with System;
 
 package body Cai.Log.Client is
 
-   procedure Stdout (Msg : String)
+   procedure Info (Msg : String)
    is
       C_Str : String := Msg & Character'Val (0);
       procedure Log (C : System.Address) with
@@ -11,9 +11,20 @@ package body Cai.Log.Client is
          External_Name => "_ZN3Cai3logEPKc";
    begin
       Log (C_Str'Address);
-   end Stdout;
+   end Info;
 
-   procedure Stderr (Msg : String)
+   procedure Warning (Msg : String)
+   is
+      C_Str : String := Msg & Character'Val (0);
+      procedure Log (C : System.Address) with
+         Import,
+         Convention => C,
+         External_Name => "_ZN3Cai4warnEPKc";
+   begin
+      Log (C_Str'Address);
+   end Warning;
+
+   procedure Error (Msg : String)
    is
       C_Str : String := Msg & Character'Val (0);
       procedure Log (C : System.Address) with
@@ -22,6 +33,6 @@ package body Cai.Log.Client is
          External_Name => "_ZN3Cai3errEPKc";
    begin
       Log (C_Str'Address);
-   end Stderr;
+   end Error;
 
 end Cai.Log.Client;

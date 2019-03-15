@@ -12,6 +12,11 @@ namespace Cai
         Genode::log(Genode::Cstring(msg));
     }
 
+    void warn(const char *msg)
+    {
+        Genode::warning(Genode::Cstring(msg));
+    }
+
     void err(const char *msg)
     {
         Genode::error(Genode::Cstring(msg));
