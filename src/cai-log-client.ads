@@ -1,7 +1,9 @@
 package Cai.Log.Client is
 
-   procedure Stdout (Msg : String);
+   procedure Info (Msg : String);
 
-   procedure Stderr (Msg : String);
+   procedure Warning (Msg : String);
+
+   procedure Error (Msg : String);
 
 end Cai.Log.Client;
