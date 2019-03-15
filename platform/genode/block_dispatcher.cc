@@ -3,7 +3,6 @@
 #include <session/session.h>
 #include <block_session/block_session.h>
 #include <base/attached_ram_dataspace.h>
-#include <util/reconstructible.h>
 #include <util/string.h>
 
 #include <factory.h>
@@ -16,8 +15,8 @@ namespace Cai{
     }
 }
 
-Genode::Env *component_env __attribute__((weak)) = nullptr;
-static Genode::Constructible<Factory> _factory;
+extern Genode::Env *__genode_env;
+static Factory _factory {*__genode_env};
 
 struct Cai::Block::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
 {
@@ -102,31 +101,20 @@ void *Cai::Block::Dispatcher::get_instance()
 void Cai::Block::Dispatcher::initialize(
         void *callback)
 {
-    if(component_env){
-        _handler = callback;
-        if(!_factory.constructed()){
-            _factory.construct(*component_env);
-        }
-        _root = _factory->create<Cai::Block::Root>(*component_env, this);
-    }else{
-        Genode::error("Failed to construct block root");
-    }
+    _handler = callback;
+    _root = _factory.create<Cai::Block::Root>(*__genode_env, this);
 }
 
 void Cai::Block::Dispatcher::finalize()
 {
-    if(_factory.constructed()){
-        _factory->destroy<Cai::Block::Root>(_root);
-    }
+    _factory.destroy<Cai::Block::Root>(_root);
     _root = nullptr;
     _handler = nullptr;
 }
 
 void Cai::Block::Dispatcher::announce()
 {
-    if(component_env){
-        component_env->parent().announce(component_env->ep().manage(*reinterpret_cast<Cai::Block::Root *>(_root)));
-    }
+    __genode_env->parent().announce(__genode_env->ep().manage(*reinterpret_cast<Cai::Block::Root *>(_root)));
 }
 
 char *Cai::Block::Dispatcher::label_content()

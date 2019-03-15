@@ -3,7 +3,6 @@
 #include <base/heap.h>
 #include <block_session/connection.h>
 #include <util/string.h>
-#include <util/reconstructible.h>
 #include <ada/exception.h>
 
 #include <genode_packet.h>
@@ -21,8 +20,8 @@ extern "C"
     }
 }
 
-Genode::Env *component_env __attribute__((weak)) = nullptr;
-static Genode::Constructible<Factory> _factory;
+extern Genode::Env *__genode_env;
+static Factory _factory {*__genode_env};
 
 class Block_session
 {
@@ -55,12 +54,7 @@ class Block_session
 
 inline ::Block::Connection *blk(void *device)
 {
-    if (device){
-        return reinterpret_cast<Block_session *>(device)->block();
-    }else{
-        Genode::error("Block connection device not initialized.");
-        throw Ada::Exception::Access_Check();
-    }
+    return reinterpret_cast<Block_session *>(device)->block();
 }
 
 Cai::Block::Client::Client() :
@@ -86,30 +80,21 @@ void Cai::Block::Client::initialize(
 {
     const char default_device[] = "";
     Genode::size_t blk_size;
-    if(component_env){
-        _callback = callback;
-        if(!_factory.constructed()){
-            _factory.construct(*component_env);
-        }
-        _device = _factory->create<Block_session>(
-                *component_env,
-                128 * 1024,
-                device ? device : default_device,
-                this,
-                &Client::callback);
-        ::Block::Session::Operations ops;
-        blk(_device)->info(&_block_count, &blk_size, &ops);
-        _block_size = blk_size;
-    }else{
-        Genode::error("Failed to construct block session");
-    }
+    _callback = callback;
+    _device = _factory.create<Block_session>(
+            *__genode_env,
+            128 * 1024,
+            device ? device : default_device,
+            this,
+            &Client::callback);
+    ::Block::Session::Operations ops;
+    blk(_device)->info(&_block_count, &blk_size, &ops);
+    _block_size = blk_size;
 }
 
 void Cai::Block::Client::finalize()
 {
-    if(_factory.constructed()){
-        _factory->destroy<Block_session>(_device);
-    }
+    _factory.destroy<Block_session>(_device);
     _device = nullptr;
     _callback = nullptr;
 }

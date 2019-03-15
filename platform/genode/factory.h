@@ -41,9 +41,9 @@ class Factory
 
 /*
  * derferences attr to
- * void attr(void *);
- * ans calls it with state as argument
+ * void attr(void);
+ * and calls it
  */
-#define Call(attr) ((void (*)(void ))attr)()
+#define Call(attr) ((void (*)(void))attr)()
 
 #endif /* ifndef _CAI_FACTORY_H_ */
