@@ -2,7 +2,6 @@
 #include <session/session.h>
 #include <block/request_stream.h>
 #include <block_session/block_session.h>
-#include <util/reconstructible.h>
 
 #include <genode_packet.h>
 #include <block_root.h>
@@ -16,8 +15,8 @@ namespace Cai {
 
 #include <factory.h>
 
-Genode::Env *component_env __attribute__((weak)) = nullptr;
-static Genode::Constructible<Factory> _factory;
+extern Genode::Env *__genode_env;
+static Factory _factory {*__genode_env};
 
 Cai::Block::Block_session_component::Block_session_component(
         Genode::Region_map &rm,
@@ -99,27 +98,20 @@ void Cai::Block::Server::initialize(
         void *maximal_transfer_size,
         void *writable)
 {
-    if(component_env){
-        _callback = callback;
-        _block_count = block_count;
-        _block_size = block_size;
-        _maximal_transfer_size = maximal_transfer_size;
-        _writable = writable;
-        if(!_factory.constructed()){
-            _factory.construct(*component_env);
-        }
-        _session = _factory->create<Cai::Block::Block_root>(
-                *component_env,
-                *this,
-                static_cast<Genode::size_t>(size));
-    }
+    _callback = callback;
+    _block_count = block_count;
+    _block_size = block_size;
+    _maximal_transfer_size = maximal_transfer_size;
+    _writable = writable;
+    _session = _factory.create<Cai::Block::Block_root>(
+            *__genode_env,
+            *this,
+            static_cast<Genode::size_t>(size));
 }
 
 void Cai::Block::Server::finalize()
 {
-    if(_factory.constructed()){
-        _factory->destroy<Cai::Block::Block_root>(_session);
-    }
+    _factory.destroy<Cai::Block::Block_root>(_session);
     _session = nullptr;
     _callback = nullptr;
     _block_count = nullptr;
