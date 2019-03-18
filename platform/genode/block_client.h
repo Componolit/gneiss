@@ -30,7 +30,7 @@ namespace Block
                     const char *device = nullptr,
                     void *callback = nullptr);
             void finalize();
-            bool ready();
+            bool ready(Request Req);
             void enqueue_read(Request req);
             void enqueue_write(
                     Request req,
