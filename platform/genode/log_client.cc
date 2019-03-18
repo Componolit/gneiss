@@ -1,26 +1,50 @@
 
-#ifndef _CAI_LOG_H_
-#define _CAI_LOG_H_
-
-#include <base/log.h>
 #include <util/string.h>
+#include <log_session/connection.h>
 
 namespace Cai
 {
-    void log(const char *msg)
-    {
-        Genode::log(Genode::Cstring(msg));
-    }
+#include <log_client.h>
+}
+#include <factory.h>
 
-    void warn(const char *msg)
-    {
-        Genode::warning(Genode::Cstring(msg));
-    }
+extern Genode::Env *__genode_env;
+static Factory _factory {*__genode_env};
 
-    void err(const char *msg)
-    {
-        Genode::error(Genode::Cstring(msg));
-    }
+Cai::Log::Client::Client() :
+    _session(nullptr)
+{ }
+
+bool Cai::Log::Client::initialized()
+{
+    return (bool)_session;
 }
 
-#endif /* ifndef _CAI_LOG_H_ */
+void Cai::Log::Client::initialize(const char *label, Genode::uint64_t)
+{
+    _session = _factory.create<Genode::Log_connection>(
+            *__genode_env,
+            label);
+}
+
+void Cai::Log::Client::finalize()
+{
+    _factory.destroy<Genode::Log_connection>(_session);
+    _session = nullptr;
+}
+
+static Genode::Log_connection *log(void *session)
+{
+    return static_cast<Genode::Log_connection *>(session);
+}
+
+void Cai::Log::Client::write(const char *message)
+{
+    log(_session)->write(message);
+}
+
+Genode::uint64_t Cai::Log::Client::maximal_message_length()
+{
+    static_assert(Genode::Log_session::MAX_STRING_LEN - 16 > 79);
+    return Genode::Log_session::MAX_STRING_LEN - 16;
+}

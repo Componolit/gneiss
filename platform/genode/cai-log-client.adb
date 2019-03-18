@@ -1,38 +1,69 @@
-with System;
+
+with Cxx;
+with Cxx.Genode;
+with Cxx.Log.Client;
+use all type Cxx.Bool;
 
 package body Cai.Log.Client is
 
-   procedure Info (Msg : String)
+   function Create return Client_Session
    is
-      C_Str : String := Msg & Character'Val (0);
-      procedure Log (C : System.Address) with
-         Import,
-         Convention => C,
-         External_Name => "_ZN3Cai3logEPKc";
    begin
-      Log (C_Str'Address);
+      return Client_Session' (Instance => Cxx.Log.Client.Constructor);
+   end Create;
+
+   function Initialized (C : Client_Session) return Boolean
+   is
+   begin
+      return Cxx.Log.Client.Initialized (C.Instance) = 1;
+   end Initialized;
+
+   procedure Initialize (C : in out Client_Session;
+                         Label : String;
+                         Message_Length : Integer := 0)
+   is
+      C_Label : String := Label & Character'Val (0);
+   begin
+      Cxx.Log.Client.Initialize (C.Instance, C_Label'Address,
+                                 Cxx.Genode.Uint64_T (Message_Length));
+   end Initialize;
+
+   procedure Finalize (C : in out Client_Session)
+   is
+   begin
+      Cxx.Log.Client.Finalize (C.Instance);
+   end Finalize;
+
+   function Maximal_Message_Length (C : Client_Session) return Integer
+   is
+   begin
+      return Integer (Cxx.Log.Client.Maximal_Message_Length (C.Instance));
+   end Maximal_Message_Length;
+
+   Blue : constant String := Character'Val (8#33#) & "[34m";
+   Red : constant String := Character'Val (8#33#) & "[31m";
+   Reset : constant String := Character'Val (8#33#) & "[0m";
+   Terminator : constant Character := Character'Val (0);
+
+   procedure Info (C : in out Client_Session; Msg : String)
+   is
+      C_Msg : String := Msg & Terminator;
+   begin
+      Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Info;
 
-   procedure Warning (Msg : String)
+   procedure Warning (C : in out Client_Session; Msg : String)
    is
-      C_Str : String := Msg & Character'Val (0);
-      procedure Log (C : System.Address) with
-         Import,
-         Convention => C,
-         External_Name => "_ZN3Cai4warnEPKc";
+      C_Msg : String := Blue & "Warning: " & Msg & Reset & Terminator;
    begin
-      Log (C_Str'Address);
+      Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Warning;
 
-   procedure Error (Msg : String)
+   procedure Error (C : in out Client_Session; Msg : String)
    is
-      C_Str : String := Msg & Character'Val (0);
-      procedure Log (C : System.Address) with
-         Import,
-         Convention => C,
-         External_Name => "_ZN3Cai3errEPKc";
+      C_Msg : String := Red & "Error: " & Msg & Reset & Terminator;
    begin
-      Log (C_Str'Address);
+      Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Error;
 
 end Cai.Log.Client;
