@@ -1,5 +1,7 @@
 
-package body Cai.Log is
+package body Cai.Log with
+   SPARK_Mode
+is
 
    function Image (V : Integer) return String
    is
