@@ -99,15 +99,60 @@ void Cai::Block::Client::finalize()
     _callback = nullptr;
 }
 
-bool Cai::Block::Client::ready()
+class Packet_allocator
 {
+    private:
+        ::Block::Packet_descriptor _alloc_packet;
+
+    public:
+        Packet_allocator() :
+            _alloc_packet()
+        { }
+
+        void free(void *device)
+        {
+            if(_alloc_packet.size()){
+                blk(device)->tx()->release_packet(_alloc_packet);
+            }
+        }
+
+        void reallocate(void *device, Genode::uint64_t size)
+        {
+            if(size != _alloc_packet.size()){
+                free(device);
+                _alloc_packet = blk(device)->dma_alloc_packet(size);
+            }
+        }
+
+        ::Block::Packet_descriptor take()
+        {
+            ::Block::Packet_descriptor packet = ::Block::Packet_descriptor(
+                    _alloc_packet.offset(),
+                    _alloc_packet.size());
+            _alloc_packet = ::Block::Packet_descriptor();
+            return packet;
+        }
+};
+
+static Packet_allocator _packet_allocator {};
+
+bool Cai::Block::Client::ready(Cai::Block::Request req)
+{
+    if(_device){
+        try {
+            _packet_allocator.reallocate(_device, block_size() * req.length);
+        } catch (...) {
+            return false;
+        }
+    }
     return _device && blk(_device)->tx()->ready_to_submit();
 }
 
 void Cai::Block::Client::enqueue_read(Cai::Block::Request req)
 {
+    _packet_allocator.reallocate(_device, block_size() * req.length);
     ::Block::Packet_descriptor packet(
-            blk(_device)->dma_alloc_packet(block_size() * req.length),
+            _packet_allocator.take(),
             ::Block::Packet_descriptor::READ,
             req.start, req.length);
     blk(_device)->tx()->submit_packet(packet);
@@ -117,8 +162,9 @@ void Cai::Block::Client::enqueue_write(
         Cai::Block::Request req,
         Genode::uint8_t *data)
 {
+    _packet_allocator.reallocate(_device, block_size() * req.length);
     ::Block::Packet_descriptor packet(
-            blk(_device)->dma_alloc_packet(req.length * block_size()),
+            _packet_allocator.take(),
             ::Block::Packet_descriptor::WRITE,
             req.start, req.length);
     Genode::memcpy(blk(_device)->tx()->packet_content(packet), data, req.length * block_size());

@@ -36,8 +36,8 @@ is
    procedure Finalize (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8finalizeEv";
 
-   function Ready (This : Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client5readyEv";
+   function Ready (This : Class; Req : Cxx.Block.Request.Class) return Cxx.Bool
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client5readyENS0_7RequestE";
 
    procedure Enqueue_Read (This : Class; Req : Cxx.Block.Request.Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_readENS0_7RequestE";

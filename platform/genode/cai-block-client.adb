@@ -101,10 +101,10 @@ package body Cai.Block.Client is
       return R;
    end Convert_Request;
 
-   function Ready (C : Client_Session) return Boolean
+   function Ready (C : Client_Session; R : Request) return Boolean
    is
    begin
-      return Cxx.Block.Client.Ready (C.Instance) = 1;
+      return Cxx.Block.Client.Ready (C.Instance, Convert_Request (R)) = 1;
    end Ready;
 
    procedure Enqueue_Read (C : Client_Session; R : Request)
