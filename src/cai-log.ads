@@ -15,6 +15,10 @@ is
       Post => Image'Result'Length <= 5;
    function Image (V : Unsigned) return String with
       Post => Image'Result'Length <= 16;
+   function Image (V : Duration) return String with
+      Pre => Long_Integer (V) < 9223
+             and Long_Integer (V) > -9223,
+      Post => Image'Result'Length <= 20;
 
    type Client_Session is limited private;
 

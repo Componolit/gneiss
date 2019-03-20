@@ -71,4 +71,14 @@ is
       end return;
    end Image;
 
+   function Image (V : Duration) return String
+   is
+      Seconds : Integer := Integer (V);
+      Frac : Duration := (V - Duration (Seconds)) * 1000000;
+      Simg : String := Image (Seconds);
+      Fimg : String := Image (Integer (Frac));
+   begin
+      return Simg & "." & Fimg;
+   end Image;
+
 end Cai.Log;
