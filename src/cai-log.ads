@@ -15,6 +15,8 @@ is
       Post => Image'Result'Length <= 5;
    function Image (V : Unsigned) return String with
       Post => Image'Result'Length <= 16;
+   function Image (V : Duration) return String with
+      Post => Image'Result'Length <= 27;
 
    type Client_Session is limited private;
 

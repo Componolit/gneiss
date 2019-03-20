@@ -71,4 +71,18 @@ is
       end return;
    end Image;
 
+   function Image (V : Duration) return String
+   is
+      Seconds : constant Integer := Integer (V - 0.5);
+      Frac : Integer := Integer ((V - Duration (Seconds)) * 1000000);
+      Simg : constant String := Image (Seconds);
+      Fimg : String (1 .. 6) := (others => '0');
+   begin
+      for I in reverse Fimg'Range loop
+         Fimg (I) := Character'Val (48 + abs(Frac rem 10));
+         Frac := Frac / 10;
+      end loop;
+      return Simg & "." & Fimg;
+   end Image;
+
 end Cai.Log;
