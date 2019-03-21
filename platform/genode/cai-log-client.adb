@@ -44,24 +44,28 @@ package body Cai.Log.Client is
    Red : constant String := Character'Val (8#33#) & "[31m";
    Reset : constant String := Character'Val (8#33#) & "[0m";
    Terminator : constant Character := Character'Val (0);
+   Nl : constant Character := Character'Val (10);
 
-   procedure Info (C : in out Client_Session; Msg : String)
+   procedure Info (C : in out Client_Session; Msg : String; Newline : Boolean := True)
    is
-      C_Msg : String := Msg & Terminator;
+      C_Msg : String := Msg
+                        & (if Newline then Nl & Terminator else Terminator & Terminator);
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Info;
 
-   procedure Warning (C : in out Client_Session; Msg : String)
+   procedure Warning (C : in out Client_Session; Msg : String; Newline : Boolean := True)
    is
-      C_Msg : String := Blue & "Warning: " & Msg & Reset & Terminator;
+      C_Msg : String := Blue & "Warning: " & Msg & Reset
+                        & (if Newline then Nl & Terminator else Terminator & Terminator);
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Warning;
 
-   procedure Error (C : in out Client_Session; Msg : String)
+   procedure Error (C : in out Client_Session; Msg : String; Newline : Boolean := True)
    is
-      C_Msg : String := Red & "Error: " & Msg & Reset & Terminator;
+      C_Msg : String := Red & "Error: " & Msg & Reset
+                        & (if Newline then Nl & Terminator else Terminator & Terminator);
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Error;
