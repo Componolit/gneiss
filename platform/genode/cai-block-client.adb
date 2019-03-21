@@ -107,13 +107,13 @@ package body Cai.Block.Client is
       return Cxx.Block.Client.Ready (C.Instance, Convert_Request (R)) = 1;
    end Ready;
 
-   procedure Enqueue_Read (C : Client_Session; R : Request)
+   procedure Enqueue_Read (C : in out Client_Session; R : Request)
    is
    begin
       Cxx.Block.Client.Enqueue_Read (C.Instance, Convert_Request (R));
    end Enqueue_Read;
 
-   procedure Enqueue_Write (C : Client_Session; R : Request; B : Buffer)
+   procedure Enqueue_Write (C : in out Client_Session; R : Request; B : Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
@@ -126,13 +126,13 @@ package body Cai.Block.Client is
          Data);
    end Enqueue_Write;
 
-   procedure Enqueue_Sync (C : Client_Session; R : Request)
+   procedure Enqueue_Sync (C : in out Client_Session; R : Request)
    is
    begin
       Cxx.Block.Client.Enqueue_Sync (C.Instance, Convert_Request (R));
    end Enqueue_Sync;
 
-   procedure Submit (C : Client_Session)
+   procedure Submit (C : in out Client_Session)
    is
    begin
       Cxx.Block.Client.Submit (C.Instance);
@@ -144,7 +144,7 @@ package body Cai.Block.Client is
       return Convert_Request (Cxx.Block.Client.Next (C.Instance));
    end Next;
 
-   procedure Read (C : Client_Session; R : Request; B : out Buffer)
+   procedure Read (C : in out Client_Session; R : Request; B : out Buffer)
    is
       subtype Local_Buffer is Buffer (1 .. B'Length);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
@@ -158,7 +158,7 @@ package body Cai.Block.Client is
       B := Convert_Buffer (Data);
    end Read;
 
-   procedure Release (C : Client_Session; R : in out Request)
+   procedure Release (C : in out Client_Session; R : in out Request)
    is
    begin
       Cxx.Block.Client.Release (C.Instance, Convert_Request (R));
