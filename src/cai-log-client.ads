@@ -17,15 +17,15 @@ is
       Pre => Initialized (C),
       Post => Maximal_Message_Length'Result > 78;
 
-   procedure Info (C : in out Client_Session; Msg : String) with
+   procedure Info (C : in out Client_Session; Msg : String; Newline : Boolean := True) with
       Pre => Initialized (C)
              and Msg'Length <= Maximal_Message_Length (C);
 
-   procedure Warning (C : in out Client_Session; Msg : String) with
+   procedure Warning (C : in out Client_Session; Msg : String; Newline : Boolean := True) with
       Pre => Initialized (C)
              and Msg'Length <= Maximal_Message_Length (C);
 
-   procedure Error (C : in out Client_Session; Msg : String) with
+   procedure Error (C : in out Client_Session; Msg : String; Newline : Boolean := True) with
       Pre => Initialized (C)
              and Msg'Length <= Maximal_Message_Length (C);
 
