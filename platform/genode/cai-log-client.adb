@@ -52,6 +52,9 @@ package body Cai.Log.Client is
                         & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
+      if Newline then
+         Flush (C);
+      end if;
    end Info;
 
    procedure Warning (C : in out Client_Session; Msg : String; Newline : Boolean := True)
@@ -60,6 +63,9 @@ package body Cai.Log.Client is
                         & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
+      if Newline then
+         Flush (C);
+      end if;
    end Warning;
 
    procedure Error (C : in out Client_Session; Msg : String; Newline : Boolean := True)
@@ -68,6 +74,15 @@ package body Cai.Log.Client is
                         & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
+      if Newline then
+         Flush (C);
+      end if;
    end Error;
+
+   procedure Flush (C : in out Client_Session)
+   is
+   begin
+      Cxx.Log.Client.Flush (C.Instance);
+   End Flush;
 
 end Cai.Log.Client;
