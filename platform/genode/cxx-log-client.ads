@@ -34,6 +34,9 @@ is
    procedure Write (This : Class; Message : Cxx.Void_Address)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai3Log6Client5writeEPKc";
 
+   procedure Flush (This : Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai3Log6Client5flushEv";
+
    function Maximal_Message_Length (This : Class) return Cxx.Genode.Uint64_T
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai3Log6Client22maximal_message_lengthEv";
 

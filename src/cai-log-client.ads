@@ -29,4 +29,7 @@ is
       Pre => Initialized (C)
              and Msg'Length <= Maximal_Message_Length (C);
 
+   procedure Flush (C : in out Client_Session) with
+      Pre => Initialized (C);
+
 end Cai.Log.Client;
