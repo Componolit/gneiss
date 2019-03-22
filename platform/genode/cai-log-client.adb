@@ -49,7 +49,7 @@ package body Cai.Log.Client is
    procedure Info (C : in out Client_Session; Msg : String; Newline : Boolean := True)
    is
       C_Msg : String := Msg
-                        & (if Newline then Nl & Terminator else Terminator & Terminator);
+                        & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Info;
@@ -57,7 +57,7 @@ package body Cai.Log.Client is
    procedure Warning (C : in out Client_Session; Msg : String; Newline : Boolean := True)
    is
       C_Msg : String := Blue & "Warning: " & Msg & Reset
-                        & (if Newline then Nl & Terminator else Terminator & Terminator);
+                        & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Warning;
@@ -65,7 +65,7 @@ package body Cai.Log.Client is
    procedure Error (C : in out Client_Session; Msg : String; Newline : Boolean := True)
    is
       C_Msg : String := Red & "Error: " & Msg & Reset
-                        & (if Newline then Nl & Terminator else Terminator & Terminator);
+                        & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
    end Error;
