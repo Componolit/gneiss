@@ -120,7 +120,7 @@ class Packet_allocator
         {
             if(size != _alloc_packet.size()){
                 free(device);
-                _alloc_packet = blk(device)->dma_alloc_packet(size);
+                _alloc_packet = blk(device)->tx()->alloc_packet(size, 0);
             }
         }
 
