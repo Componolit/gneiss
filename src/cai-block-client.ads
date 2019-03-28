@@ -13,7 +13,7 @@ is
 
    function Initialized (C : Client_Session) return Boolean;
 
-   procedure Initialize (C : in out Client_Session; Path : String);
+   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Unsigned_Long := 0);
 
    procedure Finalize (C : in out Client_Session);
 

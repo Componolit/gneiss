@@ -15,6 +15,7 @@ namespace Block
         private:
             Genode::uint64_t _block_count;
             Genode::uint64_t _block_size;
+            Genode::uint64_t _buffer_size;
             void *_device; //Block_session in block_client.cc
             void *_callback; //procedure Event (S : Instance);
 
@@ -28,7 +29,8 @@ namespace Block
             bool initialized();
             void initialize(
                     const char *device = nullptr,
-                    void *callback = nullptr);
+                    void *callback = nullptr,
+                    Genode::uint64_t buffer_size = 0);
             void finalize();
             bool ready(Request Req);
             void enqueue_read(Request req);
@@ -45,6 +47,7 @@ namespace Block
             bool writable();
             Genode::uint64_t block_count();
             Genode::uint64_t block_size();
+            Genode::uint64_t maximal_transfer_size();
     };
 }
 

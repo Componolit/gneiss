@@ -26,14 +26,14 @@ package body Cai.Block.Client is
       return Cxx.Block.Client.Initialized (C.Instance) = 1;
    end Initialized;
 
-   procedure Initialize (C : in out Client_Session; Path : String)
+   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Unsigned_Long := 0)
    is
       C_Path : constant String := Path & Character'Val(0);
       subtype C_Path_String is String (1 .. C_Path'Length);
       subtype C_String is Cxx.Char_Array (1 .. C_Path'Length);
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String, C_String);
    begin
-      Cxx.Block.Client.Initialize (C.Instance, To_C_String (C_Path), Event'Address);
+      Cxx.Block.Client.Initialize (C.Instance, To_C_String (C_Path), Event'Address, Cxx.Genode.Uint64_T (Buffer_Size));
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
@@ -184,9 +184,8 @@ package body Cai.Block.Client is
 
    function Maximal_Transfer_Size (C : Client_Session) return Unsigned_Long
    is
-      pragma Unreferenced (C);
    begin
-      return 1024 ** 2;
+      return Unsigned_Long (Cxx.Block.Client.Maximal_Transfer_Size (C.Instance));
    end Maximal_Transfer_Size;
 
 end Cai.Block.Client;
