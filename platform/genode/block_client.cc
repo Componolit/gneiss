@@ -46,6 +46,11 @@ class Block_session
             _block.tx_channel()->sigh_ready_to_submit(_event);
         }
 
+        Genode::uint64_t available()
+        {
+            return _alloc.avail();
+        }
+
         ::Block::Connection *block()
         {
             return &_block;
@@ -60,6 +65,7 @@ inline ::Block::Connection *blk(void *device)
 Cai::Block::Client::Client() :
     _block_count(0),
     _block_size(0),
+    _buffer_size(0),
     _device(nullptr),
     _callback(nullptr)
 { }
@@ -76,20 +82,25 @@ bool Cai::Block::Client::initialized()
 
 void Cai::Block::Client::initialize(
         const char *device,
-        void *callback)
+        void *callback,
+        Genode::uint64_t buffer_size)
 {
     const char default_device[] = "";
     Genode::size_t blk_size;
+    Genode::uint64_t alloc_size;
+    Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
     _device = _factory.create<Block_session>(
             *__genode_env,
-            128 * 1024,
+            buf_size,
             device ? device : default_device,
             this,
             &Client::callback);
     ::Block::Session::Operations ops;
     blk(_device)->info(&_block_count, &blk_size, &ops);
     _block_size = blk_size;
+    alloc_size = reinterpret_cast<Block_session *>(_device)->available();
+    _buffer_size = alloc_size - (alloc_size % _block_size);
 }
 
 void Cai::Block::Client::finalize()
@@ -238,6 +249,11 @@ Genode::uint64_t Cai::Block::Client::block_count()
 Genode::uint64_t Cai::Block::Client::block_size()
 {
     return _block_size;
+}
+
+Genode::uint64_t Cai::Block::Client::maximal_transfer_size()
+{
+    return _buffer_size;
 }
 
 void Cai::Block::Client::callback()
