@@ -36,6 +36,11 @@ is
              and R.Status = Raw
              and Ready (C, R);
 
+   procedure Enqueue_Trim (C : in out Client_Session; R : Request) with
+      Pre => R.Kind = Trim
+             and R.Status = Raw
+             and Ready (C, R);
+
    procedure Submit (C : in out Client_Session);
 
    function Next (C : Client_Session) return Request with

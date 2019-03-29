@@ -38,6 +38,7 @@ namespace Block
                     Request req,
                     Genode::uint8_t *data);
             void enqueue_sync(Request req);
+            void enqueue_trim(Request req);
             void submit();
             void read(
                     Request req,

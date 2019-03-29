@@ -156,7 +156,9 @@ bool Cai::Block::Client::ready(Cai::Block::Request req)
             return false;
         }
     }
-    return _device && blk(_device)->tx()->ready_to_submit();
+    return _device && (blk(_device)->tx()->ready_to_submit()
+                       || req.kind == Cai::Block::SYNC
+                       || req.kind == Cai::Block::TRIM);
 }
 
 void Cai::Block::Client::enqueue_read(Cai::Block::Request req)
@@ -183,6 +185,9 @@ void Cai::Block::Client::enqueue_write(
 }
 
 void Cai::Block::Client::enqueue_sync(Cai::Block::Request)
+{ }
+
+void Cai::Block::Client::enqueue_trim(Cai::Block::Request)
 { }
 
 void Cai::Block::Client::submit()

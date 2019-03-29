@@ -27,13 +27,14 @@ package body Cai.Block.Server is
                      when Cxx.Block.None => Cai.Block.None,
                      when Cxx.Block.Sync => Cai.Block.Sync,
                      when Cxx.Block.Read => Cai.Block.Read,
-                     when Cxx.Block.Write => Cai.Block.Write));
+                     when Cxx.Block.Write => Cai.Block.Write,
+                     when Cxx.Block.Trim => Cai.Block.Trim));
    begin
       Req.Priv := Convert_Uid (R.Uid);
       case Req.Kind is
          when Cai.Block.None | Cai.Block.Sync =>
             null;
-         when Cai.Block.Read | Cai.Block.Write =>
+         when Cai.Block.Read | Cai.Block.Write | Cai.Block.Trim =>
             Req.Start := Cai.Block.Id (R.Start);
             Req.Length := Cai.Block.Count (R.Length);
             Req.Status := (case R.Status is
@@ -55,14 +56,15 @@ package body Cai.Block.Server is
                      when Cai.Block.None => Cxx.Block.None,
                      when Cai.Block.Sync => Cxx.Block.Sync,
                      when Cai.Block.Read => Cxx.Block.Read,
-                     when Cai.Block.Write => Cxx.Block.Write);
+                     when Cai.Block.Write => Cxx.Block.Write,
+                     when Cai.Block.Trim => Cxx.Block.Trim);
       Req.Uid := Convert_Uid (R.Priv);
       case R.Kind is
          when Cai.Block.None | Cai.Block.Sync =>
             Req.Start := 0;
             Req.Length := 0;
             Req.Status := Cxx.Block.Ok;
-         when Cai.Block.Read | Cai.Block.Write =>
+         when Cai.Block.Read | Cai.Block.Write | Cai.Block.Trim =>
             Req.Start := Cxx.Genode.Uint64_T (R.Start);
             Req.Length := Cxx.Genode.Uint64_T (R.Length);
             Req.Status := (case R.Status is
