@@ -49,6 +49,9 @@ is
    procedure Enqueue_Sync (This : Class; Req : Cxx.Block.Request.Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_syncENS0_7RequestE";
 
+   procedure Enqueue_Trim (This : Class; Req : Cxx.Block.Request.Class)
+   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_trimENS0_7RequestE";
+
    procedure Submit (This : Class)
    with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client6submitEv";
 

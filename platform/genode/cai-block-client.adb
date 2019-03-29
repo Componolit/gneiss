@@ -56,8 +56,12 @@ package body Cai.Block.Client is
             Cr.Kind := Cxx.Block.None;
          when Sync =>
             Cr.Kind := Cxx.Block.Sync;
-         when Read | Write =>
-            Cr.Kind := (if R.Kind = Read then Cxx.Block.Read else Cxx.Block.Write);
+         when Read | Write | Trim =>
+            Cr.Kind := (case R.Kind is
+                        when Read => Cxx.Block.Read,
+                        when Write => Cxx.Block.Write,
+                        when Trim => Cxx.Block.Trim,
+                        when others => Cxx.Block.None);
             Cr.Start := Cxx.Genode.Uint64_T (R.Start);
             Cr.Length := Cxx.Genode.Uint64_T (R.Length);
             if R.Status = Raw then
@@ -82,13 +86,14 @@ package body Cai.Block.Client is
                      when Cxx.Block.None => None,
                      when Cxx.Block.Sync => Sync,
                      when Cxx.Block.Read => Read,
-                     when Cxx.Block.Write => Write));
+                     when Cxx.Block.Write => Write,
+                     when Cxx.Block.Trim => Trim));
    begin
       R.Priv := Private_Data (CR.Uid);
       case R.Kind is
          when None | Sync =>
             null;
-         when Read | Write =>
+         when Read | Write | Trim =>
             R.Start := Id (CR.Start);
             R.Length := Count (CR.Length);
             R.Status :=
@@ -131,6 +136,12 @@ package body Cai.Block.Client is
    begin
       Cxx.Block.Client.Enqueue_Sync (C.Instance, Convert_Request (R));
    end Enqueue_Sync;
+
+   procedure Enqueue_Trim (C : in out Client_Session; R : Request)
+   is
+   begin
+      Cxx.Block.Client.Enqueue_Trim (C.Instance, Convert_Request (R));
+   end Enqueue_Trim;
 
    procedure Submit (C : in out Client_Session)
    is

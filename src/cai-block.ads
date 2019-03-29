@@ -36,7 +36,7 @@ is
       (Count (Left) - Count (Right)) with
       Pre => Left >= Right;
 
-   type Request_Kind is (None, Read, Write, Sync);
+   type Request_Kind is (None, Read, Write, Sync, Trim);
    type Request_Status is (Raw, Ok, Error, Acknowledged);
 
    type Private_Data is private;
@@ -47,7 +47,7 @@ is
       case Kind is
          when None | Sync =>
             null;
-         when Read | Write =>
+         when Read | Write | Trim =>
             Start : Id;
             Length : Count;
             Status : Request_Status;
