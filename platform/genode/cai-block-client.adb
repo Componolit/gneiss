@@ -4,9 +4,18 @@ with Cxx;
 with Cxx.Block;
 with Cxx.Block.Client;
 with Cxx.Genode;
+with Cai.Block.Util;
 use all type Cxx.Bool;
 
 package body Cai.Block.Client is
+
+   function Cast_Request (R : Request) return Block.Request is
+      (Block.Request (R));
+
+   function Cast_Request (R : Block.Request) return Request is
+      (Request (R));
+
+   package Util is new Block.Util (Request, Cast_Request, Cast_Request);
 
    function Create return Client_Session
    is
@@ -42,80 +51,16 @@ package body Cai.Block.Client is
       Cxx.Block.Client.Finalize (C.Instance);
    end Finalize;
 
-   function Convert_Request (R : Request) return Cxx.Block.Request.Class
-   is
-      Cr : Cxx.Block.Request.Class := Cxx.Block.Request.Class' (
-         Kind => Cxx.Block.None,
-         Uid => Cxx.Unsigned_Char_Array (R.Priv),
-         Start => 0,
-         Length => 0,
-         Status => Cxx.Block.Raw);
-   begin
-      case R.Kind is
-         when None =>
-            Cr.Kind := Cxx.Block.None;
-         when Sync =>
-            Cr.Kind := Cxx.Block.Sync;
-         when Read | Write | Trim =>
-            Cr.Kind := (case R.Kind is
-                        when Read => Cxx.Block.Read,
-                        when Write => Cxx.Block.Write,
-                        when Trim => Cxx.Block.Trim,
-                        when others => Cxx.Block.None);
-            Cr.Start := Cxx.Genode.Uint64_T (R.Start);
-            Cr.Length := Cxx.Genode.Uint64_T (R.Length);
-            if R.Status = Raw then
-               Cr.Status := Cxx.Block.Raw;
-            end if;
-            if R.Status = Ok then
-               Cr.Status := Cxx.Block.Ok;
-            end if;
-            if R.Status = Error then
-               Cr.Status := Cxx.Block.Error;
-            end if;
-            if R.Status = Acknowledged then
-               Cr.Status := Cxx.Block.Ack;
-            end if;
-      end case;
-      return Cr;
-   end Convert_Request;
-
-   function Convert_Request (CR : Cxx.Block.Request.Class) return Request
-   is
-      R : Request ((case CR.Kind is
-                     when Cxx.Block.None => None,
-                     when Cxx.Block.Sync => Sync,
-                     when Cxx.Block.Read => Read,
-                     when Cxx.Block.Write => Write,
-                     when Cxx.Block.Trim => Trim));
-   begin
-      R.Priv := Private_Data (CR.Uid);
-      case R.Kind is
-         when None | Sync =>
-            null;
-         when Read | Write | Trim =>
-            R.Start := Id (CR.Start);
-            R.Length := Count (CR.Length);
-            R.Status :=
-               (case CR.Status is
-                  when Cxx.Block.Raw => Raw,
-                  when Cxx.Block.Ok => Ok,
-                  when Cxx.Block.Error => Error,
-                  when Cxx.Block.Ack => Acknowledged);
-      end case;
-      return R;
-   end Convert_Request;
-
    function Ready (C : Client_Session; R : Request) return Boolean
    is
    begin
-      return Cxx.Block.Client.Ready (C.Instance, Convert_Request (R)) = 1;
+      return Cxx.Block.Client.Ready (C.Instance, Util.Convert_Request (R)) = 1;
    end Ready;
 
    procedure Enqueue_Read (C : in out Client_Session; R : Request)
    is
    begin
-      Cxx.Block.Client.Enqueue_Read (C.Instance, Convert_Request (R));
+      Cxx.Block.Client.Enqueue_Read (C.Instance, Util.Convert_Request (R));
    end Enqueue_Read;
 
    procedure Enqueue_Write (C : in out Client_Session; R : Request; B : Buffer)
@@ -127,20 +72,20 @@ package body Cai.Block.Client is
    begin
       Cxx.Block.Client.Enqueue_Write (
          C.Instance,
-         Convert_Request (R),
+         Util.Convert_Request (R),
          Data);
    end Enqueue_Write;
 
    procedure Enqueue_Sync (C : in out Client_Session; R : Request)
    is
    begin
-      Cxx.Block.Client.Enqueue_Sync (C.Instance, Convert_Request (R));
+      Cxx.Block.Client.Enqueue_Sync (C.Instance, Util.Convert_Request (R));
    end Enqueue_Sync;
 
    procedure Enqueue_Trim (C : in out Client_Session; R : Request)
    is
    begin
-      Cxx.Block.Client.Enqueue_Trim (C.Instance, Convert_Request (R));
+      Cxx.Block.Client.Enqueue_Trim (C.Instance, Util.Convert_Request (R));
    end Enqueue_Trim;
 
    procedure Submit (C : in out Client_Session)
@@ -152,7 +97,7 @@ package body Cai.Block.Client is
    function Next (C : Client_Session) return Request
    is
    begin
-      return Convert_Request (Cxx.Block.Client.Next (C.Instance));
+      return Util.Convert_Request (Cxx.Block.Client.Next (C.Instance));
    end Next;
 
    procedure Read (C : in out Client_Session; R : Request; B : out Buffer)
@@ -164,7 +109,7 @@ package body Cai.Block.Client is
    begin
       Cxx.Block.Client.Read (
          C.Instance,
-         Convert_Request (R),
+         Util.Convert_Request (R),
          Data);
       B := Convert_Buffer (Data);
    end Read;
@@ -172,7 +117,7 @@ package body Cai.Block.Client is
    procedure Release (C : in out Client_Session; R : in out Request)
    is
    begin
-      Cxx.Block.Client.Release (C.Instance, Convert_Request (R));
+      Cxx.Block.Client.Release (C.Instance, Util.Convert_Request (R));
    end Release;
 
    function Writable (C : Client_Session) return Boolean
