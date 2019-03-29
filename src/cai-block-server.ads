@@ -4,7 +4,7 @@ generic
    with function Block_Count (S : Server_Instance) return Count;
    with function Block_Size (S : Server_Instance) return Size;
    with function Writable (S : Server_Instance) return Boolean;
-   with function Maximal_Transfer_Size (S : Server_Instance) return Unsigned_Long;
+   with function Maximal_Transfer_Size (S : Server_Instance) return Byte_Length;
    with procedure Initialize (S : Server_Instance; L : String);
    with procedure Finalize (S : Server_Instance);
 package Cai.Block.Server is
