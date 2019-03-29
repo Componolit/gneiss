@@ -26,7 +26,7 @@ package body Cai.Block.Client is
       return Cxx.Block.Client.Initialized (C.Instance) = 1;
    end Initialized;
 
-   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Unsigned_Long := 0)
+   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Byte_Length := 0)
    is
       C_Path : constant String := Path & Character'Val(0);
       subtype C_Path_String is String (1 .. C_Path'Length);
@@ -115,7 +115,7 @@ package body Cai.Block.Client is
 
    procedure Enqueue_Write (C : in out Client_Session; R : Request; B : Buffer)
    is
-      subtype Local_Buffer is Buffer (1 .. B'Length);
+      subtype Local_Buffer is Buffer (B'First .. B'Last);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
       function Convert_Buffer is new Ada.Unchecked_Conversion (Local_Buffer, Local_U8_Array);
       Data : Local_U8_Array := Convert_Buffer (B);
@@ -146,7 +146,7 @@ package body Cai.Block.Client is
 
    procedure Read (C : in out Client_Session; R : Request; B : out Buffer)
    is
-      subtype Local_Buffer is Buffer (1 .. B'Length);
+      subtype Local_Buffer is Buffer (B'First .. B'Last);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
       function Convert_Buffer is new Ada.Unchecked_Conversion (Local_U8_Array, Local_Buffer);
       Data : Local_U8_Array := (others => 0);
@@ -182,10 +182,10 @@ package body Cai.Block.Client is
       return Size (Cxx.Block.Client.Block_Size (C.Instance));
    end Block_Size;
 
-   function Maximal_Transfer_Size (C : Client_Session) return Unsigned_Long
+   function Maximal_Transfer_Size (C : Client_Session) return Byte_Length
    is
    begin
-      return Unsigned_Long (Cxx.Block.Client.Maximal_Transfer_Size (C.Instance));
+      return Byte_Length (Cxx.Block.Client.Maximal_Transfer_Size (C.Instance));
    end Maximal_Transfer_Size;
 
 end Cai.Block.Client;

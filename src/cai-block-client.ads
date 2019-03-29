@@ -13,7 +13,7 @@ is
 
    function Initialized (C : Client_Session) return Boolean;
 
-   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Unsigned_Long := 0);
+   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Byte_Length := 0);
 
    procedure Finalize (C : in out Client_Session);
 
@@ -60,6 +60,6 @@ is
    function Writable (C : Client_Session) return Boolean;
    function Block_Count (C : Client_Session) return Count;
    function Block_Size (C : Client_Session) return Size;
-   function Maximal_Transfer_Size (C : Client_Session) return Unsigned_Long;
+   function Maximal_Transfer_Size (C : Client_Session) return Byte_Length;
 
 end Cai.Block.Client;
