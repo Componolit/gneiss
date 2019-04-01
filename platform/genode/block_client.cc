@@ -161,6 +161,11 @@ bool Cai::Block::Client::ready(Cai::Block::Request req)
                        || req.kind == Cai::Block::TRIM);
 }
 
+bool Cai::Block::Client::supported(Cai::Block::Request req)
+{
+    return req.kind == Cai::Block::READ || req.kind == Cai::Block::WRITE;
+}
+
 void Cai::Block::Client::enqueue_read(Cai::Block::Request req)
 {
     _packet_allocator.reallocate(_device, block_size() * req.length);

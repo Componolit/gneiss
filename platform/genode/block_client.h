@@ -32,7 +32,8 @@ namespace Block
                     void *callback = nullptr,
                     Genode::uint64_t buffer_size = 0);
             void finalize();
-            bool ready(Request Req);
+            bool ready(Request req);
+            bool supported(Request req);
             void enqueue_read(Request req);
             void enqueue_write(
                     Request req,

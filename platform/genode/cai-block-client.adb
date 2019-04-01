@@ -57,6 +57,12 @@ package body Cai.Block.Client is
       return Cxx.Block.Client.Ready (C.Instance, Util.Convert_Request (R)) = 1;
    end Ready;
 
+   function Supported (C : Client_Session; R : Request) return Boolean
+   is
+   begin
+      return Cxx.Block.Client.Ready (C.Instance, Util.Convert_Request (R)) = 1;
+   end Supported;
+
    procedure Enqueue_Read (C : in out Client_Session; R : Request)
    is
    begin
