@@ -9,7 +9,7 @@ package body Cai.Log.Client is
    function Create return Client_Session
    is
    begin
-      return Client_Session' (Instance => Cxx.Log.Client.Constructor);
+      return Client_Session'(Instance => Cxx.Log.Client.Constructor);
    end Create;
 
    function Initialized (C : Client_Session) return Boolean
@@ -46,10 +46,14 @@ package body Cai.Log.Client is
    Terminator : constant Character := Character'Val (0);
    Nl : constant Character := Character'Val (10);
 
-   procedure Info (C : in out Client_Session; Msg : String; Newline : Boolean := True)
+   procedure Info (C : in out Client_Session;
+                   Msg : String;
+                   Newline : Boolean := True)
    is
       C_Msg : String := Msg
-                        & (if Newline then Nl & Terminator else (1 => Terminator));
+                        & (if Newline then
+                              Nl & Terminator
+                           else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
       if Newline then
@@ -57,10 +61,14 @@ package body Cai.Log.Client is
       end if;
    end Info;
 
-   procedure Warning (C : in out Client_Session; Msg : String; Newline : Boolean := True)
+   procedure Warning (C : in out Client_Session;
+                      Msg : String;
+                      Newline : Boolean := True)
    is
       C_Msg : String := Blue & "Warning: " & Msg & Reset
-                        & (if Newline then Nl & Terminator else (1 => Terminator));
+                        & (if Newline then
+                              Nl & Terminator
+                           else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
       if Newline then
@@ -68,10 +76,14 @@ package body Cai.Log.Client is
       end if;
    end Warning;
 
-   procedure Error (C : in out Client_Session; Msg : String; Newline : Boolean := True)
+   procedure Error (C : in out Client_Session;
+                    Msg : String;
+                    Newline : Boolean := True)
    is
       C_Msg : String := Red & "Error: " & Msg & Reset
-                        & (if Newline then Nl & Terminator else (1 => Terminator));
+                        & (if Newline then
+                              Nl & Terminator
+                           else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
       if Newline then
@@ -83,6 +95,6 @@ package body Cai.Log.Client is
    is
    begin
       Cxx.Log.Client.Flush (C.Instance);
-   End Flush;
+   end Flush;
 
 end Cai.Log.Client;

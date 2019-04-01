@@ -2,6 +2,8 @@
 with System;
 private with Cai.Internal.Block;
 
+pragma Warnings (Off, "type ""Buffer"" is not referenced");
+
 generic
    type Byte is (<>);
    type Buffer_Index is range <>;
@@ -9,7 +11,8 @@ generic
 package Cai.Block
    with SPARK_Mode
 is
-   pragma Compile_Time_Error (Byte'Size /= 8, "Byte must have a size of 8 bit.");
+   pragma Compile_Time_Error (Byte'Size /= 8,
+                              "Byte must have a size of 8 bit.");
 
    type Byte_Length is range 0 .. 2 ** 63 - 1
       with Size => 64;
@@ -66,7 +69,8 @@ is
 private
 
    type Private_Data is new Cai.Internal.Block.Private_Data;
-   Null_Data : constant Private_Data := Private_Data (Cai.Internal.Block.Null_Data);
+   Null_Data : constant Private_Data :=
+      Private_Data (Cai.Internal.Block.Null_Data);
    type Client_Session is new Cai.Internal.Block.Client_Session;
    type Dispatcher_Session is new Cai.Internal.Block.Dispatcher_Session;
    type Server_Session is new Cai.Internal.Block.Server_Session;

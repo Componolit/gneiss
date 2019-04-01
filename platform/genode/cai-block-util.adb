@@ -4,10 +4,13 @@ with Cxx.Genode;
 
 package body Cai.Block.Util is
 
-   function Convert_Request (I : Instance_Request) return Cxx.Block.Request.Class
+   function Convert_Request (I : Instance_Request)
+      return Cxx.Block.Request.Class
    is
       subtype Uid_Type is Cxx.Genode.Uint8_T_Array (1 .. 16);
-      function Convert_Uid is new Ada.Unchecked_Conversion (Cai.Block.Private_Data, Uid_Type);
+      function Convert_Uid is new
+         Ada.Unchecked_Conversion (Cai.Block.Private_Data,
+                                   Uid_Type);
       Req : Cxx.Block.Request.Class;
       R : constant Request := Cast_Request (I);
    begin
@@ -35,10 +38,13 @@ package body Cai.Block.Util is
       return Req;
    end Convert_Request;
 
-   function Convert_Request (R : Cxx.Block.Request.Class) return Instance_Request
+   function Convert_Request (R : Cxx.Block.Request.Class)
+      return Instance_Request
    is
       subtype Uid_Type is Cxx.Genode.Uint8_T_Array (1 .. 16);
-      function Convert_Uid is new Ada.Unchecked_Conversion (Uid_Type, Cai.Block.Private_Data);
+      function Convert_Uid is new
+         Ada.Unchecked_Conversion (Uid_Type,
+                                   Cai.Block.Private_Data);
       Req : Request ((case R.Kind is
                      when Cxx.Block.None => Cai.Block.None,
                      when Cxx.Block.Sync => Cai.Block.Sync,

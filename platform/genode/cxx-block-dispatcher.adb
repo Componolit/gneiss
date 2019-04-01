@@ -12,4 +12,3 @@ package body Cxx.Block.Dispatcher is
    end Dispatch;
 
 end Cxx.Block.Dispatcher;
-

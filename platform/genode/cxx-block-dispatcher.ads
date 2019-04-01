@@ -20,37 +20,72 @@ is
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block10DispatcherC1Ev");
 
    function Initialized (This : Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher11initializedEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher11initializedEv";
 
    function Get_Instance (This : Class) return Cxx.Void_Address
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher12get_instanceEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher12get_instanceEv";
 
    procedure Initialize (This : Class; Callback : Cxx.Void_Address)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher10initializeEPv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher10initializeEPv";
 
    procedure Finalize (This : Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher8finalizeEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher8finalizeEv";
 
    procedure Announce (This : Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher8announceEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher8announceEv";
 
    procedure Dispatch (This : Class)
-   with Global => null, Export, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher8dispatchEv";
+   with Global => null,
+        Export,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher8dispatchEv";
 
    function Label_Content (This : Class) return Cxx.Void_Address
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher13label_contentEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher13label_contentEv";
 
    function Label_Length (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher12label_lengthEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher12label_lengthEv";
 
    function Session_Size (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher12session_sizeEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher12session_sizeEv";
 
-   procedure Session_Accept (This : Class; Session : in out Cxx.Block.Server.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher14session_acceptEPv";
+   procedure Session_Accept (This : Class;
+                             Session : in out Cxx.Block.Server.Class)
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher14session_acceptEPv";
 
-   function Session_Cleanup (This : Class; Session : Cxx.Block.Server.Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block10Dispatcher15session_cleanupEPv";
+   function Session_Cleanup (This : Class;
+                             Session : Cxx.Block.Server.Class) return Cxx.Bool
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block10Dispatcher15session_cleanupEPv";
 
 private
    pragma SPARK_Mode (Off);

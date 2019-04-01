@@ -4,7 +4,8 @@ is
    type Private_Uint64_T is limited private;
    type Private_Uint64_T_Address is limited private;
    type Private_Uint64_T_Array is array (Natural range <>) of Private_Uint64_T;
-   type Private_Uint64_T_Address_Array is array (Natural range <>) of Private_Uint64_T_Address;
+   type Private_Uint64_T_Address_Array is array (Natural range <>)
+      of Private_Uint64_T_Address;
    type Private_Void is limited private;
 
    type Class is
@@ -26,58 +27,120 @@ is
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ClientC1Ev");
 
    function Get_Instance (This : Class) return Cxx.Void_Address
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12get_instanceEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client12get_instanceEv";
 
    function Initialized (This : Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11initializedEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client11initializedEv";
 
-   procedure Initialize (This : Class; Device : Cxx.Char_Array; Callback : Cxx.Void_Address; Buffer_Size : Cxx.Genode.Uint64_T)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10initializeEPKcPvy";
+   procedure Initialize (This : Class;
+                         Device : Cxx.Char_Array;
+                         Callback : Cxx.Void_Address;
+                         Buffer_Size : Cxx.Genode.Uint64_T)
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client10initializeEPKcPvy";
 
    procedure Finalize (This : Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8finalizeEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client8finalizeEv";
 
    function Ready (This : Class; Req : Cxx.Block.Request.Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client5readyENS0_7RequestE";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client5readyENS0_7RequestE";
 
-   function Supported (This : Class; Req : Cxx.Block.Request.Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client9supportedENS0_7RequestE";
+   function Supported (This : Class;
+                       Req : Cxx.Block.Request.Class) return Cxx.Bool
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client9supportedENS0_7RequestE";
 
    procedure Enqueue_Read (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_readENS0_7RequestE";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client12enqueue_readENS0_7RequestE";
 
-   procedure Enqueue_Write (This : Class; Req : Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client13enqueue_writeENS0_7RequestEPh";
+   procedure Enqueue_Write (This : Class;
+                            Req : Cxx.Block.Request.Class;
+                            Data : in out Cxx.Genode.Uint8_T_Array)
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client13enqueue_writeENS0_7RequestEPh";
 
    procedure Enqueue_Sync (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_syncENS0_7RequestE";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client12enqueue_syncENS0_7RequestE";
 
    procedure Enqueue_Trim (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client12enqueue_trimENS0_7RequestE";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client12enqueue_trimENS0_7RequestE";
 
    procedure Submit (This : Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client6submitEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client6submitEv";
 
    function Next (This : Class) return Cxx.Block.Request.Class
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4nextEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client4nextEv";
 
-   procedure Read (This : Class; Req : Cxx.Block.Request.Class; Data : in out Cxx.Genode.Uint8_T_Array)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client4readENS0_7RequestEPh";
+   procedure Read (This : Class;
+                   Req : Cxx.Block.Request.Class;
+                   Data : in out Cxx.Genode.Uint8_T_Array)
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client4readENS0_7RequestEPh";
 
    procedure Release (This : Class; Req : Cxx.Block.Request.Class)
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client7releaseENS0_7RequestE";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client7releaseENS0_7RequestE";
 
    function Writable (This : Class) return Cxx.Bool
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client8writableEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client8writableEv";
 
    function Block_Count (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client11block_countEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client11block_countEv";
 
    function Block_Size (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client10block_sizeEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client10block_sizeEv";
 
    function Maximal_Transfer_Size (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null, Import, Convention => CPP, External_Name => "_ZN3Cai5Block6Client21maximal_transfer_sizeEv";
+   with Global => null,
+        Import,
+        Convention => CPP,
+        External_Name => "_ZN3Cai5Block6Client21maximal_transfer_sizeEv";
 
 private
    pragma SPARK_Mode (Off);
@@ -87,4 +150,3 @@ private
    type Private_Uint64_T_Address is access Private_Uint64_T;
    type Private_Void is new Cxx.Void;
 end Cxx.Block.Client;
-
