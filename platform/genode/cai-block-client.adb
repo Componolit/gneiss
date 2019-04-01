@@ -60,7 +60,7 @@ package body Cai.Block.Client is
    function Supported (C : Client_Session; R : Request) return Boolean
    is
    begin
-      return Cxx.Block.Client.Ready (C.Instance, Util.Convert_Request (R)) = 1;
+      return Cxx.Block.Client.Supported (C.Instance, Util.Convert_Request (R)) = 1;
    end Supported;
 
    procedure Enqueue_Read (C : in out Client_Session; R : Request)
