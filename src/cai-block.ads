@@ -45,9 +45,9 @@ is
    type Request (Kind : Request_Kind := None) is record
       Priv : Private_Data;
       case Kind is
-         when None | Sync =>
+         when None =>
             null;
-         when Read | Write | Trim =>
+         when Read .. Trim =>
             Start : Id;
             Length : Count;
             Status : Request_Status;
