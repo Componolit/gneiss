@@ -1,8 +1,8 @@
-pragma Ada_2012;
-package body Cai.Log.Client is
 
-   pragma Warnings (Off, "unimplemented");
-   pragma Warnings (Off, "formal parameter");
+with System;
+use all type System.Address;
+
+package body Cai.Log.Client is
 
    ------------
    -- Create --
@@ -10,9 +10,9 @@ package body Cai.Log.Client is
 
    function Create return Client_Session is
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
+      return Client_Session'(Label => System.Null_Address,
+                             Length => 0,
+                             Message_Length => 0);
    end Create;
 
    -----------------
@@ -21,9 +21,7 @@ package body Cai.Log.Client is
 
    function Initialized (C : Client_Session) return Boolean is
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Initialized unimplemented");
-      return raise Program_Error with "Unimplemented function Initialized";
+      return C.Label /= System.Null_Address;
    end Initialized;
 
    ----------------
@@ -35,10 +33,18 @@ package body Cai.Log.Client is
       Label : String;
       Message_Length : Integer := 0)
    is
+      procedure C_Initialize (Str : System.Address;
+                              Lbl : out System.Address) with
+         Import,
+         Convention => C,
+         External_Name => "initialize";
+
+      C_Str : String := Label & Character'Val (0);
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Initialize unimplemented");
-      raise Program_Error with "Unimplemented procedure Initialize";
+      C_Initialize (C_Str'Address, C.Label);
+      C.Length := Label'Length;
+      C.Message_Length :=
+         (if Message_Length > 0 then Message_Length else 4095);
    end Initialize;
 
    --------------
@@ -48,10 +54,14 @@ package body Cai.Log.Client is
    procedure Finalize
      (C : in out Client_Session)
    is
+      procedure C_Finalize (Label : System.Address) with
+         Import,
+         Convention => C,
+         External_Name => "finalize";
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Finalize unimplemented");
-      raise Program_Error with "Unimplemented procedure Finalize";
+      C_Finalize (C.Label);
+      C.Label := System.Null_Address;
+      C.Length := 0;
    end Finalize;
 
    ----------------------------
@@ -63,12 +73,34 @@ package body Cai.Log.Client is
       return Integer
    is
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True,
-                                   "Maximal_Message_Length unimplemented");
-      return raise Program_Error with
-        "Unimplemented function Maximal_Message_Length";
+      return C.Message_Length;
    end Maximal_Message_Length;
+
+   procedure Print (Msg : System.Address) with
+      Import,
+      Convention => C,
+      External_Name => "print";
+
+   function Create_String (Label : String;
+                           Prefix : String;
+                           Message : String;
+                           Newline : Boolean) return String;
+
+   function Create_String (Label : String;
+                           Prefix : String;
+                           Message : String;
+                           Newline : Boolean) return String
+   is
+      S : constant String := "[" & Label & "] "
+                             & Prefix & Message
+                             & (if Newline then
+                                Character'Val (10)
+                                & Character'Val (0)
+                                else
+                                (1 => Character'Val (0)));
+   begin
+      return S;
+   end Create_String;
 
    ----------
    -- Info --
@@ -79,10 +111,11 @@ package body Cai.Log.Client is
       Msg : String;
       Newline : Boolean := True)
    is
+      Label : String (1 .. C.Length) with
+         Address => C.Label;
+      M : String := Create_String (Label, "Info: ", Msg, Newline);
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Info unimplemented");
-      raise Program_Error with "Unimplemented procedure Info";
+      Print (M'Address);
    end Info;
 
    -------------
@@ -94,10 +127,11 @@ package body Cai.Log.Client is
       Msg : String;
       Newline : Boolean := True)
    is
+      Label : String (1 .. C.Length) with
+         Address => C.Label;
+      M : String := Create_String (Label, "Warning: ", Msg, Newline);
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Warning unimplemented");
-      raise Program_Error with "Unimplemented procedure Warning";
+      Print (M'Address);
    end Warning;
 
    -----------
@@ -109,10 +143,11 @@ package body Cai.Log.Client is
       Msg : String;
       Newline : Boolean := True)
    is
+      Label : String (1 .. C.Length) with
+         Address => C.Label;
+      M : String := Create_String (Label, "Error: ", Msg, Newline);
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Error unimplemented");
-      raise Program_Error with "Unimplemented procedure Error";
+      Print (M'Address);
    end Error;
 
    -----------
@@ -122,10 +157,9 @@ package body Cai.Log.Client is
    procedure Flush
      (C : in out Client_Session)
    is
+      pragma Unreferenced (C);
    begin
-      --  Generated stub: replace with real body!
-      pragma Compile_Time_Warning (Standard.True, "Flush unimplemented");
-      raise Program_Error with "Unimplemented procedure Flush";
+      null;
    end Flush;
 
 end Cai.Log.Client;
