@@ -13,7 +13,7 @@ package body Cxx.Block.Server is
    begin
       return (if
                Writable (Cxx.Block.Server.Get_Instance (This))
-              then 1 else 0);
+              then Cxx.Bool'Val (1) else Cxx.Bool'Val (0));
    end Writable;
 
 end Cxx.Block.Server;

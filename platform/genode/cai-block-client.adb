@@ -32,7 +32,7 @@ package body Cai.Block.Client is
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return Cxx.Block.Client.Initialized (C.Instance) = 1;
+      return Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
    procedure Initialize (C : in out Client_Session;
@@ -61,14 +61,16 @@ package body Cai.Block.Client is
    is
    begin
       return Cxx.Block.Client.Ready (C.Instance,
-                                     Client_Util.Convert_Request (R)) = 1;
+                                     Client_Util.Convert_Request (R)) =
+                                        Cxx.Bool'Val (1);
    end Ready;
 
    function Supported (C : Client_Session; R : Request) return Boolean
    is
    begin
       return Cxx.Block.Client.Supported (C.Instance,
-                                         Client_Util.Convert_Request (R)) = 1;
+                                         Client_Util.Convert_Request (R)) =
+                                            Cxx.Bool'Val (1);
    end Supported;
 
    procedure Enqueue_Read (C : in out Client_Session; R : Request)
@@ -144,7 +146,7 @@ package body Cai.Block.Client is
    function Writable (C : Client_Session) return Boolean
    is
    begin
-      return Cxx.Block.Client.Writable (C.Instance) /= 0;
+      return Cxx.Block.Client.Writable (C.Instance) /= Cxx.Bool'Val (0);
    end Writable;
 
    function Block_Count (C : Client_Session) return Count
