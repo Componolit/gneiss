@@ -66,7 +66,7 @@ package body Cai.Block.Server is
    function Initialized (S : Server_Session) return Boolean
    is
    begin
-      return Cxx.Block.Server.Initialized (S.Instance) = 1;
+      return Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
 end Cai.Block.Server;

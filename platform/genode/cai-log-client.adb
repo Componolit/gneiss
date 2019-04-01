@@ -15,7 +15,7 @@ package body Cai.Log.Client is
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return Cxx.Log.Client.Initialized (C.Instance) = 1;
+      return Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
    procedure Initialize (C : in out Client_Session;

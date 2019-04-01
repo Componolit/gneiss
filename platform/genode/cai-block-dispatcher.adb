@@ -17,7 +17,7 @@ is
    function Initialized (D : Dispatcher_Session) return Boolean
    is
    begin
-      return Cxx.Block.Dispatcher.Initialized (D.Instance) = 1;
+      return Cxx.Block.Dispatcher.Initialized (D.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance
@@ -93,7 +93,10 @@ is
                               I : in out Server_Session)
    is
    begin
-      if Cxx.Block.Dispatcher.Session_Cleanup (D.Instance, I.Instance) = 1 then
+      if
+         Cxx.Block.Dispatcher.Session_Cleanup (D.Instance, I.Instance) =
+            Cxx.Bool'Val (1)
+      then
          Serv.Finalize (Serv.Get_Instance (I));
          Cxx.Block.Server.Finalize (I.Instance);
       end if;
