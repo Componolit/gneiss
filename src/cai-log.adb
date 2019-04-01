@@ -15,16 +15,22 @@ is
       T : Long_Integer := V;
    begin
       for I in reverse Img'First + 1 .. Img'Last loop
-         Img (I) := Character'Val (48 + abs(T rem 10));
+         Img (I) := Character'Val (48 + abs (T rem 10));
          T := T / 10;
          if T = 0 then
             if V < 0 then
                Img (I - 1) := '-';
-               return R : constant String (1 .. Img'Last - I + 2) := Img (I - 1 .. Img'Last) do
+               return
+                  R : constant String (1 .. Img'Last - I + 2) :=
+                     Img (I - 1 .. Img'Last)
+               do
                   null;
                end return;
             else
-               return R : constant String (1 .. Img'Last - I + 1) := Img (I .. Img'Last) do
+               return
+                  R : constant String (1 .. Img'Last - I + 1) :=
+                     Img (I .. Img'Last)
+               do
                   null;
                end return;
             end if;
@@ -66,7 +72,10 @@ is
             exit;
          end if;
       end loop;
-      return R : constant String (1 .. Img'Last - S + 1) := Img (S .. Img'last) do
+      return
+         R : constant String (1 .. Img'Last - S + 1) :=
+            Img (S .. Img'Last)
+      do
          null;
       end return;
    end Image;
@@ -79,7 +88,7 @@ is
       Fimg : String (1 .. 6) := (others => '0');
    begin
       for I in reverse Fimg'Range loop
-         Fimg (I) := Character'Val (48 + abs(Frac rem 10));
+         Fimg (I) := Character'Val (48 + abs (Frac rem 10));
          Frac := Frac / 10;
       end loop;
       return Simg & "." & Fimg;

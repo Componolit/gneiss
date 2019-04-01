@@ -5,6 +5,7 @@ package Cai.Block.Client
    with SPARK_Mode
 is
 
+   pragma Warnings (Off, "declaration hides ""Request""");
    type Request is new Block.Request;
 
    function Create return Client_Session;
@@ -13,7 +14,9 @@ is
 
    function Initialized (C : Client_Session) return Boolean;
 
-   procedure Initialize (C : in out Client_Session; Path : String; Buffer_Size : Byte_Length := 0);
+   procedure Initialize (C : in out Client_Session;
+                         Path : String;
+                         Buffer_Size : Byte_Length := 0);
 
    procedure Finalize (C : in out Client_Session);
 
@@ -28,7 +31,9 @@ is
              and Ready (C, R)
              and Supported (C, R);
 
-   procedure Enqueue_Write (C : in out Client_Session; R : Request; B : Buffer) with
+   procedure Enqueue_Write (C : in out Client_Session;
+                            R : Request;
+                            B : Buffer) with
       Pre => R.Kind = Write
              and R.Status = Raw
              and B'Length = R.Length * Block_Size (C)

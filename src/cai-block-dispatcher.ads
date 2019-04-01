@@ -1,7 +1,7 @@
 with Cai.Block.Server;
 
 generic
-   with package Server is new Cai.Block.Server (<>);
+   with package Serv is new Cai.Block.Server (<>);
    with procedure Dispatch;
 package Cai.Block.Dispatcher
 is
@@ -10,7 +10,8 @@ is
 
    function Initialized (D : Dispatcher_Session) return Boolean;
 
-   function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
+   function Get_Instance (D : Dispatcher_Session)
+                         return Dispatcher_Instance with
       Pre => Initialized (D);
 
    procedure Initialize (D : in out Dispatcher_Session);
@@ -32,7 +33,8 @@ is
                              L : String) with
       Pre => Initialized (D);
 
-   procedure Session_Cleanup (D : in out Dispatcher_Session; I : in out Server_Session) with
+   procedure Session_Cleanup (D : in out Dispatcher_Session;
+                              I : in out Server_Session) with
       Pre => Initialized (D);
 
 end Cai.Block.Dispatcher;

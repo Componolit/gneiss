@@ -11,7 +11,7 @@ is
    function Create return Dispatcher_Session
    is
    begin
-      return Dispatcher_Session' (Instance => Cxx.Block.Dispatcher.Constructor);
+      return Dispatcher_Session'(Instance => Cxx.Block.Dispatcher.Constructor);
    end Create;
 
    function Initialized (D : Dispatcher_Session) return Boolean
@@ -23,7 +23,8 @@ is
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance
    is
    begin
-      return Dispatcher_Instance (Cxx.Block.Dispatcher.Get_Instance (D.Instance));
+      return Dispatcher_Instance (Cxx.Block.Dispatcher.
+                                    Get_Instance (D.Instance));
    end Get_Instance;
 
    procedure Initialize (D : in out Dispatcher_Session)
@@ -48,8 +49,10 @@ is
                               Label : out String;
                               Last : out Natural)
    is
-      Label_Address : constant System.Address := Cxx.Block.Dispatcher.Label_Content (D.Instance);
-      Label_Length : constant Natural := Natural (Cxx.Block.Dispatcher.Label_Length (D.Instance));
+      Label_Address : constant System.Address :=
+         Cxx.Block.Dispatcher.Label_Content (D.Instance);
+      Label_Length : constant Natural :=
+         Natural (Cxx.Block.Dispatcher.Label_Length (D.Instance));
    begin
       Valid := False;
       Label := (others => Character'Val (0));
@@ -74,14 +77,15 @@ is
                              L : String)
    is
    begin
-      Server.Initialize (Server.Get_Instance (I), L);
+      Serv.Initialize (Serv.Get_Instance (I), L);
       Cxx.Block.Server.Initialize (I.Instance,
-                                   Cxx.Block.Dispatcher.Session_Size (D.Instance),
-                                   Server.Event'Address,
-                                   Server.Block_Count'Address,
-                                   Server.Block_Size'Address,
-                                   Server.Maximal_Transfer_Size'Address,
-                                   Server.Writable'Address);
+                                   Cxx.Block.Dispatcher.
+                                      Session_Size (D.Instance),
+                                   Serv.Event'Address,
+                                   Serv.Block_Count'Address,
+                                   Serv.Block_Size'Address,
+                                   Serv.Maximal_Transfer_Size'Address,
+                                   Serv.Writable'Address);
       Cxx.Block.Dispatcher.Session_Accept (D.Instance, I.Instance);
    end Session_Accept;
 
@@ -90,7 +94,7 @@ is
    is
    begin
       if Cxx.Block.Dispatcher.Session_Cleanup (D.Instance, I.Instance) = 1 then
-         Server.Finalize (Server.Get_Instance (I));
+         Serv.Finalize (Serv.Get_Instance (I));
          Cxx.Block.Server.Finalize (I.Instance);
       end if;
    end Session_Cleanup;

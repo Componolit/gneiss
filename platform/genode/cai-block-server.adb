@@ -13,12 +13,12 @@ package body Cai.Block.Server is
    function Cast_Request (R : Block.Request) return Request is
       (Request (R));
 
-   package Util is new Block.Util (Request, Cast_Request, Cast_Request);
+   package Server_Util is new Block.Util (Request, Cast_Request, Cast_Request);
 
    function Create return Server_Session
    is
    begin
-      return Server_Session' (Instance => Cxx.Block.Server.Constructor);
+      return Server_Session'(Instance => Cxx.Block.Server.Constructor);
    end Create;
 
    function Get_Instance (S : Server_Session) return Server_Instance
@@ -30,7 +30,7 @@ package body Cai.Block.Server is
    function Head (S : Server_Session) return Request
    is
    begin
-      return Util.Convert_Request (Cxx.Block.Server.Head (S.Instance));
+      return Server_Util.Convert_Request (Cxx.Block.Server.Head (S.Instance));
    end Head;
 
    procedure Discard (S : in out Server_Session)
@@ -42,21 +42,25 @@ package body Cai.Block.Server is
    procedure Read (S : in out Server_Session; R : Request; B : Buffer)
    is
    begin
-      Cxx.Block.Server.Read (S.Instance, Util.Convert_Request (R), B'Address);
+      Cxx.Block.Server.Read (S.Instance,
+                             Server_Util.Convert_Request (R),
+                             B'Address);
    end Read;
 
    procedure Write (S : in out Server_Session; R : Request; B : out Buffer)
    is
    begin
-      Cxx.Block.Server.Write (S.Instance, Util.Convert_Request (R), B'Address);
+      Cxx.Block.Server.Write (S.Instance,
+                              Server_Util.Convert_Request (R),
+                              B'Address);
    end Write;
 
    procedure Acknowledge (S : in out Server_Session; R : in out Request)
    is
-      Req : Cxx.Block.Request.Class := Util.Convert_Request (R);
+      Req : Cxx.Block.Request.Class := Server_Util.Convert_Request (R);
    begin
       Cxx.Block.Server.Acknowledge (S.Instance, Req);
-      R := Util.Convert_Request (Req);
+      R := Server_Util.Convert_Request (Req);
    end Acknowledge;
 
    function Initialized (S : Server_Session) return Boolean
