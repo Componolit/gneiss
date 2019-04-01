@@ -5,6 +5,7 @@ project Ada_Interface is
    type Platform_Type is ("posix", "genode");
 
    Platform : Platform_Type := external ("PLATFORM", "posix");
+   Test := external ("TEST", "");
 
    Default_Source := ("src", "platform/" & Platform);
 
@@ -17,9 +18,17 @@ project Ada_Interface is
 
    case Platform is
       when "posix" =>
-         for Source_Dirs use Default_Source & ("test/hello_world");
+         for Languages use ("Ada", "C");
+         case Test is
+            when "" =>
+               for Source_Dirs use Default_Source;
+            when others =>
+               for Source_Dirs use Default_Source & ("test/" & Test);
+               for Main use ("main.c");
+         end case;
       when others =>
          for Source_Dirs use Default_Source;
+         for Languages use ("Ada");
    end case;
 
 end Ada_Interface;
