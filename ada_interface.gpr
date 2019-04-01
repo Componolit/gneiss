@@ -1,0 +1,19 @@
+with "switches";
+
+project Ada_Interface is
+
+   type Platform_Type is ("posix", "genode");
+
+   Platform : Platform_Type := external ("PLATFORM", "posix");
+
+   Generic_Source := ("src");
+
+   for Create_Missing_Dirs use "True";
+   for Object_Dir use "build";
+   for Source_Dirs use Generic_Source & ("platform/" & Platform);
+
+   package Compiler is
+      for Default_Switches ("Ada") use Switches.Compiler_Switches;
+   end Compiler;
+
+end Ada_Interface;
