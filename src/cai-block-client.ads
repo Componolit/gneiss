@@ -1,4 +1,6 @@
 
+pragma Warnings (Off, "procedure ""Event"" is not referenced");
+
 generic
    with procedure Event;
 package Cai.Block.Client

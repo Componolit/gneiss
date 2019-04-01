@@ -1,5 +1,8 @@
 with Cai.Block.Server;
 
+pragma Warnings (Off, "package ""Serv"" is not referenced");
+pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
+
 generic
    with package Serv is new Cai.Block.Server (<>);
    with procedure Dispatch;
