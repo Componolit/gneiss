@@ -6,14 +6,20 @@ project Ada_Interface is
 
    Platform : Platform_Type := external ("PLATFORM", "posix");
 
-   Generic_Source := ("src");
+   Default_Source := ("src", "platform/" & Platform);
 
    for Create_Missing_Dirs use "True";
    for Object_Dir use "build";
-   for Source_Dirs use Generic_Source & ("platform/" & Platform);
 
    package Compiler is
       for Default_Switches ("Ada") use Switches.Compiler_Switches;
    end Compiler;
+
+   case Platform is
+      when "posix" =>
+         for Source_Dirs use Default_Source & ("test/hello_world");
+      when others =>
+         for Source_Dirs use Default_Source;
+   end case;
 
 end Ada_Interface;
