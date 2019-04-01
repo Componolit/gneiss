@@ -20,26 +20,32 @@ is
    function Ready (C : Client_Session; R : Request) return Boolean with
       Volatile_Function;
 
+   function Supported (C : Client_Session; R : Request) return Boolean;
+
    procedure Enqueue_Read (C : in out Client_Session; R : Request) with
       Pre => R.Kind = Read
              and R.Status = Raw
-             and Ready (C, R);
+             and Ready (C, R)
+             and Supported (C, R);
 
    procedure Enqueue_Write (C : in out Client_Session; R : Request; B : Buffer) with
       Pre => R.Kind = Write
              and R.Status = Raw
              and B'Length = R.Length * Block_Size (C)
-             and Ready (C, R);
+             and Ready (C, R)
+             and Supported (C, R);
 
    procedure Enqueue_Sync (C : in out Client_Session; R : Request) with
       Pre => R.Kind = Sync
              and R.Status = Raw
-             and Ready (C, R);
+             and Ready (C, R)
+             and Supported (C, R);
 
    procedure Enqueue_Trim (C : in out Client_Session; R : Request) with
       Pre => R.Kind = Trim
              and R.Status = Raw
-             and Ready (C, R);
+             and Ready (C, R)
+             and Supported (C, R);
 
    procedure Submit (C : in out Client_Session);
 
