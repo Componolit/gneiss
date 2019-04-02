@@ -11,22 +11,22 @@ int sigloop(sigset_t *signal_set)
 {
     int sig;
     for(;;){
-        int sig;
-        if(sigwait(signal_set, &sig)){
-            perror("Failed to dispatch signal:");
+        siginfo_t sig;
+        if(sigwaitinfo(signal_set, &sig) == -1){
+            perror("Failed to dispatch signal");
         }
-        switch(sig){
+        switch(sig.si_signo){
             case SIGINT:
-                fprintf(stderr, "Received signal %d, exiting...\n", sig);
+                fprintf(stderr, "Received signal %d, exiting...\n", sig.si_signo);
                 return 0;
             case SIGUSR1:
-                entry_sigusr1();
+                entry_sigusr1(&sig);
                 break;
             case SIGIO:
-                entry_sigio();
+                entry_sigio(&sig);
                 break;
             default:
-                fprintf(stderr, "Received unhandled signal: %d\n", sig);
+                fprintf(stderr, "Received unhandled signal: %d\n", sig.si_signo);
                 return 1;
         }
     }
