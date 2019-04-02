@@ -17,3 +17,5 @@ script:
     - cd ..
     - gprbuild -P ada_interface.gpr -XPLATFORM=genode
     - gprbuild -P ada_interface.gpr -XPLATFORM=posix -XTEST=hello_world
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=posix
