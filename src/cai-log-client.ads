@@ -17,23 +17,27 @@ is
       Pre => Initialized (C),
       Post => Maximal_Message_Length'Result > 78;
 
+   function Valid_Message (C : Client_Session; Msg : String) return Boolean is
+      (Msg'Length < Maximal_Message_Length (C)) with
+      Pre => Initialized (C);
+
    procedure Info (C : in out Client_Session;
                    Msg : String;
                    Newline : Boolean := True) with
       Pre => Initialized (C)
-             and Msg'Length <= Maximal_Message_Length (C);
+             and then Valid_Message (C, Msg);
 
    procedure Warning (C : in out Client_Session;
                       Msg : String;
                       Newline : Boolean := True) with
       Pre => Initialized (C)
-             and Msg'Length <= Maximal_Message_Length (C);
+             and then Valid_Message (C, Msg);
 
    procedure Error (C : in out Client_Session;
                     Msg : String;
                     Newline : Boolean := True) with
       Pre => Initialized (C)
-             and Msg'Length <= Maximal_Message_Length (C);
+             and then Valid_Message (C, Msg);
 
    procedure Flush (C : in out Client_Session) with
       Pre => Initialized (C);

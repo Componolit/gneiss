@@ -4,7 +4,9 @@ with Cxx.Genode;
 with Cxx.Log.Client;
 use all type Cxx.Bool;
 
-package body Cai.Log.Client is
+package body Cai.Log.Client with
+   SPARK_Mode => Off
+is
 
    function Create return Client_Session
    is
