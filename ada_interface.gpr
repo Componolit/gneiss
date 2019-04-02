@@ -12,9 +12,19 @@ project Ada_Interface is
    for Create_Missing_Dirs use "True";
    for Object_Dir use "build";
 
+   package Binder is
+      for Switches ("Ada") use ("-static");
+   end Binder;
+
    package Compiler is
       for Default_Switches ("Ada") use Switches.Compiler_Switches;
    end Compiler;
+
+   package Linker is
+      for Required_Switches use ("-L../ada-runtime/obj/lib", "-lposix_rts", "-lpthread");
+   end Linker;
+
+   for Runtime ("Ada") use "ada-runtime/obj";
 
    case Platform is
       when "posix" =>

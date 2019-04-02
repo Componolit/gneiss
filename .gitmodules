@@ -1,0 +1,3 @@
+[submodule "ada-runtime"]
+	path = ada-runtime
+	url = https://github.com/Componolit/ada-runtime.git
