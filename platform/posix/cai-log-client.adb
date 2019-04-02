@@ -2,7 +2,9 @@
 with System;
 use all type System.Address;
 
-package body Cai.Log.Client is
+package body Cai.Log.Client with
+   SPARK_Mode => Off
+is
 
    ------------
    -- Create --

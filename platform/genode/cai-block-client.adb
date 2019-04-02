@@ -7,7 +7,8 @@ with Cxx.Genode;
 with Cai.Block.Util;
 use all type Cxx.Bool;
 
-package body Cai.Block.Client is
+package body Cai.Block.Client
+is
 
    function Cast_Request (R : Request) return Block.Request is
       (Block.Request (R));

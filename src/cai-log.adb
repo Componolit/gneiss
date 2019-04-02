@@ -57,7 +57,6 @@ is
       TU : U8;
       function Hex (U : U8) return Character is
          (if U < 10 then Character'Val (U + 48) else Character'Val (U + 55));
-      S : Integer := Img'Last;
    begin
       for I in reverse Integer range 1 .. 8 loop
          TU := U8 (T and 16#ff#);
@@ -68,30 +67,38 @@ is
       end loop;
       for I in Img'Range loop
          if Img (I) /= '0' then
-            S := I;
-            exit;
+            return
+               R : constant String (1 .. Img'Last - I + 1) :=
+                  Img (I .. Img'Last)
+            do
+               null;
+            end return;
          end if;
       end loop;
-      return
-         R : constant String (1 .. Img'Last - S + 1) :=
-            Img (S .. Img'Last)
-      do
-         null;
-      end return;
+      return "0";
    end Image;
 
    function Image (V : Duration) return String
    is
-      Seconds : constant Integer := Integer (V - 0.5);
-      Frac : Integer := Integer ((V - Duration (Seconds)) * 1000000);
-      Simg : constant String := Image (Seconds);
-      Fimg : String (1 .. 6) := (others => '0');
+      Seconds : Long_Integer;
+      Frac : Integer;
+      Fimg : String (1 .. 6);
+      V2 : Duration;
    begin
+      V2 := V;
+      if V > 9223372036.0 then
+         V2 := 9223372036.0;
+      end if;
+      if V < -9223372036.0 then
+         V2 := -9223372036.0;
+      end if;
+      Seconds := Long_Integer ((if V2 < 0.0 then V2 + 0.5 else V2 - 0.5));
+      Frac := Integer ((V2 - Duration (Seconds)) * 1000000);
       for I in reverse Fimg'Range loop
          Fimg (I) := Character'Val (48 + abs (Frac rem 10));
          Frac := Frac / 10;
       end loop;
-      return Simg & "." & Fimg;
+      return Image (Seconds) & "." & Fimg;
    end Image;
 
 end Cai.Log;
