@@ -6,7 +6,9 @@ is
 
      --  ,"-gnatef" -- Full source path in brief error messages
 
-     ,"-gnateV" -- Validity checks on subprogram parameters
+     -- Disabled due to a bug in GNAT Community 2018
+     --,"-gnateV" -- Validity checks on subprogram parameters
+
      ,"-gnatf"  -- Full errors. Verbose details, all undefined references
      ,"-gnatU"  -- Enable unique tag for error messages
 
