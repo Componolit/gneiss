@@ -46,18 +46,6 @@ is
    type Private_Data is private;
    Null_Data : constant Private_Data;
 
-   type Request (Kind : Request_Kind := None) is record
-      Priv : Private_Data;
-      case Kind is
-         when None =>
-            null;
-         when Read .. Trim =>
-            Start  : Id;
-            Length : Count;
-            Status : Request_Status;
-      end case;
-   end record;
-
    subtype Context is System.Address;
 
    type Client_Session is limited private;

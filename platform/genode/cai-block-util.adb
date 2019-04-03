@@ -9,24 +9,23 @@ package body Cai.Block.Util is
       subtype Uid_Type is Cxx.Genode.Uint8_T_Array (1 .. 16);
       function Convert_Uid is new Ada.Unchecked_Conversion (Cai.Block.Private_Data, Uid_Type);
       Req : Cxx.Block.Request.Class;
-      R   : constant Request := Cast_Request (I);
    begin
-      Req.Kind := (case R.Kind is
+      Req.Kind := (case Get_Kind (I) is
                    when Cai.Block.None  => Cxx.Block.None,
                    when Cai.Block.Sync  => Cxx.Block.Sync,
                    when Cai.Block.Read  => Cxx.Block.Read,
                    when Cai.Block.Write => Cxx.Block.Write,
                    when Cai.Block.Trim  => Cxx.Block.Trim);
-      Req.Uid := Convert_Uid (R.Priv);
-      case R.Kind is
+      Req.Uid := Convert_Uid (Get_Priv (I));
+      case Get_Kind (I) is
          when Cai.Block.None =>
             Req.Start  := 0;
             Req.Length := 0;
-            Req.Status := Cxx.Block.Ok;
+            Req.Status := Cxx.Block.Raw;
          when Cai.Block.Read .. Cai.Block.Trim =>
-            Req.Start  := Cxx.Genode.Uint64_T (R.Start);
-            Req.Length := Cxx.Genode.Uint64_T (R.Length);
-            Req.Status := (case R.Status is
+            Req.Start  := Cxx.Genode.Uint64_T (Get_Start (I));
+            Req.Length := Cxx.Genode.Uint64_T (Get_Length (I));
+            Req.Status := (case Get_Status (I) is
                            when Cai.Block.Raw          => Cxx.Block.Raw,
                            when Cai.Block.Ok           => Cxx.Block.Ok,
                            when Cai.Block.Error        => Cxx.Block.Error,
@@ -39,27 +38,23 @@ package body Cai.Block.Util is
    is
       subtype Uid_Type is Cxx.Genode.Uint8_T_Array (1 .. 16);
       function Convert_Uid is new Ada.Unchecked_Conversion (Uid_Type, Cai.Block.Private_Data);
-      Req : Request ((case R.Kind is
-                      when Cxx.Block.None  => Cai.Block.None,
-                      when Cxx.Block.Sync  => Cai.Block.Sync,
-                      when Cxx.Block.Read  => Cai.Block.Read,
-                      when Cxx.Block.Write => Cai.Block.Write,
-                      when Cxx.Block.Trim  => Cai.Block.Trim));
+      Kind : constant Cai.Block.Request_Kind := (case R.Kind is
+                                                 when Cxx.Block.None  => Cai.Block.None,
+                                                 when Cxx.Block.Sync  => Cai.Block.Sync,
+                                                 when Cxx.Block.Read  => Cai.Block.Read,
+                                                 when Cxx.Block.Write => Cai.Block.Write,
+                                                 when Cxx.Block.Trim  => Cai.Block.Trim);
+      Status : constant Cai.Block.Request_Status := (case R.Status is
+                                                     when Cxx.Block.Raw   => Cai.Block.Raw,
+                                                     when Cxx.Block.Ok    => Cai.Block.Ok,
+                                                     when Cxx.Block.Error => Cai.Block.Error,
+                                                     when Cxx.Block.Ack   => Cai.Block.Acknowledged);
    begin
-      Req.Priv := Convert_Uid (R.Uid);
-      case Req.Kind is
-         when Cai.Block.None =>
-            null;
-         when Cai.Block.Read .. Cai.Block.Trim =>
-            Req.Start  := Cai.Block.Id (R.Start);
-            Req.Length := Cai.Block.Count (R.Length);
-            Req.Status := (case R.Status is
-                           when Cxx.Block.Raw   => Cai.Block.Raw,
-                           when Cxx.Block.Ok    => Cai.Block.Ok,
-                           when Cxx.Block.Error => Cai.Block.Error,
-                           when Cxx.Block.Ack   => Cai.Block.Acknowledged);
-      end case;
-      return Cast_Request (Req);
+      return Create_Request (Kind   => Kind,
+                             Priv   => Convert_Uid (R.Uid),
+                             Start  => Cai.Block.Id (R.Start),
+                             Length => Cai.Block.Count (R.Length),
+                             Status => Status);
    end Convert_Request;
 
 end Cai.Block.Util;

@@ -6,7 +6,9 @@ with C.Block;
 
 use all type System.Address;
 
-package body Cai.Block.Client is
+package body Cai.Block.Client with
+SPARK_Mode => Off
+is
 
    function Convert_Request (R : Request) return C.Block.Request;
    function Convert_Request (R : C.Block.Request) return Request;
