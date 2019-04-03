@@ -10,13 +10,59 @@ use all type Cxx.Bool;
 package body Cai.Block.Client
 is
 
-   function Cast_Request (R : Request) return Block.Request is
-      (Block.Request (R));
+   function Create_Request (Kind   : Cai.Block.Request_Kind;
+                            Priv   : Cai.Block.Private_Data;
+                            Start  : Cai.Block.Id;
+                            Length : Cai.Block.Count;
+                            Status : Cai.Block.Request_Status) return Request;
 
-   function Cast_Request (R : Block.Request) return Request is
-      (Request (R));
+   function Create_Request (Kind   : Cai.Block.Request_Kind;
+                            Priv   : Cai.Block.Private_Data;
+                            Start  : Cai.Block.Id;
+                            Length : Cai.Block.Count;
+                            Status : Cai.Block.Request_Status) return Request
+   is
+      R : Request (Kind => (case Kind is
+                            when Cai.Block.None  => Cai.Block.None,
+                            when Cai.Block.Read  => Cai.Block.Read,
+                            when Cai.Block.Write => Cai.Block.Write,
+                            when Cai.Block.Sync  => Cai.Block.Sync,
+                            when Cai.Block.Trim  => Cai.Block.Trim));
+   begin
+      R.Priv := Priv;
+      case R.Kind is
+         when None =>
+            null;
+         when others =>
+            R.Start  := Start;
+            R.Length := Length;
+            R.Status := Status;
+      end case;
+      return R;
+   end Create_Request;
 
-   package Client_Util is new Block.Util (Request, Cast_Request, Cast_Request);
+   function Get_Kind (R : Request) return Cai.Block.Request_Kind is
+      (R.Kind);
+
+   function Get_Priv (R : Request) return Cai.Block.Private_Data is
+      (R.Priv);
+
+   function Get_Start (R : Request) return Cai.Block.Id is
+      (if R.Kind = Cai.Block.None then 0 else R.Start);
+
+   function Get_Length (R : Request) return Cai.Block.Count is
+      (if R.Kind = Cai.Block.None then 0 else R.Length);
+
+   function Get_Status (R : Request) return Cai.Block.Request_Status is
+      (if R.Kind = Cai.Block.None then Cai.Block.Raw else R.Status);
+
+   package Client_Util is new Block.Util (Request,
+                                          Create_Request,
+                                          Get_Kind,
+                                          Get_Priv,
+                                          Get_Start,
+                                          Get_Length,
+                                          Get_Status);
 
    function Create return Client_Session
    is

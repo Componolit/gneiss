@@ -19,9 +19,19 @@ generic
    with procedure Finalize (S : Server_Instance);
 package Cai.Block.Server is
 
-   pragma Warnings (Off, "declaration hides ""Request""");
-   --  Hide Cai.Block.Request to prevent Cai.Block.Server.Server_Request
-   type Request is new Block.Request;
+   --  Redefinition of Cai.Block.Client.Request since SPARK does not allow discriminants of derived types
+   --  SPARK RM 3.7 (2)
+   type Request (Kind : Request_Kind := None) is record
+      Priv : Private_Data;
+      case Kind is
+         when None =>
+            null;
+         when Read .. Trim =>
+            Start  : Id;
+            Length : Count;
+            Status : Request_Status;
+      end case;
+   end record;
 
    function Create return Server_Session;
 
