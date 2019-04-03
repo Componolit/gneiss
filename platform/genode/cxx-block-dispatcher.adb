@@ -5,8 +5,7 @@ is
 
    procedure Dispatch (This : Class)
    is
-      procedure D
-         with
+      procedure D with
          Import,
          Address => This.Handler;
    begin

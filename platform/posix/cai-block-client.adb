@@ -27,7 +27,7 @@ package body Cai.Block.Client is
    function Get_Instance (C : Client_Session) return Client_Instance is
       function C_Get_Instance (T : System.Address) return Client_Instance with
          Import,
-         Convention => CPP,
+         Convention    => CPP,
          External_Name => "block_client_get_instance";
    begin
       return C_Get_Instance (C.Instance);
@@ -46,10 +46,9 @@ package body Cai.Block.Client is
    -- Initialize --
    ----------------
 
-   procedure Initialize
-     (C : in out Client_Session;
-      Path : String;
-      Buffer_Size : Byte_Length := 0)
+   procedure Initialize (C           : in out Client_Session;
+                         Path        :        String;
+                         Buffer_Size :        Byte_Length := 0)
    is
       C_Path : String := Path & Character'Val (0);
       procedure C_Initialize (T : out System.Address;
@@ -57,7 +56,7 @@ package body Cai.Block.Client is
                               B : Byte_Length;
                               E : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_initialize";
    begin
       C_Initialize (C.Instance, C_Path'Address, Buffer_Size, Event'Address);
@@ -70,7 +69,7 @@ package body Cai.Block.Client is
    procedure Finalize (C : in out Client_Session) is
       procedure C_Finalize (T : in out System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_finalize";
    begin
       C_Finalize (C.Instance);
@@ -80,15 +79,13 @@ package body Cai.Block.Client is
    -- Ready --
    -----------
 
-   function Ready
-     (C : Client_Session;
-      R : Request)
-      return Boolean
+   function Ready (C : Client_Session;
+                   R : Request) return Boolean
    is
-      function C_Ready (T : System.Address;
+      function C_Ready (T   : System.Address;
                         Req : System.Address) return Integer with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_ready";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -99,11 +96,12 @@ package body Cai.Block.Client is
    -- Supported --
    ---------------
 
-   function Supported (C : Client_Session; R : Request) return Boolean is
-      function C_Supported (T : System.Address;
+   function Supported (C : Client_Session;
+                       R : Request) return Boolean is
+      function C_Supported (T   : System.Address;
                             Req : System.Address) return Integer with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_supported";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -114,13 +112,13 @@ package body Cai.Block.Client is
    -- Enqueue_Read --
    ------------------
 
-   procedure Enqueue_Read
-     (C : in out Client_Session;
-      R : Request)
+   procedure Enqueue_Read (C : in out Client_Session;
+                           R :        Request)
    is
-      procedure C_Enqueue_Read (T : System.Address; Req : System.Address) with
+      procedure C_Enqueue_Read (T   : System.Address;
+                                Req : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_enqueue_read";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -131,16 +129,15 @@ package body Cai.Block.Client is
    -- Enqueue_Write --
    -------------------
 
-   procedure Enqueue_Write
-     (C : in out Client_Session;
-      R : Request;
-      B : Buffer)
+   procedure Enqueue_Write (C : in out Client_Session;
+                            R :        Request;
+                            B :        Buffer)
    is
-      procedure C_Enqueue_Write (T : System.Address;
+      procedure C_Enqueue_Write (T   : System.Address;
                                  Req : System.Address;
                                  Buf : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_enqueue_write";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -151,13 +148,12 @@ package body Cai.Block.Client is
    -- Enqueue_Sync --
    ------------------
 
-   procedure Enqueue_Sync
-     (C : in out Client_Session;
-      R : Request)
+   procedure Enqueue_Sync (C : in out Client_Session;
+                           R :        Request)
    is
       procedure C_Enqueue_Sync (T : System.Address; Req : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_enqueue_sync";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -168,13 +164,13 @@ package body Cai.Block.Client is
    -- Enqueue_Trim --
    ------------------
 
-   procedure Enqueue_Trim
-     (C : in out Client_Session;
-      R : Request)
+   procedure Enqueue_Trim (C : in out Client_Session;
+                           R :        Request)
    is
-      procedure C_Enqueue_Trim (T : System.Address; Req : System.Address) with
+      procedure C_Enqueue_Trim (T :   System.Address;
+                                Req : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_enqueue_trim";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -188,7 +184,7 @@ package body Cai.Block.Client is
    procedure Submit (C : in out Client_Session) is
       procedure C_Submit (T : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_submit";
    begin
       C_Submit (C.Instance);
@@ -198,14 +194,12 @@ package body Cai.Block.Client is
    -- Next --
    ----------
 
-   function Next
-     (C : Client_Session)
-      return Request
+   function Next (C : Client_Session) return Request
    is
-      procedure C_Next (T : System.Address;
+      procedure C_Next (T :     System.Address;
                         R : out Standard.C.Block.Request) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_next";
       R : Standard.C.Block.Request;
    begin
@@ -217,16 +211,15 @@ package body Cai.Block.Client is
    -- Read --
    ----------
 
-   procedure Read
-     (C : in out Client_Session;
-      R : Request;
-      B : out Buffer)
+   procedure Read (C : in out Client_Session;
+                   R :        Request;
+                   B :    out Buffer)
    is
-      procedure C_Read (T : System.Address;
-                        Req : System.Address;
+      procedure C_Read (T   :     System.Address;
+                        Req :     System.Address;
                         Buf : out Buffer) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_read";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -238,14 +231,15 @@ package body Cai.Block.Client is
    -------------
 
    pragma Warnings (Off, "formal parameter ""R"" is not modified");
-   procedure Release
-     (C : in out Client_Session;
-      R : in out Request)
+   --  R is not modified but the platform state has changed and R becomes invalid on the platform
+   procedure Release (C : in out Client_Session;
+                      R : in out Request)
    is
       pragma Warnings (On, "formal parameter ""R"" is not modified");
-      procedure C_Release (T : System.Address; Req : System.Address) with
+      procedure C_Release (T   : System.Address;
+                           Req : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_release";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
@@ -259,7 +253,7 @@ package body Cai.Block.Client is
    function Writable (C : Client_Session) return Boolean is
       function C_Writable (T : System.Address) return Integer with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_writable";
    begin
       return C_Writable (C.Instance) = 1;
@@ -272,7 +266,7 @@ package body Cai.Block.Client is
    function Block_Count (C : Client_Session) return Count is
       function C_Block_Count (T : System.Address) return Count with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_block_count";
    begin
       return C_Block_Count (C.Instance);
@@ -285,7 +279,7 @@ package body Cai.Block.Client is
    function Block_Size (C : Client_Session) return Size is
       function C_Block_Size (T : System.Address) return Size with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_block_size";
    begin
       return C_Block_Size (C.Instance);
@@ -296,10 +290,9 @@ package body Cai.Block.Client is
    ---------------------------
 
    function Maximal_Transfer_Size (C : Client_Session) return Byte_Length is
-      function C_Maximal_Transfer_Size (T : System.Address)
-         return Byte_Length with
+      function C_Maximal_Transfer_Size (T : System.Address) return Byte_Length with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "block_client_maximal_transfer_size";
    begin
       return C_Maximal_Transfer_Size (C.Instance);
@@ -308,16 +301,15 @@ package body Cai.Block.Client is
    function Convert_Request (R : Request) return C.Block.Request
    is
       subtype C_Private_Data is C.Uint8_T_Array (1 .. 16);
-      function Convert_Priv is new Ada.Unchecked_Conversion (Private_Data,
-                                                             C_Private_Data);
-      Req : C.Block.Request := (Kind => (case R.Kind is
-                                          when None => C.Block.None,
-                                          when Read => C.Block.Read,
-                                          when Write => C.Block.Write,
-                                          when Sync => C.Block.Sync,
-                                          when Trim => C.Block.Trim),
-                                Priv => Convert_Priv (R.Priv),
-                                Start => 0,
+      function Convert_Priv is new Ada.Unchecked_Conversion (Private_Data, C_Private_Data);
+      Req : C.Block.Request := (Kind   => (case R.Kind is
+                                           when None  => C.Block.None,
+                                           when Read  => C.Block.Read,
+                                           when Write => C.Block.Write,
+                                           when Sync  => C.Block.Sync,
+                                           when Trim  => C.Block.Trim),
+                                Priv   => Convert_Priv (R.Priv),
+                                Start  => 0,
                                 Length => 0,
                                 Status => C.Block.Raw);
    begin
@@ -325,12 +317,12 @@ package body Cai.Block.Client is
          when None =>
             null;
          when Read .. Trim =>
-            Req.Start := C.Uint64_T (R.Start);
+            Req.Start  := C.Uint64_T (R.Start);
             Req.Length := C.Uint64_T (R.Length);
             Req.Status := (case R.Status is
-                           when Raw => C.Block.Raw,
-                           when Ok => C.Block.Ok,
-                           when Error => C.Block.Error,
+                           when Raw          => C.Block.Raw,
+                           when Ok           => C.Block.Ok,
+                           when Error        => C.Block.Error,
                            when Acknowledged => C.Block.Acknowledged);
       end case;
       return Req;
@@ -342,26 +334,26 @@ package body Cai.Block.Client is
       function Convert_Priv is new Ada.Unchecked_Conversion (C_Private_Data,
                                                              Private_Data);
       Req : Request (Kind => (case R.Kind is
-                              when C.Block.None => None,
-                              when C.Block.Read => Read,
+                              when C.Block.None  => None,
+                              when C.Block.Read  => Read,
                               when C.Block.Write => Write,
-                              when C.Block.Sync => Sync,
-                              when C.Block.Trim => Trim,
-                              when others => None));
+                              when C.Block.Sync  => Sync,
+                              when C.Block.Trim  => Trim,
+                              when others        => None));
    begin
       Req.Priv := Convert_Priv (R.Priv);
       case Req.Kind is
          when None =>
             null;
          when Read .. Trim =>
-            Req.Start := Id (R.Start);
+            Req.Start  := Id (R.Start);
             Req.Length := Count (R.Length);
             Req.Status := (case R.Status is
-                           when C.Block.Raw => Raw,
-                           when C.Block.Ok => Ok,
-                           when C.Block.Error => Error,
+                           when C.Block.Raw          => Raw,
+                           when C.Block.Ok           => Ok,
+                           when C.Block.Error        => Error,
                            when C.Block.Acknowledged => Acknowledged,
-                           when others => Error);
+                           when others               => Error);
       end case;
       return Req;
    end Convert_Request;

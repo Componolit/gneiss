@@ -39,7 +39,9 @@ package body Cai.Block.Server is
       Cxx.Block.Server.Discard (S.Instance);
    end Discard;
 
-   procedure Read (S : in out Server_Session; R : Request; B : Buffer)
+   procedure Read (S : in out Server_Session;
+                   R :        Request;
+                   B :        Buffer)
    is
    begin
       Cxx.Block.Server.Read (S.Instance,
@@ -47,7 +49,9 @@ package body Cai.Block.Server is
                              B'Address);
    end Read;
 
-   procedure Write (S : in out Server_Session; R : Request; B : out Buffer)
+   procedure Write (S : in out Server_Session;
+                    R :        Request;
+                    B :    out Buffer)
    is
    begin
       Cxx.Block.Server.Write (S.Instance,
@@ -55,7 +59,8 @@ package body Cai.Block.Server is
                               B'Address);
    end Write;
 
-   procedure Acknowledge (S : in out Server_Session; R : in out Request)
+   procedure Acknowledge (S : in out Server_Session;
+                          R : in out Request)
    is
       Req : Cxx.Block.Request.Class := Server_Util.Convert_Request (R);
    begin

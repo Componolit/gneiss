@@ -13,8 +13,7 @@ is
 
    function Initialized (D : Dispatcher_Session) return Boolean;
 
-   function Get_Instance (D : Dispatcher_Session)
-                         return Dispatcher_Instance with
+   function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
       Pre => Initialized (D);
 
    procedure Initialize (D : in out Dispatcher_Session);
@@ -25,15 +24,15 @@ is
    procedure Finalize (D : in out Dispatcher_Session) with
       Pre => Initialized (D);
 
-   procedure Session_Request (D : in out Dispatcher_Session;
-                              Valid : out Boolean;
-                              Label : out String;
-                              Last : out Natural) with
+   procedure Session_Request (D     : in out Dispatcher_Session;
+                              Valid :    out Boolean;
+                              Label :    out String;
+                              Last  :    out Natural) with
       Pre => Initialized (D);
 
    procedure Session_Accept (D : in out Dispatcher_Session;
                              I : in out Server_Session;
-                             L : String) with
+                             L :        String) with
       Pre => Initialized (D);
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;

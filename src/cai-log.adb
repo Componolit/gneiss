@@ -12,11 +12,11 @@ is
    function Image (V : Long_Integer) return String
    is
       Img : String (1 .. 20) := (others => '_');
-      T : Long_Integer := V;
+      T   : Long_Integer     := V;
    begin
       for I in reverse Img'First + 1 .. Img'Last loop
          Img (I) := Character'Val (48 + abs (T rem 10));
-         T := T / 10;
+         T       := T / 10;
          if T = 0 then
             if V < 0 then
                Img (I - 1) := '-';
@@ -51,18 +51,18 @@ is
 
    function Image (V : Unsigned) return String
    is
-      Img : String (1 .. 16) := (others => '0');
-      T : Unsigned := V;
       type U8 is mod 2 ** 8;
-      TU : U8;
+      Img : String (1 .. 16) := (others => '0');
+      T   : Unsigned         := V;
+      TU  : U8;
       function Hex (U : U8) return Character is
          (if U < 10 then Character'Val (U + 48) else Character'Val (U + 55));
    begin
       for I in reverse Integer range 1 .. 8 loop
-         TU := U8 (T and 16#ff#);
-         Img (I * 2) := Hex (TU and 16#0f#);
+         TU              := U8 (T and 16#ff#);
+         Img (I * 2)     := Hex (TU and 16#0f#);
          Img (I * 2 - 1) := Hex (TU / 16);
-         T := T / 256;
+         T               := T / 256;
          exit when T = 0;
       end loop;
       for I in Img'Range loop
@@ -81,9 +81,9 @@ is
    function Image (V : Duration) return String
    is
       Seconds : Long_Integer;
-      Frac : Integer;
-      Fimg : String (1 .. 6);
-      V2 : Duration;
+      Frac    : Integer;
+      Fimg    : String (1 .. 6);
+      V2      : Duration;
    begin
       V2 := V;
       if V > 9223372036.0 then
@@ -93,10 +93,10 @@ is
          V2 := -9223372036.0;
       end if;
       Seconds := Long_Integer ((if V2 < 0.0 then V2 + 0.5 else V2 - 0.5));
-      Frac := Integer ((V2 - Duration (Seconds)) * 1000000);
+      Frac    := Integer ((V2 - Duration (Seconds)) * 1000000);
       for I in reverse Fimg'Range loop
          Fimg (I) := Character'Val (48 + abs (Frac rem 10));
-         Frac := Frac / 10;
+         Frac     := Frac / 10;
       end loop;
       return Image (Seconds) & "." & Fimg;
    end Image;
