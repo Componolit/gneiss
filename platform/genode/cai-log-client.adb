@@ -20,14 +20,13 @@ is
       return Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
-   procedure Initialize (C : in out Client_Session;
-                         Label : String;
-                         Message_Length : Integer := 0)
+   procedure Initialize (C              : in out Client_Session;
+                         Label          :        String;
+                         Message_Length :        Integer := 0)
    is
       C_Label : String := Label & Character'Val (0);
    begin
-      Cxx.Log.Client.Initialize (C.Instance, C_Label'Address,
-                                 Cxx.Genode.Uint64_T (Message_Length));
+      Cxx.Log.Client.Initialize (C.Instance, C_Label'Address, Cxx.Genode.Uint64_T (Message_Length));
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
@@ -42,20 +41,17 @@ is
       return Integer (Cxx.Log.Client.Maximal_Message_Length (C.Instance));
    end Maximal_Message_Length;
 
-   Blue : constant String := Character'Val (8#33#) & "[34m";
-   Red : constant String := Character'Val (8#33#) & "[31m";
-   Reset : constant String := Character'Val (8#33#) & "[0m";
+   Blue       : constant String    := Character'Val (8#33#) & "[34m";
+   Red        : constant String    := Character'Val (8#33#) & "[31m";
+   Reset      : constant String    := Character'Val (8#33#) & "[0m";
    Terminator : constant Character := Character'Val (0);
-   Nl : constant Character := Character'Val (10);
+   Nl         : constant Character := Character'Val (10);
 
-   procedure Info (C : in out Client_Session;
-                   Msg : String;
-                   Newline : Boolean := True)
+   procedure Info (C       : in out Client_Session;
+                   Msg     :        String;
+                   Newline :        Boolean := True)
    is
-      C_Msg : String := Msg
-                        & (if Newline then
-                              Nl & Terminator
-                           else (1 => Terminator));
+      C_Msg : String := Msg & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
       if Newline then
@@ -63,14 +59,12 @@ is
       end if;
    end Info;
 
-   procedure Warning (C : in out Client_Session;
-                      Msg : String;
-                      Newline : Boolean := True)
+   procedure Warning (C       : in out Client_Session;
+                      Msg     :        String;
+                      Newline :        Boolean := True)
    is
       C_Msg : String := Blue & "Warning: " & Msg & Reset
-                        & (if Newline then
-                              Nl & Terminator
-                           else (1 => Terminator));
+                        & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
       if Newline then
@@ -78,14 +72,12 @@ is
       end if;
    end Warning;
 
-   procedure Error (C : in out Client_Session;
-                    Msg : String;
-                    Newline : Boolean := True)
+   procedure Error (C       : in out Client_Session;
+                    Msg     :        String;
+                    Newline :        Boolean := True)
    is
       C_Msg : String := Red & "Error: " & Msg & Reset
-                        & (if Newline then
-                              Nl & Terminator
-                           else (1 => Terminator));
+                        & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
       Cxx.Log.Client.Write (C.Instance, C_Msg'Address);
       if Newline then

@@ -3,6 +3,7 @@ with System;
 private with Cai.Internal.Block;
 
 pragma Warnings (Off, "type ""Buffer"" is not referenced");
+--  Buffer is only provided to be used in child packages
 
 generic
    type Byte is (<>);
@@ -51,7 +52,7 @@ is
          when None =>
             null;
          when Read .. Trim =>
-            Start : Id;
+            Start  : Id;
             Length : Count;
             Status : Request_Status;
       end case;
@@ -69,8 +70,7 @@ is
 private
 
    type Private_Data is new Cai.Internal.Block.Private_Data;
-   Null_Data : constant Private_Data :=
-      Private_Data (Cai.Internal.Block.Null_Data);
+   Null_Data : constant Private_Data := Private_Data (Cai.Internal.Block.Null_Data);
    type Client_Session is new Cai.Internal.Block.Client_Session;
    type Dispatcher_Session is new Cai.Internal.Block.Dispatcher_Session;
    type Server_Session is new Cai.Internal.Block.Server_Session;

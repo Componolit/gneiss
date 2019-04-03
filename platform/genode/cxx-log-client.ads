@@ -6,8 +6,7 @@ is
    type Private_Void is limited private;
    type Private_Void_Address is limited private;
    type Private_Void_Array is array (Natural range <>) of Private_Void;
-   type Private_Void_Address_Array is array (Natural range <>)
-      of Private_Void_Address;
+   type Private_Void_Address_Array is array (Natural range <>) of Private_Void_Address;
 
    type Class is
    limited record
@@ -23,43 +22,43 @@ is
    with Global => null;
    pragma Cpp_Constructor (Constructor, "_ZN3Cai3Log6ClientC1Ev");
 
-   function Initialized (This : Class) return Cxx.Bool
-   with Global => null,
-        Import,
-        Convention => CPP,
-        External_Name => "_ZN3Cai3Log6Client11initializedEv";
+   function Initialized (This : Class) return Cxx.Bool with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai3Log6Client11initializedEv";
 
-   procedure Initialize (This : Class;
+   procedure Initialize (This  : Class;
                          Label : Cxx.Void_Address;
-                         Size : Cxx.Genode.Uint64_T)
-   with Global => null,
-        Import,
-        Convention => CPP,
-        External_Name => "_ZN3Cai3Log6Client10initializeEPKcy";
+                         Size  : Cxx.Genode.Uint64_T) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai3Log6Client10initializeEPKcy";
 
-   procedure Finalize (This : Class)
-   with Global => null,
-        Import,
-        Convention => CPP,
-        External_Name => "_ZN3Cai3Log6Client8finalizeEv";
+   procedure Finalize (This : Class) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai3Log6Client8finalizeEv";
 
-   procedure Write (This : Class; Message : Cxx.Void_Address)
-   with Global => null,
-        Import,
-        Convention => CPP,
-        External_Name => "_ZN3Cai3Log6Client5writeEPKc";
+   procedure Write (This : Class; Message : Cxx.Void_Address) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai3Log6Client5writeEPKc";
 
-   procedure Flush (This : Class)
-   with Global => null,
-        Import,
-        Convention => CPP,
-        External_Name => "_ZN3Cai3Log6Client5flushEv";
+   procedure Flush (This : Class) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai3Log6Client5flushEv";
 
-   function Maximal_Message_Length (This : Class) return Cxx.Genode.Uint64_T
-   with Global => null,
-        Import,
-        Convention => CPP,
-        External_Name => "_ZN3Cai3Log6Client22maximal_message_lengthEv";
+   function Maximal_Message_Length (This : Class) return Cxx.Genode.Uint64_T with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai3Log6Client22maximal_message_lengthEv";
 
 private
    pragma SPARK_Mode (Off);

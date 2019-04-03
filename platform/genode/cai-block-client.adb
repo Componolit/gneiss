@@ -36,9 +36,9 @@ is
       return Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
-   procedure Initialize (C : in out Client_Session;
-                         Path : String;
-                         Buffer_Size : Byte_Length := 0)
+   procedure Initialize (C           : in out Client_Session;
+                         Path        :        String;
+                         Buffer_Size :        Byte_Length := 0)
    is
       C_Path : constant String := Path & Character'Val (0);
       subtype C_Path_String is String (1 .. C_Path'Length);
@@ -58,30 +58,30 @@ is
       Cxx.Block.Client.Finalize (C.Instance);
    end Finalize;
 
-   function Ready (C : Client_Session; R : Request) return Boolean
+   function Ready (C : Client_Session;
+                   R : Request) return Boolean
    is
    begin
-      return Cxx.Block.Client.Ready (C.Instance,
-                                     Client_Util.Convert_Request (R)) =
-                                        Cxx.Bool'Val (1);
+      return Cxx.Block.Client.Ready (C.Instance, Client_Util.Convert_Request (R)) = Cxx.Bool'Val (1);
    end Ready;
 
-   function Supported (C : Client_Session; R : Request) return Boolean
+   function Supported (C : Client_Session;
+                       R : Request) return Boolean
    is
    begin
-      return Cxx.Block.Client.Supported (C.Instance,
-                                         Client_Util.Convert_Request (R)) =
-                                            Cxx.Bool'Val (1);
+      return Cxx.Block.Client.Supported (C.Instance, Client_Util.Convert_Request (R)) = Cxx.Bool'Val (1);
    end Supported;
 
-   procedure Enqueue_Read (C : in out Client_Session; R : Request)
+   procedure Enqueue_Read (C : in out Client_Session;
+                           R :        Request)
    is
    begin
-      Cxx.Block.Client.Enqueue_Read (C.Instance,
-                                     Client_Util.Convert_Request (R));
+      Cxx.Block.Client.Enqueue_Read (C.Instance, Client_Util.Convert_Request (R));
    end Enqueue_Read;
 
-   procedure Enqueue_Write (C : in out Client_Session; R : Request; B : Buffer)
+   procedure Enqueue_Write (C : in out Client_Session;
+                            R :        Request;
+                            B :        Buffer)
    is
       subtype Local_Buffer is Buffer (B'First .. B'Last);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
@@ -89,24 +89,24 @@ is
                                                                Local_U8_Array);
       Data : Local_U8_Array := Convert_Buffer (B);
    begin
-      Cxx.Block.Client.Enqueue_Write (
-         C.Instance,
-         Client_Util.Convert_Request (R),
-         Data);
+      Cxx.Block.Client.Enqueue_Write (C.Instance,
+                                      Client_Util.Convert_Request (R),
+                                      Data);
    end Enqueue_Write;
 
-   procedure Enqueue_Sync (C : in out Client_Session; R : Request)
+   procedure Enqueue_Sync (C : in out Client_Session;
+                           R :        Request)
    is
    begin
       Cxx.Block.Client.Enqueue_Sync (C.Instance,
                                      Client_Util.Convert_Request (R));
    end Enqueue_Sync;
 
-   procedure Enqueue_Trim (C : in out Client_Session; R : Request)
+   procedure Enqueue_Trim (C : in out Client_Session;
+                           R :        Request)
    is
    begin
-      Cxx.Block.Client.Enqueue_Trim (C.Instance,
-                                     Client_Util.Convert_Request (R));
+      Cxx.Block.Client.Enqueue_Trim (C.Instance, Client_Util.Convert_Request (R));
    end Enqueue_Trim;
 
    procedure Submit (C : in out Client_Session)
@@ -121,7 +121,9 @@ is
       return Client_Util.Convert_Request (Cxx.Block.Client.Next (C.Instance));
    end Next;
 
-   procedure Read (C : in out Client_Session; R : Request; B : out Buffer)
+   procedure Read (C : in out Client_Session;
+                   R :        Request;
+                   B :    out Buffer)
    is
       subtype Local_Buffer is Buffer (B'First .. B'Last);
       subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
@@ -129,15 +131,16 @@ is
                                                                Local_Buffer);
       Data : Local_U8_Array := (others => 0);
    begin
-      Cxx.Block.Client.Read (
-         C.Instance,
-         Client_Util.Convert_Request (R),
-         Data);
+      Cxx.Block.Client.Read (C.Instance,
+                             Client_Util.Convert_Request (R),
+                             Data);
       B := Convert_Buffer (Data);
    end Read;
 
    pragma Warnings (Off, "formal parameter ""R"" is not modified");
-   procedure Release (C : in out Client_Session; R : in out Request)
+   --  R is not modified but the platform state has changed and R becomes invalid on the platform
+   procedure Release (C : in out Client_Session;
+                      R : in out Request)
    is
    pragma Warnings (On, "formal parameter ""R"" is not modified");
    begin

@@ -15,9 +15,9 @@ is
    is
       type Class is
       record
-         Kind : Cxx.Block.Kind;
-         Uid : Cxx.Genode.Uint8_T_Array (1 .. 16);
-         Start : Cxx.Genode.Uint64_T;
+         Kind   : Cxx.Block.Kind;
+         Uid    : Cxx.Genode.Uint8_T_Array (1 .. 16);
+         Start  : Cxx.Genode.Uint64_T;
          Length : Cxx.Genode.Uint64_T;
          Status : Cxx.Block.Status;
       end record;

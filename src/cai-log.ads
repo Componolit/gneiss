@@ -8,20 +8,15 @@ is
    type Unsigned is mod 2 ** 64;
 
    function Image (V : Integer) return String with
-      Post => Image'Result'Length <= 20
-              and Image'Result'First = 1;
+      Post => Image'Result'Length <= 20 and Image'Result'First = 1;
    function Image (V : Long_Integer) return String with
-      Post => Image'Result'Length <= 20
-              and Image'Result'First = 1;
+      Post => Image'Result'Length <= 20 and Image'Result'First = 1;
    function Image (V : Boolean) return String with
-      Post => Image'Result'Length <= 5
-              and Image'Result'First = 1;
+      Post => Image'Result'Length <= 5 and Image'Result'First = 1;
    function Image (V : Unsigned) return String with
-      Post => Image'Result'Length <= 16
-              and Image'Result'First = 1;
+      Post => Image'Result'Length <= 16 and Image'Result'First = 1;
    function Image (V : Duration) return String with
-      Post => Image'Result'Length <= 27
-              and Image'Result'First = 1;
+      Post => Image'Result'Length <= 27 and Image'Result'First = 1;
 
    type Client_Session is limited private;
 

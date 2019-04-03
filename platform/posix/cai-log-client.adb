@@ -12,8 +12,8 @@ is
 
    function Create return Client_Session is
    begin
-      return Client_Session'(Label => System.Null_Address,
-                             Length => 0,
+      return Client_Session'(Label          => System.Null_Address,
+                             Length         => 0,
                              Message_Length => 0);
    end Create;
 
@@ -30,39 +30,36 @@ is
    -- Initialize --
    ----------------
 
-   procedure Initialize
-     (C : in out Client_Session;
-      Label : String;
-      Message_Length : Integer := 0)
+   procedure Initialize (C              : in out Client_Session;
+                         Label          :        String;
+                         Message_Length :        Integer := 0)
    is
-      procedure C_Initialize (Str : System.Address;
+      procedure C_Initialize (Str :     System.Address;
                               Lbl : out System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "initialize";
 
       C_Str : String := Label & Character'Val (0);
    begin
       C_Initialize (C_Str'Address, C.Label);
-      C.Length := Label'Length;
-      C.Message_Length :=
-         (if Message_Length > 0 then Message_Length else 4095);
+      C.Length         := Label'Length;
+      C.Message_Length := (if Message_Length > 0 then Message_Length else 4095);
    end Initialize;
 
    --------------
    -- Finalize --
    --------------
 
-   procedure Finalize
-     (C : in out Client_Session)
+   procedure Finalize (C : in out Client_Session)
    is
       procedure C_Finalize (Label : System.Address) with
          Import,
-         Convention => C,
+         Convention    => C,
          External_Name => "finalize";
    begin
       C_Finalize (C.Label);
-      C.Label := System.Null_Address;
+      C.Label  := System.Null_Address;
       C.Length := 0;
    end Finalize;
 
@@ -70,9 +67,7 @@ is
    -- Maximal_Message_Length --
    ----------------------------
 
-   function Maximal_Message_Length
-     (C : Client_Session)
-      return Integer
+   function Maximal_Message_Length (C : Client_Session) return Integer
    is
    begin
       return C.Message_Length;
@@ -80,26 +75,23 @@ is
 
    procedure Print (Msg : System.Address) with
       Import,
-      Convention => C,
+      Convention    => C,
       External_Name => "print";
 
-   function Create_String (Label : String;
-                           Prefix : String;
+   function Create_String (Label   : String;
+                           Prefix  : String;
                            Message : String;
                            Newline : Boolean) return String;
 
-   function Create_String (Label : String;
-                           Prefix : String;
+   function Create_String (Label   : String;
+                           Prefix  : String;
                            Message : String;
                            Newline : Boolean) return String
    is
-      S : constant String := "[" & Label & "] "
-                             & Prefix & Message
-                             & (if Newline then
-                                Character'Val (10)
-                                & Character'Val (0)
-                                else
-                                (1 => Character'Val (0)));
+      S : constant String := "[" & Label & "] " & Prefix & Message
+                             & (if Newline
+                                then Character'Val (10) & Character'Val (0)
+                                else (1 => Character'Val (0)));
    begin
       return S;
    end Create_String;
@@ -108,10 +100,9 @@ is
    -- Info --
    ----------
 
-   procedure Info
-     (C : in out Client_Session;
-      Msg : String;
-      Newline : Boolean := True)
+   procedure Info (C       : in out Client_Session;
+                   Msg     :        String;
+                   Newline :        Boolean := True)
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
@@ -124,10 +115,9 @@ is
    -- Warning --
    -------------
 
-   procedure Warning
-     (C : in out Client_Session;
-      Msg : String;
-      Newline : Boolean := True)
+   procedure Warning (C       : in out Client_Session;
+                      Msg     :        String;
+                      Newline :        Boolean := True)
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
@@ -140,10 +130,9 @@ is
    -- Error --
    -----------
 
-   procedure Error
-     (C : in out Client_Session;
-      Msg : String;
-      Newline : Boolean := True)
+   procedure Error (C       : in out Client_Session;
+                    Msg     :        String;
+                    Newline :        Boolean := True)
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;

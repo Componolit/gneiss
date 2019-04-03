@@ -5,7 +5,7 @@ package body Cai.Component is
 
    procedure Platform_Construct with
       Export,
-      Convention => C,
+      Convention    => C,
       External_Name => "cai_component_construct";
 
    procedure Platform_Construct
