@@ -33,9 +33,10 @@ package Cai.Block.Server is
       end case;
    end record;
 
-   function Create return Server_Session;
-
    function Initialized (S : Server_Session) return Boolean;
+
+   function Create return Server_Session with
+      Post => not Initialized (Create'Result);
 
    function Get_Instance (S : Server_Session) return Server_Instance with
       Pre => Initialized (S);
@@ -45,24 +46,28 @@ package Cai.Block.Server is
       Pre => Initialized (S);
 
    procedure Discard (S : in out Server_Session) with
-      Pre => Initialized (S);
+      Pre  => Initialized (S),
+      Post => Initialized (S);
 
    procedure Read (S : in out Server_Session;
                    R :        Request;
                    B :        Buffer) with
-      Pre => Initialized (S)
-             and R.Kind = Read
-             and B'Length = R.Length * Block_Size (Get_Instance (S));
+      Pre  => Initialized (S)
+              and R.Kind = Read
+              and B'Length = R.Length * Block_Size (Get_Instance (S)),
+      Post => Initialized (S);
 
    procedure Write (S : in out Server_Session;
                     R :        Request;
                     B :    out Buffer) with
-      Pre => Initialized (S)
-             and R.Kind = Write
-             and B'Length = R.Length * Block_Size (Get_Instance (S));
+      Pre  => Initialized (S)
+              and R.Kind = Write
+              and B'Length = R.Length * Block_Size (Get_Instance (S)),
+      Post => Initialized (S);
 
    procedure Acknowledge (S : in out Server_Session;
                           R : in out Request) with
-      Pre => Initialized (S);
+      Pre  => Initialized (S),
+      Post => Initialized (S);
 
 end Cai.Block.Server;

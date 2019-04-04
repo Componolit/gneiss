@@ -10,9 +10,10 @@ generic
 package Cai.Block.Dispatcher
 is
 
-   function Create return Dispatcher_Session;
-
    function Initialized (D : Dispatcher_Session) return Boolean;
+
+   function Create return Dispatcher_Session with
+      Post => not Initialized (Create'Result);
 
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
       Pre => Initialized (D);
@@ -20,24 +21,31 @@ is
    procedure Initialize (D : in out Dispatcher_Session);
 
    procedure Register (D : in out Dispatcher_Session) with
-      Pre => Initialized (D);
+      Pre  => Initialized (D),
+      Post => Initialized (D);
 
    procedure Finalize (D : in out Dispatcher_Session) with
-      Pre => Initialized (D);
+      Pre  => Initialized (D),
+      Post => not Initialized (D);
 
    procedure Session_Request (D     : in out Dispatcher_Session;
                               Valid :    out Boolean;
                               Label :    out String;
                               Last  :    out Natural) with
-      Pre => Initialized (D);
+      Pre  => Initialized (D),
+      Post => Initialized (D);
 
    procedure Session_Accept (D : in out Dispatcher_Session;
                              I : in out Server_Session;
                              L :        String) with
-      Pre => Initialized (D);
+      Pre  => Initialized (D),
+      Post => Initialized (D);
+      --  TODO: check properties of I
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;
                               I : in out Server_Session) with
-      Pre => Initialized (D);
+      Pre  => Initialized (D),
+      Post => Initialized (D);
+      --  TODO: check properties of I
 
 end Cai.Block.Dispatcher;
