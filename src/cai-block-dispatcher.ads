@@ -2,6 +2,7 @@ with Cai.Block.Server;
 
 pragma Warnings (Off, "package ""Serv"" is not referenced");
 pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
+--  Supress unreferenced warnings since not every platform needs each subprogram/package
 
 generic
    with package Serv is new Cai.Block.Server (<>);

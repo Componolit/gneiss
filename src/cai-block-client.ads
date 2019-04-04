@@ -1,5 +1,6 @@
 
 pragma Warnings (Off, "procedure ""Event"" is not referenced");
+--  Supress unreferenced warnings since not every platform needs this procedure
 
 generic
    with procedure Event;
