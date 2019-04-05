@@ -6,17 +6,6 @@ package body Cai.Log.Client with
    SPARK_Mode => Off
 is
 
-   ------------
-   -- Create --
-   ------------
-
-   function Create return Client_Session is
-   begin
-      return Client_Session'(Label          => System.Null_Address,
-                             Length         => 0,
-                             Message_Length => 0);
-   end Create;
-
    -----------------
    -- Initialized --
    -----------------
@@ -30,9 +19,9 @@ is
    -- Initialize --
    ----------------
 
-   procedure Initialize (C              : in out Client_Session;
-                         Label          :        String;
-                         Message_Length :        Integer := 0)
+   procedure Initialize (C              : out Client_Session;
+                         Label          :     String;
+                         Message_Length :     Integer := 0)
    is
       procedure C_Initialize (Str :     System.Address;
                               Lbl : out System.Address) with

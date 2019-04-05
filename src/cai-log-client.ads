@@ -4,9 +4,9 @@ is
 
    function Initialized (C : Client_Session) return Boolean;
 
-   procedure Initialize (C              : in out Client_Session;
-                         Label          :        String;
-                         Message_Length :        Integer := 0);
+   procedure Initialize (C              : out Client_Session;
+                         Label          :     String;
+                         Message_Length :     Integer := 0);
 
    procedure Finalize (C : in out Client_Session) with
       Pre  => Initialized (C),
