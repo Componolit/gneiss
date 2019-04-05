@@ -24,15 +24,12 @@ is
 
    function Initialized (C : Client_Session) return Boolean;
 
-   function Create return Client_Session with
-      Post => not Initialized (Create'Result);
-
    function Get_Instance (C : Client_Session) return Client_Instance with
       Pre => Initialized (C);
 
-   procedure Initialize (C           : in out Client_Session;
-                         Path        :        String;
-                         Buffer_Size :        Byte_Length := 0);
+   procedure Initialize (C           : out Client_Session;
+                         Path        :     String;
+                         Buffer_Size :     Byte_Length := 0);
 
    procedure Finalize (C : in out Client_Session) with
       Pre  => Initialized (C),

@@ -1,10 +1,13 @@
 
 with Ada.Unchecked_Conversion;
+with System;
 with Cxx;
 with Cxx.Block;
 with Cxx.Block.Client;
 with Cxx.Genode;
 with Cai.Block.Util;
+
+use all type System.Address;
 use all type Cxx.Bool;
 
 package body Cai.Block.Client
@@ -64,27 +67,21 @@ is
                                           Get_Length,
                                           Get_Status);
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Instance => Cxx.Block.Client.Constructor);
-   end Create;
-
    function Get_Instance (C : Client_Session) return Client_Instance
    is
    begin
-      return Client_Instance (Cxx.Block.Client.Get_Instance (C.Instance));
+      return Client_Instance (C.Instance);
    end Get_Instance;
 
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
+      return C.Instance /= System.Null_Address;
    end Initialized;
 
-   procedure Initialize (C           : in out Client_Session;
-                         Path        :        String;
-                         Buffer_Size :        Byte_Length := 0)
+   procedure Initialize (C           : out Client_Session;
+                         Path        :     String;
+                         Buffer_Size :     Byte_Length := 0)
    is
       C_Path : constant String := Path & Character'Val (0);
       subtype C_Path_String is String (1 .. C_Path'Length);
