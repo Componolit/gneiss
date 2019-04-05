@@ -1,11 +1,10 @@
 
-with Cxx;
-with Cxx.Log.Client;
+with System;
 
 package Cai.Internal.Log is
 
-   type Client_Session is limited record
-      Instance : Cxx.Log.Client.Class;
+   type Client_Session is record
+      Instance : System.Address;
    end record;
 
 end Cai.Internal.Log;

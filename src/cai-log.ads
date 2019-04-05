@@ -18,7 +18,7 @@ is
    function Image (V : Duration) return String with
       Post => Image'Result'Length <= 27 and Image'Result'First = 1;
 
-   type Client_Session is limited private;
+   type Client_Session is private;
 
 private
 
