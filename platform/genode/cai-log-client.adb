@@ -1,23 +1,20 @@
 
+with System;
 with Cxx;
 with Cxx.Genode;
 with Cxx.Log.Client;
+
+use all type System.Address;
 use all type Cxx.Bool;
 
 package body Cai.Log.Client with
    SPARK_Mode => Off
 is
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Instance => Cxx.Log.Client.Constructor);
-   end Create;
-
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
+      return C.Instance /= System.Null_Address;
    end Initialized;
 
    procedure Initialize (C              : in out Client_Session;

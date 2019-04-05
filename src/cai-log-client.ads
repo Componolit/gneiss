@@ -4,9 +4,6 @@ is
 
    function Initialized (C : Client_Session) return Boolean;
 
-   function Create return Client_Session with
-      Post => not Initialized (Create'Result);
-
    procedure Initialize (C              : in out Client_Session;
                          Label          :        String;
                          Message_Length :        Integer := 0);
