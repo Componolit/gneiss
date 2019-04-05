@@ -13,15 +13,6 @@ is
    function Convert_Request (R : Request) return C.Block.Request;
    function Convert_Request (R : C.Block.Request) return Request;
 
-   ------------
-   -- Create --
-   ------------
-
-   function Create return Client_Session is
-   begin
-      return Client_Session'(Instance => System.Null_Address);
-   end Create;
-
    ------------------
    -- Get_Instance --
    ------------------
@@ -48,9 +39,9 @@ is
    -- Initialize --
    ----------------
 
-   procedure Initialize (C           : in out Client_Session;
-                         Path        :        String;
-                         Buffer_Size :        Byte_Length := 0)
+   procedure Initialize (C           : out Client_Session;
+                         Path        :     String;
+                         Buffer_Size :     Byte_Length := 0)
    is
       C_Path : String := Path & Character'Val (0);
       procedure C_Initialize (T : out System.Address;

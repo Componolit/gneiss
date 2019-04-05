@@ -2,7 +2,7 @@ with System;
 
 package Cai.Internal.Log is
 
-   type Client_Session is limited record
+   type Client_Session is record
       Label          : System.Address;
       Length         : Integer;
       Message_Length : Integer;

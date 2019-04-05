@@ -6,7 +6,7 @@ package body Hello_World is
 
    procedure Construct
    is
-      Log : Cai.Log.Client_Session := Cai.Log.Client.Create;
+      Log : Cai.Log.Client_Session;
    begin
       Cai.Log.Client.Initialize (Log, "Hello_World");
       Cai.Log.Client.Info (Log, "Hello World!");

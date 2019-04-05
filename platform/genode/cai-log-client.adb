@@ -17,9 +17,9 @@ is
       return C.Instance /= System.Null_Address;
    end Initialized;
 
-   procedure Initialize (C              : in out Client_Session;
-                         Label          :        String;
-                         Message_Length :        Integer := 0)
+   procedure Initialize (C              : out Client_Session;
+                         Label          :     String;
+                         Message_Length :     Integer := 0)
    is
       C_Label : String := Label & Character'Val (0);
    begin
