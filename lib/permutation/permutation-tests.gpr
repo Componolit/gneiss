@@ -1,0 +1,14 @@
+with "aunit";
+
+project Permutation.Tests is
+
+   for Source_Dirs use ("src", "tests");
+   for Object_Dir use "build";
+   for Create_Missing_Dirs use "True";
+   for Main use ("test.adb", "main.adb");
+
+   package Builder is
+      for Switches ("Ada") use ("-O2");
+   end Builder;
+
+end Permutation.Tests;

@@ -1,4 +1,6 @@
 with "switches";
+with "contrib/libsparkcrypto.gpr";
+with "lib/permutation/permutation.gpr";
 
 project Ada_Interface is
 
@@ -22,6 +24,8 @@ project Ada_Interface is
                when others =>
                   for Executable ("main.c") use Test;
             end case;
+         when others =>
+            null;
       end case;
    end Builder;
 
