@@ -3,91 +3,55 @@ package Cxx.Block.Dispatcher
    with SPARK_Mode => On
 is
 
-   type Class is
-   limited record
-      Root    : Cxx.Void_Address;
-      Handler : Cxx.Void_Address;
-   end record
-   with Import, Convention => CPP;
-
-   type Class_Address is private;
-   type Class_Array is array (Natural range <>) of Class;
-   type Class_Address_Array is array (Natural range <>) of Class_Address;
-
-   function Constructor return Class with
-      Global => null;
-   pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block10DispatcherC1Ev");
-
-   function Initialized (This : Class) return Cxx.Bool with
+   procedure Initialize (This     : in out Cxx.Void_Address;
+                         Callback :        Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher11initializedEv";
+      External_Name => "cai_block_dispatcher_initialize";
 
-   function Get_Instance (This : Class) return Cxx.Void_Address with
+   procedure Finalize (This : in out Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher12get_instanceEv";
+      External_Name => "cai_block_dispatcher_finalize";
 
-   procedure Initialize (This : Class; Callback : Cxx.Void_Address) with
+   procedure Announce (This : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher10initializeEPv";
+      External_Name => "cai_block_dispatcher_announce";
 
-   procedure Finalize (This : Class) with
+   function Label_Content (This : Cxx.Void_Address) return Cxx.Void_Address with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher8finalizeEv";
+      External_Name => "cai_block_dispatcher_label_content";
 
-   procedure Announce (This : Class) with
+   function Label_Length (This : Cxx.Void_Address) return Cxx.Genode.Uint64_T with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher8announceEv";
+      External_Name => "cai_block_dispatcher_label_length";
 
-   procedure Dispatch (This : Class) with
-      Global        => null,
-      Export,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher8dispatchEv";
-
-   function Label_Content (This : Class) return Cxx.Void_Address with
+   function Session_Size (This : Cxx.Void_Address) return Cxx.Genode.Uint64_T with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher13label_contentEv";
+      External_Name => "cai_block_dispatcher_session_size";
 
-   function Label_Length (This : Class) return Cxx.Genode.Uint64_T with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher12label_lengthEv";
-
-   function Session_Size (This : Class) return Cxx.Genode.Uint64_T with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher12session_sizeEv";
-
-   procedure Session_Accept (This    : Class;
+   procedure Session_Accept (This    : Cxx.Void_Address;
                              Session : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher14session_acceptEPv";
+      External_Name => "cai_block_dispatcher_session_accept";
 
-   function Session_Cleanup (This    : Class;
+   function Session_Cleanup (This    : Cxx.Void_Address;
                              Session : Cxx.Void_Address) return Cxx.Bool with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher15session_cleanupEPv";
+      External_Name => "cai_block_dispatcher_session_cleanup";
 
-private
-   pragma SPARK_Mode (Off);
-
-   type Class_Address is access Class;
 end Cxx.Block.Dispatcher;
