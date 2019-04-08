@@ -35,9 +35,6 @@ package Cai.Block.Server is
 
    function Initialized (S : Server_Session) return Boolean;
 
-   function Create return Server_Session with
-      Post => not Initialized (Create'Result);
-
    function Get_Instance (S : Server_Session) return Server_Instance with
       Pre => Initialized (S);
 

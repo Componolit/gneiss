@@ -1,4 +1,3 @@
-with Cxx.Block.Server;
 
 package Cxx.Block.Dispatcher
    with SPARK_Mode => On
@@ -73,15 +72,15 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block10Dispatcher12session_sizeEv";
 
-   procedure Session_Accept (This    :        Class;
-                             Session : in out Cxx.Block.Server.Class) with
+   procedure Session_Accept (This    : Class;
+                             Session : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block10Dispatcher14session_acceptEPv";
 
    function Session_Cleanup (This    : Class;
-                             Session : Cxx.Block.Server.Class) return Cxx.Bool with
+                             Session : Cxx.Void_Address) return Cxx.Bool with
       Global        => null,
       Import,
       Convention    => CPP,
