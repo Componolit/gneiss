@@ -81,6 +81,7 @@ is
    end Initialized;
 
    procedure Initialize (C           : out Client_Session;
+                         Cap         :     Cai.Types.Capability;
                          Path        :     String;
                          Buffer_Size :     Byte_Length := 0)
    is
@@ -91,6 +92,7 @@ is
                                                             C_String);
    begin
       Cxx.Block.Client.Initialize (C.Instance,
+                                   Cap,
                                    To_C_String (C_Path),
                                    Event'Address,
                                    Cxx.Genode.Uint64_T (Buffer_Size));

@@ -1,9 +1,12 @@
 
+with Cai.Types;
+
 package Cxx.Block.Dispatcher
    with SPARK_Mode => On
 is
 
    procedure Initialize (This     : in out Cxx.Void_Address;
+                         Cap      :        Cai.Types.Capability;
                          Callback :        Cxx.Void_Address) with
       Global        => null,
       Import,
@@ -53,5 +56,11 @@ is
       Import,
       Convention    => C,
       External_Name => "cai_block_dispatcher_session_cleanup";
+
+   function Get_Capability (This : Cxx.Void_Address) return Cai.Types.Capability with
+      Global        => null,
+      Import,
+      Convention    => C,
+      External_Name => "cai_block_dispatcher_get_capability";
 
 end Cxx.Block.Dispatcher;

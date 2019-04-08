@@ -1,3 +1,4 @@
+with Cai.Types;
 with Cai.Block.Server;
 
 pragma Warnings (Off, "package ""Serv"" is not referenced");
@@ -16,7 +17,8 @@ is
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
       Pre => Initialized (D);
 
-   procedure Initialize (D : out Dispatcher_Session);
+   procedure Initialize (D   : out Dispatcher_Session;
+                         Cap :     Cai.Types.Capability);
 
    procedure Register (D : in out Dispatcher_Session) with
       Pre  => Initialized (D),

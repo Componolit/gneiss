@@ -1,6 +1,4 @@
 
-with Cai.Types;
-
 package body Cai.Component is
 
    pragma Warnings (Off, "all instances of");

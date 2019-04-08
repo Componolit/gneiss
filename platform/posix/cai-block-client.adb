@@ -40,9 +40,11 @@ is
    ----------------
 
    procedure Initialize (C           : out Client_Session;
+                         Cap         :     Cai.Types.Capability;
                          Path        :     String;
                          Buffer_Size :     Byte_Length := 0)
    is
+      pragma Unreferenced (Cap);
       C_Path : String := Path & Character'Val (0);
       procedure C_Initialize (T : out System.Address;
                               P : System.Address;
