@@ -81,18 +81,18 @@ class Packet_allocator
             _alloc_packet()
     { }
 
-        void free(void *device)
+        void free(Block_session *device)
         {
             if(_alloc_packet.size()){
-                blk(device)->tx()->release_packet(_alloc_packet);
+                device->_block.tx()->release_packet(_alloc_packet);
             }
         }
 
-        void reallocate(void *device, Genode::uint64_t size)
+        void reallocate(Block_session *device, Genode::uint64_t size)
         {
             if(size != _alloc_packet.size()){
                 free(device);
-                _alloc_packet = blk(device)->tx()->alloc_packet(size, 0);
+                _alloc_packet = device->_block.tx()->alloc_packet(size, 0);
             }
         }
 
@@ -122,25 +122,25 @@ static ::Block::Packet_descriptor last_ack = empty_packet;
 
 extern "C" {
 
-    Genode::uint64_t cai_block_client_block_count(void *session)
+    Genode::uint64_t cai_block_client_block_count(Block_session *session)
     {
-        return reinterpret_cast<Block_session *>(session)->_block_count;
+        return session->_block_count;
     }
 
-    Genode::uint64_t cai_block_client_block_size(void *session)
+    Genode::uint64_t cai_block_client_block_size(Block_session *session)
     {
-        return reinterpret_cast<Block_session *>(session)->_block_size;
+        return session->_block_size;
     }
 
-    Genode::uint64_t cai_block_client_maximal_transfer_size(void *session)
+    Genode::uint64_t cai_block_client_maximal_transfer_size(Block_session *session)
     {
-        return reinterpret_cast<Block_session *>(session)->_buffer_size;
+        return session->_buffer_size;
     }
 
     void cai_block_client_initialize(
-            void **session,
+            Block_session **session,
             const char *device,
-            void *callback,
+            void (*callback)(),
             Genode::uint64_t buffer_size)
     {
         const char default_device[] = "";
@@ -149,16 +149,16 @@ extern "C" {
                 *__genode_env,
                 buf_size,
                 device ? device : default_device,
-                reinterpret_cast<void (*)()>(callback));
+                callback);
     }
 
-    void cai_block_client_finalize(void **session)
+    void cai_block_client_finalize(Block_session **session)
     {
         _factory.destroy<Block_session>(*session);
         *session = nullptr;
     }
 
-    bool cai_block_client_ready(void *session, Cai::Block::Request req)
+    bool cai_block_client_ready(Block_session *session, Cai::Block::Request req)
     {
         if(req.kind == Cai::Block::READ || req.kind == Cai::Block::WRITE){
             try {
@@ -167,28 +167,28 @@ extern "C" {
                 return false;
             }
         }
-        return blk(session)->tx()->ready_to_submit()
+        return session->_block.tx()->ready_to_submit()
                 || req.kind == Cai::Block::SYNC
                 || req.kind == Cai::Block::TRIM;
     }
 
-    bool cai_block_client_supported(void *, Cai::Block::Request req)
+    bool cai_block_client_supported(Block_session *, Cai::Block::Request req)
     {
         return req.kind == Cai::Block::READ || req.kind == Cai::Block::WRITE;
     }
 
-    void cai_block_client_enqueue_read(void *session, Cai::Block::Request req)
+    void cai_block_client_enqueue_read(Block_session *session, Cai::Block::Request req)
     {
         _packet_allocator.reallocate(session, cai_block_client_block_size(session) * req.length);
         ::Block::Packet_descriptor packet(
                 _packet_allocator.take(),
                 ::Block::Packet_descriptor::READ,
                 req.start, req.length);
-        blk(session)->tx()->submit_packet(packet);
+        session->_block.tx()->submit_packet(packet);
     }
 
     void cai_block_client_enqueue_write(
-            void *session,
+            Block_session *session,
             Cai::Block::Request req,
             Genode::uint8_t *data)
     {
@@ -197,25 +197,25 @@ extern "C" {
                 _packet_allocator.take(),
                 ::Block::Packet_descriptor::WRITE,
                 req.start, req.length);
-        Genode::memcpy(blk(session)->tx()->packet_content(packet), data, req.length * cai_block_client_block_size(session));
-        blk(session)->tx()->submit_packet(packet);
+        Genode::memcpy(session->_block.tx()->packet_content(packet), data, req.length * cai_block_client_block_size(session));
+        session->_block.tx()->submit_packet(packet);
     }
 
-    void cai_block_client_enqueue_sync(void *, Cai::Block::Request)
+    void cai_block_client_enqueue_sync(Block_session *, Cai::Block::Request)
     { }
 
-    void cai_block_client_enqueue_trim(void *, Cai::Block::Request)
+    void cai_block_client_enqueue_trim(Block_session *, Cai::Block::Request)
     { }
 
-    void cai_block_client_submit(void *)
+    void cai_block_client_submit(Block_session *)
     { }
 
-    Cai::Block::Request cai_block_client_next(void *session)
+    Cai::Block::Request cai_block_client_next(Block_session *session)
     {
         Cai::Block::Request req = {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
         if(packet_empty(last_ack)){
-            if(blk(session)->tx()->ack_avail()){
-                last_ack = blk(session)->tx()->get_acked_packet();
+            if(session->_block.tx()->ack_avail()){
+                last_ack = session->_block.tx()->get_acked_packet();
                 req = create_cai_block_request (last_ack);
             }
         }else{
@@ -225,30 +225,30 @@ extern "C" {
     }
 
     void cai_block_client_read(
-            void *session,
+            Block_session *session,
             Cai::Block::Request req,
             Genode::uint8_t *data)
     {
         ::Block::Packet_descriptor packet = create_packet_descriptor(req);
-        Genode::memcpy(data, blk(session)->tx()->packet_content(packet), packet.size());
+        Genode::memcpy(data, session->_block.tx()->packet_content(packet), packet.size());
     }
 
 
-    void cai_block_client_release(void *session, Cai::Block::Request)
+    void cai_block_client_release(Block_session *session, Cai::Block::Request)
     {
         if(last_ack.operation() == ::Block::Packet_descriptor::READ
                 || last_ack.operation() == ::Block::Packet_descriptor::WRITE){
-            blk(session)->tx()->release_packet(last_ack);
+            session->_block.tx()->release_packet(last_ack);
         }
         last_ack = empty_packet;
     }
 
-    bool cai_block_client_writable(void *session)
+    bool cai_block_client_writable(Block_session *session)
     {
         ::Block::sector_t sector;
         Genode::size_t size;
         ::Block::Session::Operations ops;
-        blk(session)->info(&sector, &size, &ops);
+        session->_block.info(&sector, &size, &ops);
         return ops.supported(::Block::Packet_descriptor::WRITE);
     }
 

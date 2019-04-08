@@ -16,34 +16,16 @@ class Factory
         { }
 
         template <typename T, typename ... Args>
-        void *create(Args &&... args)
+        T *create(Args &&... args)
         {
-            return reinterpret_cast<void *>(new (_heap) T(args ...));
+            return new (_heap) T(args ...);
         }
 
         template <typename T>
-        void destroy(void *obj)
+        void destroy(T *obj)
         {
-            Genode::destroy(_heap, reinterpret_cast<T *>(obj));
+            Genode::destroy(_heap, obj);
         }
 };
-
-/*
- * helper macros to call ada functions that are available as void pointers
- */
-
-/*
- * dereferences attr to
- * Genode::uint64_t attr(void *);
- * and calls it with state as argument
- */
-#define Get_attr_64(attr, state) ((Genode::uint64_t (*)(void *))attr)(state)
-
-/*
- * derferences attr to
- * void attr(void);
- * and calls it
- */
-#define Call(attr) ((void (*)(void))attr)()
 
 #endif /* ifndef _CAI_FACTORY_H_ */

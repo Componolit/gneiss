@@ -83,48 +83,46 @@ void Cai::Block::Root::close(Genode::Capability<Genode::Session> close_cap)
 
 extern "C" {
 
-    void cai_block_dispatcher_initialize(void **session, void *callback)
+    void cai_block_dispatcher_initialize(Cai::Block::Root **session, void (*callback)())
     {
-        *session = _factory.create<Cai::Block::Root>(*__genode_env, reinterpret_cast<void (*)()>(callback));
+        *session = _factory.create<Cai::Block::Root>(*__genode_env, callback);
     }
 
-    void cai_block_dispatcher_finalize(void **session)
+    void cai_block_dispatcher_finalize(Cai::Block::Root **session)
     {
         _factory.destroy<Cai::Block::Root>(*session);
         *session = nullptr;
     }
 
-    void cai_block_dispatcher_announce(void *session)
+    void cai_block_dispatcher_announce(Cai::Block::Root *session)
     {
-        __genode_env->parent().announce(__genode_env->ep().manage(*reinterpret_cast<Cai::Block::Root *>(session)));
+        __genode_env->parent().announce(__genode_env->ep().manage(*session));
     }
 
-    char *cai_block_dispatcher_label_content(void *session)
+    char *cai_block_dispatcher_label_content(Cai::Block::Root *session)
     {
-        return reinterpret_cast<Cai::Block::Root *>(session)->_label;
+        return session->_label;
     }
 
-    Genode::uint64_t cai_block_dispatcher_label_length(void *session)
+    Genode::uint64_t cai_block_dispatcher_label_length(Cai::Block::Root *session)
     {
-        return static_cast<Genode::uint64_t>(Genode::strlen(reinterpret_cast<Cai::Block::Root *>(session)->_label));
+        return static_cast<Genode::uint64_t>(Genode::strlen(session->_label));
     }
 
-    Genode::uint64_t cai_block_dispatcher_session_size(void *session)
+    Genode::uint64_t cai_block_dispatcher_session_size(Cai::Block::Root *session)
     {
-        return static_cast<Genode::uint64_t>(reinterpret_cast<Cai::Block::Root *>(session)->_ds_size);
+        return static_cast<Genode::uint64_t>(session->_ds_size);
     }
 
-    void cai_block_dispatcher_session_accept(void *session, void *server)
+    void cai_block_dispatcher_session_accept(Cai::Block::Root *session, Cai::Block::Block_root *server)
     {
-        reinterpret_cast<Cai::Block::Root *>(session)->_block_root =
-            reinterpret_cast<Cai::Block::Block_root *>(server);
+        session->_block_root = server;
     }
 
-    bool cai_block_dispatcher_session_cleanup(void *session, void *server)
+    bool cai_block_dispatcher_session_cleanup(Cai::Block::Root *session, Cai::Block::Block_root *server)
     {
-        Genode::Capability<Genode::Session> *close_cap = reinterpret_cast<Cai::Block::Root *>(session)->_close_cap;
-        Genode::Capability<Genode::Session> cap =
-            reinterpret_cast<Cai::Block::Block_root *>(server)->cap();
+        Genode::Capability<Genode::Session> *close_cap = session->_close_cap;
+        Genode::Capability<Genode::Session> cap = server->cap();
         if(close_cap){
             return cap == *close_cap;
         }else{
