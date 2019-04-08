@@ -171,10 +171,10 @@ is
       end;
    end Read_Single;
 
-   procedure Construct
+   procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
-      Cai.Log.Client.Initialize (Log, "Ada_Block_Test");
+      Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Test");
       if Cai.Log.Client.Initialized (Log) then
          Cai.Log.Client.Info (Log, "Ada block test");
       end if;

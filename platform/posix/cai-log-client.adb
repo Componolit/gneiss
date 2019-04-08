@@ -20,9 +20,11 @@ is
    ----------------
 
    procedure Initialize (C              : out Client_Session;
+                         Cap            :     Cai.Types.Capability;
                          Label          :     String;
                          Message_Length :     Integer := 0)
    is
+      pragma Unreferenced (Cap);
       procedure C_Initialize (Str :     System.Address;
                               Lbl : out System.Address) with
          Import,

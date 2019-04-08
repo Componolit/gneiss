@@ -10,8 +10,9 @@ package body Cai.Component is
 
    procedure Platform_Construct
    is
+      Cap : Cai.Types.Capability;
    begin
-      Construct;
+      Construct (Cap);
    end Platform_Construct;
 
 end Cai.Component;

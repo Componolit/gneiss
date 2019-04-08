@@ -1,10 +1,15 @@
 
-#include <spark/component.h>
+#include <base/component.h>
 
-extern "C" void cai_component_construct(void);
+Genode::Env *__genode_env; // only required for ada-runtime
 
-Spark::Component::Result Spark::Component::construct()
+extern "C" void adainit();
+extern "C" void cai_component_construct(Genode::Env *);
+
+void Component::construct(Genode::Env &env)
 {
-    cai_component_construct();
-    return Spark::Component::Result::CONT;
+    __genode_env = &env;
+    env.exec_static_constructors();
+    adainit();
+    cai_component_construct(&env);
 }

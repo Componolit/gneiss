@@ -1,18 +1,20 @@
 
+with Cai.Types;
+
 package body Cai.Component is
 
    pragma Warnings (Off, "all instances of");
    --  This generic must only be instantiated once
 
-   procedure Platform_Construct with
+   procedure Platform_Construct (Cap : Cai.Types.Capability) with
       Export,
       Convention    => C,
       External_Name => "cai_component_construct";
 
-   procedure Platform_Construct
+   procedure Platform_Construct (Cap : Cai.Types.Capability)
    is
    begin
-      Construct;
+      Construct (Cap);
    end Platform_Construct;
 
 end Cai.Component;

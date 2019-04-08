@@ -1,10 +1,13 @@
+
+with Cai.Types;
 package Cai.Log.Client with
    SPARK_Mode
 is
 
-   function Initialized (C : Client_Session) return Boolean;
+   function Initialized (C   : Client_Session) return Boolean;
 
    procedure Initialize (C              : out Client_Session;
+                         Cap            :     Cai.Types.Capability;
                          Label          :     String;
                          Message_Length :     Integer := 0);
 
