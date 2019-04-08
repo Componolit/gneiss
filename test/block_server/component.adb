@@ -18,11 +18,11 @@ package body Component is
    use all type Block.Request_Kind;
    use all type Block.Request_Status;
 
-   procedure Construct
+   procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
-      Cai.Log.Client.Initialize (Log, "Ada_Block_Server");
-      Block_Dispatcher.Initialize (Dispatcher);
+      Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
+      Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
       Cai.Log.Client.Info (Log, "Dispatcher initialized");
    end Construct;

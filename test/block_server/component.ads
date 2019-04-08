@@ -1,4 +1,5 @@
 
+with Cai.Types;
 with Cai.Component;
 with Cai.Block;
 with Cai.Block.Server;
@@ -6,7 +7,7 @@ with Cai.Block.Dispatcher;
 
 package Component is
 
-   procedure Construct;
+   procedure Construct (Cap : Cai.Types.Capability);
 
    package Server_Component is new Cai.Component (Construct);
 
