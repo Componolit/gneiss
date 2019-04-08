@@ -12,7 +12,7 @@ package body Cai.Block.Dispatcher is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Initialized unimplemented");
-      return raise Program_Error with "Unimplemented function Initialized";
+      return raise Program_Error;
    end Initialized;
 
    ------------------
@@ -25,7 +25,7 @@ package body Cai.Block.Dispatcher is
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True,
                                    "Get_Instance unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Instance";
+      return raise Program_Error;
    end Get_Instance;
 
    ----------------
@@ -36,7 +36,7 @@ package body Cai.Block.Dispatcher is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Initialize unimplemented");
-      raise Program_Error with "Unimplemented procedure Initialize";
+      raise Program_Error;
    end Initialize;
 
    --------------
@@ -47,7 +47,7 @@ package body Cai.Block.Dispatcher is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Register unimplemented");
-      raise Program_Error with "Unimplemented procedure Register";
+      raise Program_Error;
    end Register;
 
    --------------
@@ -58,7 +58,7 @@ package body Cai.Block.Dispatcher is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Finalize unimplemented");
-      raise Program_Error with "Unimplemented procedure Finalize";
+      raise Program_Error;
    end Finalize;
 
    ---------------------
@@ -74,7 +74,7 @@ package body Cai.Block.Dispatcher is
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True,
                                    "Session_Request unimplemented");
-      raise Program_Error with "Unimplemented procedure Session_Request";
+      raise Program_Error;
    end Session_Request;
 
    --------------------
@@ -89,7 +89,7 @@ package body Cai.Block.Dispatcher is
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True,
                                    "Session_Accept unimplemented");
-      raise Program_Error with "Unimplemented procedure Session_Accept";
+      raise Program_Error;
    end Session_Accept;
 
    ---------------------
@@ -103,7 +103,7 @@ package body Cai.Block.Dispatcher is
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True,
                                    "Session_Cleanup unimplemented");
-      raise Program_Error with "Unimplemented procedure Session_Cleanup";
+      raise Program_Error;
    end Session_Cleanup;
 
 end Cai.Block.Dispatcher;

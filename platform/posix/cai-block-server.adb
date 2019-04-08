@@ -12,7 +12,7 @@ package body Cai.Block.Server is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Initialized unimplemented");
-      return raise Program_Error with "Unimplemented function Initialized";
+      return raise Program_Error;
    end Initialized;
 
    ------------------
@@ -25,7 +25,7 @@ package body Cai.Block.Server is
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True,
                                    "Get_Instance unimplemented");
-      return raise Program_Error with "Unimplemented function Get_Instance";
+      return raise Program_Error;
    end Get_Instance;
 
    ----------
@@ -37,7 +37,7 @@ package body Cai.Block.Server is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Head unimplemented");
-      return raise Program_Error with "Unimplemented function Head";
+      return raise Program_Error;
    end Head;
 
    -------------
@@ -49,7 +49,7 @@ package body Cai.Block.Server is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Discard unimplemented");
-      raise Program_Error with "Unimplemented procedure Discard";
+      raise Program_Error;
    end Discard;
 
    ----------
@@ -63,7 +63,7 @@ package body Cai.Block.Server is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Read unimplemented");
-      raise Program_Error with "Unimplemented procedure Read";
+      raise Program_Error;
    end Read;
 
    -----------
@@ -77,7 +77,7 @@ package body Cai.Block.Server is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Write unimplemented");
-      raise Program_Error with "Unimplemented procedure Write";
+      raise Program_Error;
    end Write;
 
    -----------------
@@ -90,7 +90,7 @@ package body Cai.Block.Server is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Acknowledge unimplemented");
-      raise Program_Error with "Unimplemented procedure Acknowledge";
+      raise Program_Error;
    end Acknowledge;
 
 end Cai.Block.Server;
