@@ -9,10 +9,10 @@ package Cai.Internal.Block is
    type Client_Session is record
       Instance : System.Address;
    end record;
-   type Dispatcher_Session is limited record
+   type Dispatcher_Session is record
       Instance : System.Address;
    end record;
-   type Server_Session is limited record
+   type Server_Session is record
       Instance : System.Address;
    end record;
    type Client_Instance is new System.Address;
