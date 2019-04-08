@@ -7,7 +7,8 @@ pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
 generic
    with package Serv is new Cai.Block.Server (<>);
    with procedure Dispatch;
-package Cai.Block.Dispatcher
+package Cai.Block.Dispatcher with
+   SPARK_Mode
 is
 
    function Initialized (D : Dispatcher_Session) return Boolean;
@@ -15,7 +16,7 @@ is
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
       Pre => Initialized (D);
 
-   procedure Initialize (D : in out Dispatcher_Session);
+   procedure Initialize (D : out Dispatcher_Session);
 
    procedure Register (D : in out Dispatcher_Session) with
       Pre  => Initialized (D),
@@ -37,12 +38,10 @@ is
                              L :        String) with
       Pre  => Initialized (D),
       Post => Initialized (D);
-      --  TODO: check properties of I
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;
                               I : in out Server_Session) with
-      Pre  => Initialized (D),
+      Pre  => Initialized (D) and Serv.Initialized (I),
       Post => Initialized (D);
-      --  TODO: check properties of I
 
 end Cai.Block.Dispatcher;

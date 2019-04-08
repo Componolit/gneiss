@@ -23,24 +23,28 @@ is
                    Newline :        Boolean := True) with
       Pre  => Initialized (C) and then (Msg'Length <= Minimal_Message_Length
                                         or else Msg'Length <= Maximal_Message_Length (C)),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Maximal_Message_Length (C'Old) = Maximal_Message_Length (C);
 
    procedure Warning (C       : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True) with
       Pre  => Initialized (C) and then (Msg'Length <= Minimal_Message_Length
                                         or else Msg'Length <= Maximal_Message_Length (C)),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Maximal_Message_Length (C'Old) = Maximal_Message_Length (C);
 
    procedure Error (C       : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True) with
       Pre  => Initialized (C) and then (Msg'Length <= Minimal_Message_Length
                                         or else Msg'Length <= Maximal_Message_Length (C)),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Maximal_Message_Length (C'Old) = Maximal_Message_Length (C);
 
    procedure Flush (C : in out Client_Session) with
       Pre  => Initialized (C),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Maximal_Message_Length (C'Old) = Maximal_Message_Length (C);
 
 end Cai.Log.Client;

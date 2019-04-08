@@ -7,7 +7,7 @@ with C.Block;
 use all type System.Address;
 
 package body Cai.Block.Client with
-SPARK_Mode => Off
+   SPARK_Mode => Off
 is
 
    function Convert_Request (R : Request) return C.Block.Request;

@@ -17,7 +17,9 @@ generic
    with procedure Initialize (S : Server_Instance;
                               L : String);
    with procedure Finalize (S : Server_Instance);
-package Cai.Block.Server is
+package Cai.Block.Server with
+   SPARK_Mode
+is
 
    --  Redefinition of Cai.Block.Client.Request since SPARK does not allow discriminants of derived types
    --  SPARK RM 3.7 (2)
