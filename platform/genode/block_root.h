@@ -49,18 +49,18 @@ struct Cai::Block::Block_root
     Genode::Signal_handler<Cai::Block::Block_root> _sigh;
     Genode::Attached_ram_dataspace _ds;
     void (*_callback)(); //procedure Event;
-    Genode::uint64_t (*_block_count)(void *); //function Block_Count (S : Instance) return Cai.Block.Count;
-    Genode::uint64_t (*_block_size)(void *); //function Block_Size (S : Instance) return Cai.Block.Size;
-    Genode::uint64_t (*_maximal_transfer_size)(void *); //function Maximal_Transfer_Size (S : Instance) return Cai.Block.Unsigned_long;
+    Genode::uint64_t (*_block_count)(Cai::Block::Block_root *); //function Block_Count (S : Instance) return Cai.Block.Count;
+    Genode::uint64_t (*_block_size)(Cai::Block::Block_root *); //function Block_Size (S : Instance) return Cai.Block.Size;
+    Genode::uint64_t (*_maximal_transfer_size)(Cai::Block::Block_root *); //function Maximal_Transfer_Size (S : Instance) return Cai.Block.Unsigned_long;
     void *_writable; //function Writable (S : Instance) return Boolean
     Cai::Block::Block_session_component _session;
 
     Block_root(Genode::Env &env,
                Genode::size_t ds_size,
                void (*callback)(),
-               Genode::uint64_t (*block_count)(void *),
-               Genode::uint64_t (*block_size)(void *),
-               Genode::uint64_t (*maximal_transfer_size)(void *),
+               Genode::uint64_t (*block_count)(Cai::Block::Block_root *),
+               Genode::uint64_t (*block_size)(Cai::Block::Block_root *),
+               Genode::uint64_t (*maximal_transfer_size)(Cai::Block::Block_root *),
                void *writable);
     void handler();
     Genode::Capability<Genode::Session> cap();
