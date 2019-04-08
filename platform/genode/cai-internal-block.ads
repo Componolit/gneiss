@@ -1,7 +1,6 @@
 
 with System;
 with Cxx;
-with Cxx.Block.Dispatcher;
 
 package Cai.Internal.Block is
 
@@ -10,8 +9,8 @@ package Cai.Internal.Block is
    type Client_Session is record
       Instance : System.Address;
    end record;
-   type Dispatcher_Session is limited record
-      Instance : Cxx.Block.Dispatcher.Class;
+   type Dispatcher_Session is record
+      Instance : System.Address;
    end record;
    type Server_Session is record
       Instance : System.Address;
