@@ -19,9 +19,7 @@ package body Cai.Block.Server is
    -- Get_Instance --
    ------------------
 
-   function Get_Instance
-     (S : Server_Session)
-      return Server_Instance
+   function Get_Instance (S : Server_Session) return Server_Instance
    is
    begin
       --  Generated stub: replace with real body!
@@ -34,9 +32,7 @@ package body Cai.Block.Server is
    -- Head --
    ----------
 
-   function Head
-     (S : Server_Session)
-      return Request
+   function Head (S : Server_Session) return Request
    is
    begin
       --  Generated stub: replace with real body!
@@ -48,8 +44,7 @@ package body Cai.Block.Server is
    -- Discard --
    -------------
 
-   procedure Discard
-     (S : in out Server_Session)
+   procedure Discard (S : in out Server_Session)
    is
    begin
       --  Generated stub: replace with real body!
@@ -61,10 +56,9 @@ package body Cai.Block.Server is
    -- Read --
    ----------
 
-   procedure Read
-     (S : in out Server_Session;
-      R : Request;
-      B : Buffer)
+   procedure Read (S : in out Server_Session;
+                   R :        Request;
+                   B :        Buffer)
    is
    begin
       --  Generated stub: replace with real body!
@@ -76,10 +70,9 @@ package body Cai.Block.Server is
    -- Write --
    -----------
 
-   procedure Write
-     (S : in out Server_Session;
-      R : Request;
-      B : out Buffer)
+   procedure Write (S : in out Server_Session;
+                    R :        Request;
+                    B :    out Buffer)
    is
    begin
       --  Generated stub: replace with real body!
@@ -91,9 +84,8 @@ package body Cai.Block.Server is
    -- Acknowledge --
    -----------------
 
-   procedure Acknowledge
-     (S : in out Server_Session;
-      R : in out Request)
+   procedure Acknowledge (S : in out Server_Session;
+                          R : in out Request)
    is
    begin
       --  Generated stub: replace with real body!

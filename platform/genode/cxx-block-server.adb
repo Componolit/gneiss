@@ -1,8 +1,8 @@
 with System;
-with Cxx.Genode;
-use all type Cxx.Genode.Uint64_T;
 
-package body Cxx.Block.Server is
+package body Cxx.Block.Server with
+   SPARK_Mode => Off
+is
 
    function Writable (This : Cxx.Void_Address;
                       Writ : Cxx.Void_Address) return Cxx.Bool

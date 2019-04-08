@@ -8,7 +8,9 @@ use all type System.Address;
 use all type Cxx.Bool;
 use all type Cxx.Genode.Uint64_T;
 
-package body Cai.Block.Server is
+package body Cai.Block.Server with
+   SPARK_Mode => Off
+is
 
    function Create_Request (Kind   : Cai.Block.Request_Kind;
                             Priv   : Cai.Block.Private_Data;

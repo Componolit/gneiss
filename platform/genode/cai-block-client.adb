@@ -10,7 +10,8 @@ with Cai.Block.Util;
 use all type System.Address;
 use all type Cxx.Bool;
 
-package body Cai.Block.Client
+package body Cai.Block.Client with
+   SPARK_Mode => Off
 is
 
    function Create_Request (Kind   : Cai.Block.Request_Kind;

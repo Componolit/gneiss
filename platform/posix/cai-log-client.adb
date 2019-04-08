@@ -70,20 +70,11 @@ is
    function Create_String (Label   : String;
                            Prefix  : String;
                            Message : String;
-                           Newline : Boolean) return String;
-
-   function Create_String (Label   : String;
-                           Prefix  : String;
-                           Message : String;
-                           Newline : Boolean) return String
-   is
-      S : constant String := "[" & Label & "] " & Prefix & Message
-                             & (if Newline
-                                then Character'Val (10) & Character'Val (0)
-                                else (1 => Character'Val (0)));
-   begin
-      return S;
-   end Create_String;
+                           Newline : Boolean) return String is
+      ("[" & Label & "] " & Prefix & Message
+       & (if Newline
+          then Character'Val (10) & Character'Val (0)
+          else (1 => Character'Val (0))));
 
    ----------
    -- Info --
@@ -134,8 +125,7 @@ is
    -- Flush --
    -----------
 
-   procedure Flush
-     (C : in out Client_Session)
+   procedure Flush (C : in out Client_Session)
    is
       pragma Unreferenced (C);
    begin

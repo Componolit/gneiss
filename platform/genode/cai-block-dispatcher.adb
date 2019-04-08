@@ -6,7 +6,8 @@ with Cxx.Block.Server;
 use all type System.Address;
 use all type Cxx.Bool;
 
-package body Cai.Block.Dispatcher
+package body Cai.Block.Dispatcher with
+   SPARK_Mode => Off
 is
 
    function Initialized (D : Dispatcher_Session) return Boolean
@@ -21,7 +22,7 @@ is
       return Dispatcher_Instance (D.Instance);
    end Get_Instance;
 
-   procedure Initialize (D : in out Dispatcher_Session)
+   procedure Initialize (D : out Dispatcher_Session)
    is
    begin
       Cxx.Block.Dispatcher.Initialize (D.Instance, Dispatch'Address);

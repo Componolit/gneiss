@@ -4,8 +4,8 @@ pragma Warnings (Off, "procedure ""Event"" is not referenced");
 
 generic
    with procedure Event;
-package Cai.Block.Client
-   with SPARK_Mode
+package Cai.Block.Client with
+   SPARK_Mode
 is
 
    --  Redefinition of Cai.Block.Client.Request since SPARK does not allow discriminants of derived types
@@ -50,7 +50,11 @@ is
               and then R.Status = Raw
               and then Ready (C, R)
               and then Supported (C, R),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    procedure Enqueue_Write (C : in out Client_Session;
                             R :        Request;
@@ -61,7 +65,11 @@ is
               and then B'Length = R.Length * Block_Size (C)
               and then Ready (C, R)
               and then Supported (C, R),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    procedure Enqueue_Sync (C : in out Client_Session;
                            R :        Request) with
@@ -70,7 +78,11 @@ is
               and then R.Status = Raw
               and then Ready (C, R)
               and then Supported (C, R),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    procedure Enqueue_Trim (C : in out Client_Session;
                            R :        Request) with
@@ -79,11 +91,19 @@ is
               and then R.Status = Raw
               and then Ready (C, R)
               and then Supported (C, R),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    procedure Submit (C : in out Client_Session) with
       Pre  => Initialized (C),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    function Next (C : Client_Session) return Request with
       Volatile_Function,
@@ -99,14 +119,22 @@ is
               and then R.Kind = Read
               and then R.Status = Ok
               and then B'Length >= R.Length * Block_Size (C),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    procedure Release (C : in out Client_Session;
                       R : in out Request) with
       Pre  => Initialized (C)
               and then R.Kind /= None
               and then (R.Status = Ok or R.Status = Error),
-      Post => Initialized (C);
+      Post => Initialized (C)
+              and Writable (C'Old)              = Writable (C)
+              and Block_Count (C'Old)           = Block_Count (C)
+              and Block_Size (C'Old)            = Block_Size (C)
+              and Maximal_Transfer_Size (C'Old) = Maximal_Transfer_Size (C);
 
    function Writable (C : Client_Session) return Boolean with
       Pre => Initialized (C);
