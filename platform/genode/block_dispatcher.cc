@@ -4,6 +4,7 @@
 #include <block_session/block_session.h>
 #include <base/attached_ram_dataspace.h>
 #include <util/string.h>
+#include <util/reconstructible.h>
 
 #include <factory.h>
 #include <block_root.h>
@@ -13,8 +14,7 @@ namespace Cai{
     }
 }
 
-extern Genode::Env *__genode_env;
-static Factory _factory {*__genode_env};
+static Genode::Constructible<Factory> _factory {};
 
 struct Cai::Block::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
 {
@@ -83,20 +83,21 @@ void Cai::Block::Root::close(Genode::Capability<Genode::Session> close_cap)
 
 extern "C" {
 
-    void cai_block_dispatcher_initialize(Cai::Block::Root **session, void (*callback)())
+    void cai_block_dispatcher_initialize(Cai::Block::Root **session, Genode::Env *env, void (*callback)())
     {
-        *session = _factory.create<Cai::Block::Root>(*__genode_env, callback);
+        check_factory(_factory, *env);
+        *session = _factory->create<Cai::Block::Root>(*env, callback);
     }
 
     void cai_block_dispatcher_finalize(Cai::Block::Root **session)
     {
-        _factory.destroy<Cai::Block::Root>(*session);
+        _factory->destroy<Cai::Block::Root>(*session);
         *session = nullptr;
     }
 
     void cai_block_dispatcher_announce(Cai::Block::Root *session)
     {
-        __genode_env->parent().announce(__genode_env->ep().manage(*session));
+        session->_env.parent().announce(session->_env.ep().manage(*session));
     }
 
     char *cai_block_dispatcher_label_content(Cai::Block::Root *session)
@@ -128,6 +129,11 @@ extern "C" {
         }else{
             return false;
         }
+    }
+
+    Genode::Env *cai_block_dispatcher_get_capability(Cai::Block::Root *session)
+    {
+        return &(session->_env);
     }
 
 }

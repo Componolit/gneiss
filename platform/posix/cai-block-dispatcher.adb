@@ -32,7 +32,10 @@ package body Cai.Block.Dispatcher is
    -- Initialize --
    ----------------
 
-   procedure Initialize (D : out Dispatcher_Session) is
+   procedure Initialize (D   : out Dispatcher_Session;
+                         Cap : Cai.Types.Capability)
+   is
+      pragma Unreferenced (Cap);
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Initialize unimplemented");

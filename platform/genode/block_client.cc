@@ -3,6 +3,7 @@
 #include <base/heap.h>
 #include <block_session/connection.h>
 #include <util/string.h>
+#include <util/reconstructible.h>
 #include <ada/exception.h>
 
 #include <genode_packet.h>
@@ -20,8 +21,7 @@ extern "C"
     }
 }
 
-extern Genode::Env *__genode_env;
-static Factory _factory {*__genode_env};
+static Genode::Constructible<Factory> _factory {};
 
 struct Block_session
 {
@@ -134,14 +134,16 @@ extern "C" {
 
     void cai_block_client_initialize(
             Block_session **session,
+            Genode::Env *env,
             const char *device,
             void (*callback)(),
             Genode::uint64_t buffer_size)
     {
+        check_factory(_factory, *env)
         const char default_device[] = "";
         Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
-        *session = _factory.create<Block_session>(
-                *__genode_env,
+        *session = _factory->create<Block_session>(
+                *env,
                 buf_size,
                 device ? device : default_device,
                 callback);
@@ -149,7 +151,7 @@ extern "C" {
 
     void cai_block_client_finalize(Block_session **session)
     {
-        _factory.destroy<Block_session>(*session);
+        _factory->destroy<Block_session>(*session);
         *session = nullptr;
     }
 

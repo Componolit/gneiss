@@ -2,6 +2,7 @@
 #include <session/session.h>
 #include <block/request_stream.h>
 #include <block_session/block_session.h>
+#include <util/reconstructible.h>
 
 #include <genode_packet.h>
 #include <block_root.h>
@@ -14,8 +15,7 @@ namespace Cai {
 
 #include <factory.h>
 
-extern Genode::Env *__genode_env;
-static Factory _factory {*__genode_env};
+static Genode::Reconstructible<Factory> _factory {};
 
 extern "C" bool cai_block_server_writable(Cai::Block::Block_root *, void *);
 
@@ -89,6 +89,7 @@ extern "C" {
 
     void cai_block_server_initialize(
             Cai::Block::Block_root **session,
+            Genode::Env *env,
             Genode::uint64_t size,
             void (*callback)(),
             Genode::uint64_t (*block_count)(Cai::Block::Block_root *),
@@ -96,8 +97,9 @@ extern "C" {
             Genode::uint64_t (*maximal_transfer_size)(Cai::Block::Block_root *),
             void *writable)
     {
-        *session = _factory.create<Cai::Block::Block_root>(
-                *__genode_env,
+        check_factory(_factory, *env);
+        *session = _factory->create<Cai::Block::Block_root>(
+                *env,
                 static_cast<Genode::size_t>(size),
                 callback,
                 block_count,
@@ -108,7 +110,7 @@ extern "C" {
 
     void cai_block_server_finalize(Cai::Block::Block_root **session)
     {
-        _factory.destroy<Cai::Block::Block_root>(*session);
+        _factory->destroy<Cai::Block::Block_root>(*session);
         *session = nullptr;
     }
 

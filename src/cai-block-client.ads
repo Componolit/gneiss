@@ -1,4 +1,6 @@
 
+with Cai.Types;
+
 pragma Warnings (Off, "procedure ""Event"" is not referenced");
 --  Supress unreferenced warnings since not every platform needs this procedure
 
@@ -28,6 +30,7 @@ is
       Pre => Initialized (C);
 
    procedure Initialize (C           : out Client_Session;
+                         Cap         :     Cai.Types.Capability;
                          Path        :     String;
                          Buffer_Size :     Byte_Length := 0);
 

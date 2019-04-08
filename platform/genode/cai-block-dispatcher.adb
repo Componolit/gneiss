@@ -22,10 +22,11 @@ is
       return Dispatcher_Instance (D.Instance);
    end Get_Instance;
 
-   procedure Initialize (D : out Dispatcher_Session)
+   procedure Initialize (D   : out Dispatcher_Session;
+                         Cap :     Cai.Types.Capability)
    is
    begin
-      Cxx.Block.Dispatcher.Initialize (D.Instance, Dispatch'Address);
+      Cxx.Block.Dispatcher.Initialize (D.Instance, Cap, Dispatch'Address);
    end Initialize;
 
    procedure Finalize (D : in out Dispatcher_Session)
@@ -73,6 +74,7 @@ is
    begin
       Serv.Initialize (Serv.Get_Instance (I), L);
       Cxx.Block.Server.Initialize (I.Instance,
+                                   Cxx.Block.Dispatcher.Get_Capability (D.Instance),
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance),
                                    Serv.Event'Address,
                                    Serv.Block_Count'Address,

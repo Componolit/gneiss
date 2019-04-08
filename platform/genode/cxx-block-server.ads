@@ -1,8 +1,11 @@
+with Cai.Types;
+
 package Cxx.Block.Server
    with SPARK_Mode => On
 is
 
    procedure Initialize (This                  : in out Cxx.Void_Address;
+                         Cap                   :        Cai.Types.Capability;
                          Size                  :        Cxx.Genode.Uint64_T;
                          Callback              :        Cxx.Void_Address;
                          Block_Count           :        Cxx.Void_Address;
