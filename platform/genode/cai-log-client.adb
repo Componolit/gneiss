@@ -18,12 +18,16 @@ is
    end Initialized;
 
    procedure Initialize (C              : out Client_Session;
+                         Cap            :     Cai.Types.Capability;
                          Label          :     String;
                          Message_Length :     Integer := 0)
    is
       C_Label : String := Label & Character'Val (0);
    begin
-      Cxx.Log.Client.Initialize (C.Instance, C_Label'Address, Cxx.Genode.Uint64_T (Message_Length));
+      Cxx.Log.Client.Initialize (C.Instance,
+                                 Cap,
+                                 C_Label'Address,
+                                 Cxx.Genode.Uint64_T (Message_Length));
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)

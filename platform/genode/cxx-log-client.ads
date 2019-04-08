@@ -1,3 +1,5 @@
+
+with Cai.Types;
 with Cxx.Genode;
 
 package Cxx.Log.Client
@@ -5,6 +7,7 @@ package Cxx.Log.Client
 is
 
    procedure Initialize (This  : in out Cxx.Void_Address;
+                         Cap   :        Cai.Types.Capability;
                          Label :        Cxx.Void_Address;
                          Size  :        Cxx.Genode.Uint64_T) with
       Global        => null,

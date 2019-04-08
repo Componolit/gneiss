@@ -1,12 +1,11 @@
 
 #include <util/string.h>
+#include <util/reconstructible.h>
 #include <log_session/connection.h>
 
 #include <factory.h>
 
-extern Genode::Env *__genode_env;
-static Factory _factory {*__genode_env};
-
+static Genode::Constructible<Factory> _factory {};
 
 struct Log_session
 {
@@ -23,16 +22,17 @@ struct Log_session
 
 extern "C" {
 
-    void cai_log_client_initialize(Log_session **session, const char *label, Genode::uint64_t)
+    void cai_log_client_initialize(Log_session **session, Genode::Env *env, const char *label, Genode::uint64_t)
     {
-        *session = _factory.create<Log_session>(
-                *__genode_env,
+        check_factory (_factory, *env);
+        *session = _factory->create<Log_session>(
+                *env,
                 label);
     }
 
     void cai_log_client_finalize(Log_session **session)
     {
-        _factory.destroy<Log_session>(*session);
+        _factory->destroy<Log_session>(*session);
         *session = nullptr;
     }
 

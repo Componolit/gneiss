@@ -3,6 +3,7 @@
 #define _CAI_FACTORY_H_
 
 #include <base/heap.h>
+#include <util/reconstructible.h>
 
 class Factory
 {
@@ -27,5 +28,12 @@ class Factory
             Genode::destroy(_heap, obj);
         }
 };
+
+inline void check_factory(Genode::Reconstructible<Factory> &factory, Genode::Env &env)
+{
+    if(!factory.constructed()){
+        factory.construct(env);
+    }
+}
 
 #endif /* ifndef _CAI_FACTORY_H_ */

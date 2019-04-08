@@ -1,6 +1,8 @@
 
+with Cai.Types;
+
 generic
-   with procedure Construct;
+   with procedure Construct (Cap : Cai.Types.Capability);
 package Cai.Component is
 
    pragma Elaborate_Body;
