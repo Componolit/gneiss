@@ -66,11 +66,6 @@ struct Block_session
 
 };
 
-inline ::Block::Connection *blk(void *device)
-{
-    return &(reinterpret_cast<Block_session *>(device)->_block);
-}
-
 class Packet_allocator
 {
     private:
