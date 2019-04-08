@@ -74,14 +74,14 @@ is
 
    Data : Disk_Test.Test_State;
 
-   procedure Construct
+   procedure Construct (Cap : Cai.Types.Capability)
    is
       Count : Long_Integer;
       Size  : Long_Integer;
    begin
-      Cai.Log.Client.Initialize (Log, "Correctness");
+      Cai.Log.Client.Initialize (Log, Cap, "Correctness");
       Cai.Log.Client.Info (Log, "Correctness");
-      Block_Client.Initialize (Client, "");
+      Block_Client.Initialize (Client, Cap, "");
       Count := Long_Integer (Block_Client.Block_Count (Client));
       Size  := Long_Integer (Block_Client.Block_Size (Client));
       Cai.Log.Client.Info (Log, "Running correctness test over "

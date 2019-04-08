@@ -178,7 +178,7 @@ is
       if Cai.Log.Client.Initialized (Log) then
          Cai.Log.Client.Info (Log, "Ada block test");
       end if;
-      Block_Client.Initialize (Client, "ada test client");
+      Block_Client.Initialize (Client, Cap, "ada test client");
       Run;
    end Construct;
 

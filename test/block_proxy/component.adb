@@ -11,10 +11,13 @@ package body Component is
    Dispatcher : Block.Dispatcher_Session;
    Server : Block.Server_Session;
 
-   procedure Construct
+   Capability : Cai.Types.Capability;
+
+   procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
-      Block_Dispatcher.Initialize (Dispatcher);
+      Capability := Cap;
+      Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
    end Construct;
 
@@ -188,7 +191,7 @@ package body Component is
       pragma Unreferenced (S);
    begin
       if not Block_Client.Initialized (Client) then
-         Block_Client.Initialize (Client, L);
+         Block_Client.Initialize (Client, Capability, L);
       end if;
    end Initialize_Server;
 

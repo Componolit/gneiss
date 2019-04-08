@@ -1,4 +1,5 @@
 
+with Cai.Types;
 with Cai.Component;
 with Cai.Block;
 with Cai.Block.Client;
@@ -7,7 +8,7 @@ with Cai.Block.Server;
 
 package Component is
 
-   procedure Construct;
+   procedure Construct (Cap : Cai.Types.Capability);
 
    package Proxy_Component is new Cai.Component (Construct);
 

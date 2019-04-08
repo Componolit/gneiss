@@ -95,12 +95,12 @@ is
 --   procedure Large_1000000_Run is new Checked_Run (Block, Block_Client, 250000, 5, 1000000, 2,
    --                                                Large_250000, Large_1000000, "Large_1000000");
 
-   procedure Construct is
+   procedure Construct (Cap : Cai.Types.Capability) is
    begin
-      Cai.Log.Client.Initialize (Log, "Latency");
+      Cai.Log.Client.Initialize (Log, Cap, "Latency");
       Cai.Log.Client.Info (Log, "Initializing test data");
-      Cai.Log.Client.Initialize (Xml, "XML");
-      Block_Client.Initialize (Client, "");
+      Cai.Log.Client.Initialize (Xml, Cap, "XML");
+      Block_Client.Initialize (Client, Cap, "");
       Small_1.Initialize (Small_1_Data);
       Small_2.Initialize (Small_2_Data);
       Small_4.Initialize (Small_4_Data);
