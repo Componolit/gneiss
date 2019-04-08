@@ -9,7 +9,6 @@
 #include <block_root.h>
 namespace Cai{
 #include <block_dispatcher.h>
-#include <block_server.h>
     namespace Block{
         struct Root;
     }
@@ -135,14 +134,14 @@ Genode::uint64_t Cai::Block::Dispatcher::session_size()
 void Cai::Block::Dispatcher::session_accept(void *session)
 {
     reinterpret_cast<Cai::Block::Root *>(_root)->_block_root =
-        reinterpret_cast<Cai::Block::Block_root *>(reinterpret_cast<Cai::Block::Server *>(session)->_session);
+        reinterpret_cast<Cai::Block::Block_root *>(session);
 }
 
 bool Cai::Block::Dispatcher::session_cleanup(void *session)
 {
     Genode::Capability<Genode::Session> *close_cap = reinterpret_cast<Cai::Block::Root *>(_root)->_close_cap;
     Genode::Capability<Genode::Session> cap =
-        reinterpret_cast<Cai::Block::Block_root *>(reinterpret_cast<Cai::Block::Server *>(session)->_session)->cap();
+        reinterpret_cast<Cai::Block::Block_root *>(session)->cap();
     if(close_cap){
         return cap == *close_cap;
     }else{
