@@ -14,6 +14,15 @@ project Ada_Interface is
 
    package Builder is
       for Global_Configuration_Pragmas use "spark.adc";
+      case Platform is
+         when "posix" =>
+            case Test is
+               when "" =>
+                  null;
+               when others =>
+                  for Executable ("main.c") use Test;
+            end case;
+      end case;
    end Builder;
 
    package Binder is
