@@ -139,7 +139,7 @@ extern "C" {
             void (*callback)(),
             Genode::uint64_t buffer_size)
     {
-        check_factory(_factory, *env)
+        check_factory(_factory, *env);
         const char default_device[] = "";
         Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
         *session = _factory->create<Block_session>(

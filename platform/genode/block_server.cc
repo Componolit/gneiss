@@ -15,7 +15,7 @@ namespace Cai {
 
 #include <factory.h>
 
-static Genode::Reconstructible<Factory> _factory {};
+static Genode::Constructible<Factory> _factory {};
 
 extern "C" bool cai_block_server_writable(Cai::Block::Block_root *, void *);
 
