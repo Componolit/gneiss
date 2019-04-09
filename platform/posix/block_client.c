@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include <stdlib.h>
 #include <block_client.h>
 
@@ -9,6 +10,8 @@ const block_client_t *block_client_get_instance(const block_client_t *client)
 
 void block_client_initialize(block_client_t **client, const char *path, uint64_t buffer_size, void (*event)(void))
 {
+    fputs(path, stderr);
+    fputs("\n", stderr);
     *client = malloc(sizeof(block_client_t));
     (*client)->event = event;
 }
