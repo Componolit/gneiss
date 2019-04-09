@@ -1,6 +1,4 @@
 with "switches";
-with "contrib/libsparkcrypto.gpr";
-with "test/lib/permutation/permutation.gpr";
 
 project Ada_Interface is
 
