@@ -1,0 +1,15 @@
+
+set timeout 5;
+spawn ./build/hello_world;
+expect {
+    "Info: Hello World!" {}
+    timeout { exit 1 }
+}
+expect {
+    "Warning: Hello World!" {}
+    timeout { exit 1 }
+}
+expect {
+    "Error: Hello World!" {}
+    timeout { exit 1 }
+}
