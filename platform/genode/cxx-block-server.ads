@@ -3,66 +3,91 @@ with Cai.Types;
 package Cxx.Block.Server
    with SPARK_Mode => On
 is
+   type Class is
+   limited record
+      Session               : Cxx.Void_Address;
+      Callback              : Cxx.Void_Address;
+      Block_Count           : Cxx.Void_Address;
+      Block_Size            : Cxx.Void_Address;
+      Maximal_Transfer_Size : Cxx.Void_Address;
+      Writable              : Cxx.Void_Address;
+   end record
+   with Import, Convention => CPP;
 
-   procedure Initialize (This                  : in out Cxx.Void_Address;
-                         Cap                   :        Cai.Types.Capability;
-                         Size                  :        Cxx.Genode.Uint64_T;
-                         Callback              :        Cxx.Void_Address;
-                         Block_Count           :        Cxx.Void_Address;
-                         Block_Size            :        Cxx.Void_Address;
-                         Maximal_Transfer_Size :        Cxx.Void_Address;
-                         Writable              :        Cxx.Void_Address) with
+   function Constructor return Class with
+      Global => null;
+   pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ServerC1Ev");
+
+   function Get_Instance (This : Class) return Cxx.Void_Address with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_initialize";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server12get_instanceEv";
 
-   procedure Finalize (This : in out Cxx.Void_Address) with
+   procedure Initialize (This                  : Class;
+                         Cap                   : Cai.Types.Capability;
+                         Size                  : Cxx.Genode.Uint64_T;
+                         Callback              : Cxx.Void_Address;
+                         Block_Count           : Cxx.Void_Address;
+                         Block_Size            : Cxx.Void_Address;
+                         Maximal_Transfer_Size : Cxx.Void_Address;
+                         Writable              : Cxx.Void_Address) with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_finalize";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server10initializeEPvyS2_S2_S2_S2_S2_";
 
-   function Writable (This : Cxx.Void_Address;
-                      Writ : Cxx.Void_Address) return Cxx.Bool with
+   procedure Finalize (This : Class) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server8finalizeEv";
+
+   function Writable (This : Class) return Cxx.Bool with
       Global        => null,
       Export,
-      Convention    => C,
-      External_Name => "cai_block_server_writable";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server8writableEv";
 
-   function Head (This : Cxx.Void_Address) return Cxx.Block.Request.Class with
+   function Head (This : Class) return Cxx.Block.Request.Class with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_head";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server4headEv";
 
-   procedure Discard (This : Cxx.Void_Address) with
+   procedure Discard (This : Class) with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_discard";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server7discardEv";
 
-   procedure Read (This   : Cxx.Void_Address;
+   procedure Read (This   : Class;
                    Req    : Cxx.Block.Request.Class;
                    Buffer : Cxx.Void_Address) with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_read";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server4readENS0_7RequestEPv";
 
-   procedure Write (This   : Cxx.Void_Address;
+   procedure Write (This   : Class;
                     Req    : Cxx.Block.Request.Class;
                     Buffer : Cxx.Void_Address) with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_write";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server5writeENS0_7RequestEPv";
 
-   procedure Acknowledge (This :        Cxx.Void_Address;
+   procedure Acknowledge (This :        Class;
                           Req  : in out Cxx.Block.Request.Class) with
       Global        => null,
       Import,
-      Convention    => C,
-      External_Name => "cai_block_server_acknowledge";
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server11acknowledgeERNS0_7RequestE";
+
+   function Initialized (This : Class) return Cxx.Bool with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server11initializedEv";
 
 end Cxx.Block.Server;

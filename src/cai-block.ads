@@ -48,9 +48,9 @@ is
 
    subtype Context is System.Address;
 
-   type Client_Session is private;
-   type Dispatcher_Session is private;
-   type Server_Session is private;
+   type Client_Session is limited private;
+   type Dispatcher_Session is limited private;
+   type Server_Session is limited private;
    type Client_Instance is private;
    type Dispatcher_Instance is private;
    type Server_Instance is private;

@@ -4,14 +4,13 @@ package body Cxx.Block.Server with
    SPARK_Mode => Off
 is
 
-   function Writable (This : Cxx.Void_Address;
-                      Writ : Cxx.Void_Address) return Cxx.Bool
+   function Writable (This : Class) return Cxx.Bool
    is
       function Writable (S : System.Address) return Boolean with
          Import,
-         Address => Writ;
+         Address => This.Writable;
    begin
-      return (if Writable (This)
+      return (if Writable (Cxx.Block.Server.Get_Instance (This))
               then Cxx.Bool'Val (1)
               else Cxx.Bool'Val (0));
    end Writable;
