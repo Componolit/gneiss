@@ -1,10 +1,7 @@
 
-with System;
 with Cxx.Genode;
 with Cxx.Block.Server;
 with Cai.Block.Util;
-
-use all type System.Address;
 use all type Cxx.Bool;
 use all type Cxx.Genode.Uint64_T;
 
@@ -66,10 +63,16 @@ is
                                           Get_Length,
                                           Get_Status);
 
+   function Create return Server_Session
+   is
+   begin
+      return Server_Session'(Instance => Cxx.Block.Server.Constructor);
+   end Create;
+
    function Get_Instance (S : Server_Session) return Server_Instance
    is
    begin
-      return Server_Instance (S.Instance);
+      return Server_Instance (Cxx.Block.Server.Get_Instance (S.Instance));
    end Get_Instance;
 
    function Head (S : Server_Session) return Request
@@ -116,7 +119,7 @@ is
    function Initialized (S : Server_Session) return Boolean
    is
    begin
-      return S.Instance /= System.Null_Address;
+      return Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
 end Cai.Block.Server;

@@ -4,6 +4,17 @@ package body Cai.Block.Dispatcher is
    pragma Warnings (Off, "unimplemented");
    pragma Warnings (Off, "formal parameter");
 
+   ------------
+   -- Create --
+   ------------
+
+   function Create return Dispatcher_Session is
+   begin
+      --  Generated stub: replace with real body!
+      pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
+      return raise Program_Error with "Unimplemented function Create";
+   end Create;
+
    -----------------
    -- Initialized --
    -----------------
@@ -32,8 +43,8 @@ package body Cai.Block.Dispatcher is
    -- Initialize --
    ----------------
 
-   procedure Initialize (D   : out Dispatcher_Session;
-                         Cap : Cai.Types.Capability)
+   procedure Initialize (D   : in out Dispatcher_Session;
+                         Cap :        Cai.Types.Capability)
    is
       pragma Unreferenced (Cap);
    begin

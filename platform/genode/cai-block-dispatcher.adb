@@ -2,7 +2,6 @@
 with System;
 with Cxx.Block.Dispatcher;
 with Cxx.Block.Server;
-
 use all type System.Address;
 use all type Cxx.Bool;
 
@@ -10,20 +9,26 @@ package body Cai.Block.Dispatcher with
    SPARK_Mode => Off
 is
 
+   function Create return Dispatcher_Session
+   is
+   begin
+      return Dispatcher_Session'(Instance => Cxx.Block.Dispatcher.Constructor);
+   end Create;
+
    function Initialized (D : Dispatcher_Session) return Boolean
    is
    begin
-      return D.Instance /= System.Null_Address;
+      return Cxx.Block.Dispatcher.Initialized (D.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance
    is
    begin
-      return Dispatcher_Instance (D.Instance);
+      return Dispatcher_Instance (Cxx.Block.Dispatcher.Get_Instance (D.Instance));
    end Get_Instance;
 
-   procedure Initialize (D   : out Dispatcher_Session;
-                         Cap :     Cai.Types.Capability)
+   procedure Initialize (D   : in out Dispatcher_Session;
+                         Cap :        Cai.Types.Capability)
    is
    begin
       Cxx.Block.Dispatcher.Initialize (D.Instance, Cap, Dispatch'Address);

@@ -1,26 +1,29 @@
 
-with System;
 with Cxx;
 with Cxx.Genode;
 with Cxx.Log.Client;
-
-use all type System.Address;
 use all type Cxx.Bool;
 
 package body Cai.Log.Client with
    SPARK_Mode => Off
 is
 
+   function Create return Client_Session
+   is
+   begin
+      return Client_Session'(Instance => Cxx.Log.Client.Constructor);
+   end Create;
+
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return C.Instance /= System.Null_Address;
+      return Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
-   procedure Initialize (C              : out Client_Session;
-                         Cap            :     Cai.Types.Capability;
-                         Label          :     String;
-                         Message_Length :     Integer := 0)
+   procedure Initialize (C              : in out Client_Session;
+                         Cap            :        Cai.Types.Capability;
+                         Label          :        String;
+                         Message_Length :        Integer := 0)
    is
       C_Label : String := Label & Character'Val (0);
    begin
