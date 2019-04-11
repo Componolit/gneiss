@@ -2,7 +2,9 @@
 with Cai.Types;
 with Cai.Component;
 
-package Hello_World is
+package Hello_World with
+   SPARK_Mode
+is
 
    procedure Construct (Cap : Cai.Types.Capability);
 
