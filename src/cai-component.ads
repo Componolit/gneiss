@@ -12,11 +12,8 @@
 with Cai.Types;
 
 generic
+   --  Component intialization procedure
    with procedure Construct (Cap : Cai.Types.Capability);
-   --  Component initialization procedure, only called once
-   --  only source of an initialized Capability object
-   --
-   --  @param Cap  System capability
 package Cai.Component is
 
    pragma Elaborate_Body;
