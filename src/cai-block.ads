@@ -9,6 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
+private with System;
 private with Cai.Internal.Block;
 
 pragma Warnings (Off, "type ""Buffer"" is not referenced");
@@ -120,6 +121,9 @@ is
    type Dispatcher_Instance is private;
    type Server_Instance is private;
 
+   --  Job identifier for Client.Job
+   type Job_Id is private;
+
 private
 
    type Private_Data is new Cai.Internal.Block.Private_Data;
@@ -130,5 +134,6 @@ private
    type Client_Instance is new Cai.Internal.Block.Client_Instance;
    type Dispatcher_Instance is new Cai.Internal.Block.Dispatcher_Instance;
    type Server_Instance is new Cai.Internal.Block.Server_Instance;
+   type Job_Id is new System.Address;
 
 end Cai.Block;
