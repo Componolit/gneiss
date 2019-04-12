@@ -118,8 +118,11 @@ is
 
    --  Session instances, represent unique identifiers of session objects
    type Client_Instance is private;
+   Null_Client : constant Client_Instance;
    type Dispatcher_Instance is private;
+   Null_Dispatcher : constant Dispatcher_Instance;
    type Server_Instance is private;
+   Null_Server : constant Server_Instance;
 
    --  Job identifier for Client.Job
    type Job_Id is private;
@@ -132,8 +135,11 @@ private
    type Dispatcher_Session is new Cai.Internal.Block.Dispatcher_Session;
    type Server_Session is new Cai.Internal.Block.Server_Session;
    type Client_Instance is new Cai.Internal.Block.Client_Instance;
+   Null_Client : constant Client_Instance := Client_Instance (Cai.Internal.Block.Null_Client);
    type Dispatcher_Instance is new Cai.Internal.Block.Dispatcher_Instance;
+   Null_Dispatcher : constant Dispatcher_Instance := Dispatcher_Instance (Cai.Internal.Block.Null_Dispatcher);
    type Server_Instance is new Cai.Internal.Block.Server_Instance;
+   Null_Server : constant Server_Instance := Server_Instance (Cai.Internal.Block.Null_Server);
    type Job_Id is new System.Address;
 
 end Cai.Block;

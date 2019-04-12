@@ -16,7 +16,10 @@ package Cai.Internal.Block is
       Instance : System.Address;
    end record;
    type Client_Instance is new System.Address;
+   Null_Client : constant Client_Instance := Client_Instance (System.Null_Address);
    type Dispatcher_Instance is new System.Address;
+   Null_Dispatcher : constant Dispatcher_Instance := Dispatcher_Instance (System.Null_Address);
    type Server_Instance is new System.Address;
+   Null_Server : constant Server_Instance := Server_Instance (System.Null_Address);
 
 end Cai.Internal.Block;

@@ -126,7 +126,8 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C)
+              and Get_Instance (C)'Old          = Get_Instance (C);
 
    --  Enqueue sync request
    --
@@ -143,7 +144,8 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C)
+              and Get_Instance (C)'Old          = Get_Instance (C);
 
    --  Enqueue trim request
    --
@@ -160,7 +162,8 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C)
+              and Get_Instance (C)'Old          = Get_Instance (C);
 
    --  Submit all enqueued requests for processing
    --
@@ -171,7 +174,8 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C)
+              and Get_Instance (C)'Old          = Get_Instance (C);
 
    --  Get the next acknowledged request
    --  The request will not be removed from the queue and subsequent calls of this function
@@ -202,7 +206,8 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C)
+              and Get_Instance (C)'Old          = Get_Instance (C);
 
    --  Release a request returned by Next,
    --  this will remove the request from the queue and Next will provide a new request
@@ -218,7 +223,8 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C)
+              and Get_Instance (C)'Old          = Get_Instance (C);
 
    --  Check if the block device is writable
    --

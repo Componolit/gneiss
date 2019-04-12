@@ -8,10 +8,23 @@ is
       return J.Status;
    end Status;
 
+   function Get_Client (J : Job) return Client_Instance
+   is
+   begin
+      return J.Client;
+   end Get_Client;
+
+   function Get_Id (J : Job) return Job_Id
+   is
+   begin
+      return Job_Id (J'Address);
+   end Get_Id;
+
    function Create return Job
    is
    begin
-      return Job'(Kind      => None,
+      return Job'(Client    => Null_Client,
+                  Kind      => None,
                   Status    => Raw,
                   Start     => 0,
                   Length    => 0,
@@ -19,11 +32,13 @@ is
    end Create;
 
    procedure Initialize (J      : in out Job;
+                         C      :        Client_Session;
                          Kind   :        Request_Kind;
                          Start  :        Id;
                          Length :        Count)
    is
    begin
+      J.Client    := Get_Instance (C);
       J.Kind      := Kind;
       J.Status    := Pending;
       J.Start     := Start;
@@ -54,12 +69,6 @@ is
    begin
       null;
    end Release;
-
-   function Get_Id (J : Job) return Job_Id
-   is
-   begin
-      return Job_Id (J'Address);
-   end Get_Id;
 
    procedure Checked_Write (Jid    :        Job_Id;
                             Bsize  :        Size;
