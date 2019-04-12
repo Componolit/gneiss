@@ -15,23 +15,37 @@ package Cai.Log with
    SPARK_Mode
 is
 
-   type Unsigned is mod 2 ** 64;
    --  Catch all mod type, only used for image functions
+   type Unsigned is mod 2 ** 64;
 
+   --  Image functions for Integer
+   --
+   --  @param V  Value
    function Image (V : Integer) return String with
       Post => Image'Result'Length <= 20 and Image'Result'First = 1;
+   --  Image functions for Long_Integer
+   --
+   --  @param V  Value
    function Image (V : Long_Integer) return String with
       Post => Image'Result'Length <= 20 and Image'Result'First = 1;
+   --  Image functions for Boolean
+   --
+   --  @param V  Value
    function Image (V : Boolean) return String with
       Post => Image'Result'Length <= 5 and Image'Result'First = 1;
+   --  Image functions for modular types
+   --
+   --  @param V  Value
    function Image (V : Unsigned) return String with
       Post => Image'Result'Length <= 16 and Image'Result'First = 1;
+   --  Image functions for Duration
+   --
+   --  @param V  Value
    function Image (V : Duration) return String with
       Post => Image'Result'Length <= 27 and Image'Result'First = 1;
-   --  Image functions for basic types
 
-   type Client_Session is limited private;
    --  Log client session object
+   type Client_Session is limited private;
 
 private
 
