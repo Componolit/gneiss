@@ -12,8 +12,8 @@
 private with Cai.Internal.Types;
 package Cai.Types is
 
-   type Capability is private;
    --  System capability
+   type Capability is private;
 
 private
 
