@@ -10,11 +10,12 @@ typedef struct block_client block_client_t;
 struct block_client
 {
     void (*event)(void);
-    void (*write)(block_client_t *client,
-                  uint64_t block_size,
-                  uint64_t start,
-                  uint64_t length,
-                  void *data);
+    void (*rw)(block_client_t *client,
+               uint32_t kind,
+               uint64_t block_size,
+               uint64_t start,
+               uint64_t length,
+               void *data);
 };
 
 const block_client_t *block_client_get_instance(const block_client_t *client);
@@ -23,7 +24,7 @@ void block_client_initialize(block_client_t **client,
                              const char *path,
                              uint64_t buffer_size,
                              void (*event)(void),
-                             void (*write)(block_client_t *, uint64_t, uint64_t, uint64_t, void*));
+                             void (*rw)(block_client_t *, uint32_t, uint64_t, uint64_t, uint64_t, void*));
 
 void block_client_finalize(block_client_t **client);
 
@@ -37,7 +38,7 @@ void block_client_submit(block_client_t *client);
 
 void block_client_next(const block_client_t *client, request_t *request);
 
-void block_client_read(block_client_t *client, const request_t *request, void *data);
+void block_client_read(block_client_t *client, const request_t *request);
 
 void block_client_release(block_client_t *client, const request_t *request);
 

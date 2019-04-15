@@ -48,23 +48,32 @@ is
    -- Initialize --
    ----------------
 
-   procedure C_Write (C : Client_Instance;
-                      B : Size;
-                      S : Id;
-                      L : Count;
-                      D : System.Address);
+   procedure Crw (C : Client_Instance;
+                  K : Standard.C.Block.Request_Kind;
+                  B : Size;
+                  S : Id;
+                  L : Count;
+                  D : System.Address);
 
-   procedure C_Write (C : Client_Instance;
-                      B : Size;
-                      S : Id;
-                      L : Count;
-                      D : System.Address)
+   procedure Crw (C : Client_Instance;
+                  K : Standard.C.Block.Request_Kind;
+                  B : Size;
+                  S : Id;
+                  L : Count;
+                  D : System.Address)
    is
       Data : Buffer (1 .. B * L) with
          Address => D;
    begin
-      Write (C, B, S, L, Data);
-   end C_Write;
+      case K is
+         when Standard.C.Block.Read =>
+            Read (C, B, S, L, Data);
+         when Standard.C.Block.Write =>
+            Write (C, B, S, L, Data);
+         when others =>
+            null;
+      end case;
+   end Crw;
 
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
@@ -82,7 +91,7 @@ is
          Convention    => C,
          External_Name => "block_client_initialize";
    begin
-      C_Initialize (C.Instance, C_Path'Address, Buffer_Size, Event'Address, C_Write'Address);
+      C_Initialize (C.Instance, C_Path'Address, Buffer_Size, Event'Address, Crw'Address);
    end Initialize;
 
    --------------
@@ -187,18 +196,16 @@ is
    ----------
 
    procedure Read (C : in out Client_Session;
-                   R :        Request;
-                   B :    out Buffer)
+                   R :        Request)
    is
       procedure C_Read (T   :     System.Address;
-                        Req :     System.Address;
-                        Buf : out Buffer) with
+                        Req :     System.Address) with
          Import,
          Convention    => C,
          External_Name => "block_client_read";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      C_Read (C.Instance, Req'Address, B);
+      C_Read (C.Instance, Req'Address);
    end Read;
 
    -------------
