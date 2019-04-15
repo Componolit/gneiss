@@ -6,6 +6,19 @@ pragma Warnings (Off, "procedure ""Event"" is not referenced");
 
 generic
    with procedure Event;
+   --  Called when a read has been triggered and data is available
+   --  Pre => Data'Length = Bsize * Length
+   --
+   --  C       Client session instance identifier
+   --  Bsize   Block size of C
+   --  Start   Start block that has been read from
+   --  Length  number of blocks to read
+   --  Data    Read data
+   with procedure Read (C      : Client_Instance;
+                        Bsize  : Size;
+                        Start  : Id;
+                        Length : Count;
+                        Data   : Buffer);
    --  Write procedure called when the platform required data to write
    --  Pre => Data'Length = Bsize * Length
    --
@@ -94,13 +107,15 @@ is
                then Next'Result.Status = Ok or Next'Result.Status = Error
                else True);
 
+   --  Read the returned data from a successfully acknowledged read request
+   --
+   --  @param C  Client session instance
+   --  @param R  Request to read data from
    procedure Read (C : in out Client_Session;
-                   R :        Request;
-                   B : out    Buffer) with
+                   R :        Request) with
       Pre  => Initialized (C)
               and then R.Kind = Read
-              and then R.Status = Ok
-              and then B'Length >= R.Length * Block_Size (C),
+              and then R.Status = Ok,
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)

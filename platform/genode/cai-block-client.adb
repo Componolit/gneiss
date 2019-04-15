@@ -84,23 +84,32 @@ is
       return Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
-   procedure C_Write (C : Client_Instance;
-                      B : Size;
-                      S : Id;
-                      L : Count;
-                      D : System.Address);
+   procedure Crw (C : Client_Instance;
+                  K : Cxx.Block.Kind;
+                  B : Size;
+                  S : Id;
+                  L : Count;
+                  D : System.Address);
 
-   procedure C_Write (C : Client_Instance;
-                      B : Size;
-                      S : Id;
-                      L : Count;
-                      D : System.Address)
+   procedure Crw (C : Client_Instance;
+                  K : Cxx.Block.Kind;
+                  B : Size;
+                  S : Id;
+                  L : Count;
+                  D : System.Address)
    is
       Data : Buffer (1 .. B * L) with
          Address => D;
    begin
-      Write (C, B, S, L, Data);
-   end C_Write;
+      case K is
+         when Cxx.Block.Write =>
+            Write (C, B, S, L, Data);
+         when Cxx.Block.Read =>
+            Read (C, B, S, L, Data);
+         when others =>
+            null;
+      end case;
+   end Crw;
 
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
@@ -117,7 +126,7 @@ is
                                    Cap,
                                    To_C_String (C_Path),
                                    Event'Address,
-                                   C_Write'Address,
+                                   Crw'Address,
                                    Cxx.Genode.Uint64_T (Buffer_Size));
    end Initialize;
 
@@ -166,19 +175,11 @@ is
    end Next;
 
    procedure Read (C : in out Client_Session;
-                   R :        Request;
-                   B :    out Buffer)
+                   R :        Request)
    is
-      subtype Local_Buffer is Buffer (B'First .. B'Last);
-      subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
-      function Convert_Buffer is new Ada.Unchecked_Conversion (Local_U8_Array,
-                                                               Local_Buffer);
-      Data : Local_U8_Array := (others => 0);
    begin
       Cxx.Block.Client.Read (C.Instance,
-                             Client_Util.Convert_Request (R),
-                             Data);
-      B := Convert_Buffer (Data);
+                             Client_Util.Convert_Request (R));
    end Read;
 
    pragma Warnings (Off, "formal parameter ""R"" is not modified");

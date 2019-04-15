@@ -91,12 +91,11 @@ is
       External_Name => "_ZN3Cai5Block6Client4nextEv";
 
    procedure Read (This :        Class;
-                   Req  :        Cxx.Block.Request.Class;
-                   Data : in out Cxx.Genode.Uint8_T_Array) with
+                   Req  :        Cxx.Block.Request.Class) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client4readENS0_7RequestEPh";
+      External_Name => "_ZN3Cai5Block6Client4readENS0_7RequestE";
 
    procedure Release (This : Class;
                       Req  : Cxx.Block.Request.Class) with

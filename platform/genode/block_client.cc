@@ -68,7 +68,7 @@ Cai::Block::Client::Client() :
     _buffer_size(0),
     _device(nullptr),
     _callback(nullptr),
-    _write(nullptr)
+    _rw(nullptr)
 { }
 
 void *Cai::Block::Client::get_instance()
@@ -85,7 +85,7 @@ void Cai::Block::Client::initialize(
         void *env,
         const char *device,
         void *callback,
-        void *write,
+        void *rw,
         Genode::uint64_t buffer_size)
 {
     const char default_device[] = "";
@@ -93,7 +93,7 @@ void Cai::Block::Client::initialize(
     Genode::uint64_t alloc_size;
     Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
-    _write = write;
+    _rw = rw;
     check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
     _device = _factory->create<Block_session>(
             *reinterpret_cast<Genode::Env *>(env),
@@ -179,8 +179,8 @@ void Cai::Block::Client::enqueue(Cai::Block::Request req)
             req.kind == Cai::Block::READ ? ::Block::Packet_descriptor::READ : ::Block::Packet_descriptor::WRITE,
             req.start, req.length);
     if(req.kind == Cai::Block::WRITE){
-        ((void (*)(void *, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_write))(
-                get_instance(), block_size(), req.start, req.length,
+        ((void (*)(void *, Cai::Block::Kind, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_rw))(
+                get_instance(), req.kind, block_size(), req.start, req.length,
                 blk(_device)->tx()->packet_content(packet));
     }
     blk(_device)->tx()->submit_packet(packet);
@@ -215,12 +215,12 @@ Cai::Block::Request Cai::Block::Client::next()
     return req;
 }
 
-void Cai::Block::Client::read(
-        Cai::Block::Request req,
-        Genode::uint8_t *data)
+void Cai::Block::Client::read(Cai::Block::Request req)
 {
     ::Block::Packet_descriptor packet = create_packet_descriptor(req);
-    Genode::memcpy(data, blk(_device)->tx()->packet_content(packet), packet.size());
+    ((void (*)(void *, Cai::Block::Kind, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_rw))(
+            get_instance(), req.kind, block_size(), req.start, req.length,
+            blk(_device)->tx()->packet_content(packet));
 }
 
 

@@ -18,7 +18,7 @@ namespace Block
             Genode::uint64_t _buffer_size;
             void *_device; //Block_session in block_client.cc
             void *_callback; //procedure Event;
-            void *_write; //procedure Write (Instance, Block_size, Start, Length, Data)
+            void *_rw; //procedure Crw (Instance, Kind, Block_size, Start, Length, Data)
 
         protected:
             void callback();
@@ -32,16 +32,14 @@ namespace Block
                     void *env,
                     const char *device = nullptr,
                     void *callback = nullptr,
-                    void *write = nullptr,
+                    void *rw = nullptr,
                     Genode::uint64_t buffer_size = 0);
             void finalize();
             bool ready(Request req);
             bool supported(Kind req);
             void enqueue(Request req);
             void submit();
-            void read(
-                    Request req,
-                    Genode::uint8_t *data);
+            void read(Request req);
             Request next();
             void release(Request req);
             bool writable();

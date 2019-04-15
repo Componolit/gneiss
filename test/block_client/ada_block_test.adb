@@ -16,7 +16,13 @@ is
                     L : Block.Count;
                     D : out String);
 
-   package Block_Client is new Block.Client (Run, Write);
+   procedure Read (C : Block.Client_Instance;
+                   B : Block.Size;
+                   S : Block.Id;
+                   L : Block.Count;
+                   D : String);
+
+   package Block_Client is new Block.Client (Run, Read, Write);
 
    use all type Block.Count;
    use all type Block.Size;
@@ -122,6 +128,25 @@ is
      Post => Block_Client.Initialized (Client)
              and Cai.Log.Client.Initialized (Log);
 
+   procedure Read (C : Block.Client_Instance;
+                   B : Block.Size;
+                   S : Block.Id;
+                   L : Block.Count;
+                   D : String)
+   is
+      pragma Unreferenced (C);
+      pragma Unreferenced (B);
+      pragma Unreferenced (S);
+      pragma Unreferenced (L);
+   begin
+      Cai.Log.Client.Info (Log, "Read succeeded:");
+      if D'Length >= Cai.Log.Client.Maximal_Message_Length (Log) then
+         Cai.Log.Client.Info (Log, D (D'First .. D'First + Cai.Log.Client.Maximal_Message_Length (Log) - 1));
+      else
+         Cai.Log.Client.Info (Log, D);
+      end if;
+   end Read;
+
    procedure Read_Single (S : in out State)
    is
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
@@ -137,19 +162,12 @@ is
             pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
             declare
                R   : Block_Client.Request                := Block_Client.Next (Client);
-               Buf : String (1 .. Positive (Block_Size)) := (others => Character'First);
             begin
                exit when S.Acked >= Request_Count;
                case R.Kind is
                   when Block.Read =>
                      if R.Status = Block.Ok and R.Length = 1 then
-                        Block_Client.Read (Client, R, Buf (1 .. R.Length * Block_Size));
-                        Cai.Log.Client.Info (Log, "Read succeeded:");
-                        if R.Length * Block_Size >= Cai.Log.Client.Maximal_Message_Length (Log) then
-                           Cai.Log.Client.Info (Log, Buf (1 .. Cai.Log.Client.Maximal_Message_Length (Log)));
-                        else
-                           Cai.Log.Client.Info (Log, Buf (1 .. R.Length * Block_Size));
-                        end if;
+                        Block_Client.Read (Client, R);
                      else
                         Cai.Log.Client.Error (Log, "Read failed.");
                      end if;
