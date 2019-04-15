@@ -26,7 +26,19 @@ package Component is
    function Writable (S : Block.Server_Instance) return Boolean;
    function Maximal_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length;
 
-   package Block_Client is new Block.Client (Event);
+   procedure Write (C :     Block.Client_Instance;
+                    B :     Block.Size;
+                    S :     Block.Id;
+                    L :     Block.Count;
+                    D : out Buffer);
+
+   procedure Read (C : Block.Client_Instance;
+                   B : Block.Size;
+                   S : Block.Id;
+                   L : Block.Count;
+                   D : Buffer);
+
+   package Block_Client is new Block.Client (Event, Read, Write);
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
                                              Block_Size,
