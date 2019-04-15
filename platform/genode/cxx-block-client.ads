@@ -44,7 +44,7 @@ is
                          Cap         : Cai.Types.Capability;
                          Device      : Cxx.Char_Array;
                          Callback    : Cxx.Void_Address;
-                         Write       : Cxx.Void_Address;
+                         Rw          : Cxx.Void_Address;
                          Buffer_Size : Cxx.Genode.Uint64_T) with
       Global        => null,
       Import,
