@@ -9,7 +9,14 @@ package body Ada_Block_Test with
 is
 
    package Block is new Cai.Block (Character, Positive, String);
-   package Block_Client is new Block.Client (Run);
+
+   procedure Write (C : Block.Client_Instance;
+                    B : Block.Size;
+                    S : Block.Id;
+                    L : Block.Count;
+                    D : out String);
+
+   package Block_Client is new Block.Client (Run, Write);
 
    use all type Block.Count;
    use all type Block.Size;
@@ -39,6 +46,19 @@ is
               and Cai.Log.Client.Initialized (Log),
       Post => Block_Client.Initialized (Client)
               and Cai.Log.Client.Initialized (Log);
+
+   procedure Write (C : Block.Client_Instance;
+                    B : Block.Size;
+                    S : Block.Id;
+                    L : Block.Count;
+                    D : out String)
+   is
+      pragma Unreferenced (C);
+      pragma Unreferenced (B);
+      pragma Unreferenced (L);
+   begin
+      D (D'First .. D'Last) := (others => Character'Val (33 + Integer (S) mod 93));
+   end Write;
 
    procedure Write_Single (S : in out State)
    is
@@ -70,7 +90,6 @@ is
       if Block_Size <= 4096 and Block_Size >= 256 then
          declare
             Req : Block_Client.Request (Kind => Block.Write);
-            Buf : String (1 .. Positive (Block_Size)) := (others => Character'First);
          begin
             Req.Priv   := Block.Null_Data;
             Req.Length := 1;
@@ -82,13 +101,11 @@ is
                   pragma Loop_Invariant (S.Sent < Integer'Last);
                   pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
                   Req.Start := Block.Id (S.Sent + 1);
-                  Buf (1 .. Req.Length * Block_Size) :=
-                    (others => Character'Val (33 + Integer (Req.Start) mod 93));
                   exit when not Block_Client.Ready (Client, Req)
                             or not Block_Client.Supported (Client, Req.Kind)
                             or S.Sent >= Request_Count
                             or S.Sent = Integer'Last;
-                  Block_Client.Enqueue_Write (Client, Req, Buf (1 .. Req.Length * Block_Size));
+                  Block_Client.Enqueue (Client, Req);
                   S.Sent := S.Sent + 1;
                end loop;
                Block_Client.Submit (Client);
@@ -163,7 +180,7 @@ is
                exit when not Block_Client.Ready (Client, Req)
                          or not Block_Client.Supported (Client, Req.Kind)
                          or S.Sent >= Request_Count;
-               Block_Client.Enqueue_Read (Client, Req);
+               Block_Client.Enqueue (Client, Req);
                S.Sent := S.Sent + 1;
             end loop;
             Block_Client.Submit (Client);

@@ -48,6 +48,24 @@ is
    -- Initialize --
    ----------------
 
+   procedure C_Write (C : Client_Instance;
+                      B : Size;
+                      S : Id;
+                      L : Count;
+                      D : System.Address);
+
+   procedure C_Write (C : Client_Instance;
+                      B : Size;
+                      S : Id;
+                      L : Count;
+                      D : System.Address)
+   is
+      Data : Buffer (1 .. B * L) with
+         Address => D;
+   begin
+      Write (C, B, S, L, Data);
+   end C_Write;
+
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
                          Path        :        String;
@@ -58,12 +76,13 @@ is
       procedure C_Initialize (T : out System.Address;
                               P : System.Address;
                               B : Byte_Length;
-                              E : System.Address) with
+                              E : System.Address;
+                              W : System.Address) with
          Import,
          Convention    => C,
          External_Name => "block_client_initialize";
    begin
-      C_Initialize (C.Instance, C_Path'Address, Buffer_Size, Event'Address);
+      C_Initialize (C.Instance, C_Path'Address, Buffer_Size, Event'Address, C_Write'Address);
    end Initialize;
 
    --------------
@@ -120,70 +139,18 @@ is
    -- Enqueue_Read --
    ------------------
 
-   procedure Enqueue_Read (C : in out Client_Session;
-                           R :        Request)
+   procedure Enqueue (C : in out Client_Session;
+                      R :        Request)
    is
-      procedure C_Enqueue_Read (T   : System.Address;
-                                Req : System.Address) with
+      procedure C_Enqueue (T   : System.Address;
+                           Req : System.Address) with
          Import,
          Convention    => C,
-         External_Name => "block_client_enqueue_read";
+         External_Name => "block_client_enqueue";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      C_Enqueue_Read (C.Instance, Req'Address);
-   end Enqueue_Read;
-
-   -------------------
-   -- Enqueue_Write --
-   -------------------
-
-   procedure Enqueue_Write (C : in out Client_Session;
-                            R :        Request;
-                            B :        Buffer)
-   is
-      procedure C_Enqueue_Write (T   : System.Address;
-                                 Req : System.Address;
-                                 Buf : System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_enqueue_write";
-      Req : Standard.C.Block.Request := Convert_Request (R);
-   begin
-      C_Enqueue_Write (C.Instance, Req'Address, B'Address);
-   end Enqueue_Write;
-
-   ------------------
-   -- Enqueue_Sync --
-   ------------------
-
-   procedure Enqueue_Sync (C : in out Client_Session;
-                           R :        Request)
-   is
-      procedure C_Enqueue_Sync (T : System.Address; Req : System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_enqueue_sync";
-      Req : Standard.C.Block.Request := Convert_Request (R);
-   begin
-      C_Enqueue_Sync (C.Instance, Req'Address);
-   end Enqueue_Sync;
-
-   ------------------
-   -- Enqueue_Trim --
-   ------------------
-
-   procedure Enqueue_Trim (C : in out Client_Session;
-                           R :        Request)
-   is
-      procedure C_Enqueue_Trim (T :   System.Address;
-                                Req : System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_enqueue_trim";
-      Req : Standard.C.Block.Request := Convert_Request (R);
-   begin
-      C_Enqueue_Trim (C.Instance, Req'Address);
-   end Enqueue_Trim;
+      C_Enqueue (C.Instance, Req'Address);
+   end Enqueue;
 
    ------------
    -- Submit --

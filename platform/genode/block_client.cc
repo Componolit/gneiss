@@ -67,7 +67,8 @@ Cai::Block::Client::Client() :
     _block_size(0),
     _buffer_size(0),
     _device(nullptr),
-    _callback(nullptr)
+    _callback(nullptr),
+    _write(nullptr)
 { }
 
 void *Cai::Block::Client::get_instance()
@@ -84,6 +85,7 @@ void Cai::Block::Client::initialize(
         void *env,
         const char *device,
         void *callback,
+        void *write,
         Genode::uint64_t buffer_size)
 {
     const char default_device[] = "";
@@ -91,6 +93,7 @@ void Cai::Block::Client::initialize(
     Genode::uint64_t alloc_size;
     Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
+    _write = write;
     check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
     _device = _factory->create<Block_session>(
             *reinterpret_cast<Genode::Env *>(env),
@@ -168,34 +171,20 @@ bool Cai::Block::Client::supported(Cai::Block::Kind kind)
     return kind == Cai::Block::READ || kind == Cai::Block::WRITE;
 }
 
-void Cai::Block::Client::enqueue_read(Cai::Block::Request req)
+void Cai::Block::Client::enqueue(Cai::Block::Request req)
 {
     _packet_allocator.reallocate(_device, block_size() * req.length);
     ::Block::Packet_descriptor packet(
             _packet_allocator.take(),
-            ::Block::Packet_descriptor::READ,
+            req.kind == Cai::Block::READ ? ::Block::Packet_descriptor::READ : ::Block::Packet_descriptor::WRITE,
             req.start, req.length);
+    if(req.kind == Cai::Block::WRITE){
+        ((void (*)(void *, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_write))(
+                get_instance(), block_size(), req.start, req.length,
+                blk(_device)->tx()->packet_content(packet));
+    }
     blk(_device)->tx()->submit_packet(packet);
 }
-
-void Cai::Block::Client::enqueue_write(
-        Cai::Block::Request req,
-        Genode::uint8_t *data)
-{
-    _packet_allocator.reallocate(_device, block_size() * req.length);
-    ::Block::Packet_descriptor packet(
-            _packet_allocator.take(),
-            ::Block::Packet_descriptor::WRITE,
-            req.start, req.length);
-    Genode::memcpy(blk(_device)->tx()->packet_content(packet), data, req.length * block_size());
-    blk(_device)->tx()->submit_packet(packet);
-}
-
-void Cai::Block::Client::enqueue_sync(Cai::Block::Request)
-{ }
-
-void Cai::Block::Client::enqueue_trim(Cai::Block::Request)
-{ }
 
 void Cai::Block::Client::submit()
 { }

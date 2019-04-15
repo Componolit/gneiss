@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Conversion;
+with System;
 with Cxx;
 with Cxx.Block;
 with Cxx.Block.Client;
@@ -83,6 +84,24 @@ is
       return Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
+   procedure C_Write (C : Client_Instance;
+                      B : Size;
+                      S : Id;
+                      L : Count;
+                      D : System.Address);
+
+   procedure C_Write (C : Client_Instance;
+                      B : Size;
+                      S : Id;
+                      L : Count;
+                      D : System.Address)
+   is
+      Data : Buffer (1 .. B * L) with
+         Address => D;
+   begin
+      Write (C, B, S, L, Data);
+   end C_Write;
+
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
                          Path        :        String;
@@ -98,6 +117,7 @@ is
                                    Cap,
                                    To_C_String (C_Path),
                                    Event'Address,
+                                   C_Write'Address,
                                    Cxx.Genode.Uint64_T (Buffer_Size));
    end Initialize;
 
@@ -126,42 +146,12 @@ is
                                                       when Trim  => Cxx.Block.Trim)) = Cxx.Bool'Val (1);
    end Supported;
 
-   procedure Enqueue_Read (C : in out Client_Session;
-                           R :        Request)
+   procedure Enqueue (C : in out Client_Session;
+                      R :        Request)
    is
    begin
-      Cxx.Block.Client.Enqueue_Read (C.Instance, Client_Util.Convert_Request (R));
-   end Enqueue_Read;
-
-   procedure Enqueue_Write (C : in out Client_Session;
-                            R :        Request;
-                            B :        Buffer)
-   is
-      subtype Local_Buffer is Buffer (B'First .. B'Last);
-      subtype Local_U8_Array is Cxx.Genode.Uint8_T_Array (1 .. B'Length);
-      function Convert_Buffer is new Ada.Unchecked_Conversion (Local_Buffer,
-                                                               Local_U8_Array);
-      Data : Local_U8_Array := Convert_Buffer (B);
-   begin
-      Cxx.Block.Client.Enqueue_Write (C.Instance,
-                                      Client_Util.Convert_Request (R),
-                                      Data);
-   end Enqueue_Write;
-
-   procedure Enqueue_Sync (C : in out Client_Session;
-                           R :        Request)
-   is
-   begin
-      Cxx.Block.Client.Enqueue_Sync (C.Instance,
-                                     Client_Util.Convert_Request (R));
-   end Enqueue_Sync;
-
-   procedure Enqueue_Trim (C : in out Client_Session;
-                           R :        Request)
-   is
-   begin
-      Cxx.Block.Client.Enqueue_Trim (C.Instance, Client_Util.Convert_Request (R));
-   end Enqueue_Trim;
+      Cxx.Block.Client.Enqueue (C.Instance, Client_Util.Convert_Request (R));
+   end Enqueue;
 
    procedure Submit (C : in out Client_Session)
    is
