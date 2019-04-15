@@ -6,6 +6,19 @@ pragma Warnings (Off, "procedure ""Event"" is not referenced");
 
 generic
    with procedure Event;
+   --  Write procedure called when the platform required data to write
+   --  Pre => Data'Length = Bsize * Length
+   --
+   --  C       Client session instance identifier
+   --  Bsize   Block size of C
+   --  Start   Start block that is written to
+   --  Length  number of blocks that will be written
+   --  Data    Data that will be written
+   with procedure Write (C      :     Client_Instance;
+                         Bsize  :     Size;
+                         Start  :     Id;
+                         Length :     Count;
+                         Data   : out Buffer);
 package Cai.Block.Client with
    SPARK_Mode
 is
@@ -49,51 +62,14 @@ is
                        R : Request_Kind) return Boolean with
       Pre => Initialized (C) and then Supported (C, R);
 
-   procedure Enqueue_Read (C : in out Client_Session;
+   --  Enqueue request
+   --
+   --  @param C  Client session instance
+   --  @param R  Request to enqueue
+   procedure Enqueue (C : in out Client_Session;
                            R :        Request) with
       Pre  => Initialized (C)
-              and then R.Kind = Read
-              and then R.Status = Raw
-              and then Supported (C, R.Kind)
-              and then Ready (C, R),
-      Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
-
-   procedure Enqueue_Write (C : in out Client_Session;
-                            R :        Request;
-                            B :        Buffer) with
-      Pre  => Initialized (C)
-              and then R.Kind = Write
-              and then R.Status = Raw
-              and then B'Length = R.Length * Block_Size (C)
-              and then Supported (C, R.Kind)
-              and then Ready (C, R),
-      Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
-
-   procedure Enqueue_Sync (C : in out Client_Session;
-                           R :        Request) with
-      Pre  => Initialized (C)
-              and then R.Kind = Sync
-              and then R.Status = Raw
-              and then Supported (C, R.Kind)
-              and then Ready (C, R),
-      Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
-
-   procedure Enqueue_Trim (C : in out Client_Session;
-                           R :        Request) with
-      Pre  => Initialized (C)
-              and then R.Kind = Trim
+              and then R.Kind in Read .. Trim
               and then R.Status = Raw
               and then Supported (C, R.Kind)
               and then Ready (C, R),

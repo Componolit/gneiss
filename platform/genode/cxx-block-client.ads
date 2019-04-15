@@ -16,6 +16,7 @@ is
       Private_X_Buffer_Size : Private_Uint64_T;
       Private_X_Device      : Private_Void;
       Private_X_Callback    : Private_Void;
+      Private_X_Write       : Private_Void;
    end record
    with Import, Convention => CPP;
 
@@ -43,11 +44,12 @@ is
                          Cap         : Cai.Types.Capability;
                          Device      : Cxx.Char_Array;
                          Callback    : Cxx.Void_Address;
+                         Write       : Cxx.Void_Address;
                          Buffer_Size : Cxx.Genode.Uint64_T) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client10initializeEPvPKcS2_y";
+      External_Name => "_ZN3Cai5Block6Client10initializeEPvPKcS2_S2_y";
 
    procedure Finalize (This : Class) with
       Global        => null,
@@ -69,34 +71,12 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client9supportedENS0_4KindE";
 
-   procedure Enqueue_Read (This : Class;
-                           Req  : Cxx.Block.Request.Class) with
+   procedure Enqueue (This : Class;
+                      Req  : Cxx.Block.Request.Class) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client12enqueue_readENS0_7RequestE";
-
-   procedure Enqueue_Write (This :        Class;
-                            Req  :        Cxx.Block.Request.Class;
-                            Data : in out Cxx.Genode.Uint8_T_Array) with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client13enqueue_writeENS0_7RequestEPh";
-
-   procedure Enqueue_Sync (This : Class;
-                           Req  : Cxx.Block.Request.Class) with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client12enqueue_syncENS0_7RequestE";
-
-   procedure Enqueue_Trim (This : Class;
-                           Req  : Cxx.Block.Request.Class) with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client12enqueue_trimENS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Client7enqueueENS0_7RequestE";
 
    procedure Submit (This : Class) with
       Global        => null,
