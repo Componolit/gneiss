@@ -101,15 +101,19 @@ is
    ---------------
 
    function Supported (C : Client_Session;
-                       R : Request) return Boolean is
+                       R : Request_Kind) return Boolean is
       function C_Supported (T   : System.Address;
-                            Req : System.Address) return Integer with
+                            Req : Standard.C.Block.Request_Kind) return Integer with
          Import,
          Convention    => C,
          External_Name => "block_client_supported";
-      Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      return C_Supported (C.Instance, Req'Address) = 1;
+      return C_Supported (C.Instance, (case R is
+                                       when None  => Standard.C.Block.None,
+                                       when Read  => Standard.C.Block.Read,
+                                       when Write => Standard.C.Block.Write,
+                                       when Sync  => Standard.C.Block.Sync,
+                                       when Trim  => Standard.C.Block.Trim)) = 1;
    end Supported;
 
    ------------------

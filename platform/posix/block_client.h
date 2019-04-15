@@ -18,7 +18,7 @@ void block_client_finalize(block_client_t **client);
 
 int block_client_ready(const block_client_t *client, const request_t *request);
 
-int block_client_supported(const block_client_t *client, const request_t *request);
+int block_client_supported(const block_client_t *client, uint32_t kind);
 
 void block_client_enqueue_read(block_client_t *client, const request_t *request);
 

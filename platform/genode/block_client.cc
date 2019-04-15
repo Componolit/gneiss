@@ -163,9 +163,9 @@ bool Cai::Block::Client::ready(Cai::Block::Request req)
                        || req.kind == Cai::Block::TRIM);
 }
 
-bool Cai::Block::Client::supported(Cai::Block::Request req)
+bool Cai::Block::Client::supported(Cai::Block::Kind kind)
 {
-    return req.kind == Cai::Block::READ || req.kind == Cai::Block::WRITE;
+    return kind == Cai::Block::READ || kind == Cai::Block::WRITE;
 }
 
 void Cai::Block::Client::enqueue_read(Cai::Block::Request req)

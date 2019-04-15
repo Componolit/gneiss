@@ -85,7 +85,7 @@ is
                   Buf (1 .. Req.Length * Block_Size) :=
                     (others => Character'Val (33 + Integer (Req.Start) mod 93));
                   exit when not Block_Client.Ready (Client, Req)
-                            or not Block_Client.Supported (Client, Req)
+                            or not Block_Client.Supported (Client, Req.Kind)
                             or S.Sent >= Request_Count
                             or S.Sent = Integer'Last;
                   Block_Client.Enqueue_Write (Client, Req, Buf (1 .. Req.Length * Block_Size));
@@ -161,7 +161,7 @@ is
                pragma Loop_Invariant (S.Sent < Integer'Last);
                Req.Start := Block.Id (S.Sent + 1);
                exit when not Block_Client.Ready (Client, Req)
-                         or not Block_Client.Supported (Client, Req)
+                         or not Block_Client.Supported (Client, Req.Kind)
                          or S.Sent >= Request_Count;
                Block_Client.Enqueue_Read (Client, Req);
                S.Sent := S.Sent + 1;

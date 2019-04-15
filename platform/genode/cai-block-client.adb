@@ -115,10 +115,15 @@ is
    end Ready;
 
    function Supported (C : Client_Session;
-                       R : Request) return Boolean
+                       R : Request_Kind) return Boolean
    is
    begin
-      return Cxx.Block.Client.Supported (C.Instance, Client_Util.Convert_Request (R)) = Cxx.Bool'Val (1);
+      return Cxx.Block.Client.Supported (C.Instance, (case R is
+                                                      when None  => Cxx.Block.None,
+                                                      when Read  => Cxx.Block.Read,
+                                                      when Write => Cxx.Block.Write,
+                                                      when Sync  => Cxx.Block.Sync,
+                                                      when Trim  => Cxx.Block.Trim)) = Cxx.Bool'Val (1);
    end Supported;
 
    procedure Enqueue_Read (C : in out Client_Session;
