@@ -28,6 +28,8 @@ is
                   Status    => Raw,
                   Start     => 0,
                   Length    => 0,
+                  Sent      => 0,
+                  Acked     => 0,
                   Processed => 0);
    end Create;
 
@@ -43,6 +45,8 @@ is
       J.Status    := Pending;
       J.Start     := Start;
       J.Length    := Length;
+      J.Sent      := 0;
+      J.Acked     := 0;
       J.Processed := 0;
    end Initialize;
 
@@ -52,16 +56,6 @@ is
    begin
       null;
    end Run;
-
-   procedure Read (J      : in out Job;
-                   C      : in out Client_Session;
-                   Data   :    out Buffer;
-                   Length : in out Count;
-                   Offset :        Count)
-   is
-   begin
-      null;
-   end Read;
 
    procedure Release (J : in out Job;
                       C : in out Client_Session)
@@ -73,10 +67,20 @@ is
    procedure Checked_Write (Jid    :        Job_Id;
                             Bsize  :        Size;
                             Data   :    out Buffer;
-                            Length : in out Count)
+                            Length : in out Count;
+                            Offset :        Count)
    is
    begin
-      Write (Jid, Bsize, Data, Length);
+      Write (Jid, Bsize, Data, Length, Offset);
    end Checked_Write;
 
+   procedure Checked_Read (Jid    :        Job_Id;
+                           Bsize  :        Size;
+                           Data   :        Buffer;
+                           Length : in out Count;
+                           Offset :        Count)
+   is
+   begin
+      Read (Jid, Bsize, Data, Length, Offset);
+   end Checked_Read;
 end Cai.Block.Client.Jobs;

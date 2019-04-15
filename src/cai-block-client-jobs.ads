@@ -1,16 +1,32 @@
 
 generic
+   --  Read procedure that is called once read data is available
+   --
+   --  J       Job to read from
+   --  C       Client the job is bound to
+   --  Data    Buffer to read into
+   --  Length  in Length of the read buffer in blocks, out Length of the read data in blocks
+   --  Offset  Offset in blocks of the first block
+   with procedure Read (Jid    :        Job_Id;
+                        Bsize  :        Size;
+                        Data   :        Buffer;
+                        Length : in out Count;
+                        Offset :        Count);
    --  Write procedure that is called once data to write is required
+   --
    --  Pre => Data'Length = Length * Bsize
    --  Post => Length <= Length'Old
+   --
    --  Jid      Id of the Job passed to Run
    --  Bsize    Block size of the used client
    --  Data     Write buffer
    --  Length   Length of the buffer in blocks
-   with procedure Write (Jid        :        Job_Id;
-                         Bsize      :        Size;
-                         Data       :    out Buffer;
-                         Length     : in out Count);
+   --  Offset   Offset in block of the first block
+   with procedure Write (Jid    :        Job_Id;
+                         Bsize  :        Size;
+                         Data   :    out Buffer;
+                         Length : in out Count;
+                         Offset :        Count);
 package Cai.Block.Client.Jobs with
    SPARK_Mode
 is
@@ -77,28 +93,6 @@ is
       Post => Status (J) in Pending .. Error
               and Get_Id (J) = Get_Id (J)'Old;
 
-   --  Read data from job if available, can be called on pending jobs,
-   --  if the available data is not read completely Run will not continue the job
-   --
-   --  @param J       Job to read from
-   --  @param C       Client the job is bound to
-   --  @param Data    Buffer to read into
-   --  @param Length  in Length of the read buffer in blocks, out Length of the read data in blocks
-   --  @param Offset  Offset in blocks of the first block
-   procedure Read (J      : in out Job;
-                   C      : in out Client_Session;
-                   Data   :    out Buffer;
-                   Length : in out Count;
-                   Offset :        Count) with
-      Pre  => Data'Length = Length * Block_Size (C)
-              and then Initialized (C)
-              and then Get_Client (J) = Get_Instance (C)
-              and then Offset < Length
-              and then Status (J) in Pending .. Ok,
-      Post => Length <= Length'Old
-              and Status (J) = Status (J)'Old
-              and Get_Id (J) = Get_Id (J)'Old;
-
    --  Release a finished job, frees resources on the platform
    --
    --  @param J  Job to release
@@ -115,7 +109,16 @@ private
    procedure Checked_Write (Jid    :        Job_Id;
                             Bsize  :        Size;
                             Data   :    out Buffer;
-                            Length : in out Count) with
+                            Length : in out Count;
+                            Offset :        Count) with
+      Pre  => Data'Length = Length * Bsize,
+      Post => Length <= Length'Old;
+
+   procedure Checked_Read (Jid    :        Job_Id;
+                           Bsize  :        Size;
+                           Data   :        Buffer;
+                           Length : in out Count;
+                           Offset :        Count) with
       Pre  => Data'Length = Length * Bsize,
       Post => Length <= Length'Old;
 
@@ -125,6 +128,8 @@ private
       Status    : Job_Status;
       Start     : Id;
       Length    : Count;
+      Sent      : Count;
+      Acked     : Count;
       Processed : Count;
    end record;
 
