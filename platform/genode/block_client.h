@@ -34,7 +34,7 @@ namespace Block
                     Genode::uint64_t buffer_size = 0);
             void finalize();
             bool ready(Request req);
-            bool supported(Request req);
+            bool supported(Kind req);
             void enqueue_read(Request req);
             void enqueue_write(
                     Request req,

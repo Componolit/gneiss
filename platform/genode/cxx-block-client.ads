@@ -63,11 +63,11 @@ is
       External_Name => "_ZN3Cai5Block6Client5readyENS0_7RequestE";
 
    function Supported (This : Class;
-                       Req  : Cxx.Block.Request.Class) return Cxx.Bool with
+                       Req  : Cxx.Block.Kind) return Cxx.Bool with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client9supportedENS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Client9supportedENS0_4KindE";
 
    procedure Enqueue_Read (This : Class;
                            Req  : Cxx.Block.Request.Class) with

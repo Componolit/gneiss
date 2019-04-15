@@ -46,16 +46,16 @@ is
       Pre => Initialized (C);
 
    function Supported (C : Client_Session;
-                       R : Request) return Boolean with
-      Pre => Initialized (C);
+                       R : Request_Kind) return Boolean with
+      Pre => Initialized (C) and then Supported (C, R);
 
    procedure Enqueue_Read (C : in out Client_Session;
                            R :        Request) with
       Pre  => Initialized (C)
               and then R.Kind = Read
               and then R.Status = Raw
-              and then Ready (C, R)
-              and then Supported (C, R),
+              and then Supported (C, R.Kind)
+              and then Ready (C, R),
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
@@ -69,8 +69,8 @@ is
               and then R.Kind = Write
               and then R.Status = Raw
               and then B'Length = R.Length * Block_Size (C)
-              and then Ready (C, R)
-              and then Supported (C, R),
+              and then Supported (C, R.Kind)
+              and then Ready (C, R),
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
@@ -82,8 +82,8 @@ is
       Pre  => Initialized (C)
               and then R.Kind = Sync
               and then R.Status = Raw
-              and then Ready (C, R)
-              and then Supported (C, R),
+              and then Supported (C, R.Kind)
+              and then Ready (C, R),
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
@@ -95,8 +95,8 @@ is
       Pre  => Initialized (C)
               and then R.Kind = Trim
               and then R.Status = Raw
-              and then Ready (C, R)
-              and then Supported (C, R),
+              and then Supported (C, R.Kind)
+              and then Ready (C, R),
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
