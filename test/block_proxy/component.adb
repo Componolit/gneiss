@@ -1,9 +1,11 @@
 
+with Cai.Log;
+with Cai.Log.Client;
+
 package body Component is
 
    use all type Block_Server.Request;
    use all type Block.Id;
-   use all type Block.Count;
    use all type Block.Request_Kind;
    use all type Block.Request_Status;
 
@@ -13,12 +15,15 @@ package body Component is
 
    Capability : Cai.Types.Capability;
 
+   Log : Cai.Log.Client_Session := Cai.Log.Client.Create;
+
    procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
       Capability := Cap;
       Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
+      Cai.Log.Client.Initialize (Log, Cap, "Proxy");
    end Construct;
 
    type Cache_Entry is record
@@ -31,6 +36,10 @@ package body Component is
    Cache : Registry := (others => (False, (Kind => Block.None, Priv => Block.Null_Data)));
 
    procedure Store (R : Block_Server.Request; Success : out Boolean);
+
+   function Peek (K : Block.Request_Kind; B : Block.Id) return Block_Server.Request;
+
+   procedure Load (R : out Block_Server.Request; K : Block.Request_Kind; B : Block.Id);
 
    procedure Store (R : Block_Server.Request; Success : out Boolean)
    is
@@ -53,7 +62,20 @@ package body Component is
       end if;
    end Store;
 
-   procedure Load (R : out Block_Server.Request; K : Block.Request_Kind; B : Block.Id);
+   function Peek (K : Block.Request_Kind; B : Block.Id) return Block_Server.Request
+   is
+   begin
+      for I in Cache'Range loop
+         if
+            Cache (I).Used
+            and then Cache (I).Request.Kind = K
+            and then Cache (I).Request.Start = B
+         then
+            return Cache (I).Request;
+         end if;
+      end loop;
+      return Block_Server.Request'(Kind => None, Priv => Block.Null_Data);
+   end Peek;
 
    procedure Load (R : out Block_Server.Request; K : Block.Request_Kind; B : Block.Id)
    is
@@ -72,104 +94,37 @@ package body Component is
       end loop;
    end Load;
 
-   procedure Handle_Write (R : Block_Server.Request);
-
-   procedure Handle_Write (R : Block_Server.Request)
+   procedure Write (C :     Block.Client_Instance;
+                    B :     Block.Size;
+                    S :     Block.Id;
+                    L :     Block.Count;
+                    D : out Buffer)
    is
-      Success : Boolean;
-      B : Buffer (1 .. R.Length * Block_Size (Block_Server.Get_Instance (Server)));
-      WR : constant Block_Client.Request := (Kind => Block.Write,
-                                             Priv => Block.Null_Data,
-                                             Start => R.Start,
-                                             Length => R.Length,
-                                             Status => Block.Raw);
    begin
-      Store (R, Success);
-      if Success then
-         Block_Server.Write (Server, R, B);
-         Block_Client.Enqueue_Write (Client, WR, B);
-         Block_Server.Discard (Server);
-      end if;
-   end Handle_Write;
+      null;
+   end Write;
 
-   procedure Handle_Read (R : Block_Server.Request);
-
-   procedure Handle_Read (R : Block_Server.Request)
+   procedure Read (C : Block.Client_Instance;
+                   B : Block.Size;
+                   S : Block.Id;
+                   L : Block.Count;
+                   D : Buffer)
    is
-      Success : Boolean;
-      WR : constant Block_Client.Request := (Kind => Block.Write,
-                                             Priv => Block.Null_Data,
-                                             Start => R.Start,
-                                             Length => R.Length,
-                                             Status => Block.Raw);
    begin
-      Store (R, Success);
-      if Success then
-         Block_Client.Enqueue_Read (Client, WR);
-         Block_Server.Discard (Server);
-      end if;
-   end Handle_Read;
+      null;
+   end Read;
 
    procedure Event
    is
       R : Block_Server.Request;
       A : Block_Client.Request;
+      Success : Boolean;
    begin
       if
          Block_Client.Initialized (Client)
          and Block_Server.Initialized (Server)
       then
-         loop
-            R := Block_Server.Head (Server);
-            case R.Kind is
-               when Block.Write =>
-                  Handle_Write (R);
-               when Block.Read =>
-                  Handle_Read (R);
-               when others =>
-                  null;
-            end case;
-            exit when R.Kind = Block.None;
-         end loop;
-         Block_Client.Submit (Client);
-
-         loop
-            A := Block_Client.Next (Client);
-            case A.Kind is
-               when Block.Write =>
-                  Load (R, A.Kind, A.Start);
-                  if R.Kind = Block.Write then
-                     R.Status := A.Status;
-                     while R.Status /= Block.Acknowledged loop
-                        Block_Server.Acknowledge (Server, R);
-                     end loop;
-                  else
-                     A.Status := Block.Error;
-                  end if;
-                  Block_Client.Release (Client, A);
-               when Block.Read =>
-                  declare
-                     B : Buffer (1 .. A.Length * Block_Client.Block_Size (Client));
-                  begin
-                     Load (R, A.Kind, A.Start);
-                     if R.Kind = Block.Read then
-                        Block_Client.Read (Client, A, B);
-                        R.Status := A.Status;
-                        if R.Status = Block.Ok then
-                           Block_Server.Read (Server, R, B);
-                           R.Status := Block.Ok;
-                        end if;
-                        Block_Server.Acknowledge (Server, R);
-                     else
-                        A.Status := Block.Error;
-                     end if;
-                  end;
-                  Block_Client.Release (Client, A);
-               when others =>
-                  null;
-            end case;
-            exit when A.Kind = Block.None;
-         end loop;
+         null;
       end if;
    end Event;
 
