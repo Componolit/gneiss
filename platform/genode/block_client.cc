@@ -259,7 +259,5 @@ Genode::uint64_t Cai::Block::Client::maximal_transfer_size()
 
 void Cai::Block::Client::callback()
 {
-    if(_callback){
-        Call(_callback);
-    }
+    Call(_callback);
 }
