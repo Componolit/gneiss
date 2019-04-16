@@ -81,7 +81,8 @@ inline Block::Request create_genode_block_request(const Cai::Block::Request &req
             Block::Request::Success::FALSE : Block::Request::Success::TRUE,
         req.start,
         *(reinterpret_cast<const Genode::uint64_t *>(&req.uid)),
-        reinterpret_cast<const Genode::uint32_t*>(&req.length)[0]
+        reinterpret_cast<const Genode::uint32_t*>(&req.length)[0],
+        0
     };
     return r;
 }
