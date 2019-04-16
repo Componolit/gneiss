@@ -104,4 +104,15 @@ package body Cai.Block.Server is
       raise Program_Error;
    end Acknowledge;
 
+   --------------------
+   -- Unblock_Client --
+   --------------------
+
+   procedure Unblock_Client (S : in out Server_Session)
+   is
+   begin
+      pragma Compile_Time_Warning (Standard.True, "Unblock_Client unimplemented");
+      raise Program_Error;
+   end Unblock_Client;
+
 end Cai.Block.Server;

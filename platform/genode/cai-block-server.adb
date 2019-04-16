@@ -122,4 +122,10 @@ is
       return Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
+   procedure Unblock_Client (S : in out Server_Session)
+   is
+   begin
+      Cxx.Block.Server.Unblock_Client (S.Instance);
+   end Unblock_Client;
+
 end Cai.Block.Server;

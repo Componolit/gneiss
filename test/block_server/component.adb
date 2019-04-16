@@ -97,6 +97,7 @@ package body Component is
             exit when R.Kind = Block.None;
          end loop;
       end if;
+      Block_Server.Unblock_Client (Server);
    end Event;
 
    function Block_Count (S : Block.Server_Instance) return Block.Count

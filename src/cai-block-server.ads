@@ -73,4 +73,6 @@ is
       Pre  => Initialized (S),
       Post => Initialized (S);
 
+   procedure Unblock_Client (S : in out Server_Session);
+
 end Cai.Block.Server;

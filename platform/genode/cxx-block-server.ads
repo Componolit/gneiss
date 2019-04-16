@@ -90,4 +90,10 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Server11initializedEv";
 
+   procedure Unblock_Client(This : Class) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server14unblock_clientEv";
+
 end Cxx.Block.Server;

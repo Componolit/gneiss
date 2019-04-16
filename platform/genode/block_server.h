@@ -43,6 +43,7 @@ namespace Block
             void write(Request request, void *buffer);
             void acknowledge(Request &request);
             bool initialized();
+            void unblock_client();
     };
 }
 
