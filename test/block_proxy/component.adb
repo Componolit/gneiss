@@ -7,6 +7,7 @@ package body Component is
    use all type Block_Server.Request;
    use all type Block.Id;
    use all type Block.Request_Kind;
+   use all type Block.Request_Status;
 
    Client : Block.Client_Session;
    Dispatcher : Block.Dispatcher_Session;
@@ -99,8 +100,12 @@ package body Component is
                     L :     Block.Count;
                     D : out Buffer)
    is
+      pragma Unreferenced (C);
+      pragma Unreferenced (B);
+      pragma Unreferenced (L);
+      S_R : constant Block_Server.Request := Peek (Block.Write, S);
    begin
-      null;
+      Block_Server.Write (Server, S_R, D);
    end Write;
 
    procedure Read (C : Block.Client_Instance;
@@ -109,9 +114,28 @@ package body Component is
                    L : Block.Count;
                    D : Buffer)
    is
+      pragma Unreferenced (C);
+      pragma Unreferenced (B);
+      pragma Unreferenced (L);
+      S_R : constant Block_Server.Request := Peek (Block.Read, S);
    begin
-      null;
+      Block_Server.Read (Server, S_R, D);
    end Read;
+
+   function Convert_Request (R : Block_Server.Request) return Block_Client.Request;
+
+   function Convert_Request (R : Block_Server.Request) return Block_Client.Request
+   is
+      C : Block_Client.Request (Kind => R.Kind);
+   begin
+      if C.Kind /= Block.None then
+         C.Priv := Block.Null_Data;
+         C.Start := R.Start;
+         C.Length := R.Length;
+         C.Status := Block.Raw;
+      end if;
+      return C;
+   end Convert_Request;
 
    procedure Event
    is
@@ -123,8 +147,32 @@ package body Component is
          Block_Client.Initialized (Client)
          and Block_Server.Initialized (Server)
       then
-         null;
+         loop
+            A := Block_Client.Next (Client);
+            exit when A.Kind = Block.None;
+            if A.Kind = Block.Read and then A.Status = Block.Ok then
+               Block_Client.Read (Client, A);
+            end if;
+            Load (R, A.Kind, A.Start);
+            if R.Kind /= Block.None then
+               R.Status := A.Status;
+               Block_Server.Acknowledge (Server, R);
+            end if;
+            Block_Client.Release (Client, A);
+            exit when R.Kind = Block.None;
+         end loop;
+
+         loop
+            R := Block_Server.Head (Server);
+            exit when R.Kind = Block.None;
+            Store (R, Success);
+            exit when not Success;
+            Block_Client.Enqueue (Client, Convert_Request (R));
+            Block_Server.Discard (Server);
+         end loop;
+         Block_Client.Submit (Client);
       end if;
+      Block_Server.Unblock_Client (Server);
    end Event;
 
    procedure Dispatch
