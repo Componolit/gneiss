@@ -7,6 +7,7 @@ package body Component is
 
    Dispatcher : Block.Dispatcher_Session;
    Server : Block.Server_Session;
+   Buffer_Size : Block.Byte_Length;
 
    subtype Block_Buffer is Buffer (1 .. 512);
    type Disk is array (Block.Id range 0 .. 1023) of Block_Buffer;
@@ -123,15 +124,16 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      return 16#ffffffff#;
+      return Buffer_Size;
    end Maximal_Transfer_Size;
 
-   procedure Initialize (S : Block.Server_Instance; L : String)
+   procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
       pragma Unreferenced (S);
    begin
       Cai.Log.Client.Info (Log, "Server initialize with label: " & L);
       Ram_Disk := (others => (others => 0));
+      Buffer_Size := B;
       Cai.Log.Client.Info (Log, "Initialized");
    end Initialize;
 
