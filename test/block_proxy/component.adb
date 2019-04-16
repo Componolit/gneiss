@@ -7,7 +7,6 @@ package body Component is
    use all type Block_Server.Request;
    use all type Block.Id;
    use all type Block.Request_Kind;
-   use all type Block.Request_Status;
 
    Client : Block.Client_Session;
    Dispatcher : Block.Dispatcher_Session;
@@ -141,12 +140,12 @@ package body Component is
       Block_Dispatcher.Session_Cleanup (Dispatcher, Server);
    end Dispatch;
 
-   procedure Initialize_Server (S : Block.Server_Instance; L : String)
+   procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
       pragma Unreferenced (S);
    begin
       if not Block_Client.Initialized (Client) then
-         Block_Client.Initialize (Client, Capability, L);
+         Block_Client.Initialize (Client, Capability, L, B);
       end if;
    end Initialize_Server;
 

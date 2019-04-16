@@ -21,7 +21,7 @@ package Component is
    function Block_Size (S : Block.Server_Instance) return Block.Size;
    function Writable (S : Block.Server_Instance) return Boolean;
    function Maximal_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length;
-   procedure Initialize (S : Block.Server_Instance; L : String);
+   procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize (S : Block.Server_Instance);
 
    procedure Request;

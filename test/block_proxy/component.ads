@@ -19,7 +19,7 @@ package Component is
 
    procedure Event;
    procedure Dispatch;
-   procedure Initialize_Server (S : Block.Server_Instance; L : String);
+   procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize_Server (S : Block.Server_Instance);
    function Block_Count (S : Block.Server_Instance) return Block.Count;
    function Block_Size (S : Block.Server_Instance) return Block.Size;

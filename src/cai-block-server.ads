@@ -15,7 +15,8 @@ generic
    with function Writable (S : Server_Instance) return Boolean;
    with function Maximal_Transfer_Size (S : Server_Instance) return Byte_Length;
    with procedure Initialize (S : Server_Instance;
-                              L : String);
+                              L : String;
+                              B : Byte_Length);
    with procedure Finalize (S : Server_Instance);
 package Cai.Block.Server with
    SPARK_Mode

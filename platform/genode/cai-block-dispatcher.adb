@@ -77,7 +77,7 @@ is
                              L :        String)
    is
    begin
-      Serv.Initialize (Serv.Get_Instance (I), L);
+      Serv.Initialize (Serv.Get_Instance (I), L, Byte_Length(Cxx.Block.Dispatcher.Session_Size (D.Instance)));
       Cxx.Block.Server.Initialize (I.Instance,
                                    Cxx.Block.Dispatcher.Get_Capability (D.Instance),
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance),
