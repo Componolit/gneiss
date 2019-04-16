@@ -65,10 +65,7 @@ Cai::Block::Block_root::Block_root(Genode::Env &env, Cai::Block::Server &server,
 
 void Cai::Block::Block_root::handler()
 {
-    if(_server._callback){
-        Call(_server._callback);
-    }
-    _session.wakeup_client();
+    Call(_server._callback);
 }
 
 Genode::Capability<Genode::Session> Cai::Block::Block_root::cap()
@@ -188,4 +185,9 @@ void Cai::Block::Server::acknowledge(Cai::Block::Request &req)
             acked = true;
         }
     });
+}
+
+void Cai::Block::Server::unblock_client()
+{
+    blk(_session).wakeup_client();
 }
