@@ -12,7 +12,7 @@ package body Cai.Block.Dispatcher is
    begin
       --  Generated stub: replace with real body!
       pragma Compile_Time_Warning (Standard.True, "Create unimplemented");
-      return raise Program_Error with "Unimplemented function Create";
+      return raise Program_Error;
    end Create;
 
    -----------------

@@ -75,7 +75,6 @@ package body Component is
    is
       R : Block_Server.Request;
    begin
-      Cai.Log.Client.Info (Log, "Event");
       if Block_Server.Initialized (Server) then
          loop
             R := Block_Server.Head (Server);
