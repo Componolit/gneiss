@@ -14,6 +14,8 @@ project Ada_Interface is
    Source_Block_Server := "src/block/server";
    Source_Log := "src/log";
    Source_Log_Client := "src/log/client";
+   Source_Timer := "src/timer";
+   Source_Timer_Client := "src/timer/client";
 
    Posix_Source := (Source,
                     Source_Platform,
@@ -39,7 +41,11 @@ project Ada_Interface is
                      Source_Log,
                      Source_Log & "/genode",
                      Source_Log_Client,
-                     Source_Log_Client & "/genode");
+                     Source_Log_Client & "/genode",
+                     Source_Timer,
+                     Source_Timer & "/genode",
+                     Source_Timer_Client,
+                     Source_Timer_Client & "/genode");
 
    for Create_Missing_Dirs use "True";
    for Object_Dir use "build";

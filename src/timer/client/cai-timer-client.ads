@@ -1,6 +1,8 @@
 with Cai.Types;
 
-package Cai.Timer.Client is
+package Cai.Timer.Client with
+   SPARK_Mode
+is
 
    function Create return Client_Session;
 
