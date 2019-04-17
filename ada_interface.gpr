@@ -7,7 +7,39 @@ project Ada_Interface is
    Platform : Platform_Type := external ("PLATFORM", "posix");
    Test := external ("TEST", "");
 
-   Default_Source := ("src", "platform/" & Platform);
+   Source := "src";
+   Source_Platform := "src/platform";
+   Source_Block := "src/block";
+   Source_Block_Client := "src/block/client";
+   Source_Block_Server := "src/block/server";
+   Source_Log := "src/log";
+   Source_Log_Client := "src/log/client";
+
+   Posix_Source := (Source,
+                    Source_Platform,
+                    Source_Platform & "/posix",
+                    Source_Block,
+                    Source_Block & "/posix",
+                    Source_Block_Client,
+                    Source_Block_Client & "/posix",
+                    Source_Log,
+                    Source_Log & "/posix",
+                    Source_Log_Client,
+                    Source_Log_Client & "/posix");
+
+   Genode_Source := (Source,
+                     Source_Platform,
+                     Source_Platform & "/genode",
+                     Source_Block,
+                     Source_Block & "/genode",
+                     Source_Block_Client,
+                     Source_Block_Client & "/genode",
+                     Source_Block_Server,
+                     Source_Block_Server & "/genode",
+                     Source_Log,
+                     Source_Log & "/genode",
+                     Source_Log_Client,
+                     Source_Log_Client & "/genode");
 
    for Create_Missing_Dirs use "True";
    for Object_Dir use "build";
@@ -46,13 +78,13 @@ project Ada_Interface is
          for Languages use ("Ada", "C");
          case Test is
             when "" =>
-               for Source_Dirs use Default_Source;
+               for Source_Dirs use Posix_Source;
             when others =>
-               for Source_Dirs use Default_Source & ("test/" & Test);
+               for Source_Dirs use Posix_Source & ("test/" & Test);
                for Main use ("main.c");
          end case;
-      when others =>
-         for Source_Dirs use Default_Source;
+      when "genode" =>
+         for Source_Dirs use Genode_Source;
          for Languages use ("Ada");
    end case;
 
