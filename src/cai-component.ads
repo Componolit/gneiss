@@ -13,6 +13,8 @@ with Cai.Types;
 
 generic
    --  Component intialization procedure
+   --
+   --  @param Cap  Capability provided by the platform to use services
    with procedure Construct (Cap : Cai.Types.Capability);
 package Cai.Component is
 

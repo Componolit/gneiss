@@ -22,19 +22,33 @@ generic
    --  Event handler, will be called received requests, ready queues, etc
    with procedure Event;
    --  Return the block count of the according session
+   --
+   --  @param S  Server session instance identifier
    with function Block_Count (S : Server_Instance) return Count;
    --  Return the block size of the according session in bytes
+   --
+   --  @param S  Server session instance identifier
    with function Block_Size (S : Server_Instance) return Size;
    --  Return if the according session is writable
+   --
+   --  @param S  Server session instance identifier
    with function Writable (S : Server_Instance) return Boolean;
    --  Return the maximal request size of the according session in bytes
+   --
+   --  @param S  Server session instance identifier
    with function Maximal_Transfer_Size (S : Server_Instance) return Byte_Length;
    --  Custom initialization for the server, automatically called by Cai.Block.Dispatcher.Session_Accept
+   --
+   --  @param S  Server session instance identifier
+   --  @param L  Label passed by the client
+   --  @param B  Internal buffer size as provided by the platform
    with procedure Initialize (S : Server_Instance;
                               L : String;
                               B : Byte_Length);
    --  Custom finalization for the server, automatically called by Cai.Block.Dispatcher.Session_Cleanup
    --  if the connected client disconnected
+   --
+   --  @param S  Server session instance identifier
    with procedure Finalize (S : Server_Instance);
 package Cai.Block.Server with
    SPARK_Mode
@@ -127,6 +141,9 @@ is
       Pre  => Initialized (S) and (R.Status = Ok or R.Status = Error),
       Post => Initialized (S);
 
+   --  Signal client to wake up
+   --
+   --  @param S  Server session instance
    procedure Unblock_Client (S : in out Server_Session);
 
 end Cai.Block.Server;

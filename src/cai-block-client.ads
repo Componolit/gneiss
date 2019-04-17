@@ -20,11 +20,11 @@ generic
    --  Called when a read has been triggered and data is available
    --  Pre => Data'Length = Bsize * Length
    --
-   --  C       Client session instance identifier
-   --  Bsize   Block size of C
-   --  Start   Start block that has been read from
-   --  Length  number of blocks to read
-   --  Data    Read data
+   --  @param C       Client session instance identifier
+   --  @param Bsize   Block size of C
+   --  @param Start   Start block that has been read from
+   --  @param Length  number of blocks to read
+   --  @param Data    Read data
    with procedure Read (C      : Client_Instance;
                         Bsize  : Size;
                         Start  : Id;
@@ -33,11 +33,11 @@ generic
    --  Write procedure called when the platform required data to write
    --  Pre => Data'Length = Bsize * Length
    --
-   --  C       Client session instance identifier
-   --  Bsize   Block size of C
-   --  Start   Start block that is written to
-   --  Length  number of blocks that will be written
-   --  Data    Data that will be written
+   --  @param C       Client session instance identifier
+   --  @param Bsize   Block size of C
+   --  @param Start   Start block that is written to
+   --  @param Length  number of blocks that will be written
+   --  @param Data    Data that will be written
    with procedure Write (C      :     Client_Instance;
                          Bsize  :     Size;
                          Start  :     Id;
