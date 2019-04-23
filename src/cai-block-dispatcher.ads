@@ -36,7 +36,7 @@ is
    function Create return Dispatcher_Session with
       Post => not Initialized (Create'Result);
 
-   --  Get the instance ID of D
+   --  Return the instance ID of D
    --
    --  @param D  Dispatcher session instance
    function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
@@ -63,13 +63,13 @@ is
       Pre  => Initialized (D),
       Post => not Initialized (D);
 
-   --  Retrieve information about a session request, should only be used in Dispatch
+   --  Retrieve information about a session request, must only be used in Dispatch
    --  If a request is available and Session_Accept is called the session is accepted on the platform
    --  If Session_Accept is not called before the return of Dispatch the session is rejected
    --
    --  @param D      Dispatcher session instance
-   --  @param Valid  session has been requested if True
-   --  @param Label  label/path of the session request
+   --  @param Valid  Session has been requested if True
+   --  @param Label  Label/path of the session request
    --  @param Last   Last initialized element in Label
    procedure Session_Request (D     : in out Dispatcher_Session;
                               Valid :    out Boolean;
@@ -78,7 +78,7 @@ is
       Pre  => Initialized (D),
       Post => Initialized (D) and Last in Label'Range;
 
-   --  Accept session request and provide the server label L, should only be used in Dispatch
+   --  Accept session request and provide the server label L, must only be used in Dispatch
    --  This procedure also initializes the server on the platform and calls Serv.Initialize
    --
    --  @param D  Dispatcher session instance
@@ -90,8 +90,8 @@ is
       Pre  => Initialized (D),
       Post => Initialized (D);
 
-   --  Garbage collects disconnected sessions, should only be used in Dispatch
-   --  Can and should safely be called on each session each time Dispatch is called
+   --  Garbage collects disconnected sessions, must only be used in Dispatch
+   --  Should be called on each session each time Dispatch is called
    --  Server_Session will be finalized if the client disconnected on the platform
    --
    --  @param D  Dispatcher session instance

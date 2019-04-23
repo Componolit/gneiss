@@ -31,7 +31,10 @@ is
    --  @param C               Client session instance
    --  @param Cap             System capability
    --  @param Label           Session label
-   --  @param Message_Length  Requested maximal message length, may or may not be provided
+   --  @param Message_Length  Requested maximum message length
+   --                         This is a hint for the platform on how long messages the client wants to send
+   --                         The platform is free to decide if it follows this hint
+   --                         A value of 0 uses the platform default
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Cai.Types.Capability;
                          Label          :        String;
@@ -44,10 +47,10 @@ is
       Pre  => Initialized (C),
       Post => not Initialized (C);
 
-   --  Minimal message length, guaranteed by any the platform
+   --  Minimum message length, guaranteed by all platforms
    Minimal_Message_Length : constant Positive := 78 with Ghost;
 
-   --  Maximal message length the platform can handle in a single message
+   --  Maximum message length the platform can handle in a single message
    --
    --  @param C  Client session instance
    --  @return Maximal message length for Info, Warning and Error
