@@ -16,6 +16,11 @@ struct block_client
                uint64_t start,
                uint64_t length,
                void *data);
+    int fd;
+    int writable;
+    uint64_t block_size;
+    uint64_t block_count;
+    uint64_t maximum_transfer_size;
 };
 
 const block_client_t *block_client_get_instance(const block_client_t *client);
