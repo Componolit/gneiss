@@ -29,59 +29,68 @@ is
    --  Number of Bytes
    type Byte_Length is range 0 .. 2 ** 63 - 1
       with Size => 64;
+
    --  Block Id
    type Id is mod 2 ** 64
       with Size => 64;
+
    --  Amount of blocks
    type Count is range 0 .. 2 ** 63 - 1
       with Size => 64;
+
    --  Size of a block in bytes
    type Size is range 0 .. 2 ** 32 - 1
       with Size => 64;
 
-   --  * Operator for block count and size
+   --  "*" Operator for block count and size
    --
    --  @param Left   Block count
    --  @param Right  Block size
    --  @return       Byte size of all blocks
    function "*" (Left : Count; Right : Size) return Byte_Length is
       (Byte_Length (Left * Count (Right)));
-   --  * Operator for block count and size
+
+   --  "*" Operator for block count and size
    --
    --  @param Left   Block size
    --  @param Right  Block count
    --  @return       Byte size of all blocks
    function "*" (Left : Size; Right : Count) return Byte_Length is
       (Right * Left);
-   --  * Operator for block count and size
+
+   --  "*" Operator for block count and size
    --
    --  @param Left   Block size
    --  @param Right  Block count
    --  @return       Buffer length
    function "*" (Left : Count; Right : Size) return Buffer_Index is
       (Buffer_Index (Left * Count (Right)));
-   --  * Operator for block count and size
+
+   --  "*" Operator for block count and size
    --
    --  @param Left   Block size
    --  @param Right  Block count
    --  @return       Buffer length
    function "*" (Left : Size; Right : Count) return Buffer_Index is
       (Right * Left);
-   --  + Operator for block Id and count
+
+   --  "+" Operator for block Id and count
    --
    --  @param Left   Block Id
    --  @param Right  Block count
    --  @return       Block Id that has offset Right from Left
    function "+" (Left : Id; Right : Count) return Id is
       (Left + Id (Right));
-   --  - Operator for block Id and count
+
+   --  "-" Operator for block Id and count
    --
    --  @param Left   Block Id
    --  @param Right  Block count
    --  @return       Block Id that has offset -Right from Left
    function "-" (Left : Id; Right : Count) return Id is
       (Left - Id (Right));
-   --  - Operator for Block Ids
+
+   --  "-" Operator for Block Ids
    --
    --  @param Left   Block Id
    --  @param Right  Block Id
@@ -98,12 +107,13 @@ is
    --  @value Sync   Sync request
    --  @value Trim   Trim request
    type Request_Kind is (None, Read, Write, Sync, Trim);
+
    --  Status of a block request
    --
    --  @value Raw           Newly created request
    --  @value Ok            Successfully handled request
    --  @value Error         Failed request
-   --  @value Acknowledged  deprecated
+   --  @value Acknowledged  Request has been acknoweledged by the platform, only relevant for server
    type Request_Status is (Raw, Ok, Error, Acknowledged);
 
    --  Platform specific data

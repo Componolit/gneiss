@@ -19,21 +19,21 @@ pragma Warnings (Off, "procedure ""Finalize"" is not referenced");
 --  Supress unreferenced warnings since not every platform needs each subprogram
 
 generic
-   --  Event handler, will be called received requests, ready queues, etc
+   --  Event handler, is called on received requests, ready queues, etc.
    with procedure Event;
-   --  Return the block count of the according session
+   --  Return the block count of session S
    --
    --  @param S  Server session instance identifier
    with function Block_Count (S : Server_Instance) return Count;
-   --  Return the block size of the according session in bytes
+   --  Return the block size of session S in bytes
    --
    --  @param S  Server session instance identifier
    with function Block_Size (S : Server_Instance) return Size;
-   --  Return if the according session is writable
+   --  Return if session S is writable
    --
    --  @param S  Server session instance identifier
    with function Writable (S : Server_Instance) return Boolean;
-   --  Return the maximal request size of the according session in bytes
+   --  Return the maximum request size of session S in bytes
    --
    --  @param S  Server session instance identifier
    with function Maximal_Transfer_Size (S : Server_Instance) return Byte_Length;
@@ -46,7 +46,7 @@ generic
                               L : String;
                               B : Byte_Length);
    --  Custom finalization for the server, automatically called by Cai.Block.Dispatcher.Session_Cleanup
-   --  if the connected client disconnected
+   --  when the connected client disconnects
    --
    --  @param S  Server session instance identifier
    with procedure Finalize (S : Server_Instance);
@@ -99,7 +99,7 @@ is
    function Head (S : Server_Session) return Request with
       Pre => Initialized (S);
 
-   --  Discars the request currently available from Head making the next one available
+   --  Discards the request currently available from Head making the next one available
    --
    --  @param S  Server session instance
    procedure Discard (S : in out Server_Session) with
@@ -142,6 +142,8 @@ is
       Post => Initialized (S);
 
    --  Signal client to wake up
+   --  Some platforms do not wake up the client if the server returns unless explicitly being told to
+   --  If this procedure is not called at least once before returning from the event handler a deadlock might occur
    --
    --  @param S  Server session instance
    procedure Unblock_Client (S : in out Server_Session);

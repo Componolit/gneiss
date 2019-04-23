@@ -23,7 +23,7 @@ generic
    --  @param C       Client session instance identifier
    --  @param Bsize   Block size of C
    --  @param Start   Start block that has been read from
-   --  @param Length  number of blocks to read
+   --  @param Length  Number of blocks to read
    --  @param Data    Read data
    with procedure Read (C      : Client_Instance;
                         Bsize  : Size;
@@ -36,7 +36,7 @@ generic
    --  @param C       Client session instance identifier
    --  @param Bsize   Block size of C
    --  @param Start   Start block that is written to
-   --  @param Length  number of blocks that will be written
+   --  @param Length  Number of blocks that will be written
    --  @param Data    Data that will be written
    with procedure Write (C      :     Client_Instance;
                          Bsize  :     Size;
@@ -88,7 +88,10 @@ is
    --  @param C            Client session instance
    --  @param Cap          System capability
    --  @param Path         Device id/path
-   --  @param Buffer_Size  platform buffer size, may determine maximal transfer size
+   --  @param Buffer_Size  Platform buffer size
+   --                      This is a hint for the platform how much space can be used for packet allocation
+   --                      The platform is free to decide if it follows this hint
+   --                      A value of 0 uses the platform default
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
                          Path        :        String;
@@ -146,8 +149,7 @@ is
               and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
 
    --  Get the next acknowledged request
-   --  The request will not be removed from the queue and subsequent calls of this function
-   --  will have the same result
+   --  The request is not removed from the queue and subsequent calls of this function have the same result
    --  If no request is available Request.Kind is None
    --
    --  @param C  Client session instance
@@ -174,7 +176,8 @@ is
               and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
 
    --  Release a request returned by Next,
-   --  this will remove the request from the queue and Next will provide a new request
+   --  Removes the request from the queue
+   --  The next call of Next provides the next request in the queue or an invalid one if the queue is empty
    --
    --  @param C  Client session instance
    --  @param R  Request to enqueue
@@ -207,7 +210,7 @@ is
    function Block_Size (C : Client_Session) return Size with
       Pre => Initialized (C);
 
-   --  Get the maximal number of bytes for a single request
+   --  Get the maximum number of bytes for a single request
    --
    --  @param C  Client session instance
    function Maximal_Transfer_Size (C : Client_Session) return Byte_Length with
