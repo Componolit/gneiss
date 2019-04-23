@@ -160,8 +160,20 @@ is
       if Cai.Log.Client.Initialized (Log) then
          Cai.Log.Client.Info (Log, "Ada block test");
       end if;
-      Block_Client.Initialize (Client, Cap, "ada test client");
-      Run;
+      Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
+      if Block_Client.Initialized (Client) then
+         if Cai.Log.Client.Initialized (Log) then
+            Cai.Log.Client.Info (Log, "Block device with "
+                                      & Cai.Log.Image (Long_Integer (Block_Client.Block_Count (Client)))
+                                      & " blocks of size "
+                                      & Cai.Log.Image (Long_Integer (Block_Client.Block_Size (Client))));
+         end if;
+         if Block_Client.Writable (Client) then
+            Run;
+         else
+            Cai.Log.Client.Error (Log, "Block device not writable, cannot run test");
+         end if;
+      end if;
    end Construct;
 
    procedure Run is
