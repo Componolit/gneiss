@@ -27,7 +27,11 @@ project Ada_Interface is
                     Source_Log,
                     Source_Log & "/posix",
                     Source_Log_Client,
-                    Source_Log_Client & "/posix");
+                    Source_Log_Client & "/posix",
+                    Source_Timer,
+                    Source_Timer & "/posix",
+                    Source_Timer_Client,
+                    Source_Timer_Client & "/posix");
 
    Genode_Source := (Source,
                      Source_Platform,
