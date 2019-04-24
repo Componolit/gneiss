@@ -13,10 +13,16 @@ typedef struct block_client block_client_t;
 #define FSYNC 2
 #define FAILED 3
 
+struct ctrl
+{
+    //the first member MUST ALWAYS be struct aiocb
+    struct aiocb aio_cb;
+    uint8_t status;
+};
+
 typedef struct ring
 {
-    uint8_t *status;
-    struct aiocb *buffer;
+    struct ctrl **buffer;
     size_t size;
     unsigned enqueue;
     unsigned dequeue;

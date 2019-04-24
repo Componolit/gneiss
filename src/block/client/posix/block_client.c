@@ -12,54 +12,58 @@
 
 size_t ring_alloc(ring_t *r, uint64_t buffer_size)
 {
-    r->size = buffer_size ? buffer_size / (sizeof(struct aiocb) + sizeof(uint8_t)) : _SC_AIO_LISTIO_MAX - 1;
-    r->status = malloc(r->size * sizeof(uint8_t));
-    r->buffer = malloc(r->size * sizeof(struct aiocb));
-    if(r->buffer && r->status){
-        memset(r->status, 0, r->size * sizeof(uint8_t));
-        memset(r->buffer, 0, r->size * sizeof(struct aiocb));
+    r->size = buffer_size ? buffer_size / sizeof(struct ctrl) : _SC_AIO_LISTIO_MAX - 1;
+    r->buffer = malloc(r->size * sizeof(struct ctrl *));
+    if(r->buffer){
+        for(size_t i = 0; i < r->size; i++){
+            r->buffer[i] = malloc(sizeof(struct ctrl));
+            if(!r->buffer[i]){
+                return 0;
+            }
+            memset(r->buffer[i], 0, sizeof(struct ctrl));
+        }
     }
     r->enqueue = 0;
     r->dequeue = 0;
     r->submit = 0;
-    return r->buffer && r->status ? r->size : 0;
+    return r->buffer ? r->size : 0;
 }
 
 int ring_avail(ring_t const *r)
 {
-    return r->status[r->enqueue] == 0;
+    return r->buffer[r->enqueue]->status == 0;
 }
 
 void ring_enqueue(ring_t *r, block_client_t *c, request_t const *req)
 {
-    memset(&(r->buffer[r->enqueue]), 0, sizeof(struct aiocb));
-    r->buffer[r->enqueue].aio_fildes = c->fd;
-    r->buffer[r->enqueue].aio_sigevent.sigev_notify = SIGEV_NONE; // TODO: proper signal creation for READ and WRITE
+    memset(&(r->buffer[r->enqueue]->aio_cb), 0, sizeof(struct aiocb));
+    r->buffer[r->enqueue]->aio_cb.aio_fildes = c->fd;
+    r->buffer[r->enqueue]->aio_cb.aio_sigevent.sigev_notify = SIGEV_NONE; // TODO: proper signal creation for READ and WRITE
     switch(req->type){
         case READ:
-            r->status[r->enqueue] = RW;
-            r->buffer[r->enqueue].aio_lio_opcode = LIO_READ;
-            r->buffer[r->enqueue].aio_offset = req->start * c->block_size;
-            r->buffer[r->enqueue].aio_nbytes = req->length * c->block_size;
-            r->buffer[r->enqueue].aio_buf = malloc(req->length * c->block_size);
-            if(!(r->buffer[r->enqueue].aio_buf)){
-                r->status[r->enqueue] = FAILED;
+            r->buffer[r->enqueue]->status = RW;
+            r->buffer[r->enqueue]->aio_cb.aio_lio_opcode = LIO_READ;
+            r->buffer[r->enqueue]->aio_cb.aio_offset = req->start * c->block_size;
+            r->buffer[r->enqueue]->aio_cb.aio_nbytes = req->length * c->block_size;
+            r->buffer[r->enqueue]->aio_cb.aio_buf = malloc(req->length * c->block_size);
+            if(!(r->buffer[r->enqueue]->aio_cb.aio_buf)){
+                r->buffer[r->enqueue]->status = FAILED;
             }
             break;
         case WRITE:
-            r->status[r->enqueue] = RW;
-            r->buffer[r->enqueue].aio_lio_opcode = LIO_WRITE;
-            r->buffer[r->enqueue].aio_offset = req->start * c->block_size;
-            r->buffer[r->enqueue].aio_nbytes = req->length * c->block_size;
-            r->buffer[r->enqueue].aio_buf = malloc(req->length * c->block_size);
-            if((r->buffer[r->enqueue].aio_buf)){
-                c->rw(c, req->type, c->block_size, req->start, req->length, (void *)(r->buffer[r->enqueue].aio_buf));
+            r->buffer[r->enqueue]->status = RW;
+            r->buffer[r->enqueue]->aio_cb.aio_lio_opcode = LIO_WRITE;
+            r->buffer[r->enqueue]->aio_cb.aio_offset = req->start * c->block_size;
+            r->buffer[r->enqueue]->aio_cb.aio_nbytes = req->length * c->block_size;
+            r->buffer[r->enqueue]->aio_cb.aio_buf = malloc(req->length * c->block_size);
+            if((r->buffer[r->enqueue]->aio_cb.aio_buf)){
+                c->rw(c, req->type, c->block_size, req->start, req->length, (void *)(r->buffer[r->enqueue]->aio_cb.aio_buf));
             }else{
-                r->status[r->enqueue] = FAILED;
+                r->buffer[r->enqueue]->status = FAILED;
             }
             break;
         case SYNC:
-            r->status[r->enqueue] = FSYNC;
+            r->buffer[r->enqueue]->status = FSYNC;
             break;
         default:
             break;
@@ -71,15 +75,15 @@ void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
 {
     int aio_status;
     memset(req, 0, sizeof(request_t));
-    switch(r->status[r->dequeue]){
+    switch(r->buffer[r->dequeue]->status){
         case EMPTY:
             req->type = NONE;
             break;
         case RW:
-            aio_status = aio_error(&r->buffer[r->dequeue]);
-            req->type = r->buffer[r->dequeue].aio_lio_opcode == LIO_READ ? READ : WRITE;
-            req->start = r->buffer[r->dequeue].aio_offset / c->block_size;
-            req->length = r->buffer[r->dequeue].aio_nbytes / c->block_size;
+            aio_status = aio_error(&r->buffer[r->dequeue]->aio_cb);
+            req->type = r->buffer[r->dequeue]->aio_cb.aio_lio_opcode == LIO_READ ? READ : WRITE;
+            req->start = r->buffer[r->dequeue]->aio_cb.aio_offset / c->block_size;
+            req->length = r->buffer[r->dequeue]->aio_cb.aio_nbytes / c->block_size;
             switch(aio_status){
                 case 0:
                     req->status = OK;
@@ -98,18 +102,18 @@ void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
             break;
         case FAILED:
             req->status = ERROR;
-            req->type = r->buffer[r->dequeue].aio_lio_opcode == LIO_READ ? READ : WRITE;
-            req->start = r->buffer[r->dequeue].aio_offset / c->block_size;
-            req->length = r->buffer[r->dequeue].aio_nbytes / c->block_size;
+            req->type = r->buffer[r->dequeue]->aio_cb.aio_lio_opcode == LIO_READ ? READ : WRITE;
+            req->start = r->buffer[r->dequeue]->aio_cb.aio_offset / c->block_size;
+            req->length = r->buffer[r->dequeue]->aio_cb.aio_nbytes / c->block_size;
             break;
     }
 }
 
 void ring_dequeue(ring_t *r)
 {
-    free((void *)(r->buffer[r->dequeue].aio_buf));
-    r->buffer[r->dequeue].aio_buf = 0;
-    r->status[r->dequeue] = EMPTY;
+    free((void *)(r->buffer[r->dequeue]->aio_cb.aio_buf));
+    r->buffer[r->dequeue]->aio_cb.aio_buf = 0;
+    r->buffer[r->dequeue]->status = EMPTY;
     r->dequeue = (r->dequeue + 1) % r->size;
 }
 
@@ -118,7 +122,7 @@ unsigned ring_submit_length(ring_t const *r)
     unsigned avail = 0;
     for(avail; avail < _SC_AIO_LISTIO_MAX
                && r->submit + avail < r->size
-               && r->status[r->submit + avail] == RW; avail++);
+               && r->buffer[r->submit + avail]->status == RW; avail++);
     return avail;
 }
 void ring_submitted(ring_t *r, unsigned s)
@@ -192,6 +196,12 @@ void block_client_initialize(block_client_t **client,
 void block_client_finalize(block_client_t **client)
 {
     close((*client)->fd);
+    if((*client)->queue.buffer){
+        for(size_t i = 0; i < (*client)->queue.size; i++){
+            free((*client)->queue.buffer[i]);
+        }
+        free((*client)->queue.buffer);
+    }
     free(*client);
     *client = 0;
 }
@@ -218,16 +228,12 @@ void block_client_submit(block_client_t *client)
     int cont = 1;
     unsigned length;
     struct sigevent sige;
-    struct aiocb *start[client->queue.size];
     sige.sigev_notify = SIGEV_NONE; // TODO: proper signal creation for read and write
     while(cont){
         length = ring_submit_length(&client->queue);
         if(length){
-            for(unsigned i = 0; i < length; i++){
-                start[i] = &client->queue.buffer[client->queue.submit + i];
-                // TODO: this data structure should be available in ring_t
-            }
-            if(lio_listio(LIO_NOWAIT, start, length, &sige) == -1){
+            // cast struct ctrl ** to struct aiocb * const * restrict since aiocb is always the first member of ctrl
+            if(lio_listio(LIO_NOWAIT, (struct aiocb * const * restrict)&client->queue.buffer[client->queue.submit], length, &sige) == -1){
                 switch(errno){
                     case EAGAIN:
                         cont = 0;
@@ -243,8 +249,8 @@ void block_client_submit(block_client_t *client)
             }else{
                 ring_submitted(&client->queue, length);
             }
-        }else if(client->queue.status[client->queue.submit] == FSYNC){
-            aio_fsync(O_SYNC, &client->queue.buffer[client->queue.submit]);
+        }else if(client->queue.buffer[client->queue.submit]->status == FSYNC){
+            aio_fsync(O_SYNC, &client->queue.buffer[client->queue.submit]->aio_cb);
             client->queue.submit = (client->queue.submit + 1) % client->queue.size;
             cont = 1;
         }else{
