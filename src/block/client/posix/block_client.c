@@ -9,6 +9,7 @@
 #include <sys/ioctl.h>
 #include <string.h>
 #include <errno.h>
+#include <signal.h>
 
 size_t ring_alloc(ring_t *r, uint64_t buffer_size)
 {
@@ -38,7 +39,7 @@ void ring_enqueue(ring_t *r, block_client_t *c, request_t const *req)
 {
     memset(&(r->buffer[r->enqueue]->aio_cb), 0, sizeof(struct aiocb));
     r->buffer[r->enqueue]->aio_cb.aio_fildes = c->fd;
-    r->buffer[r->enqueue]->aio_cb.aio_sigevent.sigev_notify = SIGEV_NONE; // TODO: proper signal creation for READ and WRITE
+    r->buffer[r->enqueue]->aio_cb.aio_sigevent.sigev_notify = SIGEV_NONE; // the proper signal is set in submit
     switch(req->type){
         case READ:
             r->buffer[r->enqueue]->status = RW;
@@ -79,7 +80,7 @@ void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
         case EMPTY:
             req->type = NONE;
             break;
-        case RW:
+        case SUBMITTED:
             aio_status = aio_error(&r->buffer[r->dequeue]->aio_cb);
             req->type = r->buffer[r->dequeue]->aio_cb.aio_lio_opcode == LIO_READ ? READ : WRITE;
             req->start = r->buffer[r->dequeue]->aio_cb.aio_offset / c->block_size;
@@ -127,6 +128,9 @@ unsigned ring_submit_length(ring_t const *r)
 }
 void ring_submitted(ring_t *r, unsigned s)
 {
+    for(unsigned i = r->submit; i < r->submit + s; i++){
+        r->buffer[i % r->size]->status = SUBMITTED;
+    }
     r->submit = (r->submit + s) % r->size;
 }
 
@@ -228,7 +232,9 @@ void block_client_submit(block_client_t *client)
     int cont = 1;
     unsigned length;
     struct sigevent sige;
-    sige.sigev_notify = SIGEV_NONE; // TODO: proper signal creation for read and write
+    sige.sigev_notify = SIGEV_SIGNAL;
+    sige.sigev_signo = SIGIO;
+    sige.sigev_value.sival_ptr = (void *)client;
     while(cont){
         length = ring_submit_length(&client->queue);
         if(length){
@@ -266,7 +272,8 @@ void block_client_next(const block_client_t *client, request_t *request)
 
 void block_client_read(block_client_t *client, const request_t *request)
 {
-    printf("%s\n", __func__);
+    client->rw(client, request->type, client->block_size, request->start, request->length,
+               (void *)client->queue.buffer[client->queue.dequeue]->aio_cb.aio_buf);
 }
 
 void block_client_release(block_client_t *client, const request_t *request)

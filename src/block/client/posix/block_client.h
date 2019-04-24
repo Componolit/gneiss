@@ -11,7 +11,8 @@ typedef struct block_client block_client_t;
 #define EMPTY 0
 #define RW 1
 #define FSYNC 2
-#define FAILED 3
+#define SUBMITTED 3
+#define FAILED 4
 
 struct ctrl
 {
