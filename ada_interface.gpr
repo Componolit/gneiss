@@ -78,7 +78,7 @@ project Ada_Interface is
    end Compiler;
 
    package Linker is
-      for Required_Switches use ("-L../ada-runtime/obj/lib", "-lposix_rts", "-lpthread");
+      for Required_Switches use ("-L../ada-runtime/obj/lib", "-lposix_rts", "-lpthread", "-lrt");
    end Linker;
 
    for Runtime ("Ada") use "ada-runtime/obj";

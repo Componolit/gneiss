@@ -4,8 +4,24 @@
 
 #include <stdint.h>
 #include <block.h>
+#include <aio.h>
 
 typedef struct block_client block_client_t;
+
+#define EMPTY 0
+#define RW 1
+#define FSYNC 2
+#define FAILED 3
+
+typedef struct ring
+{
+    uint8_t *status;
+    struct aiocb *buffer;
+    size_t size;
+    unsigned enqueue;
+    unsigned dequeue;
+    unsigned submit;
+} ring_t;
 
 struct block_client
 {
@@ -21,7 +37,17 @@ struct block_client
     uint64_t block_size;
     uint64_t block_count;
     uint64_t maximum_transfer_size;
+    ring_t queue;
 };
+
+size_t ring_alloc(ring_t *, uint64_t buffer_size);
+int ring_avail(ring_t const *);
+void ring_enqueue(ring_t *, block_client_t *, request_t const *);
+void ring_peek(ring_t const *, block_client_t const *, request_t *);
+void ring_dequeue(ring_t *);
+unsigned ring_submit_offset(ring_t const *);
+unsigned ring_submit_length(ring_t const *);
+void ring_submitted(ring_t *, unsigned);
 
 const block_client_t *block_client_get_instance(const block_client_t *client);
 
