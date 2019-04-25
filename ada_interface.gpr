@@ -33,7 +33,11 @@ project Ada_Interface is
                     Source_Timer,
                     Source_Timer & "/posix",
                     Source_Timer_Client,
-                    Source_Timer_Client & "/posix");
+                    Source_Timer_Client & "/posix",
+                    Source_Configuraion,
+                    Source_Configuraion & "/posix",
+                    Source_Configuraion_Client,
+                    Source_Configuraion_Client & "/posix");
 
    Genode_Source := (Source,
                      Source_Platform,

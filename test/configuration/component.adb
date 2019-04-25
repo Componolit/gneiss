@@ -8,13 +8,14 @@ package body Component with
    SPARK_Mode
 is
 
-   Cfg : Cai.Configuration.Client_Session;
-   Log : Cai.Log.Client_Session;
+   Log : Cai.Log.Client_Session := Cai.Log.Client.Create;
    C : Cai.Types.Capability;
 
    procedure Parse (Data : String);
 
    package Config is new Cai.Configuration.Client (Character, Positive, String, Parse);
+
+   Cfg : Cai.Configuration.Client_Session := Config.Create;
 
    procedure Construct (Cap : Cai.Types.Capability)
    is

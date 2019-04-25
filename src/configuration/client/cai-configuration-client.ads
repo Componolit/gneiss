@@ -1,6 +1,8 @@
 
 with Cai.Types;
 
+pragma Warnings (Off, "procedure ""Parse"" is not referenced");
+
 generic
    type Element is private;
    type Index is range <>;
