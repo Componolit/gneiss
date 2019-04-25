@@ -87,15 +87,17 @@ void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
             req->length = r->buffer[r->dequeue]->aio_cb.aio_nbytes / c->block_size;
             switch(aio_status){
                 case 0:
-                    req->status = OK;
+                    req->status = aio_return(&r->buffer[r->dequeue]->aio_cb) == r->buffer[r->dequeue]->aio_cb.aio_nbytes ? OK : ERROR;
                     break;
                 case EINPROGRESS:
                     req->type = NONE;
                     break;
                 case ECANCELED:
                     req->status = ERROR;
+                    break;
                 default:
                     fprintf(stderr, "invalid request status: %d\n", aio_status);
+                    break;
             }
             break;
         case FSYNC:
