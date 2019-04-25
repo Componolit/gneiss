@@ -16,6 +16,8 @@ project Ada_Interface is
    Source_Log_Client := "src/log/client";
    Source_Timer := "src/timer";
    Source_Timer_Client := "src/timer/client";
+   Source_Configuraion := "src/configuration";
+   Source_Configuraion_Client := "src/configuration/client";
 
    Posix_Source := (Source,
                     Source_Platform,
@@ -49,7 +51,11 @@ project Ada_Interface is
                      Source_Timer,
                      Source_Timer & "/genode",
                      Source_Timer_Client,
-                     Source_Timer_Client & "/genode");
+                     Source_Timer_Client & "/genode",
+                     Source_Configuraion,
+                     Source_Configuraion & "/genode",
+                     Source_Configuraion_Client,
+                     Source_Configuraion_Client & "/genode");
 
    for Create_Missing_Dirs use "True";
    for Object_Dir use "build";
