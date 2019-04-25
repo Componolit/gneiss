@@ -75,6 +75,7 @@ void ring_enqueue(ring_t *r, block_client_t *c, request_t const *req)
 void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
 {
     int aio_status;
+    ring_t *mut_r = (ring_t *)r;
     memset(req, 0, sizeof(request_t));
     switch(r->buffer[r->dequeue]->status){
         case EMPTY:
@@ -101,7 +102,10 @@ void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
             }
             break;
         case FSYNC:
-            req->type = NONE;
+            // since sync requests are not answered we need to fast forward over it
+            mut_r->buffer[r->dequeue]->status = EMPTY;
+            mut_r->dequeue = (r->dequeue + 1) % r->size;
+            ring_peek(r, c, req);
             break;
         case FAILED:
             req->status = ERROR;
