@@ -13,7 +13,8 @@ is
    function Create return Client_Session is
    begin
       return Client_Session'(Label          => System.Null_Address,
-                             Length         => 0);
+                             Length         => 0,
+                             Prev_Nl        => True);
    end Create;
 
    -----------------
@@ -79,10 +80,11 @@ is
       External_Name => "print";
 
    function Create_String (Label   : String;
+                           Use_L   : Boolean;
                            Prefix  : String;
                            Message : String;
                            Newline : Boolean) return String is
-      ("[" & Label & "] " & Prefix & Message
+      ((if Use_L then "[" & Label & "] " & Prefix else "") & Message
        & (if Newline
           then Character'Val (10) & Character'Val (0)
           else (1 => Character'Val (0))));
@@ -97,8 +99,9 @@ is
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
-      M : String := Create_String (Label, "Info: ", Msg, Newline);
+      M : String := Create_String (Label, C.Prev_Nl, "Info: ", Msg, Newline);
    begin
+      C.Prev_Nl := Newline;
       Print (M'Address);
    end Info;
 
@@ -112,8 +115,9 @@ is
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
-      M : String := Create_String (Label, "Warning: ", Msg, Newline);
+      M : String := Create_String (Label, C.Prev_Nl, "Warning: ", Msg, Newline);
    begin
+      C.Prev_Nl := Newline;
       Print (M'Address);
    end Warning;
 
@@ -127,8 +131,9 @@ is
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
-      M : String := Create_String (Label, "Error: ", Msg, Newline);
+      M : String := Create_String (Label, C.Prev_Nl, "Error: ", Msg, Newline);
    begin
+      C.Prev_Nl := Newline;
       Print (M'Address);
    end Error;
 
@@ -138,9 +143,11 @@ is
 
    procedure Flush (C : in out Client_Session)
    is
-      pragma Unreferenced (C);
+      M : String := Character'Val (10) & Character'Val (0);
    begin
-      null;
+      if not C.Prev_Nl then
+         Print (M'Address);
+      end if;
    end Flush;
 
 end Cai.Log.Client;
