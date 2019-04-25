@@ -3,14 +3,13 @@ package body Cai.Component is
 
    pragma Warnings (Off, "all instances of");
 
-   procedure Platform_Construct with
+   procedure Platform_Construct (Cap : Cai.Types.Capability) with
       Export,
       Convention    => C,
       External_Name => "cai_component_construct";
 
-   procedure Platform_Construct
+   procedure Platform_Construct (Cap : Cai.Types.Capability)
    is
-      Cap : Cai.Types.Capability;
    begin
       Construct (Cap);
    end Platform_Construct;
