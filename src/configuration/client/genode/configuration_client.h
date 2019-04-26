@@ -10,7 +10,6 @@ namespace Cai
         {
             private:
                 void *_config;
-                void *_parse;
             public:
                 Client();
                 void initialize(void *env, void *parse);
