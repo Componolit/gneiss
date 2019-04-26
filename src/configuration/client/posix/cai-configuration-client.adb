@@ -25,7 +25,10 @@ is
    begin
       return C.Fd >= 0
              and C.Map /= System.Null_Address
-             and C.Size > 0;
+             and C.Size > 0
+             and C.Ifd >= 0
+             and C.Load /= System.Null_Address
+             and C.Cap /= System.Null_Address;
    end Initialized;
 
    procedure Initialize (C   : in out Client_Session;

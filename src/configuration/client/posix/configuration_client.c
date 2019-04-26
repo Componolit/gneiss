@@ -72,7 +72,7 @@ void configuration_client_initialize(session_t *session, capability_t *cap, void
             }else{
                 perror("stat failed");
                 close(session->fd);
-                session->map = 0;
+                set_zero(session);
             }
         }else{
             perror(cap->config_file);
@@ -85,5 +85,6 @@ void configuration_client_finalize(session_t *session)
     session->cap->withdraw(session->ifd);
     munmap(session->map, session->size);
     close(session->fd);
+    close(session->ifd);
     set_zero(session);
 }
