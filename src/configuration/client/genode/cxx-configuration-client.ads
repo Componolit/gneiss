@@ -7,7 +7,6 @@ is
 
    type Class is limited record
       Config : Cxx.Void_Address;
-      Parse  : Cxx.Void_Address;
    end record
    with Import, Convention => CPP;
 
