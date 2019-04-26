@@ -20,6 +20,7 @@ is
          Cai.Log.Client.Error (Log, "Hello World!");
          Cai.Log.Client.Finalize (Log);
       end if;
+      Hello_World_Component.Shutdown (Cap, Hello_World_Component.Success);
    end Construct;
 
 end Hello_World;
