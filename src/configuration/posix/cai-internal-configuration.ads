@@ -8,6 +8,9 @@ package Cai.Internal.Configuration is
       Fd   : Integer;
       Map  : System.Address;
       Size : C.Uint64_T;
+      Ifd  : Integer;
+      Load : System.Address;
+      Cap  : System.Address;
    end record;
 
 end Cai.Internal.Configuration;

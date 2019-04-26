@@ -14,7 +14,10 @@ is
    begin
       return Client_Session'(Fd   => -1,
                              Map  => System.Null_Address,
-                             Size => 10);
+                             Size => 10,
+                             Ifd  => -1,
+                             Load => System.Null_Address,
+                             Cap  => System.Null_Address);
    end Create;
 
    function Initialized (C : Client_Session) return Boolean
@@ -29,12 +32,13 @@ is
                          Cap :        Cai.Types.Capability)
    is
       procedure C_Initialize (S : in out Client_Session;
-                              C : Cai.Types.Capability) with
+                              C : Cai.Types.Capability;
+                              L : System.Address) with
          Import,
          Convention => C,
          External_Name => "configuration_client_initialize";
    begin
-      C_Initialize (C, Cap);
+      C_Initialize (C, Cap, Load'Address);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
