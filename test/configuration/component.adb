@@ -28,8 +28,12 @@ is
    procedure Parse (Data : String)
    is
    begin
-      Cai.Log.Client.Initialize (Log, C, Data);
-      Cai.Log.Client.Info (Log, "Log session configured with label: " & Data);
+      if not Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Initialize (Log, C, Data);
+         Cai.Log.Client.Info (Log, "Log session configured with label: " & Data);
+      else
+         Cai.Log.Client.Info (Log, "Label configuration changed to: " & Data);
+      end if;
    end Parse;
 
 end Component;
