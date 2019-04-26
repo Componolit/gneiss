@@ -18,6 +18,9 @@ generic
    with procedure Construct (Cap : Cai.Types.Capability);
 package Cai.Component is
 
-   pragma Elaborate_Body;
+   type Shutdown_Status is (Success, Failure);
+
+   procedure Shutdown (Cap    : Cai.Types.Capability;
+                       Status : Shutdown_Status);
 
 end Cai.Component;
