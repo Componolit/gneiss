@@ -54,5 +54,5 @@ uint64_t block_client_block_count(const block_client_t *client)
 uint64_t block_client_block_size(const block_client_t *client)
 { }
 
-uint64_t block_client_maximal_transfer_size(const block_client_t *client)
+uint64_t block_client_maximum_transfer_size(const block_client_t *client)
 { }

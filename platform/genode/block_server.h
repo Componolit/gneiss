@@ -21,7 +21,7 @@ namespace Block
              void *_callback; //procedure Event (S : Instance);
              void *_block_count; //function Block_Count (S : Instance) return Cai.Block.Count;
              void *_block_size; //function Block_Size (S : Instance) return Cai.Block.Size;
-             void *_maximal_transfer_size; //function Maximum_Transfer_Size (S : Instance) return Cai.Block.Unsigned_long;
+             void *_maximum_transfer_size; //function Maximum_Transfer_Size (S : Instance) return Cai.Block.Unsigned_long;
              void *_writable; //function Writable (S : Instance) return Boolean
 
         public:
@@ -33,7 +33,7 @@ namespace Block
                     void *callback,
                     void *block_count,
                     void *block_size,
-                    void *maximal_transfer_size,
+                    void *maximum_transfer_size,
                     void *writable);
             void finalize();
             Ada bool writable();
