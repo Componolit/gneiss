@@ -32,8 +32,7 @@ is
 
    procedure Initialize (This  : Class;
                          Cap   : Cai.Types.Capability;
-                         Label : Cxx.Void_Address;
-                         Size  : Cxx.Genode.Uint64_T) with
+                         Label : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,

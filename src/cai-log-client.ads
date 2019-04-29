@@ -31,14 +31,9 @@ is
    --  @param C               Client session instance
    --  @param Cap             System capability
    --  @param Label           Session label
-   --  @param Message_Length  Requested maximum message length
-   --                         This is a hint for the platform on how long messages the client wants to send
-   --                         The platform is free to decide if it follows this hint
-   --                         A value of 0 uses the platform default
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Cai.Types.Capability;
-                         Label          :        String;
-                         Message_Length :        Integer := 0);
+                         Label          :        String);
 
    --  Finalize client session
    --

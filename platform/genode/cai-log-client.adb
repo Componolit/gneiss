@@ -1,6 +1,5 @@
 
 with Cxx;
-with Cxx.Genode;
 with Cxx.Log.Client;
 use all type Cxx.Bool;
 
@@ -22,15 +21,13 @@ is
 
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Cai.Types.Capability;
-                         Label          :        String;
-                         Message_Length :        Integer := 0)
+                         Label          :        String)
    is
       C_Label : String := Label & Character'Val (0);
    begin
       Cxx.Log.Client.Initialize (C.Instance,
                                  Cap,
-                                 C_Label'Address,
-                                 Cxx.Genode.Uint64_T (Message_Length));
+                                 C_Label'Address);
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
