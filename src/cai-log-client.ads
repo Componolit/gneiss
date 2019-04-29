@@ -48,7 +48,7 @@ is
    --  Maximum message length the platform can handle in a single message
    --
    --  @param C  Client session instance
-   --  @return Maximal message length for Info, Warning and Error
+   --  @return Maximum message length for Info, Warning and Error
    function Maximum_Message_Length (C : Client_Session) return Integer with
       Pre  => Initialized (C),
       Post => Maximum_Message_Length'Result > Minimum_Message_Length;

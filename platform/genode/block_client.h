@@ -45,7 +45,7 @@ namespace Block
             bool writable();
             Genode::uint64_t block_count();
             Genode::uint64_t block_size();
-            Genode::uint64_t maximal_transfer_size();
+            Genode::uint64_t maximum_transfer_size();
     };
 }
 

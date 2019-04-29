@@ -126,7 +126,7 @@ is
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client21maximal_transfer_sizeEv";
+      External_Name => "_ZN3Cai5Block6Client21maximum_transfer_sizeEv";
 
 private
    pragma SPARK_Mode (Off);

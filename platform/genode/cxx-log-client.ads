@@ -60,7 +60,7 @@ is
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai3Log6Client22maximal_message_lengthEv";
+      External_Name => "_ZN3Cai3Log6Client22maximum_message_lengthEv";
 
 private
    pragma SPARK_Mode (Off);

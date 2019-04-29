@@ -78,7 +78,7 @@ Cai::Block::Server::Server() :
     _callback(nullptr),
     _block_count(nullptr),
     _block_size(nullptr),
-    _maximal_transfer_size(nullptr),
+    _maximum_transfer_size(nullptr),
     _writable(nullptr)
 { }
 
@@ -93,13 +93,13 @@ void Cai::Block::Server::initialize(
         void *callback,
         void *block_count,
         void *block_size,
-        void *maximal_transfer_size,
+        void *maximum_transfer_size,
         void *writable)
 {
     _callback = callback;
     _block_count = block_count;
     _block_size = block_size;
-    _maximal_transfer_size = maximal_transfer_size;
+    _maximum_transfer_size = maximum_transfer_size;
     _writable = writable;
     check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
     _session = _factory->create<Cai::Block::Block_root>(
@@ -115,7 +115,7 @@ void Cai::Block::Server::finalize()
     _callback = nullptr;
     _block_count = nullptr;
     _block_size = nullptr;
-    _maximal_transfer_size = nullptr;
+    _maximum_transfer_size = nullptr;
     _writable = nullptr;
 }
 
@@ -125,7 +125,7 @@ bool Cai::Block::Server::initialized()
         && _callback
         && _block_count
         && _block_size
-        && _maximal_transfer_size
+        && _maximum_transfer_size
         && _writable;
 }
 

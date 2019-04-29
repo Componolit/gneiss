@@ -275,7 +275,7 @@ is
       function C_Maximum_Transfer_Size (T : System.Address) return Byte_Length with
          Import,
          Convention    => C,
-         External_Name => "block_client_maximal_transfer_size";
+         External_Name => "block_client_maximum_transfer_size";
    begin
       return C_Maximum_Transfer_Size (C.Instance);
    end Maximum_Transfer_Size;

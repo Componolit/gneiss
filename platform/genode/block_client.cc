@@ -252,7 +252,7 @@ Genode::uint64_t Cai::Block::Client::block_size()
     return _block_size;
 }
 
-Genode::uint64_t Cai::Block::Client::maximal_transfer_size()
+Genode::uint64_t Cai::Block::Client::maximum_transfer_size()
 {
     return _buffer_size;
 }

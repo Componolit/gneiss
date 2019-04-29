@@ -73,7 +73,7 @@ void Cai::Log::Client::flush()
     Genode::memset(log(_session)->_buffer, 0, sizeof(Log_session::_buffer));
 }
 
-Genode::uint64_t Cai::Log::Client::maximal_message_length()
+Genode::uint64_t Cai::Log::Client::maximum_message_length()
 {
     static_assert(Genode::Log_session::MAX_STRING_LEN - 16 > 79);
     return Genode::Log_session::MAX_STRING_LEN - 16;
