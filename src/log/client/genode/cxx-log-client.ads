@@ -36,7 +36,7 @@ is
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai3Log6Client10initializeEPvPKcy";
+      External_Name => "_ZN3Cai3Log6Client10initializeEPvPKc";
 
    procedure Finalize (This : Class) with
       Global        => null,
