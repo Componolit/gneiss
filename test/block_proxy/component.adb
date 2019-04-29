@@ -239,11 +239,11 @@ package body Component is
       end if;
    end Writable;
 
-   function Maximal_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length
+   function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length
    is
       pragma Unreferenced (S);
    begin
       return 16#ffffffff#;
-   end Maximal_Transfer_Size;
+   end Maximum_Transfer_Size;
 
 end Component;

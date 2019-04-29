@@ -19,6 +19,7 @@ pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
 generic
    --  Server implementation to be registered
    with package Serv is new Cai.Block.Server (<>);
+
    --  Called when a client connects or disconnects
    with procedure Dispatch;
 package Cai.Block.Dispatcher with
@@ -64,8 +65,9 @@ is
       Post => not Initialized (D);
 
    --  Retrieve information about a session request, must only be used in Dispatch
-   --  If a request is available and Session_Accept is called the session is accepted on the platform
-   --  If Session_Accept is not called before the return of Dispatch the session is rejected
+   --
+   --  If a request is available and Session_Accept is called the session is accepted on the platform.
+   --  If Session_Accept is not called before the return of Dispatch the session is rejected.
    --
    --  @param D      Dispatcher session instance
    --  @param Valid  Session has been requested if True
@@ -78,8 +80,9 @@ is
       Pre  => Initialized (D),
       Post => Initialized (D) and Last in Label'Range;
 
-   --  Accept session request and provide the server label L, must only be used in Dispatch
-   --  This procedure also initializes the server on the platform and calls Serv.Initialize
+   --  Accept session request and provide the server label L
+   --  This procedure must only be used in Dispatch.
+   --  It also initializes the server on the platform and calls Serv.Initialize.
    --
    --  @param D  Dispatcher session instance
    --  @param I  Server session instance to handle client connection with
@@ -90,9 +93,11 @@ is
       Pre  => Initialized (D),
       Post => Initialized (D);
 
-   --  Garbage collects disconnected sessions, must only be used in Dispatch
-   --  Should be called on each session each time Dispatch is called
-   --  Server_Session will be finalized if the client disconnected on the platform
+   --  Garbage collects disconnected sessions
+   --
+   --  This procedure must only be used in Dispatch.
+   --  It should be called on each session each time Dispatch is called.
+   --  Server_Session will be finalized if the client disconnected on the platform.
    --
    --  @param D  Dispatcher session instance
    --  @param I  Server session instance to check for removal

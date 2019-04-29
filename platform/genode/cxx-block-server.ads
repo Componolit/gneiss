@@ -9,7 +9,7 @@ is
       Callback              : Cxx.Void_Address;
       Block_Count           : Cxx.Void_Address;
       Block_Size            : Cxx.Void_Address;
-      Maximal_Transfer_Size : Cxx.Void_Address;
+      Maximum_Transfer_Size : Cxx.Void_Address;
       Writable              : Cxx.Void_Address;
    end record
    with Import, Convention => CPP;
@@ -30,7 +30,7 @@ is
                          Callback              : Cxx.Void_Address;
                          Block_Count           : Cxx.Void_Address;
                          Block_Size            : Cxx.Void_Address;
-                         Maximal_Transfer_Size : Cxx.Void_Address;
+                         Maximum_Transfer_Size : Cxx.Void_Address;
                          Writable              : Cxx.Void_Address) with
       Global        => null,
       Import,
