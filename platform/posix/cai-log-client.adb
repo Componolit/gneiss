@@ -13,8 +13,7 @@ is
    function Create return Client_Session is
    begin
       return Client_Session'(Label          => System.Null_Address,
-                             Length         => 0,
-                             Message_Length => 0);
+                             Length         => 0);
    end Create;
 
    -----------------
@@ -32,8 +31,7 @@ is
 
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Cai.Types.Capability;
-                         Label          :        String;
-                         Message_Length :        Integer := 0)
+                         Label          :        String)
    is
       pragma Unreferenced (Cap);
       procedure C_Initialize (Str :     System.Address;
@@ -46,7 +44,6 @@ is
    begin
       C_Initialize (C_Str'Address, C.Label);
       C.Length         := Label'Length;
-      C.Message_Length := (if Message_Length > 0 then Message_Length else 4095);
    end Initialize;
 
    --------------
@@ -71,8 +68,9 @@ is
 
    function Maximum_Message_Length (C : Client_Session) return Integer
    is
+      pragma Unreferenced (C);
    begin
-      return C.Message_Length;
+      return 4095;
    end Maximum_Message_Length;
 
    procedure Print (Msg : System.Address) with

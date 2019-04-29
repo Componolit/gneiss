@@ -33,7 +33,7 @@ bool Cai::Log::Client::initialized()
     return (bool)_session;
 }
 
-void Cai::Log::Client::initialize(void *env, const char *label, Genode::uint64_t)
+void Cai::Log::Client::initialize(void *env, const char *label)
 {
     check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
     _session = _factory->create<Log_session>(

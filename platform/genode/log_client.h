@@ -13,7 +13,7 @@ namespace Log{
         public:
             Client();
             bool initialized();
-            void initialize(void *env, const char *label, Genode::uint64_t size);
+            void initialize(void *env, const char *label);
             void finalize();
             void write(const char *message);
             void flush();
