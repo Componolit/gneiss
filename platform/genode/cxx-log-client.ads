@@ -57,7 +57,7 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai3Log6Client5flushEv";
 
-   function Maximal_Message_Length (This : Class) return Cxx.Genode.Uint64_T with
+   function Maximum_Message_Length (This : Class) return Cxx.Genode.Uint64_T with
       Global        => null,
       Import,
       Convention    => CPP,

@@ -39,11 +39,11 @@ is
       Cxx.Log.Client.Finalize (C.Instance);
    end Finalize;
 
-   function Maximal_Message_Length (C : Client_Session) return Integer
+   function Maximum_Message_Length (C : Client_Session) return Integer
    is
    begin
-      return Integer (Cxx.Log.Client.Maximal_Message_Length (C.Instance));
-   end Maximal_Message_Length;
+      return Integer (Cxx.Log.Client.Maximum_Message_Length (C.Instance));
+   end Maximum_Message_Length;
 
    Blue       : constant String    := Character'Val (8#33#) & "[34m";
    Red        : constant String    := Character'Val (8#33#) & "[31m";

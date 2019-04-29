@@ -210,10 +210,10 @@ is
       return Size (Cxx.Block.Client.Block_Size (C.Instance));
    end Block_Size;
 
-   function Maximal_Transfer_Size (C : Client_Session) return Byte_Length
+   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length
    is
    begin
-      return Byte_Length (Cxx.Block.Client.Maximal_Transfer_Size (C.Instance));
-   end Maximal_Transfer_Size;
+      return Byte_Length (Cxx.Block.Client.Maximum_Transfer_Size (C.Instance));
+   end Maximum_Transfer_Size;
 
 end Cai.Block.Client;

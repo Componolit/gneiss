@@ -268,17 +268,17 @@ is
    end Block_Size;
 
    ---------------------------
-   -- Maximal_Transfer_Size --
+   -- Maximum_Transfer_Size --
    ---------------------------
 
-   function Maximal_Transfer_Size (C : Client_Session) return Byte_Length is
-      function C_Maximal_Transfer_Size (T : System.Address) return Byte_Length with
+   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length is
+      function C_Maximum_Transfer_Size (T : System.Address) return Byte_Length with
          Import,
          Convention    => C,
          External_Name => "block_client_maximal_transfer_size";
    begin
-      return C_Maximal_Transfer_Size (C.Instance);
-   end Maximal_Transfer_Size;
+      return C_Maximum_Transfer_Size (C.Instance);
+   end Maximum_Transfer_Size;
 
    function Convert_Request (R : Request) return C.Block.Request
    is

@@ -66,14 +66,14 @@ is
    end Finalize;
 
    ----------------------------
-   -- Maximal_Message_Length --
+   -- Maximum_Message_Length --
    ----------------------------
 
-   function Maximal_Message_Length (C : Client_Session) return Integer
+   function Maximum_Message_Length (C : Client_Session) return Integer
    is
    begin
       return C.Message_Length;
-   end Maximal_Message_Length;
+   end Maximum_Message_Length;
 
    procedure Print (Msg : System.Address) with
       Import,

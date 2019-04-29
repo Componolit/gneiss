@@ -24,7 +24,7 @@ package Component is
    function Block_Count (S : Block.Server_Instance) return Block.Count;
    function Block_Size (S : Block.Server_Instance) return Block.Size;
    function Writable (S : Block.Server_Instance) return Boolean;
-   function Maximal_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length;
+   function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length;
 
    procedure Write (C :     Block.Client_Instance;
                     B :     Block.Size;
@@ -43,7 +43,7 @@ package Component is
                                              Block_Count,
                                              Block_Size,
                                              Writable,
-                                             Maximal_Transfer_Size,
+                                             Maximum_Transfer_Size,
                                              Initialize_Server,
                                              Finalize_Server);
    package Block_Dispatcher is new Block.Dispatcher (Block_Server, Dispatch);

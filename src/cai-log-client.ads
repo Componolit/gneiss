@@ -48,15 +48,15 @@ is
       Post => not Initialized (C);
 
    --  Minimum message length, guaranteed by all platforms
-   Minimal_Message_Length : constant Positive := 78 with Ghost;
+   Minimum_Message_Length : constant Positive := 78 with Ghost;
 
    --  Maximum message length the platform can handle in a single message
    --
    --  @param C  Client session instance
    --  @return Maximal message length for Info, Warning and Error
-   function Maximal_Message_Length (C : Client_Session) return Integer with
+   function Maximum_Message_Length (C : Client_Session) return Integer with
       Pre  => Initialized (C),
-      Post => Maximal_Message_Length'Result > Minimal_Message_Length;
+      Post => Maximum_Message_Length'Result > Minimum_Message_Length;
 
    --  Print info message
    --
@@ -66,10 +66,10 @@ is
    procedure Info (C       : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True) with
-      Pre  => Initialized (C) and then (Msg'Length <= Minimal_Message_Length
-                                        or else Msg'Length <= Maximal_Message_Length (C)),
+      Pre  => Initialized (C) and then (Msg'Length <= Minimum_Message_Length
+                                        or else Msg'Length <= Maximum_Message_Length (C)),
       Post => Initialized (C)
-              and Maximal_Message_Length (C)'Old = Maximal_Message_Length (C);
+              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
 
    --  Print warning message
    --
@@ -79,10 +79,10 @@ is
    procedure Warning (C       : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True) with
-      Pre  => Initialized (C) and then (Msg'Length <= Minimal_Message_Length
-                                        or else Msg'Length <= Maximal_Message_Length (C)),
+      Pre  => Initialized (C) and then (Msg'Length <= Minimum_Message_Length
+                                        or else Msg'Length <= Maximum_Message_Length (C)),
       Post => Initialized (C)
-              and Maximal_Message_Length (C)'Old = Maximal_Message_Length (C);
+              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
 
    --  Print error message
    --
@@ -92,10 +92,10 @@ is
    procedure Error (C       : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True) with
-      Pre  => Initialized (C) and then (Msg'Length <= Minimal_Message_Length
-                                        or else Msg'Length <= Maximal_Message_Length (C)),
+      Pre  => Initialized (C) and then (Msg'Length <= Minimum_Message_Length
+                                        or else Msg'Length <= Maximum_Message_Length (C)),
       Post => Initialized (C)
-              and Maximal_Message_Length (C)'Old = Maximal_Message_Length (C);
+              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
 
    --  Flush all messages to make sure they're printed
    --
@@ -103,6 +103,6 @@ is
    procedure Flush (C : in out Client_Session) with
       Pre  => Initialized (C),
       Post => Initialized (C)
-              and Maximal_Message_Length (C)'Old = Maximal_Message_Length (C);
+              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
 
 end Cai.Log.Client;

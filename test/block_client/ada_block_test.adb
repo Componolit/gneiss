@@ -146,8 +146,8 @@ is
       pragma Unreferenced (L);
    begin
       Cai.Log.Client.Info (Log, "Read succeeded:");
-      if D'Length >= Cai.Log.Client.Maximal_Message_Length (Log) then
-         Cai.Log.Client.Info (Log, D (D'First .. D'First + Cai.Log.Client.Maximal_Message_Length (Log) - 1));
+      if D'Length >= Cai.Log.Client.Maximum_Message_Length (Log) then
+         Cai.Log.Client.Info (Log, D (D'First .. D'First + Cai.Log.Client.Maximum_Message_Length (Log) - 1));
       else
          Cai.Log.Client.Info (Log, D);
       end if;

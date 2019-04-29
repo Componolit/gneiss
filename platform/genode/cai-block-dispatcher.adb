@@ -84,7 +84,7 @@ is
                                    Serv.Event'Address,
                                    Serv.Block_Count'Address,
                                    Serv.Block_Size'Address,
-                                   Serv.Maximal_Transfer_Size'Address,
+                                   Serv.Maximum_Transfer_Size'Address,
                                    Serv.Writable'Address);
       Cxx.Block.Dispatcher.Session_Accept (D.Instance, I.Instance);
    end Session_Accept;

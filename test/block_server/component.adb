@@ -120,12 +120,12 @@ package body Component is
       return True;
    end Writable;
 
-   function Maximal_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length
+   function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length
    is
       pragma Unreferenced (S);
    begin
       return Buffer_Size;
-   end Maximal_Transfer_Size;
+   end Maximum_Transfer_Size;
 
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is

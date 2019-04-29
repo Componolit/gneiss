@@ -122,7 +122,7 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client10block_sizeEv";
 
-   function Maximal_Transfer_Size (This : Class) return Cxx.Genode.Uint64_T with
+   function Maximum_Transfer_Size (This : Class) return Cxx.Genode.Uint64_T with
       Global        => null,
       Import,
       Convention    => CPP,

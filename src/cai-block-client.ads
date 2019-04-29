@@ -17,6 +17,7 @@ pragma Warnings (Off, "procedure ""Event"" is not referenced");
 generic
    --  Block client event handler
    with procedure Event;
+
    --  Called when a read has been triggered and data is available
    --  Pre => Data'Length = Bsize * Length
    --
@@ -25,11 +26,13 @@ generic
    --  @param Start   Start block that has been read from
    --  @param Length  Number of blocks to read
    --  @param Data    Read data
+
    with procedure Read (C      : Client_Instance;
                         Bsize  : Size;
                         Start  : Id;
                         Length : Count;
                         Data   : Buffer);
+
    --  Write procedure called when the platform required data to write
    --  Pre => Data'Length = Bsize * Length
    --
@@ -89,9 +92,9 @@ is
    --  @param Cap          System capability
    --  @param Path         Device id/path
    --  @param Buffer_Size  Platform buffer size
-   --                      This is a hint for the platform how much space can be used for packet allocation
-   --                      The platform is free to decide if it follows this hint
-   --                      A value of 0 uses the platform default
+   --                      This is a hint for the platform how much space can be used for packet allocation.
+   --                      The platform is free to decide if it follows this hint.
+   --                      A value of 0 uses the platform default.
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
                          Path        :        String;
@@ -135,7 +138,7 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
 
    --  Submit all enqueued requests for processing
    --
@@ -146,11 +149,12 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
 
    --  Get the next acknowledged request
-   --  The request is not removed from the queue and subsequent calls of this function have the same result
-   --  If no request is available Request.Kind is None
+   --
+   --  The request is not removed from the queue and subsequent calls of this function have the same result.
+   --  If no request is available Request.Kind is None.
    --
    --  @param C  Client session instance
    function Next (C : Client_Session) return Request with
@@ -173,11 +177,12 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
 
-   --  Release a request returned by Next,
-   --  Removes the request from the queue
-   --  The next call of Next provides the next request in the queue or an invalid one if the queue is empty
+   --  Release a request returned by Next
+   --
+   --  Removes the request from the queue.
+   --  The next call of Next provides the next request in the queue or an invalid one if the queue is empty.
    --
    --  @param C  Client session instance
    --  @param R  Request to enqueue
@@ -190,7 +195,7 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximal_Transfer_Size (C)'Old = Maximal_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
 
    --  Check if the block device is writable
    --
@@ -213,7 +218,7 @@ is
    --  Get the maximum number of bytes for a single request
    --
    --  @param C  Client session instance
-   function Maximal_Transfer_Size (C : Client_Session) return Byte_Length with
+   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length with
       Pre => Initialized (C);
 
 end Cai.Block.Client;

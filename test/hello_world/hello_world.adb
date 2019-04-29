@@ -13,9 +13,9 @@ is
    begin
       Cai.Log.Client.Initialize (Log, Cap, "Hello_World");
       if Cai.Log.Client.Initialized (Log) then
-         Ml := Cai.Log.Client.Maximal_Message_Length (Log);
+         Ml := Cai.Log.Client.Maximum_Message_Length (Log);
          Cai.Log.Client.Info (Log, "Hello World!");
-         pragma Assert (Ml = Cai.Log.Client.Maximal_Message_Length (Log));
+         pragma Assert (Ml = Cai.Log.Client.Maximum_Message_Length (Log));
          Cai.Log.Client.Warning (Log, "Hello World!");
          Cai.Log.Client.Error (Log, "Hello World!");
          Cai.Log.Client.Finalize (Log);

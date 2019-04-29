@@ -13,7 +13,7 @@ pragma Warnings (Off, "procedure ""Event"" is not referenced");
 pragma Warnings (Off, "function ""Block_Count"" is not referenced");
 pragma Warnings (Off, "function ""Block_Size"" is not referenced");
 pragma Warnings (Off, "function ""Writable"" is not referenced");
-pragma Warnings (Off, "function ""Maximal_Transfer_Size"" is not referenced");
+pragma Warnings (Off, "function ""Maximum_Transfer_Size"" is not referenced");
 pragma Warnings (Off, "procedure ""Initialize"" is not referenced");
 pragma Warnings (Off, "procedure ""Finalize"" is not referenced");
 --  Supress unreferenced warnings since not every platform needs each subprogram
@@ -21,22 +21,27 @@ pragma Warnings (Off, "procedure ""Finalize"" is not referenced");
 generic
    --  Event handler, is called on received requests, ready queues, etc.
    with procedure Event;
+
    --  Return the block count of session S
    --
    --  @param S  Server session instance identifier
    with function Block_Count (S : Server_Instance) return Count;
+
    --  Return the block size of session S in bytes
    --
    --  @param S  Server session instance identifier
    with function Block_Size (S : Server_Instance) return Size;
+
    --  Return if session S is writable
    --
    --  @param S  Server session instance identifier
    with function Writable (S : Server_Instance) return Boolean;
+
    --  Return the maximum request size of session S in bytes
    --
    --  @param S  Server session instance identifier
-   with function Maximal_Transfer_Size (S : Server_Instance) return Byte_Length;
+   with function Maximum_Transfer_Size (S : Server_Instance) return Byte_Length;
+
    --  Custom initialization for the server, automatically called by Cai.Block.Dispatcher.Session_Accept
    --
    --  @param S  Server session instance identifier
@@ -45,8 +50,10 @@ generic
    with procedure Initialize (S : Server_Instance;
                               L : String;
                               B : Byte_Length);
-   --  Custom finalization for the server, automatically called by Cai.Block.Dispatcher.Session_Cleanup
-   --  when the connected client disconnects
+
+   --  Custom finalization for the server
+   --
+   --  It automatically called by Cai.Block.Dispatcher.Session_Cleanup when the connected client disconnects.
    --
    --  @param S  Server session instance identifier
    with procedure Finalize (S : Server_Instance);
@@ -91,9 +98,10 @@ is
    function Get_Instance (S : Server_Session) return Server_Instance with
       Pre => Initialized (S);
 
-   --  Get the next request that is pending for consumption,
-   --  will not remove the request from the queue
-   --  Request.Kind is None if no request is available
+   --  Get the next request that is pending for consumption
+   --
+   --  It will not remove the request from the queue.
+   --  Request.Kind is None if no request is available.
    --
    --  @param S  Server session instance
    function Head (S : Server_Session) return Request with
@@ -142,8 +150,9 @@ is
       Post => Initialized (S);
 
    --  Signal client to wake up
-   --  Some platforms do not wake up the client if the server returns unless explicitly being told to
-   --  If this procedure is not called at least once before returning from the event handler a deadlock might occur
+   --
+   --  Some platforms do not wake up the client if the server returns unless explicitly being told to.
+   --  If this procedure is not called at least once before returning from the event handler a deadlock might occur.
    --
    --  @param S  Server session instance
    procedure Unblock_Client (S : in out Server_Session);
