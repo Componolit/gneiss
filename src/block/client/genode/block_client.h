@@ -19,6 +19,7 @@ namespace Block
             void *_device; //Block_session in block_client.cc
             void *_callback; //procedure Event;
             void *_rw; //procedure Crw (Instance, Kind, Block_size, Start, Length, Data)
+            void *_env; //Cai::Env
 
         protected:
             void callback();

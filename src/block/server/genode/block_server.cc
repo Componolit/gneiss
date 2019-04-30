@@ -3,6 +3,7 @@
 #include <block/request_stream.h>
 #include <block_session/block_session.h>
 #include <util/reconstructible.h>
+#include <cai_capability.h>
 
 #include <genode_packet.h>
 #include <block_root.h>
@@ -55,17 +56,18 @@ Genode::Capability<::Block::Session::Tx> Cai::Block::Block_session_component::tx
     return Request_stream::tx_cap();
 }
 
-Cai::Block::Block_root::Block_root(Genode::Env &env, Cai::Block::Server &server, Genode::size_t ds_size) :
+Cai::Block::Block_root::Block_root(Cai::Env *env, Cai::Block::Server &server, Genode::size_t ds_size) :
     _env(env),
-    _sigh(env.ep(), *this, &Cai::Block::Block_root::handler),
+    _sigh(env->env->ep(), *this, &Cai::Block::Block_root::handler),
     _server(server),
-    _ds(env.ram(), env.rm(), ds_size),
-    _session(env.rm(), _ds.cap(), env.ep(), _sigh, server)
+    _ds(env->env->ram(), env->env->rm(), ds_size),
+    _session(env->env->rm(), _ds.cap(), env->env->ep(), _sigh, server)
 { }
 
 void Cai::Block::Block_root::handler()
 {
     Call(_server._callback);
+    _env->cgc();
 }
 
 Genode::Capability<Genode::Session> Cai::Block::Block_root::cap()
@@ -101,9 +103,9 @@ void Cai::Block::Server::initialize(
     _block_size = block_size;
     _maximum_transfer_size = maximum_transfer_size;
     _writable = writable;
-    check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
+    check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
     _session = _factory->create<Cai::Block::Block_root>(
-            *reinterpret_cast<Genode::Env *>(env),
+            reinterpret_cast<Cai::Env *>(env),
             *this,
             static_cast<Genode::size_t>(size));
 }

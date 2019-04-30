@@ -8,6 +8,7 @@
 
 #include <factory.h>
 #include <block_root.h>
+#include <cai_capability.h>
 namespace Cai{
 #include <block_dispatcher.h>
 #include <block_server.h>
@@ -20,7 +21,7 @@ static Genode::Constructible<Factory> _factory {};
 
 struct Cai::Block::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
 {
-    Genode::Env &_env;
+    Cai::Env *_env;
     Cai::Block::Dispatcher *_dispatcher;
 
     char *_label;
@@ -28,17 +29,18 @@ struct Cai::Block::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session
     Genode::size_t _ds_size;
     Cai::Block::Block_root *_block_root;
 
-    Root(Genode::Env &, Cai::Block::Dispatcher *);
+    Root(Cai::Env *, Cai::Block::Dispatcher *);
     Genode::Capability<Genode::Session> session(Cai::Block::Root::Session_args const &args, Genode::Affinity const &) override;
     void upgrade(Genode::Capability<Genode::Session>, Cai::Block::Root::Upgrade_args const &) override;
     void close(Genode::Capability<Genode::Session>) override;
+    void dispatch();
 
     private:
         Root(const Root&);
         Root &operator = (Root const &);
 };
 
-Cai::Block::Root::Root(Genode::Env &env, Cai::Block::Dispatcher *dispatcher) :
+Cai::Block::Root::Root(Cai::Env *env, Cai::Block::Dispatcher *dispatcher) :
     _env(env),
     _dispatcher(dispatcher),
     _label(nullptr),
@@ -61,7 +63,7 @@ Genode::Capability<Genode::Session> Cai::Block::Root::session(Cai::Block::Root::
     _ds_size = ds_size;
     _label = const_cast<char *>(label.string());
     _block_root = nullptr;
-    _dispatcher->dispatch();
+    dispatch();
     _label = nullptr;
     _ds_size = 0;
 
@@ -79,8 +81,14 @@ void Cai::Block::Root::upgrade(Genode::Capability<Genode::Session>, Cai::Block::
 void Cai::Block::Root::close(Genode::Capability<Genode::Session> close_cap)
 {
     _close_cap = &close_cap;
-    _dispatcher->dispatch();
+    dispatch();
     _close_cap = nullptr;
+}
+
+void Cai::Block::Root::dispatch()
+{
+    _dispatcher->dispatch();
+    _env->cgc();
 }
 
 Cai::Block::Dispatcher::Dispatcher() :
@@ -103,8 +111,8 @@ void Cai::Block::Dispatcher::initialize(
         void *callback)
 {
     _handler = callback;
-    check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
-    _root = _factory->create<Cai::Block::Root>(*reinterpret_cast<Genode::Env *>(env), this);
+    check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
+    _root = _factory->create<Cai::Block::Root>(reinterpret_cast<Cai::Env *>(env), this);
 }
 
 void Cai::Block::Dispatcher::finalize()
@@ -117,7 +125,7 @@ void Cai::Block::Dispatcher::finalize()
 void Cai::Block::Dispatcher::announce()
 {
     Cai::Block::Root *root = reinterpret_cast<Cai::Block::Root *>(_root);
-    root->_env.parent().announce(root->_env.ep().manage(*root));
+    root->_env->env->parent().announce(root->_env->env->ep().manage(*root));
 }
 
 char *Cai::Block::Dispatcher::label_content()

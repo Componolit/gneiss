@@ -17,6 +17,7 @@ is
       Private_X_Device      : Private_Void;
       Private_X_Callback    : Private_Void;
       Private_X_Write       : Private_Void;
+      Private_X_Env         : Private_Void;
    end record
    with Import, Convention => CPP;
 

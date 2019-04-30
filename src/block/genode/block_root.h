@@ -5,6 +5,7 @@
 #include <block_session/block_session.h>
 #include <block/request_stream.h>
 #include <base/attached_ram_dataspace.h>
+#include <cai_capability.h>
 
 namespace Cai
 {
@@ -39,15 +40,19 @@ struct Cai::Block::Block_session_component : Genode::Rpc_object<::Block::Session
 
 struct Cai::Block::Block_root
 {
-    Genode::Env &_env;
+    Cai::Env *_env;
     Genode::Signal_handler<Cai::Block::Block_root> _sigh;
     Cai::Block::Server &_server;
     Genode::Attached_ram_dataspace _ds;
     Cai::Block::Block_session_component _session;
 
-    Block_root(Genode::Env &env, Cai::Block::Server &server, Genode::size_t ds_size);
+    Block_root(Cai::Env *env, Cai::Block::Server &server, Genode::size_t ds_size);
     void handler();
     Genode::Capability<Genode::Session> cap();
+
+    private:
+        Block_root(const Block_root&);
+        Block_root &operator = (Block_root const &);
 };
 
 #endif /* ifndef _BLOCK_ROOT_H_ */
