@@ -10,6 +10,7 @@
 
 extern void adainit(void);
 extern void cai_component_construct(void *);
+extern void cai_component_destruct(void);
 extern void adafinal(void);
 
 struct isg
@@ -32,7 +33,7 @@ void enlist(int fd, void (*callback)(int, void *), void *context)
     list_append(signal_registry, (void *)&i, sizeof(i));
 }
 
-int is_fd(const void *i1, const void *i2, size_t size){
+static int is_fd(const void *i1, const void *i2, size_t size){
     return !(((struct isg*)i1)->fd == ((struct isg*)i2)->fd);
 }
 
@@ -45,7 +46,7 @@ void withdraw(int fd)
     list_remove(signal_registry, list_find(signal_registry, (void *)&i, sizeof(i), &is_fd));
 }
 
-int initialize_fds(list_t *item, unsigned size, void *max)
+static int initialize_fds(list_t *item, unsigned size, void *max)
 {
     int fd = ((struct isg *)((*item)->content))->fd;
     FD_SET(fd, &fds);
@@ -55,7 +56,7 @@ int initialize_fds(list_t *item, unsigned size, void *max)
     return 0;
 }
 
-int execute_events(list_t *item, unsigned size, void *arg)
+static int execute_events(list_t *item, unsigned size, void *arg)
 {
     struct isg *i = (struct isg *)((*item)->content);
     if(FD_ISSET(i->fd, &fds)){
@@ -65,10 +66,10 @@ int execute_events(list_t *item, unsigned size, void *arg)
     }
 }
 
-void event_loop()
+static void event_loop()
 {
     int max;
-    for(;;){
+    while(capability.status == COMPONENT_RUNNING){
         FD_ZERO(&fds);
         max = 0;
         list_foreach(signal_registry, &initialize_fds, &max);
@@ -77,13 +78,18 @@ void event_loop()
     }
 }
 
+void vacate(int status)
+{
+    capability.status = status;
+}
+
 int main(int argc, char *argv[])
 {
     sigset_t signal_set;
-    int ret;
     memset(&capability, 0, sizeof(capability));
 
     signal_registry = list_new();
+    capability.status = COMPONENT_RUNNING;
     capability.enlist = &enlist;
     capability.withdraw = &withdraw;
 
@@ -102,7 +108,8 @@ int main(int argc, char *argv[])
     adainit();
     cai_component_construct(&capability);
     event_loop();
+    cai_component_destruct();
     adafinal();
     list_delete(signal_registry);
-    return ret;
+    return capability.status;
 }
