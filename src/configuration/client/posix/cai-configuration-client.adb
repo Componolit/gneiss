@@ -9,25 +9,22 @@ is
    use type System.Address;
    use type C.Uint64_T;
 
+   procedure C_Parse (Ptr : System.Address;
+                      Len : C.Uint64_T);
+
    function Create return Client_Session
    is
    begin
-      return Client_Session'(Fd   => -1,
-                             Map  => System.Null_Address,
-                             Size => 10,
-                             Ifd  => -1,
-                             Load => System.Null_Address,
-                             Cap  => System.Null_Address);
+      return Client_Session'(Ifd   => -1,
+                             Parse => System.Null_Address,
+                             Cap   => System.Null_Address);
    end Create;
 
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return C.Fd >= 0
-             and C.Map /= System.Null_Address
-             and C.Size > 0
-             and C.Ifd >= 0
-             and C.Load /= System.Null_Address
+      return C.Ifd >= 0
+             and C.Parse /= System.Null_Address
              and C.Cap /= System.Null_Address;
    end Initialized;
 
@@ -41,17 +38,40 @@ is
          Convention => C,
          External_Name => "configuration_client_initialize";
    begin
-      C_Initialize (C, Cap, Load'Address);
+      C_Initialize (C, Cap, C_Parse'Address);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
    is
-      Last : constant Index := Index (C.Size / (Element'Size / 8));
-      Data : Buffer (1 .. Last) with
-        Address => C.Map;
+      procedure C_Load (C : in out Client_Session) with
+         Import,
+         Convention => C,
+         External_Name => "configuration_client_load";
    begin
-      Parse (Data);
+      C_Load (C);
    end Load;
+
+   procedure C_Parse (Ptr : System.Address;
+                      Len : C.Uint64_T)
+   is
+      Empty : Buffer (1 .. 0);
+      Elen  : constant C.Uint64_T := Len / (Element'Size / 8);
+   begin
+      if
+         Ptr /= System.Null_Address
+         and Elen > 0
+         and C.Uint64_T (Index'Last) > C.Uint64_T (Index'First) + Elen
+      then
+         declare
+            Data : Buffer (1 .. Index (Elen)) with
+              Address => Ptr;
+         begin
+            Parse (Data);
+         end;
+      else
+         Parse (Empty);
+      end if;
+   end C_Parse;
 
    procedure Finalize (C : in out Client_Session)
    is

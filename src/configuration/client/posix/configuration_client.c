@@ -13,78 +13,74 @@ typedef struct session session_t;
 
 struct session
 {
-    int fd;
-    void *map;
-    uint64_t size;
     int ifd;
-    void (*load)(session_t*);
+    void (*parse)(void *, uint64_t);
     capability_t *cap;
 };
 
 void set_zero(session_t *session)
 {
-    session->fd = -1;
-    session->map = 0;
-    session->size = 0;
     session->ifd = -1;
-    session->load = 0;
+    session->parse = 0;
     session->cap = 0;
+}
+
+void configuration_client_load(session_t *session)
+{
+    struct stat st;
+    void *map;
+    int fd = open(session->cap->config_file, O_RDONLY | O_NOFOLLOW);
+    if(fd > -1){
+        if(!fstat(fd, &st)){
+            map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
+            if(map == MAP_FAILED || map == 0){
+                perror("map failed");
+                session->parse(0, 0);
+            }else{
+                session->parse(map, st.st_size);
+                munmap(map, st.st_size);
+                close(fd);
+            }
+        }else{
+            close(fd);
+            session->parse(0, 0);
+            perror("stat failed");
+        }
+    }else{
+        session->parse(0, 0);
+        perror(session->cap->config_file);
+    }
 }
 
 void handle_change(int fd, void *session)
 {
     struct inotify_event ie;
     read(fd, &ie, sizeof(struct inotify_event));
-    ((session_t *)session)->load((session_t *)session);
+    configuration_client_load((session_t *)session);
 }
 
-void configuration_client_initialize(session_t *session, capability_t *cap, void (*load)(session_t *))
+void configuration_client_initialize(session_t *session, capability_t *cap, void (*parse)(void *, uint64_t))
 {
-    struct stat st;
-    if(cap->config_file){
-        session->fd = open(cap->config_file, O_RDONLY | O_NOFOLLOW);
-        if(session->fd > -1){
-            if(!fstat(session->fd, &st)){
-                session->map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, session->fd, 0);
-                if(session->map == MAP_FAILED || session->map == 0){
-                    perror("map failed");
-                    close(session->fd);
-                    set_zero(session);
-                }else{
-                    session->ifd = inotify_init();
-                    if(session->ifd > -1){
-                        if(inotify_add_watch(session->ifd, cap->config_file, IN_MODIFY) > -1){
-                            session->size = st.st_size;
-                            session->load = load;
-                            session->cap = cap;
-                            cap->enlist(session->ifd, &handle_change, session);
-                        }else{
-                            perror("watch failed");
-                            close(session->fd);
-                            set_zero(session);
-                        }
-                    }else{
-                        perror("inotify failed");
-                        close(session->fd);
-                        set_zero(session);
-                    }
-                }
-            }else{
-                perror("stat failed");
-                close(session->fd);
-                set_zero(session);
-            }
+    session->ifd = inotify_init();
+    if(session->ifd > -1){
+        if(inotify_add_watch(session->ifd, cap->config_file,
+                             IN_MODIFY | IN_DELETE_SELF | IN_CLOSE_WRITE) > -1){
+            session->parse = parse;
+            session->cap = cap;
+            cap->enlist(session->ifd, &handle_change, session);
         }else{
-            perror(cap->config_file);
+            perror("watch failed");
+            set_zero(session);
         }
+    }else{
+        perror("inotify failed");
+        set_zero(session);
     }
 }
 
 void configuration_client_finalize(session_t *session)
 {
     session->cap->withdraw(session->ifd);
-    munmap(session->map, session->size);
-    close(session->fd);
     close(session->ifd);
     set_zero(session);
 }
