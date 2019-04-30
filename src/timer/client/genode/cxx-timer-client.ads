@@ -1,6 +1,5 @@
 
 with Cai.Types;
-with Cxx.Genode;
 
 package Cxx.Timer.Client is
 
@@ -26,7 +25,7 @@ package Cxx.Timer.Client is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Timer6Client10initializeEPv";
 
-   function Clock (This : Class) return Genode.Uint64_T with
+   function Clock (This : Class) return Duration with
       Global        => null,
       Import,
       Convention    => C,
