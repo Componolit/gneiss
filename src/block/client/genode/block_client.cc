@@ -5,6 +5,7 @@
 #include <util/string.h>
 #include <util/reconstructible.h>
 #include <ada/exception.h>
+#include <cai_capability.h>
 
 #include <genode_packet.h>
 namespace Cai {
@@ -68,7 +69,8 @@ Cai::Block::Client::Client() :
     _buffer_size(0),
     _device(nullptr),
     _callback(nullptr),
-    _rw(nullptr)
+    _rw(nullptr),
+    _env(nullptr)
 { }
 
 void *Cai::Block::Client::get_instance()
@@ -94,9 +96,10 @@ void Cai::Block::Client::initialize(
     Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
     _rw = rw;
-    check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
+    _env = env;
+    check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
     _device = _factory->create<Block_session>(
-            *reinterpret_cast<Genode::Env *>(env),
+            *reinterpret_cast<Cai::Env *>(env)->env,
             buf_size,
             device ? device : default_device,
             this,
@@ -111,8 +114,13 @@ void Cai::Block::Client::initialize(
 void Cai::Block::Client::finalize()
 {
     _factory->destroy<Block_session>(_device);
+    _block_count = 0;
+    _block_size = 0;
+    _buffer_size = 0;
     _device = nullptr;
     _callback = nullptr;
+    _rw = nullptr;
+    _env = nullptr;
 }
 
 class Packet_allocator
@@ -260,4 +268,5 @@ Genode::uint64_t Cai::Block::Client::maximum_transfer_size()
 void Cai::Block::Client::callback()
 {
     Call(_callback);
+    reinterpret_cast<Cai::Env *>(_env)->cgc();
 }

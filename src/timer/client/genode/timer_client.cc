@@ -3,6 +3,7 @@
 #include <timer_session/connection.h>
 #include <timer_client.h>
 #include <factory.h>
+#include <cai_capability.h>
 
 static Genode::Constructible<Factory> _factory;
 
@@ -17,8 +18,8 @@ bool Cai::Timer::Client::initialized()
 
 void Cai::Timer::Client::initialize(void *capability)
 {
-    check_factory(_factory, *reinterpret_cast<Genode::Env *>(capability));
-    _session = _factory->create<::Timer::Connection>(*reinterpret_cast<Genode::Env *>(capability));
+    check_factory(_factory, *reinterpret_cast<Cai::Env *>(capability)->env);
+    _session = _factory->create<::Timer::Connection>(*reinterpret_cast<Cai::Env *>(capability)->env);
 }
 
 Genode::uint64_t Cai::Timer::Client::clock()

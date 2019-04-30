@@ -2,6 +2,7 @@
 #include <util/string.h>
 #include <util/reconstructible.h>
 #include <log_session/connection.h>
+#include <cai_capability.h>
 
 namespace Cai
 {
@@ -35,9 +36,9 @@ bool Cai::Log::Client::initialized()
 
 void Cai::Log::Client::initialize(void *env, const char *label)
 {
-    check_factory(_factory, *reinterpret_cast<Genode::Env *>(env));
+    check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
     _session = _factory->create<Log_session>(
-            *reinterpret_cast<Genode::Env *>(env),
+            *reinterpret_cast<Cai::Env *>(env)->env,
             label);
 }
 
