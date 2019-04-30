@@ -16,11 +16,20 @@ generic
    --
    --  @param Cap  Capability provided by the platform to use services
    with procedure Construct (Cap : Cai.Types.Capability);
-package Cai.Component is
 
-   type Shutdown_Status is (Success, Failure);
+   --  Component destruction procedure
+   --  This procedure is called after Vacate has been called and the procedure Vacate has been called from returned.
+   with procedure Destruct;
+package Cai.Component with
+   SPARK_Mode,
+   Abstract_State => Platform,
+   Initializes => Platform
+is
 
-   procedure Shutdown (Cap    : Cai.Types.Capability;
-                       Status : Shutdown_Status);
+   type Component_Status is (Success, Failure);
+
+   procedure Vacate (Cap    : Cai.Types.Capability;
+                     Status : Component_Status) with
+      Global => (In_Out => Platform);
 
 end Cai.Component;
