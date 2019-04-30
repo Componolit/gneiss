@@ -46,11 +46,25 @@ is
    procedure C_Parse (Ptr : System.Address;
                       Len : Cxx.Genode.Uint64_T)
    is
+      use type System.Address;
       use type Cxx.Genode.Uint64_T;
-      Data : Buffer (1 .. Index (Len / (Element'Size / 8))) with
-         Address => Ptr;
+      Empty : Buffer (1 .. 0);
+      Elen  : constant Cxx.Genode.Uint64_T := Len / (Element'Size / 8);
    begin
-      Parse (Data);
+      if
+         Ptr /= System.Null_Address
+         and Elen > 0
+         and Cxx.Genode.Uint64_T (Index'Last) > Cxx.Genode.Uint64_T (Index'First) + Elen
+      then
+         declare
+            Data : Buffer (Index'First .. Index'First + Index (Elen) - 1) with
+               Address => Ptr;
+         begin
+            Parse (Data);
+         end;
+      else
+         Parse (Empty);
+      end if;
    end C_Parse;
 
 end Cai.Configuration.Client;

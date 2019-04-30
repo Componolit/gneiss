@@ -63,7 +63,7 @@ is
          and C.Uint64_T (Index'Last) > C.Uint64_T (Index'First) + Elen
       then
          declare
-            Data : Buffer (1 .. Index (Elen)) with
+            Data : Buffer (Index'First .. Index'First + Index (Elen) - 1) with
               Address => Ptr;
          begin
             Parse (Data);
