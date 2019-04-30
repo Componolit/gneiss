@@ -29,7 +29,7 @@ is
    function Clock (C : Client_Session) return Time
    is
    begin
-      return Time (Cxx.Timer.Client.Clock (C.Instance)) / 1000000;
+      return Time (Cxx.Timer.Client.Clock (C.Instance));
    end Clock;
 
    procedure Finalize (C : in out Client_Session)
