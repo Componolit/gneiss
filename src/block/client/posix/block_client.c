@@ -199,7 +199,9 @@ void block_client_initialize(block_client_t **client,
         }
     }else{
         perror("failed to initialize block client");
-        block_client_finalize(client);
+        if(*client){
+            block_client_finalize(client);
+        }
     }
 }
 
