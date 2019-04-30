@@ -23,7 +23,7 @@ void Cai::Timer::Client::initialize(void *capability)
 
 Genode::uint64_t Cai::Timer::Client::clock()
 {
-    return reinterpret_cast<::Timer::Connection *>(_session)->elapsed_us();
+    return reinterpret_cast<::Timer::Connection *>(_session)->elapsed_us() * 1000;
 }
 
 void Cai::Timer::Client::finalize()
