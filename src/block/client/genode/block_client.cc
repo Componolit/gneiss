@@ -266,5 +266,4 @@ Genode::uint64_t Cai::Block::Client::maximum_transfer_size()
 void Cai::Block::Client::callback()
 {
     Call(_callback);
-    reinterpret_cast<Cai::Env *>(_env)->cgc();
 }

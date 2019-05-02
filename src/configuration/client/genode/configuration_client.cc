@@ -45,7 +45,6 @@ void Config::update()
     }catch(...){
         _parse(static_cast<void const *>(&_empty), 0);
     }
-    _env->cgc();
 }
 
 Cai::Configuration::Client::Client() :

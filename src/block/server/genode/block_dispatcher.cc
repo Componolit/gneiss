@@ -86,7 +86,6 @@ void Cai::Block::Root::close(Genode::Capability<Genode::Session> close_cap)
 void Cai::Block::Root::dispatch()
 {
     _dispatcher->dispatch();
-    _env->cgc();
 }
 
 Cai::Block::Dispatcher::Dispatcher() :
