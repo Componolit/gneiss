@@ -163,5 +163,5 @@ bool Cai::Block::Dispatcher::session_cleanup(void *session)
 
 void *Cai::Block::Dispatcher::get_capability()
 {
-    return &(reinterpret_cast<Cai::Block::Root *>(_root)->_env);
+    return reinterpret_cast<Cai::Block::Root *>(_root)->_env;
 }
