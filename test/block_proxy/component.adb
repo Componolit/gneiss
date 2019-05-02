@@ -26,6 +26,17 @@ package body Component is
       Cai.Log.Client.Initialize (Log, Cap, "Proxy");
    end Construct;
 
+   procedure Destruct
+   is
+   begin
+      if Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Finalize (Log);
+      end if;
+      if Block_Dispatcher.Initialized (Dispatcher) then
+         Block_Dispatcher.Finalize (Dispatcher);
+      end if;
+   end Destruct;
+
    type Cache_Entry is record
       Used : Boolean;
       Request : Block_Server.Request;

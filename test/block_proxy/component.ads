@@ -9,8 +9,9 @@ with Cai.Block.Server;
 package Component is
 
    procedure Construct (Cap : Cai.Types.Capability);
+   procedure Destruct;
 
-   package Proxy_Component is new Cai.Component (Construct);
+   package Proxy_Component is new Cai.Component (Construct, Destruct);
 
    type Byte is mod 2 ** 8;
    type Buffer is array (Long_Integer range <>) of Byte;

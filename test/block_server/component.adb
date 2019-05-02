@@ -28,6 +28,17 @@ package body Component is
       Cai.Log.Client.Info (Log, "Dispatcher initialized");
    end Construct;
 
+   procedure Destruct
+   is
+   begin
+      if Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Finalize (Log);
+      end if;
+      if Block_Dispatcher.Initialized (Dispatcher) then
+         Block_Dispatcher.Finalize (Dispatcher);
+      end if;
+   end Destruct;
+
    procedure Read (R : in out Block_Server.Request);
 
    procedure Read (R : in out Block_Server.Request)
