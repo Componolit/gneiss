@@ -5,8 +5,6 @@
 #include <factory.h>
 #include <cai_capability.h>
 
-static Genode::Constructible<Factory> _factory;
-
 Cai::Timer::Client::Client() :
     _session(nullptr)
 { }

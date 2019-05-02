@@ -17,8 +17,6 @@ namespace Cai {
 
 #include <factory.h>
 
-static Genode::Constructible<Factory> _factory {};
-
 Cai::Block::Block_session_component::Block_session_component(
         Genode::Region_map &rm,
         Genode::Dataspace_capability ds,

@@ -22,8 +22,6 @@ extern "C"
     }
 }
 
-static Genode::Constructible<Factory> _factory {};
-
 class Block_session
 {
     private:

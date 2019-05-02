@@ -17,8 +17,6 @@ namespace Cai{
     }
 }
 
-static Genode::Constructible<Factory> _factory {};
-
 struct Cai::Block::Root : Genode::Rpc_object<Genode::Typed_root<::Block::Session>>
 {
     Cai::Env *_env;
