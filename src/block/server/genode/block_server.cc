@@ -65,7 +65,6 @@ Cai::Block::Block_root::Block_root(Cai::Env *env, Cai::Block::Server &server, Ge
 void Cai::Block::Block_root::handler()
 {
     Call(_server._callback);
-    _env->cgc();
 }
 
 Genode::Capability<Genode::Session> Cai::Block::Block_root::cap()
