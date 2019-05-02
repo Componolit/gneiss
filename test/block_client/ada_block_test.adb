@@ -38,6 +38,7 @@ is
 
    Client : Block.Client_Session;
    Log    : Cai.Log.Client_Session;
+   P_Cap  : Cai.Types.Capability;
 
    Request_Count : constant Integer := 32;
 
@@ -156,6 +157,7 @@ is
    procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
+      P_Cap := Cap;
       Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Test");
       if Cai.Log.Client.Initialized (Log) then
          Cai.Log.Client.Info (Log, "Ada block test");
@@ -197,9 +199,21 @@ is
             State_Finished (Write_State)
             and State_Finished (Read_State)
          then
+            Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Success);
             Cai.Log.Client.Info (Log, "Test finished.");
          end if;
       end if;
    end Run;
+
+   procedure Destruct
+   is
+   begin
+      if Block_Client.Initialized (Client) then
+         Block_Client.Finalize (Client);
+      end if;
+      if Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Finalize (Log);
+      end if;
+   end Destruct;
 
 end Ada_Block_Test;
