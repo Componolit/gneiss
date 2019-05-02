@@ -10,8 +10,6 @@ namespace Cai
 }
 #include <factory.h>
 
-static Genode::Constructible<Factory> _factory {};
-
 struct Log_session
 {
     enum {WRITE_BUFFER = Genode::Log_session::MAX_STRING_LEN - 1};

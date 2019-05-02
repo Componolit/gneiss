@@ -2,6 +2,7 @@
 #ifndef _CAI_FACTORY_H_
 #define _CAI_FACTORY_H_
 
+#include <base/env.h>
 #include <base/heap.h>
 #include <util/reconstructible.h>
 

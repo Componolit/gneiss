@@ -6,8 +6,6 @@
 #include <factory.h>
 #include <cai_capability.h>
 
-static Genode::Constructible<Factory> _factory;
-
 class Config
 {
     private:
