@@ -4,7 +4,7 @@ git:
     submodules: true
 before_install:
     - sudo apt-get update
-    - sudo apt-get install -y build-essential git wget libfontconfig1 libx11-xcb1 expect
+    - sudo apt-get install -y build-essential git wget libfontconfig1 libx11-xcb1
 before_script:
     - wget http://mirrors.cdn.adacore.com/art/5b0d7bffa3f5d709751e3e04 -O /tmp/gnat-community-2018-20180528-x86_64-linux-bin
     - git clone https://github.com/AdaCore/gnat_community_install_script.git /tmp/gnat_community_install_script
@@ -17,11 +17,16 @@ script:
     - cd ..
     - gprbuild -P ada_interface.gpr -XPLATFORM=genode
     - gprclean -P ada_interface.gpr -XPLATFORM=genode
-    - gprbuild -P ada_interface.gpr -XPLATFORM=posix
-    - gprclean -P ada_interface.gpr -XPLATFORM=posix
+    - gprbuild -P ada_interface.gpr -XPLATFORM=linux
+    - gprclean -P ada_interface.gpr -XPLATFORM=linux
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode --clean
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=posix
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=posix --clean
-    - gprbuild -P ada_interface.gpr -XPLATFORM=posix -XTEST=hello_world
-    - expect test/hello_world.expect
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
+    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
+    - ./build/hello_world
+    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
+    - dd if=/dev/zero of=/tmp/test_disk.img bs=4k count=64
+    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
+    - ./build/block_client
+    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
