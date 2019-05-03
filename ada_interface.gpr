@@ -2,9 +2,9 @@ with "switches";
 
 project Ada_Interface is
 
-   type Platform_Type is ("posix", "genode");
+   type Platform_Type is ("linux", "genode");
 
-   Platform : Platform_Type := external ("PLATFORM", "posix");
+   Platform : Platform_Type := external ("PLATFORM", "linux");
    Test := external ("TEST", "");
 
    Source := "src";
@@ -19,25 +19,25 @@ project Ada_Interface is
    Source_Configuraion := "src/configuration";
    Source_Configuraion_Client := "src/configuration/client";
 
-   Posix_Source := (Source,
+   Linux_Source := (Source,
                     Source_Platform,
-                    Source_Platform & "/posix",
+                    Source_Platform & "/linux",
                     Source_Block,
-                    Source_Block & "/posix",
+                    Source_Block & "/linux",
                     Source_Block_Client,
-                    Source_Block_Client & "/posix",
+                    Source_Block_Client & "/linux",
                     Source_Log,
-                    Source_Log & "/posix",
+                    Source_Log & "/linux",
                     Source_Log_Client,
-                    Source_Log_Client & "/posix",
+                    Source_Log_Client & "/linux",
                     Source_Timer,
-                    Source_Timer & "/posix",
+                    Source_Timer & "/linux",
                     Source_Timer_Client,
-                    Source_Timer_Client & "/posix",
+                    Source_Timer_Client & "/linux",
                     Source_Configuraion,
-                    Source_Configuraion & "/posix",
+                    Source_Configuraion & "/linux",
                     Source_Configuraion_Client,
-                    Source_Configuraion_Client & "/posix");
+                    Source_Configuraion_Client & "/linux");
 
    Genode_Source := (Source,
                      Source_Platform,
@@ -67,7 +67,7 @@ project Ada_Interface is
    package Builder is
       for Global_Configuration_Pragmas use "spark.adc";
       case Platform is
-         when "posix" =>
+         when "linux" =>
             case Test is
                when "" =>
                   null;
@@ -94,13 +94,13 @@ project Ada_Interface is
    for Runtime ("Ada") use "ada-runtime/obj";
 
    case Platform is
-      when "posix" =>
+      when "linux" =>
          for Languages use ("Ada", "C");
          case Test is
             when "" =>
-               for Source_Dirs use Posix_Source;
+               for Source_Dirs use Linux_Source;
             when others =>
-               for Source_Dirs use Posix_Source & ("test/" & Test);
+               for Source_Dirs use Linux_Source & ("test/" & Test);
                for Main use ("main.c");
          end case;
       when "genode" =>
