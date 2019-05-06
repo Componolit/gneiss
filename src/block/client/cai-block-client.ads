@@ -107,21 +107,21 @@ is
       Pre  => Initialized (C),
       Post => not Initialized (C);
 
-   --  Checks if client is ready to enqueue the request (temporary property)
-   --
-   --  @param C  Client session instance
-   --  @param R  Request to check
-   function Ready (C : Client_Session;
-                   R : Request) return Boolean with
-      Pre => Initialized (C);
-
    --  Checks if client supports handling the request (permanent property)
    --
    --  @param C  Client session instance
    --  @param R  Request to check
    function Supported (C : Client_Session;
                        R : Request_Kind) return Boolean with
-      Pre => Initialized (C) and then Supported (C, R);
+      Pre => Initialized (C);
+
+   --  Checks if client is ready to enqueue the request (temporary property)
+   --
+   --  @param C  Client session instance
+   --  @param R  Request to check
+   function Ready (C : Client_Session;
+                   R : Request) return Boolean with
+      Pre => Initialized (C) and then Supported (C, R.Kind);
 
    --  Enqueue request
    --
@@ -138,7 +138,12 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Supported (C, None)'Old       = Supported (C, None)
+              and Supported (C, Read)'Old       = Supported (C, Read)
+              and Supported (C, Write)'Old      = Supported (C, Write)
+              and Supported (C, Sync)'Old       = Supported (C, Sync)
+              and Supported (C, Trim)'Old       = Supported (C, Trim);
 
    --  Submit all enqueued requests for processing
    --
@@ -149,7 +154,12 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Supported (C, None)'Old       = Supported (C, None)
+              and Supported (C, Read)'Old       = Supported (C, Read)
+              and Supported (C, Write)'Old      = Supported (C, Write)
+              and Supported (C, Sync)'Old       = Supported (C, Sync)
+              and Supported (C, Trim)'Old       = Supported (C, Trim);
 
    --  Get the next acknowledged request
    --
@@ -177,7 +187,12 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Supported (C, None)'Old       = Supported (C, None)
+              and Supported (C, Read)'Old       = Supported (C, Read)
+              and Supported (C, Write)'Old      = Supported (C, Write)
+              and Supported (C, Sync)'Old       = Supported (C, Sync)
+              and Supported (C, Trim)'Old       = Supported (C, Trim);
 
    --  Release a request returned by Next
    --
@@ -195,7 +210,12 @@ is
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
+              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Supported (C, None)'Old       = Supported (C, None)
+              and Supported (C, Read)'Old       = Supported (C, Read)
+              and Supported (C, Write)'Old      = Supported (C, Write)
+              and Supported (C, Sync)'Old       = Supported (C, Sync)
+              and Supported (C, Trim)'Old       = Supported (C, Trim);
 
    --  Check if the block device is writable
    --
