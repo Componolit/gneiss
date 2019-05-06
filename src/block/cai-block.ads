@@ -50,7 +50,8 @@ is
    --  @param Right  Block size
    --  @return       Byte size of all blocks
    function "*" (Left : Count; Right : Size) return Byte_Length is
-      (Byte_Length (Left * Count (Right)));
+      (Byte_Length (Left * Count (Right))) with
+      Pre => (if Right /= 0 then Count'Last / Count (Right) >= Left else True);
 
    --  "*" Operator for block count and size
    --
@@ -58,7 +59,8 @@ is
    --  @param Right  Block count
    --  @return       Byte size of all blocks
    function "*" (Left : Size; Right : Count) return Byte_Length is
-      (Right * Left);
+      (Right * Left) with
+      Pre => (if Right /= 0 then Count'Last / Right >= Count (Left) else True);
 
    --  "*" Operator for block count and size
    --
@@ -66,7 +68,9 @@ is
    --  @param Right  Block count
    --  @return       Buffer length
    function "*" (Left : Count; Right : Size) return Buffer_Index is
-      (Buffer_Index (Left * Count (Right)));
+      (Buffer_Index (Left * Count (Right))) with
+      Pre => (if Right /= 0 then Count'Last / Count (Right) >= Left else True)
+             and then Left * Count (Right) in Count (Buffer_Index'First) .. Count (Buffer_Index'Last);
 
    --  "*" Operator for block count and size
    --
@@ -74,7 +78,9 @@ is
    --  @param Right  Block count
    --  @return       Buffer length
    function "*" (Left : Size; Right : Count) return Buffer_Index is
-      (Right * Left);
+      (Right * Left) with
+      Pre => (if Right /= 0 then Count'Last / Right >= Count (Left) else True)
+             and then Count (Left) * Right in Count (Buffer_Index'First) .. Count (Buffer_Index'Last);
 
    --  "+" Operator for block Id and count
    --
@@ -92,14 +98,21 @@ is
    function "-" (Left : Id; Right : Count) return Id is
       (Left - Id (Right));
 
+   --  Rename default operator "-" for Id to use it in its new implementation
+   --
+   --  @param Left   Block Id
+   --  @param Right  Block Id
+   --  @return       Block Id difference of type Id
+   function Subtract (Left : Id; Right : Id) return Id renames "-";
+
    --  "-" Operator for Block Ids
    --
    --  @param Left   Block Id
    --  @param Right  Block Id
    --  @return       Offset between Left and Right
    function "-" (Left : Id; Right : Id) return Count is
-      (Count (Left) - Count (Right)) with
-      Pre => Left >= Right;
+      (Count (Subtract (Left, Right))) with
+      Pre => Left >= Right and Subtract (Left, Right) in Id (Count'First) .. Id (Count'Last);
 
    --  Type of a block request
    --
