@@ -51,7 +51,8 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
       Pre  => Block_Client.Initialized (Client)
-              and Cai.Log.Client.Initialized (Log),
+              and Cai.Log.Client.Initialized (Log)
+              and Operation in Block.Read .. Block.Write,
       Post => Block_Client.Initialized (Client)
               and Cai.Log.Client.Initialized (Log);
 
@@ -64,8 +65,9 @@ is
       pragma Unreferenced (C);
       pragma Unreferenced (B);
       pragma Unreferenced (L);
+      use type Block.Id;
    begin
-      D (D'First .. D'Last) := (others => Character'Val (33 + Integer (S) mod 93));
+      D := (others => Character'Val (33 + Integer (S mod 93)));
    end Write;
 
    procedure Single (S         : in out State;
@@ -106,7 +108,7 @@ is
             end;
          end loop;
       end if;
-      if Block_Size <= 4096 and Block_Size >= 256 then
+      if Block_Size <= 4096 and Block_Size >= 256 and Block_Client.Supported (Client, Operation) then
          declare
             Req : Block_Client.Request (Kind => Operation);
          begin
@@ -114,14 +116,15 @@ is
             Req.Length := 1;
             Req.Status := Block.Raw;
             if S.Sent < Request_Count then
+               pragma Assert (Block_Client.Supported (Client, Operation));
                loop
                   pragma Loop_Invariant (Block_Client.Initialized (Client));
                   pragma Loop_Invariant (Cai.Log.Client.Initialized (Log));
                   pragma Loop_Invariant (S.Sent < Integer'Last);
                   pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
+                  pragma Loop_Invariant (Block_Client.Supported (Client, Operation));
                   Req.Start := Block.Id (S.Sent + 1);
                   exit when not Block_Client.Ready (Client, Req)
-                            or not Block_Client.Supported (Client, Req.Kind)
                             or S.Sent >= Request_Count
                             or S.Sent = Integer'Last;
                   Block_Client.Enqueue (Client, Req);
@@ -161,20 +164,26 @@ is
       Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Test");
       if Cai.Log.Client.Initialized (Log) then
          Cai.Log.Client.Info (Log, "Ada block test");
-      end if;
-      Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
-      if Block_Client.Initialized (Client) then
-         if Cai.Log.Client.Initialized (Log) then
-            Cai.Log.Client.Info (Log, "Block device with "
-                                      & Cai.Log.Image (Long_Integer (Block_Client.Block_Count (Client)))
-                                      & " blocks of size "
-                                      & Cai.Log.Image (Long_Integer (Block_Client.Block_Size (Client))));
-         end if;
-         if Block_Client.Writable (Client) then
-            Run;
+         Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
+         if Block_Client.Initialized (Client) then
+            if Cai.Log.Client.Initialized (Log) then
+               Cai.Log.Client.Info (Log, "Block device with "
+                                    & Cai.Log.Image (Long_Integer (Block_Client.Block_Count (Client)))
+                                    & " blocks of size "
+                                    & Cai.Log.Image (Long_Integer (Block_Client.Block_Size (Client))));
+            end if;
+            if Block_Client.Writable (Client) then
+               Run;
+            else
+               Cai.Log.Client.Error (Log, "Block device not writable, cannot run test");
+               Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Failure);
+            end if;
          else
-            Cai.Log.Client.Error (Log, "Block device not writable, cannot run test");
+            Cai.Log.Client.Error (Log, "Failed to initialize Block session");
+            Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Failure);
          end if;
+      else
+         Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Failure);
       end if;
    end Construct;
 
