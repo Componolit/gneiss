@@ -19,14 +19,16 @@ script:
     - gprclean -P ada_interface.gpr -XPLATFORM=genode
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux
     - gprclean -P ada_interface.gpr -XPLATFORM=linux
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode --clean
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u cai-log
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u hello_world
     - ./build/hello_world
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u hello_world --clean
     - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
     - dd if=/dev/zero of=/tmp/test_disk.img bs=4k count=64
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u ada_block_test
     - ./build/block_client
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u ada_block_test --clean
     - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
