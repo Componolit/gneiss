@@ -32,3 +32,8 @@ script:
     - ./build/block_client
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u ada_block_test --clean
     - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
+    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=timer
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=timer -u component
+    - ./build/timer
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=timer -u component --clean
+    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=timer

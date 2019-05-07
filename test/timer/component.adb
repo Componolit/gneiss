@@ -15,9 +15,14 @@ is
    is
    begin
       Cai.Log.Client.Initialize (Log, Cap, "Timer");
-      Cai.Timer.Client.Initialize (Timer, Cap);
+      if not Cai.Timer.Client.Initialized (Timer) then
+         Cai.Timer.Client.Initialize (Timer, Cap);
+      end if;
       if Cai.Log.Client.Initialized (Log) and Cai.Timer.Client.Initialized (Timer) then
+         Timer_Component.Vacate (Cap, Timer_Component.Success);
          Cai.Log.Client.Info (Log, "Time: " & Cai.Log.Image (Duration (Cai.Timer.Client.Clock (Timer))));
+      else
+         Timer_Component.Vacate (Cap, Timer_Component.Failure);
       end if;
    end Construct;
 
