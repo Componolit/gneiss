@@ -143,6 +143,15 @@ is
       return Cxx.Block.Client.Ready (C.Instance, Client_Util.Convert_Request (R)) = Cxx.Bool'Val (1);
    end Ready;
 
+   function Supported (I : Client_Instance;
+                       R : Request_Kind) return Boolean
+   is
+      pragma Unreferenced (I);
+      pragma Unreferenced (R);
+   begin
+      return False;
+   end Supported;
+
    function Supported (C : Client_Session;
                        R : Request_Kind) return Boolean
    is

@@ -26,7 +26,6 @@ generic
    --  @param Start   Start block that has been read from
    --  @param Length  Number of blocks to read
    --  @param Data    Read data
-
    with procedure Read (C      : Client_Instance;
                         Bsize  : Size;
                         Start  : Id;
@@ -49,6 +48,8 @@ generic
 package Cai.Block.Client with
    SPARK_Mode
 is
+
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    --  Block request
    --
@@ -107,13 +108,23 @@ is
       Pre  => Initialized (C),
       Post => not Initialized (C);
 
+   --  Prove function to prove that the supported request types are not dependent on procedure calls
+   --
+   --  @param I  Client instance
+   --  @param R  Request to check
+   function Supported (I : Client_Instance;
+                       R : Request_Kind) return Boolean with
+      Ghost;
+
    --  Checks if client supports handling the request (permanent property)
    --
    --  @param C  Client session instance
    --  @param R  Request to check
    function Supported (C : Client_Session;
                        R : Request_Kind) return Boolean with
-      Pre => Initialized (C);
+      Annotate => (GNATprove, Terminating),
+      Pre      => Initialized (C),
+      Post     => Supported'Result = Supported (Get_Instance (C), R);
 
    --  Checks if client is ready to enqueue the request (temporary property)
    --
@@ -139,11 +150,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Supported (C, None)'Old       = Supported (C, None)
-              and Supported (C, Read)'Old       = Supported (C, Read)
-              and Supported (C, Write)'Old      = Supported (C, Write)
-              and Supported (C, Sync)'Old       = Supported (C, Sync)
-              and Supported (C, Trim)'Old       = Supported (C, Trim);
+              and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
 
    --  Submit all enqueued requests for processing
    --
@@ -155,11 +162,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Supported (C, None)'Old       = Supported (C, None)
-              and Supported (C, Read)'Old       = Supported (C, Read)
-              and Supported (C, Write)'Old      = Supported (C, Write)
-              and Supported (C, Sync)'Old       = Supported (C, Sync)
-              and Supported (C, Trim)'Old       = Supported (C, Trim);
+              and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
 
    --  Get the next acknowledged request
    --
@@ -188,11 +191,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Supported (C, None)'Old       = Supported (C, None)
-              and Supported (C, Read)'Old       = Supported (C, Read)
-              and Supported (C, Write)'Old      = Supported (C, Write)
-              and Supported (C, Sync)'Old       = Supported (C, Sync)
-              and Supported (C, Trim)'Old       = Supported (C, Trim);
+              and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
 
    --  Release a request returned by Next
    --
@@ -211,11 +210,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Supported (C, None)'Old       = Supported (C, None)
-              and Supported (C, Read)'Old       = Supported (C, Read)
-              and Supported (C, Write)'Old      = Supported (C, Write)
-              and Supported (C, Sync)'Old       = Supported (C, Sync)
-              and Supported (C, Trim)'Old       = Supported (C, Trim);
+              and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
 
    --  Check if the block device is writable
    --

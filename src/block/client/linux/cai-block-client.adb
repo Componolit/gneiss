@@ -144,6 +144,15 @@ is
                                        when Trim  => Standard.C.Block.Trim)) = 1;
    end Supported;
 
+   function Supported (I : Client_Instance;
+                       R : Request_Kind) return Boolean
+   is
+      pragma Unreferenced (I);
+      pragma Unreferenced (R);
+   begin
+      return False;
+   end Supported;
+
    ------------------
    -- Enqueue_Read --
    ------------------
