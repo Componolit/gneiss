@@ -17,7 +17,8 @@ is
    function Initialized (C : Client_Session) return Boolean;
 
    procedure Initialize (C   : in out Client_Session;
-                         Cap :        Cai.Types.Capability);
+                         Cap :        Cai.Types.Capability) with
+     Pre => not Initialized (C);
 
    procedure Load (C : in out Client_Session) with
       Pre  => Initialized (C),

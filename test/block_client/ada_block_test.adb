@@ -161,10 +161,14 @@ is
    is
    begin
       P_Cap := Cap;
-      Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Test");
+      if not Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Test");
+      end if;
       if Cai.Log.Client.Initialized (Log) then
          Cai.Log.Client.Info (Log, "Ada block test");
-         Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
+         if not Block_Client.Initialized (Client) then
+            Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
+         end if;
          if Block_Client.Initialized (Client) then
             if Cai.Log.Client.Initialized (Log) then
                Cai.Log.Client.Info (Log, "Block device with "

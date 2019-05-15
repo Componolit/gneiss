@@ -99,7 +99,8 @@ is
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Cai.Types.Capability;
                          Path        :        String;
-                         Buffer_Size :        Byte_Length := 0);
+                         Buffer_Size :        Byte_Length := 0) with
+     Pre => not Initialized (C);
 
    --  Finalize client
    --
@@ -228,6 +229,7 @@ is
    --
    --  @param C  Client session instance
    function Block_Size (C : Client_Session) return Size with
+     Annotate => (GNATprove, Terminating),
       Pre => Initialized (C);
 
    --  Get the maximum number of bytes for a single request

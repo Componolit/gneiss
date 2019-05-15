@@ -33,7 +33,8 @@ is
    --  @param Label           Session label
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Cai.Types.Capability;
-                         Label          :        String);
+                         Label          :        String) with
+     Pre => not Initialized (C);
 
    --  Finalize client session
    --
@@ -50,6 +51,7 @@ is
    --  @param C  Client session instance
    --  @return Maximum message length for Info, Warning and Error
    function Maximum_Message_Length (C : Client_Session) return Integer with
+     Annotate => (GNATprove, Terminating),
       Pre  => Initialized (C),
       Post => Maximum_Message_Length'Result > Minimum_Message_Length;
 

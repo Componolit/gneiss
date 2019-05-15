@@ -19,7 +19,9 @@ is
    procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
-      Config.Initialize (Cfg, Cap);
+      if not Config.Initialized (Cfg) then
+         Config.Initialize (Cfg, Cap);
+      end if;
       C := Cap;
       if Config.Initialized (Cfg) then
          Config.Load (Cfg);
