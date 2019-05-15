@@ -14,7 +14,9 @@ is
    procedure Construct (Cap : Cai.Types.Capability)
    is
    begin
-      Cai.Log.Client.Initialize (Log, Cap, "Timer");
+      if not Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Initialize (Log, Cap, "Timer");
+      end if;
       if not Cai.Timer.Client.Initialized (Timer) then
          Cai.Timer.Client.Initialize (Timer, Cap);
       end if;

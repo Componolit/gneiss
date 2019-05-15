@@ -13,7 +13,9 @@ is
       Ml : Integer;
    begin
       Hello_World_Component.Vacate (Cap, Hello_World_Component.Success);
-      Cai.Log.Client.Initialize (Log, Cap, "Hello_World");
+      if not Cai.Log.Client.Initialized (Log) then
+         Cai.Log.Client.Initialize (Log, Cap, "Hello_World");
+      end if;
       if Cai.Log.Client.Initialized (Log) then
          Ml := Cai.Log.Client.Maximum_Message_Length (Log);
          Cai.Log.Client.Info (Log, "Hello World!");
