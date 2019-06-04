@@ -1,5 +1,5 @@
 
-with Cai.Types;
+with Componolit.Interfaces.Types;
 
 package Cxx.Timer.Client is
 
@@ -19,7 +19,7 @@ package Cxx.Timer.Client is
       External_Name => "_ZN3Cai5Timer6Client11initializedEv";
 
    procedure Initialize (This : Class;
-                         Cap  : Cai.Types.Capability) with
+                         Cap  : Componolit.Interfaces.Types.Capability) with
       Global        => null,
       Import,
       Convention    => CPP,
