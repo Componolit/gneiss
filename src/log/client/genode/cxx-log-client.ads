@@ -1,5 +1,5 @@
 
-with Cai.Types;
+with Componolit.Interfaces.Types;
 with Cxx.Genode;
 
 package Cxx.Log.Client
@@ -31,7 +31,7 @@ is
       External_Name => "_ZN3Cai3Log6Client11initializedEv";
 
    procedure Initialize (This  : Class;
-                         Cap   : Cai.Types.Capability;
+                         Cap   : Componolit.Interfaces.Types.Capability;
                          Label : Cxx.Void_Address) with
       Global        => null,
       Import,
