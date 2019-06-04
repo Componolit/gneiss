@@ -3,19 +3,11 @@ package body Componolit.Interfaces.Component with
    SPARK_Mode => Off
 is
 
-   pragma Warnings (Off, "all instances of");
-   --  This generic must only be instantiated once
-
-   procedure Platform_Construct (Cap : Componolit.Interfaces.Types.Capability) with
-      Export,
-      Convention    => C,
-      External_Name => "cai_component_construct";
-
-   procedure Platform_Construct (Cap : Componolit.Interfaces.Types.Capability)
+   procedure Construct (Capability : Componolit.Interfaces.Types.Capability)
    is
    begin
-      Construct (Cap);
-   end Platform_Construct;
+      Component_Construct (Capability);
+   end Construct;
 
    procedure Vacate (Cap    : Componolit.Interfaces.Types.Capability;
                      Status : Component_Status)
@@ -33,15 +25,10 @@ is
       end if;
    end Vacate;
 
-   procedure Platform_Destruct with
-      Export,
-      Convention => C,
-      External_Name => "cai_component_destruct";
-
-   procedure Platform_Destruct
+   procedure Destruct
    is
    begin
-      Destruct;
-   end Platform_Destruct;
+      Component_Destruct;
+   end Destruct;
 
 end Componolit.Interfaces.Component;

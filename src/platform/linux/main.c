@@ -9,8 +9,8 @@
 #include <list.h>
 
 extern void adainit(void);
-extern void cai_component_construct(void *);
-extern void cai_component_destruct(void);
+extern void componolit_interfaces_component_construct(void *);
+extern void componolit_interfaces_component_destruct(void);
 extern void adafinal(void);
 
 struct isg
@@ -106,9 +106,9 @@ int main(int argc, char *argv[])
     sigprocmask(SIG_BLOCK, &signal_set, NULL);
     enlist(signalfd(-1, &signal_set, 0), &entry_signal, 0);
     adainit();
-    cai_component_construct(&capability);
+    componolit_interfaces_component_construct(&capability);
     event_loop();
-    cai_component_destruct();
+    componolit_interfaces_component_destruct();
     adafinal();
     list_delete(signal_registry);
     return capability.status;

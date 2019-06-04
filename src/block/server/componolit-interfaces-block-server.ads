@@ -42,7 +42,8 @@ generic
    --  @param S  Server session instance identifier
    with function Maximum_Transfer_Size (S : Server_Instance) return Byte_Length;
 
-   --  Custom initialization for the server, automatically called by Componolit.Interfaces.Block.Dispatcher.Session_Accept
+   --  Custom initialization for the server,
+   --  automatically called by Componolit.Interfaces.Block.Dispatcher.Session_Accept
    --
    --  @param S  Server session instance identifier
    --  @param L  Label passed by the client
@@ -53,7 +54,8 @@ generic
 
    --  Custom finalization for the server
    --
-   --  It automatically called by Componolit.Interfaces.Block.Dispatcher.Session_Cleanup when the connected client disconnects.
+   --  Is automatically called by Componolit.Interfaces.Block.Dispatcher.Session_Cleanup
+   --  when the connected client disconnects.
    --
    --  @param S  Server session instance identifier
    with procedure Finalize (S : Server_Instance);
@@ -61,7 +63,8 @@ package Componolit.Interfaces.Block.Server with
    SPARK_Mode
 is
 
-   --  Redefinition of Componolit.Interfaces.Block.Client.Request since SPARK does not allow discriminants of derived types
+   --  Redefinition of Componolit.Interfaces.Block.Client.Request
+   --  since SPARK does not allow discriminants of derived types
    --  SPARK RM 3.7 (2)
    --
    --  @field Kind    Request type
