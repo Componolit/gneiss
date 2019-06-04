@@ -1,14 +1,14 @@
 
-with Cai.Types;
-with Cai.Component;
+with Componolit.Interfaces.Types;
+with Componolit.Interfaces.Component;
 
 package Component with
    SPARK_Mode
 is
 
-   procedure Construct (Cap : Cai.Types.Capability);
+   procedure Construct (Cap : Componolit.Interfaces.Types.Capability);
    procedure Destruct;
 
-   package Timer_Component is new Cai.Component (Construct, Destruct);
+   package Main is new Componolit.Interfaces.Component (Construct, Destruct);
 
 end Component;

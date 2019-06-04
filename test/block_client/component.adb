@@ -1,14 +1,14 @@
 
-with Cai.Block;
-with Cai.Block.Client;
-with Cai.Log;
-with Cai.Log.Client;
+with Componolit.Interfaces.Block;
+with Componolit.Interfaces.Block.Client;
+with Componolit.Interfaces.Log;
+with Componolit.Interfaces.Log.Client;
 
-package body Ada_Block_Test with
+package body Component with
   SPARK_Mode
 is
 
-   package Block is new Cai.Block (Character, Positive, String);
+   package Block is new Componolit.Interfaces.Block (Character, Positive, String);
 
    procedure Write (C : Block.Client_Instance;
                     B : Block.Size;
@@ -37,8 +37,8 @@ is
    end record;
 
    Client : Block.Client_Session;
-   Log    : Cai.Log.Client_Session;
-   P_Cap  : Cai.Types.Capability;
+   Log    : Componolit.Interfaces.Log.Client_Session;
+   P_Cap  : Componolit.Interfaces.Types.Capability;
 
    Request_Count : constant Integer := 32;
 
@@ -51,10 +51,10 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
       Pre  => Block_Client.Initialized (Client)
-              and Cai.Log.Client.Initialized (Log)
+              and Componolit.Interfaces.Log.Client.Initialized (Log)
               and Operation in Block.Read .. Block.Write,
       Post => Block_Client.Initialized (Client)
-              and Cai.Log.Client.Initialized (Log);
+              and Componolit.Interfaces.Log.Client.Initialized (Log);
 
    procedure Write (C : Block.Client_Instance;
                     B : Block.Size;
@@ -78,7 +78,7 @@ is
       if S.Acked < Request_Count then
          loop
             pragma Loop_Invariant (Block_Client.Initialized (Client));
-            pragma Loop_Invariant (Cai.Log.Client.Initialized (Log));
+            pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
             pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
             declare
                R   : Block_Client.Request := Block_Client.Next (Client);
@@ -94,7 +94,7 @@ is
                      if R.Status = Block.Ok and R.Length = 1 then
                         Block_Client.Read (Client, R);
                      else
-                        Cai.Log.Client.Error (Log, "Read failed.");
+                        Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
                      end if;
                      pragma Warnings (Off, "unused assignment to ""R""");
                      Block_Client.Release (Client, R);
@@ -103,7 +103,7 @@ is
                   when Block.None =>
                      exit;
                   when others =>
-                     Cai.Log.Client.Warning (Log, "Write_Single: Unexpected request");
+                     Componolit.Interfaces.Log.Client.Warning (Log, "Write_Single: Unexpected request");
                end case;
             end;
          end loop;
@@ -119,7 +119,7 @@ is
                pragma Assert (Block_Client.Supported (Client, Operation));
                loop
                   pragma Loop_Invariant (Block_Client.Initialized (Client));
-                  pragma Loop_Invariant (Cai.Log.Client.Initialized (Log));
+                  pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
                   pragma Loop_Invariant (S.Sent < Integer'Last);
                   pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
                   pragma Loop_Invariant (Block_Client.Supported (Client, Operation));
@@ -134,7 +134,7 @@ is
             end if;
          end;
       else
-         Cai.Log.Client.Error (Log, "Failed to send write requests. Invalid block size.");
+         Componolit.Interfaces.Log.Client.Error (Log, "Failed to send write requests. Invalid block size.");
       end if;
    end Single;
 
@@ -149,71 +149,74 @@ is
       pragma Unreferenced (S);
       pragma Unreferenced (L);
    begin
-      Cai.Log.Client.Info (Log, "Read succeeded:");
-      if D'Length >= Cai.Log.Client.Maximum_Message_Length (Log) then
-         Cai.Log.Client.Info (Log, D (D'First .. D'First + Cai.Log.Client.Maximum_Message_Length (Log) - 1));
+      Componolit.Interfaces.Log.Client.Info (Log, "Read succeeded:");
+      if D'Length >= Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) then
+         Componolit.Interfaces.Log.Client.Info
+            (Log, D (D'First .. D'First + Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) - 1));
       else
-         Cai.Log.Client.Info (Log, D);
+         Componolit.Interfaces.Log.Client.Info (Log, D);
       end if;
    end Read;
 
-   procedure Construct (Cap : Cai.Types.Capability)
+   procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
       P_Cap := Cap;
-      if not Cai.Log.Client.Initialized (Log) then
-         Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Test");
+      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada block test");
       end if;
-      if Cai.Log.Client.Initialized (Log) then
-         Cai.Log.Client.Info (Log, "Ada block test");
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Info (Log, "Ada block test");
          if not Block_Client.Initialized (Client) then
             Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
          end if;
          if Block_Client.Initialized (Client) then
-            if Cai.Log.Client.Initialized (Log) then
-               Cai.Log.Client.Info (Log, "Block device with "
-                                    & Cai.Log.Image (Long_Integer (Block_Client.Block_Count (Client)))
+            if Componolit.Interfaces.Log.Client.Initialized (Log) then
+               Componolit.Interfaces.Log.Client.Info (Log, "Block device with "
+                                    & Componolit.Interfaces.Log.Image
+                                         (Long_Integer (Block_Client.Block_Count (Client)))
                                     & " blocks of size "
-                                    & Cai.Log.Image (Long_Integer (Block_Client.Block_Size (Client))));
+                                    & Componolit.Interfaces.Log.Image
+                                         (Long_Integer (Block_Client.Block_Size (Client))));
             end if;
             if Block_Client.Writable (Client) then
                Run;
             else
-               Cai.Log.Client.Error (Log, "Block device not writable, cannot run test");
-               Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Failure);
+               Componolit.Interfaces.Log.Client.Error (Log, "Block device not writable, cannot run test");
+               Main.Vacate (P_Cap, Main.Failure);
             end if;
          else
-            Cai.Log.Client.Error (Log, "Failed to initialize Block session");
-            Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Failure);
+            Componolit.Interfaces.Log.Client.Error (Log, "Failed to initialize Block session");
+            Main.Vacate (P_Cap, Main.Failure);
          end if;
       else
-         Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Failure);
+         Main.Vacate (P_Cap, Main.Failure);
       end if;
    end Construct;
 
    procedure Run is
    begin
       if
-         Cai.Log.Client.Initialized (Log)
+         Componolit.Interfaces.Log.Client.Initialized (Log)
          and Block_Client.Initialized (Client)
       then
          if not State_Finished (Write_State) then
-            Cai.Log.Client.Info (Log, "Writing...");
+            Componolit.Interfaces.Log.Client.Info (Log, "Writing...");
             Single (Write_State, Block.Write);
          end if;
          if
             State_Finished (Write_State)
             and not State_Finished (Read_State)
          then
-            Cai.Log.Client.Info (Log, "Reading...");
+            Componolit.Interfaces.Log.Client.Info (Log, "Reading...");
             Single (Read_State, Block.Read);
          end if;
          if
             State_Finished (Write_State)
             and State_Finished (Read_State)
          then
-            Ada_Block_Test_Component.Vacate (P_Cap, Ada_Block_Test_Component.Success);
-            Cai.Log.Client.Info (Log, "Test finished.");
+            Main.Vacate (P_Cap, Main.Success);
+            Componolit.Interfaces.Log.Client.Info (Log, "Test finished.");
          end if;
       end if;
    end Run;
@@ -224,9 +227,9 @@ is
       if Block_Client.Initialized (Client) then
          Block_Client.Finalize (Client);
       end if;
-      if Cai.Log.Client.Initialized (Log) then
-         Cai.Log.Client.Finalize (Log);
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
    end Destruct;
 
-end Ada_Block_Test;
+end Component;

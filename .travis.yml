@@ -19,18 +19,18 @@ script:
     - gprclean -P ada_interface.gpr -XPLATFORM=genode
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux
     - gprclean -P ada_interface.gpr -XPLATFORM=linux
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u cai-log
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-interfaces-log
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u hello_world
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component
     - ./build/hello_world
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u hello_world --clean
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component --clean
     - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
     - dd if=/dev/zero of=/tmp/test_disk.img bs=4k count=64
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u ada_block_test
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u component
     - ./build/block_client
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u ada_block_test --clean
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u component --clean
     - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
     - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=timer
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=timer -u component
