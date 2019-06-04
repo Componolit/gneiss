@@ -45,4 +45,5 @@ is
                      Status : Component_Status) with
       Global => (In_Out => Platform);
 
+   pragma Warnings (On, "all instances of");
 end Componolit.Interfaces.Component;
