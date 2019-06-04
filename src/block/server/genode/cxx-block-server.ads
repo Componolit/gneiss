@@ -1,4 +1,4 @@
-with Cai.Types;
+with Componolit.Interfaces.Types;
 
 package Cxx.Block.Server
    with SPARK_Mode => On
@@ -25,7 +25,7 @@ is
       External_Name => "_ZN3Cai5Block6Server12get_instanceEv";
 
    procedure Initialize (This                  : Class;
-                         Cap                   : Cai.Types.Capability;
+                         Cap                   : Componolit.Interfaces.Types.Capability;
                          Size                  : Cxx.Genode.Uint64_T;
                          Callback              : Cxx.Void_Address;
                          Block_Count           : Cxx.Void_Address;

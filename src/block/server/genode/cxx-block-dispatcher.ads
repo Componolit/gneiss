@@ -1,6 +1,6 @@
 with Cxx.Block.Server;
 
-with Cai.Types;
+with Componolit.Interfaces.Types;
 
 package Cxx.Block.Dispatcher
    with SPARK_Mode => On
@@ -34,7 +34,7 @@ is
       External_Name => "_ZN3Cai5Block10Dispatcher12get_instanceEv";
 
    procedure Initialize (This     : Class;
-                         Cap      : Cai.Types.Capability;
+                         Cap      : Componolit.Interfaces.Types.Capability;
                          Callback : Cxx.Void_Address) with
       Global        => null,
       Import,
@@ -91,7 +91,7 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block10Dispatcher15session_cleanupEPv";
 
-   function Get_Capability (This : Class) return Cai.Types.Capability with
+   function Get_Capability (This : Class) return Componolit.Interfaces.Types.Capability with
       Global => null,
       Import,
       Convention => CPP,

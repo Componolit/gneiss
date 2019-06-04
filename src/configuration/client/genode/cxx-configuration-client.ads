@@ -1,5 +1,5 @@
 
-with Cai.Types;
+with Componolit.Interfaces.Types;
 
 package Cxx.Configuration.Client with
    SPARK_Mode
@@ -14,7 +14,7 @@ is
    pragma Cpp_Constructor (Constructor, "_ZN3Cai13Configuration6ClientC1Ev");
 
    procedure Initialize (This  : Class;
-                         Env   : Cai.Types.Capability;
+                         Env   : Componolit.Interfaces.Types.Capability;
                          Parse : Cxx.Void_Address) with
       Global => null,
       Import,
