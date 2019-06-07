@@ -110,21 +110,10 @@ is
       use type CIM.Session_Index;
       use type Musinfo.Memregion_Type;
       pragma Unreferenced (Cap);
-      Name   : Musinfo.Name_Type;
-      Length : Integer;
+      Name   : constant Musinfo.Name_Type := CIM.String_To_Name (Label);
       Index  : CIM.Session_Index := CIM.Invalid_Index;
       Memory : Musinfo.Memregion_Type;
    begin
-      if Label'Length > Musinfo.Name_Index_Type'Last then
-         Length := Musinfo.Name_Index_Type'Last;
-      else
-         Length := Label'Length;
-      end if;
-      Name.Data (Name.Data'First .. Name.Data'First + Length - 1) :=
-         Musinfo.Name_Data_Type (Label (Label'First .. Label'First + Length - 1));
-      Name.Length    := Musinfo.Name_Size_Type (Length);
-      Name.Padding   := 0;
-      Name.Null_Term := Character'First;
       Memory         := Musinfo.Instance.Memory_By_Name (Name);
       for I in CIM.Session_Registry'Range loop
          if CIM.Session_Registry (I).Session = CIM.None then
@@ -134,6 +123,7 @@ is
       end loop;
       if Index /= CIM.Invalid_Index and Memory /= Musinfo.Null_Memregion then
          CIM.Session_Registry (Index) := CIM.Session_Element'(Session        => CIM.Log,
+                                                              Name           => Name,
                                                               Memregion      => Memory,
                                                               Message_Index  => Debuglog.Types.Message_Index'First,
                                                               Message_Buffer => Debuglog.Types.Null_Data);
@@ -156,12 +146,21 @@ is
       return 200;
    end Maximum_Message_Length;
 
+   function Get_Label (C : Client_Session) return String;
+
+   function Get_Label (C : Client_Session) return String
+   is
+      I : constant CIM.Session_Index := CIM.Session_Index (C);
+   begin
+      return "[" & CIM.Name_To_String (CIM.Session_Registry (I).Name) & "] ";
+   end Get_Label;
+
    procedure Info (C       : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True)
    is
    begin
-      Put (C, "Info: " & Msg);
+      Put (C, Get_Label (C) & "Info: " & Msg);
       if Newline then
          Put (C, Character'Val (10));
       end if;
@@ -172,7 +171,7 @@ is
                       Newline :        Boolean := True)
    is
    begin
-      Put (C, "Warning: " & Msg);
+      Put (C, Get_Label (C) & "Warning: " & Msg);
       if Newline then
          Put (C, Character'Val (10));
       end if;
@@ -183,7 +182,7 @@ is
                     Newline :        Boolean := True)
    is
    begin
-      Put (C, "Error: " & Msg);
+      Put (C, Get_Label (C) & "Error: " & Msg);
       if Newline then
          Put (C, Character'Val (10));
       end if;
