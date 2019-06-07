@@ -15,11 +15,12 @@ is
 
    procedure Initialize (This  : Class;
                          Env   : Componolit.Interfaces.Types.Capability;
-                         Parse : Cxx.Void_Address) with
+                         Parse : Cxx.Void_Address;
+                         Name  : Cxx.Void_Address) with
       Global => null,
       Import,
       Convention => CPP,
-      External_Name => "_ZN3Cai13Configuration6Client10initializeEPvS2_";
+      External_Name => "_ZN3Cai13Configuration6Client10initializeEPvS2_PKc";
 
    function Initialized (This : Class) return Cxx.Bool with
       Global => null,

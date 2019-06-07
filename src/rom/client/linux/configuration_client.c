@@ -7,6 +7,8 @@
 #include <stdint.h>
 #include <sys/mman.h>
 #include <sys/inotify.h>
+#include <stdlib.h>
+#include <string.h>
 #include <capability.h>
 
 typedef struct session session_t;
@@ -16,6 +18,7 @@ struct session
     int ifd;
     void (*parse)(void *, uint64_t);
     capability_t *cap;
+    char *name;
 };
 
 void set_zero(session_t *session)
@@ -23,13 +26,14 @@ void set_zero(session_t *session)
     session->ifd = -1;
     session->parse = 0;
     session->cap = 0;
+    session->name = 0;
 }
 
 void configuration_client_load(session_t *session)
 {
     struct stat st;
     void *map;
-    int fd = open(session->cap->config_file, O_RDONLY | O_NOFOLLOW);
+    int fd = open(session->name, O_RDONLY | O_NOFOLLOW);
     if(fd > -1){
         if(!fstat(fd, &st)){
             map = mmap(0, st.st_size, PROT_READ, MAP_PRIVATE, fd, 0);
@@ -48,7 +52,7 @@ void configuration_client_load(session_t *session)
         }
     }else{
         session->parse(0, 0);
-        perror(session->cap->config_file);
+        perror(session->name);
     }
 }
 
@@ -59,21 +63,30 @@ void handle_change(int fd, void *session)
     configuration_client_load((session_t *)session);
 }
 
-void configuration_client_initialize(session_t *session, capability_t *cap, void (*parse)(void *, uint64_t))
+void configuration_client_initialize(session_t *session, capability_t *cap, void (*parse)(void *, uint64_t), const char *name)
 {
     session->ifd = inotify_init();
-    if(session->ifd > -1){
-        if(inotify_add_watch(session->ifd, cap->config_file,
-                             IN_MODIFY | IN_DELETE_SELF | IN_CLOSE_WRITE) > -1){
-            session->parse = parse;
-            session->cap = cap;
-            cap->enlist(session->ifd, &handle_change, session);
+    const char *rom_name = name ? name : cap->config_file;
+    session->name = (char *)malloc(strlen(rom_name) + 1);
+    if(session->name){
+        memset(session->name, 0, strlen(rom_name) + 1);
+        memcpy(session->name, rom_name, strlen(rom_name));
+        if(session->ifd > -1){
+            if(inotify_add_watch(session->ifd, session->name,
+                        IN_MODIFY | IN_DELETE_SELF | IN_CLOSE_WRITE) > -1){
+                session->parse = parse;
+                session->cap = cap;
+                cap->enlist(session->ifd, &handle_change, session);
+            }else{
+                perror("watch failed");
+                set_zero(session);
+            }
         }else{
-            perror("watch failed");
+            perror("inotify failed");
             set_zero(session);
         }
     }else{
-        perror("inotify failed");
+        perror("allocating name failed");
         set_zero(session);
     }
 }
@@ -82,5 +95,6 @@ void configuration_client_finalize(session_t *session)
 {
     session->cap->withdraw(session->ifd);
     close(session->ifd);
+    free(session->name);
     set_zero(session);
 }
