@@ -25,10 +25,13 @@ is
 
    type Session_List is array (Session_Index range 1 .. 64) of Session_Element;
 
+   type Status is (Running, Success, Failure);
+
    function Name_To_String (Name : Musinfo.Name_Type) return String;
 
    function String_To_Name (Name : String) return Musinfo.Name_Type;
 
    Session_Registry : Session_List := (others => Session_Element'(Session => None));
+   Component_Status : Status := Running;
 
 end Componolit.Interfaces.Muen;
