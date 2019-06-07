@@ -37,8 +37,8 @@ script:
     - ./build/timer
     - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=timer -u component --clean
     - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=timer
-    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=configuration
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=configuration -u component
-    - ./build/configuration test/configuration/cai.conf & (sleep 2 && touch test/configuration/cai.conf)
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=configuration -u component --clean
-    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=configuration
+    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=rom
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=rom -u component
+    - ./build/rom test/rom/cai.conf & (sleep 2 && touch test/rom/cai.conf)
+    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=rom -u component --clean
+    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=rom
