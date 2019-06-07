@@ -32,11 +32,19 @@ is
 
    procedure Parse (Data : String)
    is
+      Last : Positive := Data'Last;
    begin
-      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Initialize (Log, C, Data);
+      if not Componolit.Interfaces.Log.Client.Initialized (Log) and then Data'Length > 1 then
+         for I in Data'Range loop
+            if Data (I) = ASCII.LF then
+               Last := I - 1;
+               exit;
+            end if;
+         end loop;
+         Componolit.Interfaces.Log.Client.Initialize (Log, C, Data (Data'First .. Last));
          if Componolit.Interfaces.Log.Client.Initialized (Log) then
-            Componolit.Interfaces.Log.Client.Info (Log, "Log session configured with label: " & Data);
+            Componolit.Interfaces.Log.Client.Info (Log, "Log session configured with label: "
+                                                        & Data (Data'First .. Last));
          else
             Main.Vacate (C, Main.Failure);
          end if;

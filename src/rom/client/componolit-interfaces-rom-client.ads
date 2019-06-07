@@ -1,8 +1,6 @@
 
 with Componolit.Interfaces.Types;
 
-pragma Warnings (Off, "procedure ""Parse"" is not referenced");
-
 generic
    type Element is private;
    type Index is range <>;
@@ -11,6 +9,7 @@ generic
 package Componolit.Interfaces.Rom.Client with
    SPARK_Mode
 is
+   pragma Warnings (Off, "procedure ""Parse"" is not referenced");
 
    function Create return Client_Session;
 
@@ -29,4 +28,5 @@ is
       Pre  => Initialized (C),
       Post => not Initialized (C);
 
+   pragma Warnings (On, "procedure ""Parse"" is not referenced");
 end Componolit.Interfaces.Rom.Client;
