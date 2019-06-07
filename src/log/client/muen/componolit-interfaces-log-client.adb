@@ -116,17 +116,17 @@ is
       Index  : CIM.Session_Index := CIM.Invalid_Index;
       Memory : Musinfo.Memregion_Type;
    begin
-      Memory         := Musinfo.Instance.Memory_By_Name (Name);
+      Memory := Musinfo.Instance.Memory_By_Name (Name);
       for I in CIM.Session_Registry'Range loop
          if CIM.Session_Registry (I).Session = CIM.None then
             Index := I;
             exit;
          end if;
       end loop;
-      if Index /= CIM.Invalid_Index and Memory /= Musinfo.Null_Memregion then
+      if Index /= CIM.Invalid_Index and then Memory /= Musinfo.Null_Memregion then
          CIM.Session_Registry (Index) := CIM.Session_Element'(Session        => CIM.Log,
-                                                              Name           => Name,
-                                                              Memregion      => Memory,
+                                                              Log_Name       => Name,
+                                                              Log_Mem        => Memory,
                                                               Message_Index  => Debuglog.Types.Message_Index'First,
                                                               Message_Buffer => Debuglog.Types.Null_Data);
          Activate_Channel (Memory);
@@ -137,7 +137,7 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      Deactivate_Channel (CIM.Session_Registry (CIM.Session_Index (C)).Memregion);
+      Deactivate_Channel (CIM.Session_Registry (CIM.Session_Index (C)).Log_Mem);
       CIM.Session_Registry (CIM.Session_Index (C)) := CIM.Session_Element'(Session => CIM.None);
       C := Client_Session (CIM.Invalid_Index);
    end Finalize;
@@ -155,7 +155,7 @@ is
    is
       I : constant CIM.Session_Index := CIM.Session_Index (C);
    begin
-      return "[" & CIM.Name_To_String (CIM.Session_Registry (I).Name) & "] ";
+      return "[" & CIM.Name_To_String (CIM.Session_Registry (I).Log_Name) & "] ";
    end Get_Label;
 
    procedure Info (C       : in out Client_Session;
@@ -196,7 +196,7 @@ is
       SI : constant CIM.Session_Index := CIM.Session_Index (C);
    begin
       CIM.Session_Registry (SI).Message_Buffer.Timestamp := Musinfo.Instance.TSC_Schedule_Start;
-      Write_Channel (CIM.Session_Registry (SI).Memregion,
+      Write_Channel (CIM.Session_Registry (SI).Log_Mem,
                      CIM.Session_Registry (SI).Message_Buffer);
       CIM.Session_Registry (SI).Message_Index  := Debuglog.Types.Message_Index'First;
       CIM.Session_Registry (SI).Message_Buffer := Debuglog.Types.Null_Data;
