@@ -1,7 +1,7 @@
 
 with System;
 
-package Componolit.Interfaces.Internal.Configuration is
+package Componolit.Interfaces.Internal.Rom is
 
    type Client_Session is limited record
       Ifd   : Integer;
@@ -9,4 +9,4 @@ package Componolit.Interfaces.Internal.Configuration is
       Cap   : System.Address;
    end record;
 
-end Componolit.Interfaces.Internal.Configuration;
+end Componolit.Interfaces.Internal.Rom;

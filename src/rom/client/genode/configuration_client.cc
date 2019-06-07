@@ -20,15 +20,15 @@ class Config
         Config & operator = (Config const &);
 
     public:
-        Config(Cai::Env *, void (*)(void const *, Genode::uint64_t));
+        Config(Cai::Env *, void (*)(void const *, Genode::uint64_t), const char *);
         void update();
 };
 
 char const Config::_empty = '\0';
 
-Config::Config(Cai::Env *env, void (*parse)(void const *, Genode::uint64_t)) :
+Config::Config(Cai::Env *env, void (*parse)(void const *, Genode::uint64_t), const char *label) :
     _env(env),
-    _ds(*env->env, "config"),
+    _ds(*env->env, label),
     _sigh(env->env->ep(), *this, &Config::update),
     _parse(parse)
 {
@@ -51,11 +51,12 @@ Cai::Configuration::Client::Client() :
     _config(nullptr)
 { }
 
-void Cai::Configuration::Client::initialize(void *env, void *parse)
+void Cai::Configuration::Client::initialize(void *env, void *parse, const char *label)
 {
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
     _config = _factory->create<Config>(reinterpret_cast<Cai::Env *>(env),
-                                       reinterpret_cast<void (*)(void const *, Genode::uint64_t)>(parse));
+                                       reinterpret_cast<void (*)(void const *, Genode::uint64_t)>(parse),
+                                       label);
 }
 
 bool Cai::Configuration::Client::initialized()

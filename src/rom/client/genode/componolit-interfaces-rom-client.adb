@@ -4,7 +4,7 @@ with Cxx;
 with Cxx.Genode;
 with Cxx.Configuration.Client;
 
-package body Componolit.Interfaces.Configuration.Client with
+package body Componolit.Interfaces.Rom.Client with
    SPARK_Mode => Off
 is
 
@@ -17,11 +17,13 @@ is
    procedure C_Parse (Ptr : System.Address;
                       Len : Cxx.Genode.Uint64_T);
 
-   procedure Initialize (C   : in out Client_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability)
+   procedure Initialize (C    : in out Client_Session;
+                         Cap  :        Componolit.Interfaces.Types.Capability;
+                         Name :        String := "")
    is
+      C_Name : constant String := (if Name'Length > 0 then Name else "config") & Character'First;
    begin
-      Cxx.Configuration.Client.Initialize (C.Instance, Cap, C_Parse'Address);
+      Cxx.Configuration.Client.Initialize (C.Instance, Cap, C_Parse'Address, C_Name'Address);
    end Initialize;
 
    function Initialized (C : Client_Session) return Boolean
@@ -67,4 +69,4 @@ is
       end if;
    end C_Parse;
 
-end Componolit.Interfaces.Configuration.Client;
+end Componolit.Interfaces.Rom.Client;
