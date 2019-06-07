@@ -18,8 +18,10 @@ is
    function Initialized (C : Client_Session) return Boolean
    is
       use type CIM.Session_Index;
+      use type CIM.Session_Type;
    begin
-      return CIM.Session_Index (C) /= CIM.Invalid_Index;
+      return CIM.Session_Index (C) /= CIM.Invalid_Index
+             and then CIM.Session_Registry (CIM.Session_Index (C)).Session = CIM.Log;
    end Initialized;
 
    function Create return Client_Session
@@ -137,6 +139,7 @@ is
    begin
       Deactivate_Channel (CIM.Session_Registry (CIM.Session_Index (C)).Memregion);
       CIM.Session_Registry (CIM.Session_Index (C)) := CIM.Session_Element'(Session => CIM.None);
+      C := Client_Session (CIM.Invalid_Index);
    end Finalize;
 
    function Maximum_Message_Length (C : Client_Session) return Integer
