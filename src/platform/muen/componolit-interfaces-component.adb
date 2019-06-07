@@ -1,4 +1,6 @@
 
+with Componolit.Interfaces.Muen;
+
 package body Componolit.Interfaces.Component with
    SPARK_Mode => Off
 is
@@ -18,10 +20,15 @@ is
    procedure Vacate (Cap    : Componolit.Interfaces.Types.Capability;
                      Status : Component_Status)
    is
+      package CIM renames Componolit.Interfaces.Muen;
       pragma Unreferenced (Cap);
-      pragma Unreferenced (Status);
    begin
-      null;
+      case Status is
+         when Success =>
+            CIM.Component_Status := CIM.Success;
+         when Failure =>
+            CIM.Component_Status := CIM.Failure;
+      end case;
    end Vacate;
 
 end Componolit.Interfaces.Component;
