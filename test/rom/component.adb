@@ -1,6 +1,6 @@
 
-with Componolit.Interfaces.Configuration;
-with Componolit.Interfaces.Configuration.Client;
+with Componolit.Interfaces.Rom;
+with Componolit.Interfaces.Rom.Client;
 with Componolit.Interfaces.Log;
 with Componolit.Interfaces.Log.Client;
 
@@ -10,9 +10,9 @@ is
 
    procedure Parse (Data : String);
 
-   package Config is new Componolit.Interfaces.Configuration.Client (Character, Positive, String, Parse);
+   package Config is new Componolit.Interfaces.Rom.Client (Character, Positive, String, Parse);
 
-   Cfg : Componolit.Interfaces.Configuration.Client_Session := Config.Create;
+   Cfg : Componolit.Interfaces.Rom.Client_Session := Config.Create;
    Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
    C : Componolit.Interfaces.Types.Capability;
 
@@ -41,7 +41,7 @@ is
             Main.Vacate (C, Main.Failure);
          end if;
       else
-         Componolit.Interfaces.Log.Client.Info (Log, "Configuration changed, exiting...");
+         Componolit.Interfaces.Log.Client.Info (Log, "Rom changed, exiting...");
          Main.Vacate (C, Main.Success);
       end if;
    end Parse;

@@ -12,7 +12,7 @@ namespace Cai
                 void *_config;
             public:
                 Client();
-                void initialize(void *env, void *parse);
+                void initialize(void *env, void *parse, const char *label);
                 bool initialized();
                 void load();
                 void finalize();

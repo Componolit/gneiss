@@ -2,7 +2,7 @@
 with System;
 with C;
 
-package body Componolit.Interfaces.Configuration.Client with
+package body Componolit.Interfaces.Rom.Client with
    SPARK_Mode => Off
 is
 
@@ -28,17 +28,21 @@ is
              and C.Cap /= System.Null_Address;
    end Initialized;
 
-   procedure Initialize (C   : in out Client_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability)
+   procedure Initialize (C    : in out Client_Session;
+                         Cap  :        Componolit.Interfaces.Types.Capability;
+                         Name :        String := "")
    is
       procedure C_Initialize (S : in out Client_Session;
                               C : Componolit.Interfaces.Types.Capability;
-                              L : System.Address) with
+                              L : System.Address;
+                              N : System.Address) with
          Import,
          Convention => C,
          External_Name => "configuration_client_initialize";
+      C_Name : constant String := Name & Character'First;
+      C_Name_Addr : constant System.Address := (if Name'Length > 0 then C_Name'Address else System.Null_Address);
    begin
-      C_Initialize (C, Cap, C_Parse'Address);
+      C_Initialize (C, Cap, C_Parse'Address, C_Name_Addr);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
@@ -83,4 +87,4 @@ is
       C_Finalize (C);
    end Finalize;
 
-end Componolit.Interfaces.Configuration.Client;
+end Componolit.Interfaces.Rom.Client;
