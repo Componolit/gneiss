@@ -6,19 +6,21 @@ package Componolit.Interfaces.Muen with
    SPARK_Mode
 is
 
-   type Session_Type is (None, Log, Timer);
+   type Session_Type is (None, Log, Timer, Rom);
 
    type Session_Element (Session : Session_Type := None) is record
       case Session is
          when None =>
             null;
          when Log =>
-            Name           : Musinfo.Name_Type;
-            Memregion      : Musinfo.Memregion_Type;
+            Log_Name       : Musinfo.Name_Type;
+            Log_Mem        : Musinfo.Memregion_Type;
             Message_Index  : Debuglog.Types.Message_Index;
             Message_Buffer : Debuglog.Types.Data_Type;
          when Timer =>
             null;
+         when Rom =>
+            Rom_Mem  : Musinfo.Memregion_Type;
       end case;
    end record;
 
