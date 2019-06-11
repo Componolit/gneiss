@@ -7,6 +7,7 @@ package Componolit.Interfaces.Internal.Rom is
       Ifd   : Integer;
       Parse : System.Address;
       Cap   : System.Address;
+      Name  : System.Address;
    end record;
 
 end Componolit.Interfaces.Internal.Rom;

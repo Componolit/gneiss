@@ -17,15 +17,17 @@ is
    begin
       return Client_Session'(Ifd   => -1,
                              Parse => System.Null_Address,
-                             Cap   => System.Null_Address);
+                             Cap   => System.Null_Address,
+                             Name  => System.Null_Address);
    end Create;
 
    function Initialized (C : Client_Session) return Boolean
    is
    begin
-      return C.Ifd >= 0
+      return C.Ifd       >= 0
              and C.Parse /= System.Null_Address
-             and C.Cap /= System.Null_Address;
+             and C.Cap   /= System.Null_Address
+             and C.Name  /= System.Null_Address;
    end Initialized;
 
    procedure Initialize (C    : in out Client_Session;
