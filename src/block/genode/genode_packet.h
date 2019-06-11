@@ -62,27 +62,27 @@ inline Cai::Block::Request create_cai_block_request(const Block::Request &r)
         Cai::Block::Status::OK
     };
     Cai::Block::Request req = {
-        static_cast<Cai::Block::Kind>(r.operation),
+        static_cast<Cai::Block::Kind>(r.operation.type),
         {},
-        r.block_number,
-        0,
+        r.operation.block_number,
+        r.operation.count,
         request_status[static_cast<Genode::uint32_t>(r.success)]
     };
     *reinterpret_cast<Genode::uint64_t*>(&req.uid) = r.offset;
-    reinterpret_cast<Genode::uint32_t*>(&req.length)[0] = r.count;
     return req;
 }
 
 inline Block::Request create_genode_block_request(const Cai::Block::Request &req)
 {
     Block::Request r = {
-        static_cast<Block::Request::Operation>(req.kind),
-        req.status == Cai::Block::Status::ERROR ?
-            Block::Request::Success::FALSE : Block::Request::Success::TRUE,
-        req.start,
-        *(reinterpret_cast<const Genode::uint64_t *>(&req.uid)),
-        reinterpret_cast<const Genode::uint32_t*>(&req.length)[0],
-        0
+        {
+            static_cast<Block::Operation::Type>(req.kind),
+            req.start,
+            req.length
+        },
+        req.status != Cai::Block::Status::ERROR,
+        *reinterpret_cast<const Genode::off_t *>(req.uid),
+        {0},
     };
     return r;
 }

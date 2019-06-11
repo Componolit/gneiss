@@ -86,6 +86,9 @@ is
                exit when S.Acked >= Request_Count;
                case R.Kind is
                   when Block.Write =>
+                     if R.Status /= Block.Ok then
+                        Componolit.Interfaces.Log.Client.Error (Log, "Write failed.");
+                     end if;
                      pragma Warnings (Off, "unused assignment to ""R""");
                      Block_Client.Release (Client, R);
                      pragma Warnings (On, "unused assignment to ""R""");

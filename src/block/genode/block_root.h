@@ -31,9 +31,7 @@ struct Cai::Block::Block_session_component : Genode::Rpc_object<::Block::Session
 
     ~Block_session_component();
 
-    void info(::Block::sector_t *count, Genode::size_t *size, ::Block::Session::Operations *ops) override;
-
-    void sync() override;
+    ::Block::Session::Info info() const override;
 
     Genode::Capability<::Block::Session::Tx> tx_cap() override;
 };
