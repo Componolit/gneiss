@@ -23,7 +23,7 @@ Cai::Block::Block_session_component::Block_session_component(
         Genode::Entrypoint &ep,
         Genode::Signal_context_capability sigh,
         Cai::Block::Server &server) :
-    Request_stream(rm, ds, ep, sigh, Get_attr_64(server._block_size, server.get_instance())),
+    Request_stream(rm, ds, ep, sigh, info()),
     _ep(ep),
     _server(server)
 {
@@ -35,19 +35,15 @@ Cai::Block::Block_session_component::~Block_session_component()
     _ep.dissolve(*this);
 }
 
-void Cai::Block::Block_session_component::info(::Block::sector_t *count, Genode::size_t *size, ::Block::Session::Operations *ops)
+::Block::Session::Info Cai::Block::Block_session_component::info() const
 {
-    *count = Get_attr_64(_server._block_count, _server.get_instance());
-    *size = Get_attr_64(_server._block_size, _server.get_instance());
-    *ops = ::Block::Session::Operations();
-    ops->set_operation(::Block::Packet_descriptor::Opcode::READ);
-    if(_server.writable()){
-        ops->set_operation(::Block::Packet_descriptor::Opcode::WRITE);
-    }
+    return ::Block::Session::Info {
+        Get_attr_64(_server._block_size, _server.get_instance()),
+        Get_attr_64(_server._block_count, _server.get_instance()),
+        0,
+        _server.writable()
+    };
 }
-
-void Cai::Block::Block_session_component::sync()
-{ }
 
 Genode::Capability<::Block::Session::Tx> Cai::Block::Block_session_component::tx_cap()
 {
@@ -188,5 +184,5 @@ void Cai::Block::Server::acknowledge(Cai::Block::Request &req)
 
 void Cai::Block::Server::unblock_client()
 {
-    blk(_session).wakeup_client();
+    blk(_session).wakeup_client_if_needed();
 }
