@@ -1,6 +1,6 @@
 
-with Cai.Log;
-with Cai.Log.Client;
+with Componolit.Interfaces.Log;
+with Componolit.Interfaces.Log.Client;
 
 package body Component is
 
@@ -9,28 +9,28 @@ package body Component is
    use all type Block.Request_Kind;
    use all type Block.Request_Status;
 
-   Client : Block.Client_Session;
-   Dispatcher : Block.Dispatcher_Session;
-   Server : Block.Server_Session;
+   Client     : Block.Client_Session     := Block_Client.Create;
+   Dispatcher : Block.Dispatcher_Session := Block_Dispatcher.Create;
+   Server     : Block.Server_Session     := Block_Server.Create;
 
-   Capability : Cai.Types.Capability;
+   Capability : Componolit.Interfaces.Types.Capability;
 
-   Log : Cai.Log.Client_Session := Cai.Log.Client.Create;
+   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
 
-   procedure Construct (Cap : Cai.Types.Capability)
+   procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
       Capability := Cap;
       Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
-      Cai.Log.Client.Initialize (Log, Cap, "Proxy");
+      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
    end Construct;
 
    procedure Destruct
    is
    begin
-      if Cai.Log.Client.Initialized (Log) then
-         Cai.Log.Client.Finalize (Log);
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
       if Block_Dispatcher.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);

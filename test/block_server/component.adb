@@ -1,12 +1,11 @@
 
-with Cai.Log.Client;
+with Componolit.Interfaces.Log.Client;
 
 package body Component is
 
-   Log : Cai.Log.Client_Session;
-
-   Dispatcher : Block.Dispatcher_Session;
-   Server : Block.Server_Session;
+   Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
+   Dispatcher  : Block.Dispatcher_Session                 := Block_Dispatcher.Create;
+   Server      : Block.Server_Session                     := Block_Server.Create;
    Buffer_Size : Block.Byte_Length;
 
    subtype Block_Buffer is Buffer (1 .. 512);
@@ -19,20 +18,20 @@ package body Component is
    use all type Block.Request_Kind;
    use all type Block.Request_Status;
 
-   procedure Construct (Cap : Cai.Types.Capability)
+   procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
-      Cai.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
+      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
       Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
-      Cai.Log.Client.Info (Log, "Dispatcher initialized");
+      Componolit.Interfaces.Log.Client.Info (Log, "Dispatcher initialized");
    end Construct;
 
    procedure Destruct
    is
    begin
-      if Cai.Log.Client.Initialized (Log) then
-         Cai.Log.Client.Finalize (Log);
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
       if Block_Dispatcher.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
@@ -142,10 +141,10 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      Cai.Log.Client.Info (Log, "Server initialize with label: " & L);
+      Componolit.Interfaces.Log.Client.Info (Log, "Server initialize with label: " & L);
       Ram_Disk := (others => (others => 0));
       Buffer_Size := B;
-      Cai.Log.Client.Info (Log, "Initialized");
+      Componolit.Interfaces.Log.Client.Info (Log, "Initialized");
    end Initialize;
 
    procedure Finalize (S : Block.Server_Instance)
@@ -163,7 +162,7 @@ package body Component is
    begin
       Block_Dispatcher.Session_Request (Dispatcher, Valid, Label, Last);
       if Valid and not Block_Server.Initialized (Server) then
-         Cai.Log.Client.Info (Log, "Received request with label " & Label (1 .. Last));
+         Componolit.Interfaces.Log.Client.Info (Log, "Received request with label " & Label (1 .. Last));
          Block_Dispatcher.Session_Accept (Dispatcher, Server, Label (1 .. Last));
       end if;
       Block_Dispatcher.Session_Cleanup (Dispatcher, Server);
