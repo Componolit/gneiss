@@ -27,7 +27,7 @@ class Block_session
     private:
         Genode::Heap _heap;
         Genode::Allocator_avl _alloc;
-        Block::Connection _block;
+        Block::Connection<> _block;
         Genode::Io_signal_handler<Cai::Block::Client> _event;
     public:
         Block_session(
@@ -50,13 +50,13 @@ class Block_session
             return _alloc.avail();
         }
 
-        ::Block::Connection *block()
+        ::Block::Connection<> *block()
         {
             return &_block;
         }
 };
 
-inline ::Block::Connection *blk(void *device)
+inline ::Block::Connection<> *blk(void *device)
 {
     return reinterpret_cast<Block_session *>(device)->block();
 }
@@ -89,7 +89,6 @@ void Cai::Block::Client::initialize(
         Genode::uint64_t buffer_size)
 {
     const char default_device[] = "";
-    Genode::size_t blk_size;
     Genode::uint64_t alloc_size;
     Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
@@ -102,9 +101,8 @@ void Cai::Block::Client::initialize(
             device ? device : default_device,
             this,
             &Client::callback);
-    ::Block::Session::Operations ops;
-    blk(_device)->info(&_block_count, &blk_size, &ops);
-    _block_size = blk_size;
+    _block_size = blk(_device)->info().block_size;
+    _block_count = blk(_device)->info().block_count;
     alloc_size = reinterpret_cast<Block_session *>(_device)->available();
     _buffer_size = alloc_size - (alloc_size % _block_size);
 }
@@ -142,7 +140,7 @@ class Packet_allocator
         {
             if(size != _alloc_packet.size()){
                 free(device);
-                _alloc_packet = blk(device)->tx()->alloc_packet(size, 0);
+                _alloc_packet = blk(device)->alloc_packet(size);
             }
         }
 
@@ -241,11 +239,7 @@ void Cai::Block::Client::release(Cai::Block::Request)
 
 bool Cai::Block::Client::writable()
 {
-    ::Block::sector_t sector;
-    Genode::size_t size;
-    ::Block::Session::Operations ops;
-    blk(_device)->info(&sector, &size, &ops);
-    return ops.supported(::Block::Packet_descriptor::WRITE);
+    return blk(_device)->info().writeable;
 }
 
 Genode::uint64_t Cai::Block::Client::block_count()
