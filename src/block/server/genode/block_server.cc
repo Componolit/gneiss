@@ -23,7 +23,12 @@ Cai::Block::Block_session_component::Block_session_component(
         Genode::Entrypoint &ep,
         Genode::Signal_context_capability sigh,
         Cai::Block::Server &server) :
-    Request_stream(rm, ds, ep, sigh, info()),
+    Request_stream(rm, ds, ep, sigh, ::Block::Session::Info{
+                Get_attr_64(server._block_size, server.get_instance()),
+                Get_attr_64(server._block_size, server.get_instance()),
+                0,
+                server.writable()
+            }),
     _ep(ep),
     _server(server)
 {
