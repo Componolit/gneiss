@@ -1,22 +1,23 @@
 
-with Cai.Types;
-with Cai.Component;
-with Cai.Block;
-with Cai.Block.Client;
-with Cai.Block.Dispatcher;
-with Cai.Block.Server;
+with Componolit.Interfaces.Types;
+with Componolit.Interfaces.Component;
+with Componolit.Interfaces.Block;
+with Componolit.Interfaces.Block.Client;
+with Componolit.Interfaces.Block.Dispatcher;
+with Componolit.Interfaces.Block.Server;
 
 package Component is
 
-   procedure Construct (Cap : Cai.Types.Capability);
+   procedure Construct (Cap : Componolit.Interfaces.Types.Capability);
    procedure Destruct;
 
-   package Proxy_Component is new Cai.Component (Construct, Destruct);
+   package Main is new Componolit.Interfaces.Component (Construct, Destruct);
 
    type Byte is mod 2 ** 8;
    type Buffer is array (Long_Integer range <>) of Byte;
+   subtype Unsigned_Long is Long_Integer range 0 .. Long_Integer'Last;
 
-   package Block is new Cai.Block (Byte, Long_Integer, Buffer);
+   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer);
 
    procedure Event;
    procedure Dispatch;
