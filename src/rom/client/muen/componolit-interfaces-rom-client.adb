@@ -13,16 +13,14 @@ is
    function Create return Client_Session
    is
    begin
-      return Client_Session (CIM.Invalid_Index);
+      return Client_Session'(Mem => Musinfo.Null_Memregion);
    end Create;
 
    function Initialized (C : Client_Session) return Boolean
    is
-      use type CIM.Session_Index;
-      use type CIM.Session_Type;
-      I : constant CIM.Session_Index := CIM.Session_Index (C);
+      use type Musinfo.Memregion_Type;
    begin
-      return I /= CIM.Invalid_Index and then CIM.Session_Registry (I).Session = CIM.Rom;
+      return C.Mem /= Musinfo.Null_Memregion;
    end Initialized;
 
    procedure Initialize (C    : in out Client_Session;
@@ -30,25 +28,10 @@ is
                          Name :        String := "")
    is
       pragma Unreferenced (Cap);
-      use type CIM.Session_Index;
-      use type CIM.Session_Type;
-      use type Musinfo.Memregion_Type;
       Rom_Name : constant Musinfo.Name_Type :=
          (if Name = "" then CIM.String_To_Name ("config") else CIM.String_To_Name (Name));
-      SI : CIM.Session_Index := CIM.Invalid_Index;
-      Memory : constant Musinfo.Memregion_Type := Musinfo.Instance.Memory_By_Name (Rom_Name);
    begin
-      for I in CIM.Session_Registry'Range loop
-         if CIM.Session_Registry (I).Session = CIM.None then
-            SI := I;
-            exit;
-         end if;
-      end loop;
-      if SI /= CIM.Invalid_Index and then Memory /= Musinfo.Null_Memregion then
-         CIM.Session_Registry (SI) := CIM.Session_Element'(Session  => CIM.Rom,
-                                                              Rom_Mem  => Memory);
-         C := Client_Session (SI);
-      end if;
+      C.Mem := Musinfo.Instance.Memory_By_Name (Rom_Name);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
@@ -56,10 +39,9 @@ is
       use type Standard.Interfaces.Unsigned_64;
       function Max_Index (Size : Standard.Interfaces.Unsigned_64) return Index is
          (if Standard.Interfaces.Unsigned_64 (Index'Last) > Size then Index (Size) else Index'Last);
-      I : constant Index :=
-         Max_Index (CIM.Session_Registry (CIM.Session_Index (C)).Rom_Mem.Size / (Element'Size / 8));
+      I : constant Index := Max_Index (C.Mem.Size / (Element'Size / 8));
       B : Buffer (Index'First .. Index'First + I - 1) with
-         Address => System'To_Address (CIM.Session_Registry (CIM.Session_Index (C)).Rom_Mem.Address);
+         Address => System'To_Address (C.Mem.Address);
    begin
       Parse (B);
    end Load;
@@ -67,8 +49,7 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      CIM.Session_Registry (CIM.Session_Index (C)) := CIM.Session_Element'(Session => CIM.None);
-      C := Client_Session (CIM.Invalid_Index);
+      C.Mem := Musinfo.Null_Memregion;
    end Finalize;
 
 end Componolit.Interfaces.Rom.Client;
