@@ -11,10 +11,12 @@
 
 with Componolit.Interfaces.Types;
 
+generic
 pragma Warnings (Off, "procedure ""Event"" is not referenced");
+pragma Warnings (Off, "procedure ""Read"" is not referenced");
+pragma Warnings (Off, "procedure ""Write"" is not referenced");
 --  Supress unreferenced warnings since not every platform needs this procedure
 
-generic
    --  Block client event handler
    with procedure Event;
 
@@ -45,6 +47,9 @@ generic
                          Start  :     Id;
                          Length :     Count;
                          Data   : out Buffer);
+pragma Warnings (On, "procedure ""Event"" is not referenced");
+pragma Warnings (On, "procedure ""Read"" is not referenced");
+pragma Warnings (On, "procedure ""Write"" is not referenced");
 package Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
@@ -63,7 +68,7 @@ is
       case Kind is
          when None =>
             null;
-         when Read .. Trim =>
+         when Read | Write | Sync | Trim =>
             Start  : Id;
             Length : Count;
             Status : Request_Status;
@@ -115,7 +120,8 @@ is
    --  @param R  Request to check
    function Supported (I : Client_Instance;
                        R : Request_Kind) return Boolean with
-      Ghost;
+      Ghost,
+      Import;
 
    --  Checks if client supports handling the request (permanent property)
    --
@@ -142,7 +148,7 @@ is
    procedure Enqueue (C : in out Client_Session;
                       R :        Request) with
       Pre  => Initialized (C)
-              and then R.Kind in Read .. Trim
+              and then R.Kind in Read | Write | Sync | Trim
               and then R.Status = Raw
               and then Supported (C, R.Kind)
               and then Ready (C, R),

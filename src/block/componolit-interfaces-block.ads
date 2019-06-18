@@ -11,10 +11,10 @@
 
 private with Componolit.Interfaces.Internal.Block;
 
+generic
 pragma Warnings (Off, "type ""Buffer"" is not referenced");
 --  Buffer is only provided to be used in child packages
 
-generic
    --  Buffer element type, must be 8bit in size
    type Byte is (<>);
 
@@ -23,6 +23,7 @@ generic
 
    --  Buffer type to be used with all operations of this instance
    type Buffer is array (Buffer_Index range <>) of Byte;
+pragma Warnings (On, "type ""Buffer"" is not referenced");
 package Componolit.Interfaces.Block
    with SPARK_Mode
 is
