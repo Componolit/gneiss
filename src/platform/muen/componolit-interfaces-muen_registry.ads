@@ -1,12 +1,14 @@
 
 with System;
 with Componolit.Interfaces.Muen;
+with Componolit.Interfaces.Muen_Block;
 with Musinfo;
 
 package Componolit.Interfaces.Muen_Registry with
    SPARK_Mode
 is
    package CIM renames Componolit.Interfaces.Muen;
+   package CIMB renames Componolit.Interfaces.Muen_Block;
 
    type Session_Entry (Kind : CIM.Async_Session_Type := CIM.None) is record
       case Kind is
@@ -14,6 +16,7 @@ is
             null;
          when CIM.Block =>
             Response_Memory : Musinfo.Memregion_Type;
+            Response_Reader : CIMB.Response_Channel.Reader_Type;
             Block_Event     : System.Address;
       end case;
    end record;
