@@ -26,4 +26,15 @@ is
       return Muname;
    end String_To_Name;
 
+   function Str_Cut (S : String) return String
+   is
+      Last : Positive := S'First;
+   begin
+      for I in S'Range loop
+         exit when S (I) = Character'First;
+         Last := I;
+      end loop;
+      return S (S'First .. Last);
+   end Str_Cut;
+
 end Componolit.Interfaces.Muen;

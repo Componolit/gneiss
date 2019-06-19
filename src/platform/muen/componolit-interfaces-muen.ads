@@ -15,6 +15,8 @@ is
 
    function String_To_Name (Name : String) return Musinfo.Name_Type;
 
+   function Str_Cut (S : String) return String;
+
    Component_Status : Status := Running;
 
 end Componolit.Interfaces.Muen;
