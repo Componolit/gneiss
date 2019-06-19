@@ -1,8 +1,7 @@
 
 with Interfaces;
-with Muchannel;
-with Muchannel.Readers;
-with Muchannel.Writer;
+with Componolit.Interfaces.Muchannel_Writer;
+with Componolit.Interfaces.Muchannel_Reader;
 
 package Componolit.Interfaces.Muen_Block with
    SPARK_Mode
@@ -18,7 +17,7 @@ is
    type Event_Data_Type is array (1 .. Event_Block_Size) of Standard.Interfaces.Unsigned_8;
 
    type Command_Type is (Sync, Size) with
-      Size => 32;
+      Size => 64;
    for Command_Type use (Sync => 0, Size => 1);
 
    type Event_Type is (Read,
@@ -34,7 +33,7 @@ is
    type Event is record
       Kind  : Event_Type;
       Error : Integer;
-      Id    : Standard.Interfaces.Unsigned_64;
+      Id    : Command_Type;
       Priv  : Standard.Interfaces.Unsigned_64;
       Data  : Event_Data_Type;
    end record;
@@ -49,22 +48,20 @@ is
 
    Null_Event : constant Event := (Kind  => Read,
                                    Error => 0,
-                                   Id    => 0,
+                                   Id    => Sync,
                                    Priv  => 0,
                                    Data  => (others => 0));
 
-   package Request_Channel is new Muchannel (Element_Type => Event,
-                                             Elements     => 16#0010_0000# / (Event'Size / 8),
-                                             Null_Element => Null_Event,
-                                             Protocol     => 16#9570_208d_ca77_db19#);
+   package Request_Channel is new Componolit.Interfaces.Muchannel_Writer
+      (Element_Type => Event,
+       Elements     => 16#0010_0000# / (Event'Size / 8),
+       Null_Element => Null_Event,
+       Protocol     => 16#9570_208d_ca77_db19#);
 
-   package Response_Channel is new Muchannel (Element_Type => Event,
-                                              Elements     => 16#0010_0000# / (Event'Size / 8),
-                                              Null_Element => Null_Event,
-                                              Protocol     => 16#9851_be32_82fe_f0dc#);
-
-   package Request_Writer is new Request_Channel.Writer;
-
-   package Response_Reader is new Response_Channel.Readers;
+   package Response_Channel is new Componolit.Interfaces.Muchannel_Reader
+      (Element_Type => Event,
+       Elements     => 16#0010_0000# / (Event'Size / 8),
+       Null_Element => Null_Event,
+       Protocol     => 16#9851_be32_82fe_f0dc#);
 
 end Componolit.Interfaces.Muen_Block;
