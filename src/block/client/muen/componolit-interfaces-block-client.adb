@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Conversion;
+with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Componolit.Interfaces.Muen_Registry;
@@ -198,29 +199,89 @@ is
 
    function Next (C : Client_Session) return Request
    is
-      pragma Unreferenced (C);
+      use type Blk.Event;
+      Res_Mem : constant Musinfo.Memregion_Type :=
+         Reg.Registry (C.Registry_Index).Response_Memory;
+      Reader  : constant Blk.Response_Channel.Reader_Type :=
+         Reg.Registry (C.Registry_Index).Response_Reader;
+      Peek_Event : Blk.Event;
    begin
+      for I in Natural range 0 .. Blk.Element_Count loop
+         Peek_Event := Blk.Response_Channel.Peek (Res_Mem, Reader,
+                                                  Standard.Interfaces.Unsigned_64 (I));
+         case Peek_Event.Kind is
+            when Blk.Read =>
+               exit when Peek_Event = Blk.Null_Event;
+               return Request'(Kind => Read,
+                               Priv => Null_Data,
+                               Start => Id (Peek_Event.Id),
+                               Length => 1,
+                               Status => (if Peek_Event.Error = 0 then Ok else Error));
+            when Blk.Write =>
+               return Request'(Kind => Read,
+                               Priv => Null_Data,
+                               Start => Id (Peek_Event.Id),
+                               Length => 1,
+                               Status => (if Peek_Event.Error = 0 then Ok else Error));
+            when others =>
+               null;
+         end case;
+      end loop;
       return Request'(Kind => None,
                       Priv => Null_Data);
    end Next;
 
+   pragma Warnings (Off, "mode could be ""in"" instead of ""in out""");
    procedure Read (C : in out Client_Session;
                    R :        Request)
    is
-      pragma Unreferenced (C);
-      pragma Unreferenced (R);
+      use type Blk.Event_Type;
+      Res_Mem : constant Musinfo.Memregion_Type :=
+         Reg.Registry (C.Registry_Index).Response_Memory;
+      Reader  : constant Blk.Response_Channel.Reader_Type :=
+         Reg.Registry (C.Registry_Index).Response_Reader;
+      Peek_Event : Blk.Event;
    begin
-      null;
+      for I in Natural range 0 .. Blk.Element_Count loop
+         Peek_Event := Blk.Response_Channel.Peek (Res_Mem, Reader,
+                                                  Standard.Interfaces.Unsigned_64 (I));
+         if Peek_Event.Kind = Blk.Read and R.Start = Id (Peek_Event.Id) then
+            Read (Get_Instance (C),
+                  Blk.Event_Block_Size,
+                  Id (Peek_Event.Id),
+                  1,
+                  Convert_Buffer (Peek_Event.Data));
+         end if;
+      end loop;
    end Read;
+   pragma Warnings (On, "mode could be ""in"" instead of ""in out""");
 
+   pragma Warnings (Off, "formal parameter ""R"" is not modified");
    procedure Release (C : in out Client_Session;
                       R : in out Request)
    is
-      pragma Unreferenced (C);
-      pragma Unreferenced (R);
+      use type Blk.Event_Type;
+      Res_Mem : constant Musinfo.Memregion_Type :=
+         Reg.Registry (C.Registry_Index).Response_Memory;
+      Peek_Event : Blk.Event;
+      Result : Blk.Response_Channel.Result_Type;
    begin
-      null;
+      for I in Natural range 0 .. Blk.Element_Count loop
+         Blk.Response_Channel.Read (Res_Mem,
+                                    Reg.Registry (C.Registry_Index).Response_Reader,
+                                    Peek_Event,
+                                    Result);
+         case R.Kind is
+            when Read =>
+               exit when Peek_Event.Kind = Blk.Read and Id (Peek_Event.Id) = R.Start;
+            when Write =>
+               exit when Peek_Event.Kind = Blk.Write and Id (Peek_Event.Id) = R.Start;
+            when others =>
+               null;
+         end case;
+      end loop;
    end Release;
+   pragma Warnings (On, "formal parameter ""R"" is not modified");
 
    function Writable (C : Client_Session) return Boolean
    is

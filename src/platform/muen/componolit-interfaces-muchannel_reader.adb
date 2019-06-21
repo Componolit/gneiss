@@ -1,4 +1,5 @@
 
+with Ada.Unchecked_Conversion;
 with System;
 
 package body Componolit.Interfaces.Muchannel_Reader with
@@ -49,5 +50,40 @@ is
    begin
       Mureader.Drain (Chn, Mureader.Reader_Type (Reader));
    end Drain;
+
+   function Peek (Mem    : Musinfo.Memregion_Type;
+                  Reader : Reader_Type;
+                  Skip   : Standard.Interfaces.Unsigned_64 := 0) return Element_Type with
+      Spark_Mode => Off
+   is
+      Chn : Peek_Channel_Type with
+         Address => System'To_Address (Mem.Address);
+      function Convert_Reader is new Ada.Unchecked_Conversion (Reader_Type, Peek_Reader_Type);
+      Rdr : constant Peek_Reader_Type := Convert_Reader (Reader);
+   begin
+      return Peek (Chn, Rdr, Channel.Header_Field_Type (Skip));
+   end Peek;
+
+   function Peek (Chn : Peek_Channel_Type;
+                  Rdr : Peek_Reader_Type;
+                  Skp : Channel.Header_Field_Type) return Element_Type
+   is
+      use type Channel.Header_Field_Type;
+      Position : constant Peek_Data_Range :=
+         Peek_Data_Range ((Rdr.RC + Skp) mod Channel.Header_Field_Type (Elements));
+   begin
+      if
+         Chn.Header.Epoch          /= Channel.Header_Field_Type'First
+         and then Chn.Header.Epoch  = Rdr.Epoch
+         and then Rdr.Protocol      = Channel.Header_Field_Type (Protocol)
+         and then Rdr.Size          = Chn.Header.Size
+         and then Rdr.Elements      = Chn.Header.Elements
+         and then Rdr.RC + Skp      < Chn.Header.WC
+      then
+         return Chn.Data (Position);
+      else
+         return Null_Element;
+      end if;
+   end Peek;
 
 end Componolit.Interfaces.Muchannel_Reader;
