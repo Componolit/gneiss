@@ -1,5 +1,6 @@
 
 with Musinfo;
+with Interfaces;
 
 package Componolit.Interfaces.Muen with
    SPARK_Mode
@@ -18,5 +19,7 @@ is
    function Str_Cut (S : String) return String;
 
    Component_Status : Status := Running;
+
+   procedure Yield (Epoch : in out Standard.Interfaces.Unsigned_64);
 
 end Componolit.Interfaces.Muen;
