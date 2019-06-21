@@ -1,3 +1,5 @@
+with Musinfo.Instance;
+
 package body Componolit.Interfaces.Muen with
    SPARK_Mode
 is
@@ -36,5 +38,17 @@ is
       end loop;
       return S (S'First .. Last);
    end Str_Cut;
+
+   procedure Yield (Epoch : in out Standard.Interfaces.Unsigned_64)
+   is
+      use type Standard.Interfaces.Unsigned_64;
+      Current : Standard.Interfaces.Unsigned_64;
+   begin
+      loop
+         Current := Musinfo.Instance.TSC_Schedule_Start;
+         exit when Epoch /= Current;
+      end loop;
+      Epoch := Current;
+   end Yield;
 
 end Componolit.Interfaces.Muen;

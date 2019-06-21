@@ -10,6 +10,8 @@ is
    package CIM renames Componolit.Interfaces.Muen;
    package CIMB renames Componolit.Interfaces.Muen_Block;
 
+   use type CIM.Async_Session_Type;
+
    type Session_Entry (Kind : CIM.Async_Session_Type := CIM.None) is record
       case Kind is
          when CIM.None =>
@@ -23,5 +25,8 @@ is
 
    type Session_Registry is array (CIM.Session_Index range 1 .. CIM.Session_Index'Last) of Session_Entry;
    Registry : Session_Registry := (others => Session_Entry'(Kind => CIM.None));
+
+   procedure Call_Block_Event (S : Session_Entry) with
+      Pre => S.Kind = CIM.Block;
 
 end Componolit.Interfaces.Muen_Registry;
