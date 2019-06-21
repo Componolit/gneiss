@@ -1,6 +1,5 @@
 
 with Ada.Unchecked_Conversion;
-with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Componolit.Interfaces.Muen_Registry;
@@ -14,6 +13,10 @@ is
    package CIM renames Componolit.Interfaces.Muen;
    package Blk renames Componolit.Interfaces.Muen_Block;
    package Reg renames Componolit.Interfaces.Muen_Registry;
+
+   subtype Block_Buffer is Buffer (1 .. 4096);
+   function Convert_Buffer is new Ada.Unchecked_Conversion (Blk.Raw_Data_Type, Block_Buffer);
+   function Convert_Buffer is new Ada.Unchecked_Conversion (Block_Buffer, Blk.Raw_Data_Type);
 
    function Initialized (C : Client_Session) return Boolean
    is
@@ -33,7 +36,8 @@ is
       return Client_Session'(Name            => Blk.Null_Name,
                              Count           => 0,
                              Request_Memory  => Musinfo.Null_Memregion,
-                             Registry_Index  => CIM.Invalid_Index);
+                             Registry_Index  => CIM.Invalid_Index,
+                             Queued          => 0);
    end Create;
 
    function Get_Instance (C : Client_Session) return Client_Instance
@@ -65,7 +69,8 @@ is
    is
       use type CIM.Async_Session_Type;
       use type CIM.Session_Index;
-      use type Blk.Command_Type;
+      use type Blk.Sector;
+      use type Blk.Count;
       use type Blk.Event_Type;
       use type Blk.Response_Channel.Result_Type;
       pragma Unreferenced (Cap);
@@ -83,9 +88,6 @@ is
                                  Data  => (others => 0));
       Reader     : Blk.Response_Channel.Reader_Type := Blk.Response_Channel.Null_Reader;
       Result     : Blk.Response_Channel.Result_Type := Blk.Response_Channel.Inactive;
-      type Command_Data is array (1 .. 8) of Standard.Interfaces.Unsigned_8;
-      function Event_Data_To_Count is new Ada.Unchecked_Conversion (Command_Data, Blk.Count);
-      Cmd_Data : Command_Data;
    begin
       if Path'Length <= Blk.Session_Name'Length then
          for I in Reg.Registry'Range loop
@@ -120,18 +122,10 @@ is
                                                           Response_Memory => Res_Mem,
                                                           Response_Reader => Reader,
                                                           Block_Event     => Event'Address);
-               Cmd_Data             := (Size_Event.Data (1),
-                                        Size_Event.Data (2),
-                                        Size_Event.Data (3),
-                                        Size_Event.Data (4),
-                                        Size_Event.Data (5),
-                                        Size_Event.Data (6),
-                                        Size_Event.Data (7),
-                                        Size_Event.Data (8));
                C.Registry_Index     := Index;
                C.Name               := Name;
                C.Request_Memory     := Req_Mem;
-               C.Count              := Event_Data_To_Count (Cmd_Data);
+               C.Count              := Blk.Get_Size_Command_Data (Size_Event.Data).Value / 8;
             end if;
          end if;
       end if;
@@ -148,34 +142,58 @@ is
                        R : Request_Kind) return Boolean
    is
       pragma Unreferenced (C);
-      pragma Unreferenced (R);
    begin
-      return False;
+      return R = Read or R = Write or R = Sync;
    end Supported;
 
    function Ready (C : Client_Session;
                    R : Request) return Boolean
    is
-      pragma Unreferenced (C);
-      pragma Unreferenced (R);
    begin
-      return False;
+      return C.Queued < Blk.Element_Count and R.Length = 1;
    end Ready;
+
+   Enqueue_Buffer : Block_Buffer;
 
    procedure Enqueue (C : in out Client_Session;
                       R :        Request)
    is
-      pragma Unreferenced (C);
-      pragma Unreferenced (R);
+      Ev : Blk.Event := Blk.Null_Event;
    begin
-      null;
+      Enqueue_Buffer := (others => Byte'First);
+      case R.Kind is
+         when Read =>
+            Ev.Kind  := Blk.Read;
+            Ev.Error := 0;
+            Ev.Id    := Blk.Sector (R.Start);
+            Ev.Priv  := 0;
+         when Write =>
+            Ev.Kind  := Blk.Write;
+            Ev.Error := 0;
+            Ev.Id    := Blk.Sector (R.Start);
+            Ev.Priv  := 0;
+            Write (Get_Instance (C),
+                   Size (Blk.Event_Block_Size),
+                   R.Start,
+                   1,
+                   Enqueue_Buffer);
+            Ev.Data  := Convert_Buffer (Enqueue_Buffer);
+         when Sync =>
+            Ev.Kind  := Blk.Command;
+            Ev.Error := 0;
+            Ev.Id    := Blk.Sync;
+            Ev.Priv  := 0;
+         when others =>
+            return;
+      end case;
+      Blk.Request_Channel.Write (C.Request_Memory, Ev);
+      C.Queued := C.Queued + 1;
    end Enqueue;
 
    procedure Submit (C : in out Client_Session)
    is
-      pragma Unreferenced (C);
    begin
-      null;
+      C.Queued := 0;
    end Submit;
 
    function Next (C : Client_Session) return Request
@@ -221,14 +239,14 @@ is
    is
       pragma Unreferenced (C);
    begin
-      return 512;
+      return Blk.Event_Block_Size;
    end Block_Size;
 
    function Maximum_Transfer_Size (C : Client_Session) return Byte_Length
    is
       pragma Unreferenced (C);
    begin
-      return 0;
+      return Blk.Event_Block_Size;
    end Maximum_Transfer_Size;
 
 end Componolit.Interfaces.Block.Client;
