@@ -15,6 +15,7 @@ is
       Count           : Componolit.Interfaces.Muen_Block.Count;
       Request_Memory  : Musinfo.Memregion_Type;
       Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
+      Queued          : Natural;
    end record;
 
    type Dispatcher_Session is null record;
