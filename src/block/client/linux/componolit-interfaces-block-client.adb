@@ -137,20 +137,12 @@ is
          External_Name => "block_client_supported";
    begin
       return C_Supported (C.Instance, (case R is
-                                       when None  => Standard.C.Block.None,
-                                       when Read  => Standard.C.Block.Read,
-                                       when Write => Standard.C.Block.Write,
-                                       when Sync  => Standard.C.Block.Sync,
-                                       when Trim  => Standard.C.Block.Trim)) = 1;
-   end Supported;
-
-   function Supported (I : Client_Instance;
-                       R : Request_Kind) return Boolean
-   is
-      pragma Unreferenced (I);
-      pragma Unreferenced (R);
-   begin
-      return False;
+                                       when None      => Standard.C.Block.None,
+                                       when Read      => Standard.C.Block.Read,
+                                       when Write     => Standard.C.Block.Write,
+                                       when Sync      => Standard.C.Block.Sync,
+                                       when Trim      => Standard.C.Block.Trim,
+                                       when Undefined => Standard.C.Block.None)) = 1;
    end Supported;
 
    ------------------
@@ -234,7 +226,9 @@ is
          External_Name => "block_client_release";
       Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      C_Release (C.Instance, Req'Address);
+      if R.Kind /= None and R.Kind /= Undefined then
+         C_Release (C.Instance, Req'Address);
+      end if;
    end Release;
 
    --------------
@@ -294,18 +288,19 @@ is
       subtype C_Private_Data is C.Uint8_T_Array (1 .. 16);
       function Convert_Priv is new Ada.Unchecked_Conversion (Private_Data, C_Private_Data);
       Req : C.Block.Request := (Kind   => (case R.Kind is
-                                           when None  => C.Block.None,
-                                           when Read  => C.Block.Read,
-                                           when Write => C.Block.Write,
-                                           when Sync  => C.Block.Sync,
-                                           when Trim  => C.Block.Trim),
+                                           when None      => C.Block.None,
+                                           when Read      => C.Block.Read,
+                                           when Write     => C.Block.Write,
+                                           when Sync      => C.Block.Sync,
+                                           when Trim      => C.Block.Trim,
+                                           when Undefined => C.Block.None),
                                 Priv   => Convert_Priv (R.Priv),
                                 Start  => 0,
                                 Length => 0,
                                 Status => C.Block.Raw);
    begin
       case R.Kind is
-         when None =>
+         when None | Undefined =>
             null;
          when Read .. Trim =>
             Req.Start  := C.Uint64_T (R.Start);
@@ -334,7 +329,7 @@ is
    begin
       Req.Priv := Convert_Priv (R.Priv);
       case Req.Kind is
-         when None =>
+         when None | Undefined =>
             null;
          when Read .. Trim =>
             Req.Start  := Id (R.Start);

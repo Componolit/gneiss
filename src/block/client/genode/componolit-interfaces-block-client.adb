@@ -25,11 +25,12 @@ is
                             Status : Componolit.Interfaces.Block.Request_Status) return Request
    is
       R : Request (Kind => (case Kind is
-                            when Componolit.Interfaces.Block.None  => Componolit.Interfaces.Block.None,
-                            when Componolit.Interfaces.Block.Read  => Componolit.Interfaces.Block.Read,
-                            when Componolit.Interfaces.Block.Write => Componolit.Interfaces.Block.Write,
-                            when Componolit.Interfaces.Block.Sync  => Componolit.Interfaces.Block.Sync,
-                            when Componolit.Interfaces.Block.Trim  => Componolit.Interfaces.Block.Trim));
+                            when Componolit.Interfaces.Block.None      => Componolit.Interfaces.Block.None,
+                            when Componolit.Interfaces.Block.Read      => Componolit.Interfaces.Block.Read,
+                            when Componolit.Interfaces.Block.Write     => Componolit.Interfaces.Block.Write,
+                            when Componolit.Interfaces.Block.Sync      => Componolit.Interfaces.Block.Sync,
+                            when Componolit.Interfaces.Block.Trim      => Componolit.Interfaces.Block.Trim,
+                            when Componolit.Interfaces.Block.Undefined => Componolit.Interfaces.Block.Undefined));
    begin
       R.Priv := Priv;
       case R.Kind is
@@ -143,25 +144,17 @@ is
       return Cxx.Block.Client.Ready (C.Instance, Client_Util.Convert_Request (R)) = Cxx.Bool'Val (1);
    end Ready;
 
-   function Supported (I : Client_Instance;
-                       R : Request_Kind) return Boolean
-   is
-      pragma Unreferenced (I);
-      pragma Unreferenced (R);
-   begin
-      return False;
-   end Supported;
-
    function Supported (C : Client_Session;
                        R : Request_Kind) return Boolean
    is
    begin
       return Cxx.Block.Client.Supported (C.Instance, (case R is
-                                                      when None  => Cxx.Block.None,
-                                                      when Read  => Cxx.Block.Read,
-                                                      when Write => Cxx.Block.Write,
-                                                      when Sync  => Cxx.Block.Sync,
-                                                      when Trim  => Cxx.Block.Trim)) = Cxx.Bool'Val (1);
+                                                      when None      => Cxx.Block.None,
+                                                      when Read      => Cxx.Block.Read,
+                                                      when Write     => Cxx.Block.Write,
+                                                      when Sync      => Cxx.Block.Sync,
+                                                      when Trim      => Cxx.Block.Trim,
+                                                      when Undefined => Cxx.Block.None)) = Cxx.Bool'Val (1);
    end Supported;
 
    procedure Enqueue (C : in out Client_Session;
@@ -198,7 +191,9 @@ is
    is
    pragma Warnings (On, "formal parameter ""R"" is not modified");
    begin
-      Cxx.Block.Client.Release (C.Instance, Client_Util.Convert_Request (R));
+      if R.Kind /= None and R.Kind /= Undefined then
+         Cxx.Block.Client.Release (C.Instance, Client_Util.Convert_Request (R));
+      end if;
    end Release;
 
    function Writable (C : Client_Session) return Boolean

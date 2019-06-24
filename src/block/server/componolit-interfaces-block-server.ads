@@ -75,7 +75,7 @@ is
    type Request (Kind : Request_Kind := None) is record
       Priv : Private_Data;
       case Kind is
-         when None =>
+         when None | Undefined =>
             null;
          when Read .. Trim =>
             Start  : Id;
