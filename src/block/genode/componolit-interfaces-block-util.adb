@@ -11,14 +11,15 @@ package body Componolit.Interfaces.Block.Util is
       Req : Cxx.Block.Request.Class;
    begin
       Req.Kind := (case Get_Kind (I) is
-                   when Componolit.Interfaces.Block.None  => Cxx.Block.None,
-                   when Componolit.Interfaces.Block.Sync  => Cxx.Block.Sync,
-                   when Componolit.Interfaces.Block.Read  => Cxx.Block.Read,
-                   when Componolit.Interfaces.Block.Write => Cxx.Block.Write,
-                   when Componolit.Interfaces.Block.Trim  => Cxx.Block.Trim);
+                   when Componolit.Interfaces.Block.None      => Cxx.Block.None,
+                   when Componolit.Interfaces.Block.Sync      => Cxx.Block.Sync,
+                   when Componolit.Interfaces.Block.Read      => Cxx.Block.Read,
+                   when Componolit.Interfaces.Block.Write     => Cxx.Block.Write,
+                   when Componolit.Interfaces.Block.Trim      => Cxx.Block.Trim,
+                   when Componolit.Interfaces.Block.Undefined => Cxx.Block.None);
       Req.Uid := Convert_Uid (Get_Priv (I));
       case Get_Kind (I) is
-         when Componolit.Interfaces.Block.None =>
+         when Componolit.Interfaces.Block.None | Componolit.Interfaces.Block.Undefined =>
             Req.Start  := 0;
             Req.Length := 0;
             Req.Status := Cxx.Block.Raw;

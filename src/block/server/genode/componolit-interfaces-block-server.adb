@@ -22,11 +22,12 @@ is
                             Status : Componolit.Interfaces.Block.Request_Status) return Request
    is
       R : Request (Kind => (case Kind is
-                            when Componolit.Interfaces.Block.None  => Componolit.Interfaces.Block.None,
-                            when Componolit.Interfaces.Block.Read  => Componolit.Interfaces.Block.Read,
-                            when Componolit.Interfaces.Block.Write => Componolit.Interfaces.Block.Write,
-                            when Componolit.Interfaces.Block.Sync  => Componolit.Interfaces.Block.Sync,
-                            when Componolit.Interfaces.Block.Trim  => Componolit.Interfaces.Block.Trim));
+                            when Componolit.Interfaces.Block.None      => Componolit.Interfaces.Block.None,
+                            when Componolit.Interfaces.Block.Read      => Componolit.Interfaces.Block.Read,
+                            when Componolit.Interfaces.Block.Write     => Componolit.Interfaces.Block.Write,
+                            when Componolit.Interfaces.Block.Sync      => Componolit.Interfaces.Block.Sync,
+                            when Componolit.Interfaces.Block.Trim      => Componolit.Interfaces.Block.Trim,
+                            when Componolit.Interfaces.Block.Undefined => Componolit.Interfaces.Block.Undefined));
    begin
       R.Priv := Priv;
       case R.Kind is
