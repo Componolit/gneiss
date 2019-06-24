@@ -89,9 +89,6 @@ is
                      if R.Status /= Block.Ok then
                         Componolit.Interfaces.Log.Client.Error (Log, "Write failed.");
                      end if;
-                     pragma Warnings (Off, "unused assignment to ""R""");
-                     Block_Client.Release (Client, R);
-                     pragma Warnings (On, "unused assignment to ""R""");
                      S.Acked := S.Acked + 1;
                   when Block.Read =>
                      if R.Status = Block.Ok and R.Length = 1 then
@@ -99,15 +96,14 @@ is
                      else
                         Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
                      end if;
-                     pragma Warnings (Off, "unused assignment to ""R""");
-                     Block_Client.Release (Client, R);
-                     pragma Warnings (On, "unused assignment to ""R""");
                      S.Acked := S.Acked + 1;
-                  when Block.None =>
-                     exit;
                   when others =>
-                     Componolit.Interfaces.Log.Client.Warning (Log, "Write_Single: Unexpected request");
+                     null;
                end case;
+               --  pragma Warnings (Off, "unused assignment to ""R""");
+               Block_Client.Release (Client, R);
+               --  pragma Warnings (On, "unused assignment to ""R""");
+               exit when R.Kind = Block.None;
             end;
          end loop;
       end if;
