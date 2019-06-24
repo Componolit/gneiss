@@ -66,7 +66,7 @@ is
    type Request (Kind : Request_Kind := None) is record
       Priv : Private_Data;
       case Kind is
-         when None =>
+         when None | Undefined =>
             null;
          when Read | Write | Sync | Trim =>
             Start  : Id;
@@ -131,7 +131,9 @@ is
                        R : Request_Kind) return Boolean with
       Annotate => (GNATprove, Terminating),
       Pre      => Initialized (C),
-      Post     => Supported'Result = Supported (Get_Instance (C), R);
+      Contract_Cases =>
+         (R = None or R = Undefined => Supported'Result = False,
+          others                    => Supported'Result = Supported (Get_Instance (C), R));
 
    --  Checks if client is ready to enqueue the request (temporary property)
    --
@@ -140,6 +142,19 @@ is
    function Ready (C : Client_Session;
                    R : Request) return Boolean with
       Pre => Initialized (C) and then Supported (C, R.Kind);
+
+   --  Get the next acknowledged request
+   --
+   --  The request is not removed from the queue and subsequent calls of this function have the same result.
+   --  If no request is available Request.Kind is None.
+   --
+   --  @param C  Client session instance
+   function Next (C : Client_Session) return Request with
+      Volatile_Function,
+      Pre  => Initialized (C),
+      Post => (if Next'Result.Kind /= None and Next'Result.Kind /= Undefined
+               then Next'Result.Status = Ok or Next'Result.Status = Error
+               else True);
 
    --  Enqueue request
    --
@@ -157,6 +172,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Next (C)'Old                  = Next (C)
               and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
 
    --  Submit all enqueued requests for processing
@@ -169,20 +185,8 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Next (C)'Old                  = Next (C)
               and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
-
-   --  Get the next acknowledged request
-   --
-   --  The request is not removed from the queue and subsequent calls of this function have the same result.
-   --  If no request is available Request.Kind is None.
-   --
-   --  @param C  Client session instance
-   function Next (C : Client_Session) return Request with
-      Volatile_Function,
-      Pre  => Initialized (C),
-      Post => (if Next'Result.Kind /= None
-               then Next'Result.Status = Ok or Next'Result.Status = Error
-               else True);
 
    --  Read the returned data from a successfully acknowledged read request
    --
@@ -198,6 +202,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Next (C)'Old                  = Next (C)
               and (for all K in Request_Kind => Supported (Get_Instance (C)'Old, K) = Supported (Get_Instance (C), K));
 
    --  Release a request returned by Next
@@ -210,8 +215,7 @@ is
    procedure Release (C : in out Client_Session;
                       R : in out Request) with
       Pre  => Initialized (C)
-              and then R.Kind /= None
-              and then (R.Status = Ok or R.Status = Error),
+              and then (if R.Kind /= None and R.Kind /= Undefined then R.Status = Ok or R.Status = Error),
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)

@@ -117,12 +117,13 @@ is
 
    --  Type of a block request
    --
-   --  @value None   Invalid request
-   --  @value Read   Read request
-   --  @value Write  Write request
-   --  @value Sync   Sync request
-   --  @value Trim   Trim request
-   type Request_Kind is (None, Read, Write, Sync, Trim);
+   --  @value None       Invalid request
+   --  @value Read       Read request
+   --  @value Write      Write request
+   --  @value Sync       Sync request
+   --  @value Trim       Trim request
+   --  @value Undefined  Platform specific request that cannot be used but needs to be handled
+   type Request_Kind is (None, Read, Write, Sync, Trim, Undefined);
 
    --  Status of a block request
    --
