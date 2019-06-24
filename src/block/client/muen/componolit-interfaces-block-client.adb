@@ -1,6 +1,5 @@
 
 with Ada.Unchecked_Conversion;
-with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Componolit.Interfaces.Muen_Registry;
@@ -38,7 +37,8 @@ is
                              Count           => 0,
                              Request_Memory  => Musinfo.Null_Memregion,
                              Registry_Index  => CIM.Invalid_Index,
-                             Queued          => 0);
+                             Queued          => 0,
+                             Latest_Response => Blk.Null_Event);
    end Create;
 
    function Get_Instance (C : Client_Session) return Client_Instance
@@ -127,6 +127,7 @@ is
                C.Name               := Name;
                C.Request_Memory     := Req_Mem;
                C.Count              := Blk.Get_Size_Command_Data (Size_Event.Data).Value / 8;
+               C.Latest_Response    := Size_Event;
             end if;
          end if;
       end if;
@@ -200,35 +201,28 @@ is
    function Next (C : Client_Session) return Request
    is
       use type Blk.Event;
-      Res_Mem : constant Musinfo.Memregion_Type :=
-         Reg.Registry (C.Registry_Index).Response_Memory;
-      Reader  : constant Blk.Response_Channel.Reader_Type :=
-         Reg.Registry (C.Registry_Index).Response_Reader;
-      Peek_Event : Blk.Event;
    begin
-      for I in Natural range 0 .. Blk.Element_Count loop
-         Peek_Event := Blk.Response_Channel.Peek (Res_Mem, Reader,
-                                                  Standard.Interfaces.Unsigned_64 (I));
-         case Peek_Event.Kind is
-            when Blk.Read =>
-               exit when Peek_Event = Blk.Null_Event;
-               return Request'(Kind => Read,
-                               Priv => Null_Data,
-                               Start => Id (Peek_Event.Id),
-                               Length => 1,
-                               Status => (if Peek_Event.Error = 0 then Ok else Error));
-            when Blk.Write =>
-               return Request'(Kind => Read,
-                               Priv => Null_Data,
-                               Start => Id (Peek_Event.Id),
-                               Length => 1,
-                               Status => (if Peek_Event.Error = 0 then Ok else Error));
-            when others =>
-               null;
-         end case;
-      end loop;
-      return Request'(Kind => None,
-                      Priv => Null_Data);
+      case C.Latest_Response.Kind is
+         when Blk.Read =>
+            if C.Latest_Response = Blk.Null_Event then
+               return Request'(Kind => None,
+                               Priv => Null_Data);
+            end if;
+            return Request'(Kind => Read,
+                            Priv => Null_Data,
+                            Start => Id (C.Latest_Response.Id),
+                            Length => 1,
+                            Status => (if C.Latest_Response.Error = 0 then Ok else Error));
+         when Blk.Write =>
+            return Request'(Kind => Write,
+                            Priv => Null_Data,
+                            Start => Id (C.Latest_Response.Id),
+                            Length => 1,
+                            Status => (if C.Latest_Response.Error = 0 then Ok else Error));
+         when others =>
+            return Request'(Kind => Undefined,
+                            Priv => Null_Data);
+      end case;
    end Next;
 
    pragma Warnings (Off, "mode could be ""in"" instead of ""in out""");
@@ -236,23 +230,14 @@ is
                    R :        Request)
    is
       use type Blk.Event_Type;
-      Res_Mem : constant Musinfo.Memregion_Type :=
-         Reg.Registry (C.Registry_Index).Response_Memory;
-      Reader  : constant Blk.Response_Channel.Reader_Type :=
-         Reg.Registry (C.Registry_Index).Response_Reader;
-      Peek_Event : Blk.Event;
    begin
-      for I in Natural range 0 .. Blk.Element_Count loop
-         Peek_Event := Blk.Response_Channel.Peek (Res_Mem, Reader,
-                                                  Standard.Interfaces.Unsigned_64 (I));
-         if Peek_Event.Kind = Blk.Read and R.Start = Id (Peek_Event.Id) then
-            Read (Get_Instance (C),
-                  Blk.Event_Block_Size,
-                  Id (Peek_Event.Id),
-                  1,
-                  Convert_Buffer (Peek_Event.Data));
-         end if;
-      end loop;
+      if C.Latest_Response.Kind = Blk.Read and R.Start = Id (C.Latest_Response.Id) then
+         Read (Get_Instance (C),
+               Blk.Event_Block_Size,
+               Id (C.Latest_Response.Id),
+               1,
+               Convert_Buffer (C.Latest_Response.Data));
+      end if;
    end Read;
    pragma Warnings (On, "mode could be ""in"" instead of ""in out""");
 
@@ -260,26 +245,14 @@ is
    procedure Release (C : in out Client_Session;
                       R : in out Request)
    is
-      use type Blk.Event_Type;
-      Res_Mem : constant Musinfo.Memregion_Type :=
-         Reg.Registry (C.Registry_Index).Response_Memory;
-      Peek_Event : Blk.Event;
+      pragma Unreferenced (R);
       Result : Blk.Response_Channel.Result_Type;
    begin
-      for I in Natural range 0 .. Blk.Element_Count loop
-         Blk.Response_Channel.Read (Res_Mem,
-                                    Reg.Registry (C.Registry_Index).Response_Reader,
-                                    Peek_Event,
-                                    Result);
-         case R.Kind is
-            when Read =>
-               exit when Peek_Event.Kind = Blk.Read and Id (Peek_Event.Id) = R.Start;
-            when Write =>
-               exit when Peek_Event.Kind = Blk.Write and Id (Peek_Event.Id) = R.Start;
-            when others =>
-               null;
-         end case;
-      end loop;
+      pragma Warnings (Off, """Result"" modified by call, but value might not be referenced");
+      Blk.Response_Channel.Read (Reg.Registry (C.Registry_Index).Response_Memory,
+                                 Reg.Registry (C.Registry_Index).Response_Reader,
+                                 C.Latest_Response, Result);
+      pragma Warnings (On, """Result"" modified by call, but value might not be referenced");
    end Release;
    pragma Warnings (On, "formal parameter ""R"" is not modified");
 
