@@ -24,8 +24,8 @@ pragma Warnings (Off, "type ""Buffer"" is not referenced");
    --  Buffer type to be used with all operations of this instance
    type Buffer is array (Buffer_Index range <>) of Byte;
 pragma Warnings (On, "type ""Buffer"" is not referenced");
-package Componolit.Interfaces.Block
-   with SPARK_Mode
+package Componolit.Interfaces.Block with
+   SPARK_Mode
 is
    pragma Compile_Time_Error (Byte'Size /= 8, "Byte must have a size of 8 bit.");
 
