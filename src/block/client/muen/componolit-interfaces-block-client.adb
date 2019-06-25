@@ -123,7 +123,7 @@ is
                Size_Event.Kind = Blk.Command and Size_Event.Id = Blk.Size
                and (Result = Blk.Response_Channel.Success or Result = Blk.Response_Channel.Epoch_Changed)
             then
-               Reg.Registry (Index) := Reg.Session_Entry'(Kind            => CIM.Block,
+               Reg.Registry (Index) := Reg.Session_Entry'(Kind            => CIM.Block_Client,
                                                           Response_Memory => Res_Mem,
                                                           Response_Reader => Reader,
                                                           Block_Event     => Event'Address);
