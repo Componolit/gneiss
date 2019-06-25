@@ -98,14 +98,18 @@ is
             end if;
          end loop;
          Name (Name'First .. Name'First + Path'Length - 1) := Blk.Session_Name (Path);
-         Req_Name := CIM.String_To_Name ("req:" & CIM.Str_Cut (String (Name)));
-         Res_Name := CIM.String_To_Name ("rsp:" & CIM.Str_Cut (String (Name)));
+         Req_Name := CIM.String_To_Name ("blk:req:" & CIM.Str_Cut (String (Name)));
+         Res_Name := CIM.String_To_Name ("blk:rsp:" & CIM.Str_Cut (String (Name)));
          Req_Mem := Musinfo.Instance.Memory_By_Name (Req_Name);
          Res_Mem := Musinfo.Instance.Memory_By_Name (Res_Name);
          if
             Index /= CIM.Invalid_Index
             and then Req_Mem /= Musinfo.Null_Memregion
             and then Res_Mem /= Musinfo.Null_Memregion
+            and then Req_Mem.Flags.Channel
+            and then Res_Mem.Flags.Channel
+            and then Req_Mem.Flags.Writable
+            and then not Res_Mem.Flags.Writable
          then
             Blk.Request_Channel.Activate (Req_Mem, Blk.Request_Channel.Channel.Header_Field_Type
                                                       (Musinfo.Instance.TSC_Schedule_Start));
