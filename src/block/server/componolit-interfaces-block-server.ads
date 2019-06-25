@@ -77,7 +77,7 @@ is
       case Kind is
          when None | Undefined =>
             null;
-         when Read .. Trim =>
+         when Read | Write | Sync | Trim =>
             Start  : Id;
             Length : Count;
             Status : Request_Status;

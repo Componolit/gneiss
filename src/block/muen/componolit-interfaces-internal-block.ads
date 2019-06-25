@@ -19,10 +19,21 @@ is
       Latest_Response : Componolit.Interfaces.Muen_Block.Event;
    end record;
 
-   type Dispatcher_Session is null record;
-   type Server_Session is null record;
+   type Dispatcher_Session is limited record
+      Registry_Index : Componolit.Interfaces.Muen.Session_Index;
+   end record;
+
+   type Server_Session is limited record
+      Name            : Componolit.Interfaces.Muen_Block.Session_Name;
+      Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
+      Request_Memory  : Musinfo.Memregion_Type;
+      Response_Memory : Musinfo.Memregion_Type;
+      Queued          : Natural;
+      Latest_Request  : Componolit.Interfaces.Muen_Block.Event;
+   end record;
+
    type Client_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
-   type Dispatcher_Instance is null record;
-   type Server_Instance is null record;
+   type Dispatcher_Instance is new Componolit.Interfaces.Muen.Session_Index;
+   type Server_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
 
 end Componolit.Interfaces.Internal.Block;

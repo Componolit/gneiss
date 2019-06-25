@@ -12,16 +12,19 @@
 with Componolit.Interfaces.Types;
 with Componolit.Interfaces.Block.Server;
 
-pragma Warnings (Off, "package ""Serv"" is not referenced");
-pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
---  Supress unreferenced warnings since not every platform needs each subprogram/package
-
 generic
+   pragma Warnings (Off, "package ""Serv"" is not referenced");
+   pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
+   --  Supress unreferenced warnings since not every platform needs each subprogram/package
+
    --  Server implementation to be registered
    with package Serv is new Componolit.Interfaces.Block.Server (<>);
 
    --  Called when a client connects or disconnects
    with procedure Dispatch;
+
+   pragma Warnings (On, "package ""Serv"" is not referenced");
+   pragma Warnings (On, "procedure ""Dispatch"" is not referenced");
 package Componolit.Interfaces.Block.Dispatcher with
    SPARK_Mode
 is
@@ -90,7 +93,7 @@ is
    procedure Session_Accept (D : in out Dispatcher_Session;
                              I : in out Server_Session;
                              L :        String) with
-      Pre  => Initialized (D),
+      Pre  => Initialized (D) and not Serv.Initialized (I),
       Post => Initialized (D);
 
    --  Garbage collects disconnected sessions
@@ -104,6 +107,6 @@ is
    procedure Session_Cleanup (D : in out Dispatcher_Session;
                               I : in out Server_Session) with
       Pre  => Initialized (D) and Serv.Initialized (I),
-      Post => Initialized (D) and not Serv.Initialized (I);
+      Post => Initialized (D);
 
 end Componolit.Interfaces.Block.Dispatcher;

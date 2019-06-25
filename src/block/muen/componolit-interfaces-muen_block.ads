@@ -15,7 +15,7 @@ is
    type Sector is range 0 .. 2 ** 63 - 1 with
       Size => 64;
 
-   type Session_Name is new String (1 .. 59);
+   type Session_Name is new String (1 .. 55);
    Null_Name : constant Session_Name := (others => Character'First);
 
    --  The sector field is used to determine the command type if the event is a command
