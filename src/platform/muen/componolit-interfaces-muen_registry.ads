@@ -16,7 +16,7 @@ is
       case Kind is
          when CIM.None =>
             null;
-         when CIM.Block =>
+         when CIM.Block_Client =>
             Response_Memory : Musinfo.Memregion_Type;
             Response_Reader : CIMB.Response_Channel.Reader_Type;
             Block_Event     : System.Address;
@@ -27,6 +27,6 @@ is
    Registry : Session_Registry := (others => Session_Entry'(Kind => CIM.None));
 
    procedure Call_Block_Event (S : Session_Entry) with
-      Pre => S.Kind = CIM.Block;
+      Pre => S.Kind = CIM.Block_Client;
 
 end Componolit.Interfaces.Muen_Registry;
