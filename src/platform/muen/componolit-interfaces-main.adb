@@ -26,7 +26,7 @@ is
       while CIM.Component_Status = CIM.Running loop
          for Session of Reg.Registry loop
             case Session.Kind is
-               when CIM.Block =>
+               when CIM.Block_Client =>
                   Reg.Call_Block_Event (Session);
                when others =>
                   null;
