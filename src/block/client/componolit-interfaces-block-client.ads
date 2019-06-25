@@ -150,7 +150,6 @@ is
    --
    --  @param C  Client session instance
    function Next (C : Client_Session) return Request with
-      Volatile_Function,
       Pre  => Initialized (C),
       Post => (if Next'Result.Kind /= None and Next'Result.Kind /= Undefined
                then Next'Result.Status = Ok or Next'Result.Status = Error
