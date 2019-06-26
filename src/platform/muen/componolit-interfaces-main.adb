@@ -27,9 +27,11 @@ is
          for I in Reg.Registry'Range loop
             case Reg.Registry (I).Kind is
                when CIM.Block_Client =>
-                  Reg.Call_Block_Event (Reg.Registry (I));
+                  Reg.Call_Block_Client_Event (Session);
                when CIM.Timer_Client =>
                   Reg.Call_Timer_Event (Reg.Registry (I), I);
+               when CIM.Block_Dispatcher =>
+                  Reg.Call_Block_Dispatcher_Event (Session);
                when others =>
                   null;
             end case;
