@@ -21,7 +21,7 @@ generic
    with package Serv is new Componolit.Interfaces.Block.Server (<>);
 
    --  Called when a client connects or disconnects
-   with procedure Dispatch;
+   with procedure Dispatch (Cap : Dispatcher_Capability);
 
    pragma Warnings (On, "package ""Serv"" is not referenced");
    pragma Warnings (On, "procedure ""Dispatch"" is not referenced");
@@ -77,6 +77,7 @@ is
    --  @param Label  Label/path of the session request
    --  @param Last   Last initialized element in Label
    procedure Session_Request (D     : in out Dispatcher_Session;
+                              Cap   :        Dispatcher_Capability;
                               Valid :    out Boolean;
                               Label :    out String;
                               Last  :    out Natural) with
@@ -91,6 +92,7 @@ is
    --  @param I  Server session instance to handle client connection with
    --  @param L  Label passed to server session
    procedure Session_Accept (D : in out Dispatcher_Session;
+                             C :        Dispatcher_Capability;
                              I : in out Server_Session;
                              L :        String) with
       Pre  => Initialized (D) and not Serv.Initialized (I),
@@ -105,6 +107,7 @@ is
    --  @param D  Dispatcher session instance
    --  @param I  Server session instance to check for removal
    procedure Session_Cleanup (D : in out Dispatcher_Session;
+                              C :        Dispatcher_Capability;
                               I : in out Server_Session) with
       Pre  => Initialized (D) and Serv.Initialized (I),
       Post => Initialized (D);

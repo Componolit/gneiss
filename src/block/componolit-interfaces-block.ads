@@ -147,6 +147,9 @@ is
    type Dispatcher_Instance is private;
    type Server_Instance is private;
 
+   --  Dispatcher capability used to enforce scope for dispatcher session procedures
+   type Dispatcher_Capability is limited private;
+
 private
 
    type Private_Data is new Componolit.Interfaces.Internal.Block.Private_Data;
@@ -157,5 +160,6 @@ private
    type Client_Instance is new Componolit.Interfaces.Internal.Block.Client_Instance;
    type Dispatcher_Instance is new Componolit.Interfaces.Internal.Block.Dispatcher_Instance;
    type Server_Instance is new Componolit.Interfaces.Internal.Block.Server_Instance;
+   type Dispatcher_Capability is new Componolit.Interfaces.Internal.Block.Dispatcher_Capability;
 
 end Componolit.Interfaces.Block;

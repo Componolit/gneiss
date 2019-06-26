@@ -13,6 +13,14 @@ is
    end record
    with Import, Convention => CPP;
 
+   type Dispatcher_Capability is limited record
+      Size  : Cxx.Unsigned_Long;
+      Label : Cxx.Void_Address;
+      Root  : Cxx.Void_Address;
+      Cap   : Cxx.Void_Address;
+   end record
+   with Import, Convention => CPP;
+
    type Class_Address is private;
    type Class_Array is array (Natural range <>) of Class;
    type Class_Address_Array is array (Natural range <>) of Class_Address;
@@ -53,43 +61,49 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block10Dispatcher8announceEv";
 
-   procedure Dispatch (This : Class) with
+   procedure Dispatch (This : Class;
+                       Cap  : Dispatcher_Capability) with
       Global        => null,
       Export,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher8dispatchEv";
+      External_Name => "_ZN3Cai5Block10Dispatcher8dispatchEPv";
 
-   function Label_Content (This : Class) return Cxx.Void_Address with
+   function Label_Content (This : Class;
+                           Cap  : Dispatcher_Capability) return Cxx.Void_Address with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher13label_contentEv";
+      External_Name => "_ZN3Cai5Block10Dispatcher13label_contentEPv";
 
-   function Label_Length (This : Class) return Cxx.Genode.Uint64_T with
+   function Label_Length (This : Class;
+                          Cap  : Dispatcher_Capability) return Cxx.Genode.Uint64_T with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher12label_lengthEv";
+      External_Name => "_ZN3Cai5Block10Dispatcher12label_lengthEPv";
 
-   function Session_Size (This : Class) return Cxx.Genode.Uint64_T with
+   function Session_Size (This : Class;
+                          Cap  : Dispatcher_Capability) return Cxx.Genode.Uint64_T with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher12session_sizeEv";
+      External_Name => "_ZN3Cai5Block10Dispatcher12session_sizeEPv";
 
    procedure Session_Accept (This    :        Class;
+                             Cap     :        Dispatcher_Capability;
                              Session : in out Cxx.Block.Server.Class) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher14session_acceptEPv";
+      External_Name => "_ZN3Cai5Block10Dispatcher14session_acceptEPvS2_";
 
    function Session_Cleanup (This    : Class;
+                             Cap     : Dispatcher_Capability;
                              Session : Cxx.Block.Server.Class) return Cxx.Bool with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block10Dispatcher15session_cleanupEPv";
+      External_Name => "_ZN3Cai5Block10Dispatcher15session_cleanupEPvS2_";
 
    function Get_Capability (This : Class) return Componolit.Interfaces.Types.Capability with
       Global => null,

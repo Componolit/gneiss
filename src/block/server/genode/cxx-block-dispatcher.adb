@@ -3,13 +3,14 @@ package body Cxx.Block.Dispatcher with
    SPARK_Mode => Off
 is
 
-   procedure Dispatch (This : Class)
+   procedure Dispatch (This : Class;
+                       Cap  : Dispatcher_Capability)
    is
-      procedure D with
+      procedure D (C : Dispatcher_Capability) with
          Import,
          Address => This.Handler;
    begin
-      D;
+      D (Cap);
    end Dispatch;
 
 end Cxx.Block.Dispatcher;
