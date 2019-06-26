@@ -134,22 +134,27 @@ is
    is
       use type Blk.Count;
       use type Blk.Session_Name;
+      use type Blk.Client_Response_Channel.Reader_Type;
       use type CIM.Session_Index;
    begin
       return C.Name /= Componolit.Interfaces.Muen_Block.Null_Name
              and C.Count > 0
              and C.Request_Memory /= Musinfo.Null_Memregion
+             and C.Response_Memory /= Musinfo.Null_Memregion
+             and C.Response_Reader /= Blk.Client_Response_Channel.Null_Reader
              and C.Registry_Index /= CIM.Invalid_Index;
    end Initialized;
 
    function Create return Client_Session
    is
    begin
-      return Client_Session'(Name           => Blk.Null_Name,
-                             Count          => 0,
-                             Request_Memory => Musinfo.Null_Memregion,
-                             Registry_Index => CIM.Invalid_Index,
-                             Queued         => 0,
+      return Client_Session'(Name            => Blk.Null_Name,
+                             Count           => 0,
+                             Request_Memory  => Musinfo.Null_Memregion,
+                             Response_Memory => Musinfo.Null_Memregion,
+                             Response_Reader => Blk.Client_Response_Channel.Null_Reader,
+                             Registry_Index  => CIM.Invalid_Index,
+                             Queued          => 0,
                              Responses      => (others => Blk.Null_Event));
    end Create;
 
@@ -195,7 +200,7 @@ is
       use type Blk.Sector;
       use type Blk.Count;
       use type Blk.Event_Type;
-      use type Blk.Response_Channel.Result_Type;
+      use type Blk.Client_Response_Channel.Result_Type;
       pragma Unreferenced (Cap);
       pragma Unreferenced (Buffer_Size);
       Name       : Blk.Session_Name := Blk.Null_Name;
@@ -210,8 +215,8 @@ is
                                             Valid => True,
                                             Priv  => 0),
                                  Data  => (others => 0));
-      Reader     : Blk.Response_Channel.Reader_Type := Blk.Response_Channel.Null_Reader;
-      Result     : Blk.Response_Channel.Result_Type := Blk.Response_Channel.Inactive;
+      Reader     : Blk.Client_Response_Channel.Reader_Type := Blk.Client_Response_Channel.Null_Reader;
+      Result     : Blk.Client_Response_Channel.Result_Type := Blk.Client_Response_Channel.Inactive;
    begin
       if Path'Length <= Blk.Session_Name'Length then
          for I in Reg.Registry'Range loop
@@ -234,25 +239,25 @@ is
             and then Req_Mem.Flags.Writable
             and then not Res_Mem.Flags.Writable
          then
-            Blk.Request_Channel.Activate (Req_Mem, Blk.Request_Channel.Channel.Header_Field_Type
+            Blk.Client_Request_Channel.Activate (Req_Mem, Blk.Client_Request_Channel.Channel.Header_Field_Type
                                                       (Musinfo.Instance.TSC_Schedule_Start));
-            Blk.Request_Channel.Write (Req_Mem, Size_Event);
+            Blk.Client_Request_Channel.Write (Req_Mem, Size_Event);
             loop
-               Blk.Response_Channel.Read (Res_Mem, Reader, Size_Event, Result);
-               exit when Result = Blk.Response_Channel.Epoch_Changed
-                         or Result = Blk.Response_Channel.Success;
+               Blk.Client_Response_Channel.Read (Res_Mem, Reader, Size_Event, Result);
+               exit when Result = Blk.Client_Response_Channel.Epoch_Changed
+                         or Result = Blk.Client_Response_Channel.Success;
             end loop;
             if
                Size_Event.Header.Kind = Blk.Command and Size_Event.Header.Id = Blk.Size
                and (Result = Blk.Response_Channel.Success or Result = Blk.Response_Channel.Epoch_Changed)
             then
                Reg.Registry (Index) := Reg.Session_Entry'(Kind            => CIM.Block_Client,
-                                                          Response_Memory => Res_Mem,
-                                                          Response_Reader => Reader,
                                                           Block_Event     => Event_Address);
                C.Registry_Index     := Index;
                C.Name               := Name;
                C.Request_Memory     := Req_Mem;
+               C.Response_Memory    := Res_Mem;
+               C.Response_Reader    := Reader;
                C.Count              := Blk.Get_Size_Command_Data (Size_Event.Data).Value / 8;
                C.Responses          := (others => Blk.Null_Event);
             end if;
@@ -263,7 +268,7 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      Blk.Request_Channel.Deactivate (C.Request_Memory);
+      Blk.Client_Request_Channel.Deactivate (C.Request_Memory);
       Set_Null (C);
    end Finalize;
 
