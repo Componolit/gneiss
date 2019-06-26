@@ -22,12 +22,12 @@ namespace Block
                     void *callback = nullptr);
             void finalize();
             void announce();
-            __attribute__((annotate("ada"))) void dispatch();
-            char *label_content();
-            Genode::uint64_t label_length();
-            Genode::uint64_t session_size();
-            void session_accept(void *session);
-            bool session_cleanup(void *session);
+            __attribute__((annotate("ada"))) void dispatch(void *dcap);
+            char *label_content(void *dcap);
+            Genode::uint64_t label_length(void *dcap);
+            Genode::uint64_t session_size(void *dcap);
+            void session_accept(void *dcap, void *session);
+            bool session_cleanup(void *dcap, void *session);
             void *get_capability();
     };
 }
