@@ -40,5 +40,8 @@ package Componolit.Interfaces.Internal.Block is
    type Client_Instance is new System.Address;
    type Dispatcher_Instance is new System.Address;
    type Server_Instance is new System.Address;
+   type Dispatcher_Capability is limited record
+      Instance : Cxx.Block.Dispatcher.Dispatcher_Capability;
+   end record;
 
 end Componolit.Interfaces.Internal.Block;

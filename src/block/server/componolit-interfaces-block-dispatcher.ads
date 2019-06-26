@@ -21,7 +21,10 @@ generic
    with package Serv is new Componolit.Interfaces.Block.Server (<>);
 
    --  Called when a client connects or disconnects
-   with procedure Dispatch;
+   with procedure Dispatch (Cap : Dispatcher_Capability);
+
+   pragma Warnings (On, "package ""Serv"" is not referenced");
+   pragma Warnings (On, "procedure ""Dispatch"" is not referenced");
 package Componolit.Interfaces.Block.Dispatcher with
    SPARK_Mode
 is
@@ -70,10 +73,10 @@ is
    --  If Session_Accept is not called before the return of Dispatch the session is rejected.
    --
    --  @param D      Dispatcher session instance
+   --  @param Cap    Unique capability for this session request
    --  @param Valid  Session has been requested if True
-   --  @param Label  Label/path of the session request
-   --  @param Last   Last initialized element in Label
    procedure Session_Request (D     : in out Dispatcher_Session;
+                              Cap   :        Dispatcher_Capability;
                               Valid :    out Boolean;
                               Label :    out String;
                               Last  :    out Natural) with
@@ -85,9 +88,10 @@ is
    --  It also initializes the server on the platform and calls Serv.Initialize.
    --
    --  @param D  Dispatcher session instance
+   --  @param C  Unique capability for this session request
    --  @param I  Server session instance to handle client connection with
-   --  @param L  Label passed to server session
    procedure Session_Accept (D : in out Dispatcher_Session;
+                             C :        Dispatcher_Capability;
                              I : in out Server_Session;
                              L :        String) with
       Pre  => Initialized (D),
@@ -100,10 +104,12 @@ is
    --  Server_Session will be finalized if the client disconnected on the platform.
    --
    --  @param D  Dispatcher session instance
+   --  @param C  Unique capability for this session request
    --  @param I  Server session instance to check for removal
    procedure Session_Cleanup (D : in out Dispatcher_Session;
+                              C :        Dispatcher_Capability;
                               I : in out Server_Session) with
-      Pre  => Initialized (D) and Serv.Initialized (I),
-      Post => Initialized (D) and not Serv.Initialized (I);
+      Pre  => Initialized (D),
+      Post => Initialized (D);
 
 end Componolit.Interfaces.Block.Dispatcher;
