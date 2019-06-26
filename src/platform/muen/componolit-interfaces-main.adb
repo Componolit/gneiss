@@ -28,8 +28,8 @@ is
             case Session.Kind is
                when CIM.Block_Client =>
                   Reg.Call_Block_Client_Event (Session);
-               --  when CIM.Block_Dispatcher =>
-               --     Reg.Call_Block_Dispatcher_Event (Session);
+               when CIM.Block_Dispatcher =>
+                  Reg.Call_Block_Dispatcher_Event (Session);
                when others =>
                   null;
             end case;

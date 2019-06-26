@@ -83,6 +83,27 @@ is
        Null_Element => Null_Event,
        Protocol     => 16#9851_be32_82fe_f0dc#);
 
+   type Connection_Status is (Inactive, Active, Client_Connect, Client_Disconnect);
+
+   --  This type is used to determine the connection state of the bidirectional block channel.
+   --  The connection state depends on the request and response channels Is_Active property.
+   --  Initially both channels are inactive. When the client connects, it sets the request channel
+   --  state to active. When the connection is accepted then server will set the response channel
+   --  to active, too. Once the client decides to disconnect it will change the request state to inactive.
+   --
+   --  The Connection_Matrix_Type is a two dimensional array with two boolean ranges that contains four states:
+   --
+   --  Inactve            Connection is inactive, both channels are inactive
+   --  Active             Connection is established, both channels are active
+   --  Client_Connect     Client requested a connection, only the request channel is active
+   --  Client_Disconnect  Client closed an active connection, only the response channel is active
+   --
+   --  The first dimension is the request channel and the second the response channel.
+   type Connection_Matrix_Type is array (Boolean'Range, Boolean'Range) of Connection_Status;
+   Connection_Matrix : constant Connection_Matrix_Type :=
+      (False => (False => Inactive,       True => Client_Disconnect),
+       True  => (False => Client_Connect, True => Active));
+
    function Get_Size_Command_Data is new Ada.Unchecked_Conversion (Raw_Data_Type, Size_Command_Data_Type);
 
 end Componolit.Interfaces.Muen_Block;

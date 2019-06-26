@@ -72,9 +72,14 @@ is
                               Last  :    out Natural)
    is
       pragma Unreferenced (D);
+      use type Blk.Connection_Status;
       Name : constant String := CIM.Str_Cut (String (Cap.Name));
    begin
-      if Name (Name'First) /= Character'First and then Label'Length >= Name'Length then
+      if
+         Cap.Status = Blk.Client_Connect
+         and then Name (Name'First) /= Character'First
+         and then Label'Length >= Name'Length
+      then
          Label (Label'First .. Label'First + Name'Length - 1) := Name (Name'First .. Name'Last);
          Valid := True;
          Last := Name'Last;
@@ -90,10 +95,60 @@ is
    is
       pragma Unreferenced (D);
       pragma Unreferenced (C);
-      pragma Unreferenced (I);
-      pragma Unreferenced (L);
+      use type CIM.Async_Session_Type;
+      use type CIM.Session_Index;
+      use type Musinfo.Memregion_Type;
+      use type Blk.Connection_Status;
+      Name      : Blk.Session_Name;
+      S_Name    : String (1 .. Blk.Session_Name'Length);
+      Req_Name  : Musinfo.Name_Type;
+      Resp_Name : Musinfo.Name_Type;
+      Req_Mem   : Musinfo.Memregion_Type;
+      Resp_Mem  : Musinfo.Memregion_Type;
+      Index     : CIM.Session_Index := CIM.Invalid_Index;
+      Req_Act   : Boolean;
+      Resp_Act  : Boolean;
+      Status    : Blk.Connection_Status;
    begin
-      null;
+      if L'Length <= Name'Length then
+         S_Name (S_Name'First .. S_Name'First + L'Length - 1) := L (L'First .. L'Last);
+         Name := Blk.Session_Name (S_Name);
+         Req_Name  := CIM.String_To_Name ("blk:req:" & CIM.Str_Cut (String (Name)));
+         Resp_Name := CIM.String_To_Name ("blk:rsp:" & CIM.Str_Cut (String (Name)));
+         Req_Mem   := Musinfo.Instance.Memory_By_Name (Req_Name);
+         Resp_Mem  := Musinfo.Instance.Memory_By_Name (Resp_Name);
+         for I in Reg.Registry'Range loop
+            if Reg.Registry (I).Kind = CIM.None then
+               Index := I;
+               exit;
+            end if;
+         end loop;
+         if
+            Index /= CIM.Invalid_Index
+            and then Req_Mem /= Musinfo.Null_Memregion
+            and then Resp_Mem /= Musinfo.Null_Memregion
+         then
+            Blk.Request_Channel.Is_Active (Req_Mem, Req_Act);
+            Blk.Response_Channel.Is_Active (Resp_Mem, Resp_Act);
+            Status := Blk.Connection_Matrix (Req_Act, Resp_Act);
+            if Status = Blk.Client_Connect then
+               I.Name               := Name;
+               I.Registry_Index     := Index;
+               I.Request_Memory     := Req_Mem;
+               I.Response_Memory    := Resp_Mem;
+               I.Queued             := 0;
+               I.Latest_Request     := Blk.Null_Event;
+               Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Server,
+                                                          Block_Server_Event => Serv.Event'Address);
+               Serv.Initialize (Serv.Get_Instance (I),
+                                L,
+                                Byte_Length (I.Response_Memory.Size));
+               --  FIXME: the request channel should be a writing response channel
+               Blk.Request_Channel.Activate (Resp_Mem, Blk.Request_Channel.Channel.Header_Field_Type
+                                                            (Musinfo.Instance.TSC_Schedule_Start));
+            end if;
+         end if;
+      end if;
    end Session_Accept;
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;
@@ -102,22 +157,43 @@ is
    is
       pragma Unreferenced (D);
       pragma Unreferenced (C);
-      pragma Unreferenced (I);
+      use type Blk.Connection_Status;
+      Req_Active  : Boolean;
+      Resp_Active : Boolean;
+      Status      : Blk.Connection_Status;
    begin
-      null;
+      Blk.Request_Channel.Is_Active (I.Request_Memory, Req_Active);
+      Blk.Response_Channel.Is_Active (I.Response_Memory, Resp_Active);
+      Status := Blk.Connection_Matrix (Req_Active, Resp_Active);
+      if Status = Blk.Client_Disconnect then
+         Serv.Finalize (Serv.Get_Instance (I));
+         --  FIXME: the request channel should be a writing response channel
+         Blk.Request_Channel.Deactivate (I.Response_Memory);
+         Reg.Registry (I.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
+         I.Name                          := Blk.Null_Name;
+         I.Registry_Index                := CIM.Invalid_Index;
+         I.Request_Memory                := Musinfo.Null_Memregion;
+         I.Response_Memory               := Musinfo.Null_Memregion;
+         I.Queued                        := 0;
+         I.Latest_Request                := Blk.Null_Event;
+      end if;
    end Session_Cleanup;
 
    procedure Check_Channels
    is
       use type Blk.Session_Name;
+      use type Blk.Connection_Status;
       use type Musinfo.Resource_Kind;
       use type Musinfo.Memregion_Type;
       use type Musinfo.Name_Size_Type;
-      Iter     : Musinfo.Utils.Resource_Iterator_Type := Musinfo.Instance.Create_Resource_Iterator;
-      Res      : Musinfo.Resource_Type;
-      Req_Mem  : Musinfo.Memregion_Type;
-      Resp_Mem : Musinfo.Memregion_Type;
-      Name     : Blk.Session_Name := Blk.Null_Name;
+      Iter        : Musinfo.Utils.Resource_Iterator_Type := Musinfo.Instance.Create_Resource_Iterator;
+      Res         : Musinfo.Resource_Type;
+      Req_Mem     : Musinfo.Memregion_Type;
+      Resp_Mem    : Musinfo.Memregion_Type;
+      Name        : Blk.Session_Name := Blk.Null_Name;
+      Req_Active  : Boolean;
+      Resp_Active : Boolean;
+      Status      : Blk.Connection_Status;
    begin
       while Musinfo.Instance.Has_Element (Iter) loop
          Res := Musinfo.Instance.Element (Iter);
@@ -144,7 +220,13 @@ is
             and then Resp_Mem.Flags.Channel
             and then Resp_Mem.Flags.Writable
          then
-            Dispatch (Dispatcher_Capability'(Name => Name));
+            Blk.Request_Channel.Is_Active (Req_Mem, Req_Active);
+            Blk.Response_Channel.Is_Active (Resp_Mem, Resp_Active);
+            Status := Blk.Connection_Matrix (Req_Active, Resp_Active);
+            if Status = Blk.Client_Connect or Status = Blk.Client_Disconnect then
+               Dispatch (Dispatcher_Capability'(Name   => Name,
+                                                Status => Status));
+            end if;
          end if;
          Musinfo.Instance.Next (Iter);
       end loop;

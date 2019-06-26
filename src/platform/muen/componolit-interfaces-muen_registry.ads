@@ -22,6 +22,8 @@ is
             Block_Client_Event   : System.Address;
          when CIM.Block_Dispatcher =>
             Block_Dispatch_Event : System.Address;
+         when CIM.Block_Server =>
+            Block_Server_Event   : System.Address;
       end case;
    end record;
 

@@ -37,7 +37,8 @@ is
    type Server_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
 
    type Dispatcher_Capability is limited record
-      Name : Componolit.Interfaces.Muen_Block.Session_Name;
+      Name   : Componolit.Interfaces.Muen_Block.Session_Name;
+      Status : Componolit.Interfaces.Muen_Block.Connection_Status;
    end record;
 
 end Componolit.Interfaces.Internal.Block;
