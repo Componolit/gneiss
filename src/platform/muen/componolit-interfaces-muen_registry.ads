@@ -22,7 +22,6 @@ is
             Block_Client_Event   : System.Address;
          when CIM.Block_Dispatcher =>
             Block_Dispatch_Event : System.Address;
-            Current_Session_Name : CIMB.Session_Name;
       end case;
    end record;
 
