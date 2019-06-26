@@ -17,14 +17,18 @@ is
       case Kind is
          when CIM.None =>
             null;
-         when CIM.Block_Client =>
-            Response_Memory : Musinfo.Memregion_Type;
-            Response_Reader : CIMB.Response_Channel.Reader_Type;
-            Block_Event     : System.Address;
          when CIM.Timer_Client =>
             Next_Timeout    : Standard.Interfaces.Unsigned_64;
             Timeout_Set     : Boolean;
             Timeout_Event   : System.Address;
+         when CIM.Block_Client =>
+            Response_Memory      : Musinfo.Memregion_Type;
+            Response_Reader      : CIMB.Response_Channel.Reader_Type;
+            Block_Client_Event   : System.Address;
+         when CIM.Block_Dispatcher =>
+            Block_Dispatch_Event : System.Address;
+         when CIM.Block_Server =>
+            Block_Server_Event   : System.Address;
       end case;
    end record;
 
