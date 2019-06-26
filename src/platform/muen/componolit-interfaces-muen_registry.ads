@@ -3,7 +3,6 @@ with System;
 with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
-with Musinfo;
 
 package Componolit.Interfaces.Muen_Registry with
    SPARK_Mode
@@ -22,8 +21,6 @@ is
             Timeout_Set     : Boolean;
             Timeout_Event   : System.Address;
          when CIM.Block_Client =>
-            Response_Memory      : Musinfo.Memregion_Type;
-            Response_Reader      : CIMB.Response_Channel.Reader_Type;
             Block_Client_Event   : System.Address;
          when CIM.Block_Dispatcher =>
             Block_Dispatch_Event : System.Address;
