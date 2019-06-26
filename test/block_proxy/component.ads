@@ -14,13 +14,13 @@ package Component is
    package Main is new Componolit.Interfaces.Component (Construct, Destruct);
 
    type Byte is mod 2 ** 8;
-   type Buffer is array (Long_Integer range <>) of Byte;
    subtype Unsigned_Long is Long_Integer range 0 .. Long_Integer'Last;
+   type Buffer is array (Unsigned_Long range <>) of Byte;
 
    package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer);
 
    procedure Event;
-   procedure Dispatch;
+   procedure Dispatch (Cap : Block.Dispatcher_Capability);
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize_Server (S : Block.Server_Instance);
    function Block_Count (S : Block.Server_Instance) return Block.Count;
