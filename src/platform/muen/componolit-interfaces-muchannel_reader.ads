@@ -44,6 +44,10 @@ is
                     Reader : in out Reader_Type) with
       Pre => Mem /= Musinfo.Null_Memregion;
 
+   procedure Is_Active (Mem    :     Musinfo.Memregion_Type;
+                        Result : out Boolean) with
+      Pre => Mem /= Musinfo.Null_Memregion;
+
 private
 
    package Mureader is new Channel.Readers;

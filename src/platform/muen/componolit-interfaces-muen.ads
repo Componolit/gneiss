@@ -8,7 +8,11 @@ is
 
    type Status is (Running, Success, Failure);
 
-   type Async_Session_Type is (None, Block_Client, Timer_Client);
+   type Async_Session_Type is (None,
+                               Timer_Client,
+                               Block_Client,
+                               Block_Dispatcher,
+                               Block_Server);
    type Session_Index is new Natural range 0 .. 64;
    Invalid_Index : constant Session_Index := 0;
 
