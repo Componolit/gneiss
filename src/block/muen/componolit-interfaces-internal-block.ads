@@ -14,6 +14,8 @@ is
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
       Count           : Componolit.Interfaces.Muen_Block.Count;
       Request_Memory  : Musinfo.Memregion_Type;
+      Response_Memory : Musinfo.Memregion_Type;
+      Response_Reader : Componolit.Interfaces.Muen_Block.Client_Response_Channel.Reader_Type;
       Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
       Queued          : Natural;
       Latest_Response : Componolit.Interfaces.Muen_Block.Event;

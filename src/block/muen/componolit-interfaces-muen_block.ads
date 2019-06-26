@@ -71,13 +71,25 @@ is
 
    Element_Count : constant Positive := 16#0010_0000# / (Event'Size / 8);
 
-   package Request_Channel is new Componolit.Interfaces.Muchannel_Writer
+   package Client_Request_Channel is new Componolit.Interfaces.Muchannel_Writer
       (Element_Type => Event,
        Elements     => Element_Count,
        Null_Element => Null_Event,
        Protocol     => 16#9570_208d_ca77_db19#);
 
-   package Response_Channel is new Componolit.Interfaces.Muchannel_Reader
+   package Client_Response_Channel is new Componolit.Interfaces.Muchannel_Reader
+      (Element_Type => Event,
+       Elements     => Element_Count,
+       Null_Element => Null_Event,
+       Protocol     => 16#9851_be32_82fe_f0dc#);
+
+   package Server_Request_Channel is new Componolit.Interfaces.Muchannel_Reader
+      (Element_Type => Event,
+       Elements     => Element_Count,
+       Null_Element => Null_Event,
+       Protocol     => 16#9570_208d_ca77_db19#);
+
+   package Server_Response_Channel is new Componolit.Interfaces.Muchannel_Writer
       (Element_Type => Event,
        Elements     => Element_Count,
        Null_Element => Null_Event,

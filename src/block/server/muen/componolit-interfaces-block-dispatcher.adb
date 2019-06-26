@@ -128,8 +128,8 @@ is
             and then Req_Mem /= Musinfo.Null_Memregion
             and then Resp_Mem /= Musinfo.Null_Memregion
          then
-            Blk.Request_Channel.Is_Active (Req_Mem, Req_Act);
-            Blk.Response_Channel.Is_Active (Resp_Mem, Resp_Act);
+            Blk.Server_Request_Channel.Is_Active (Req_Mem, Req_Act);
+            Blk.Server_Response_Channel.Is_Active (Resp_Mem, Resp_Act);
             Status := Blk.Connection_Matrix (Req_Act, Resp_Act);
             if Status = Blk.Client_Connect then
                I.Name               := Name;
@@ -143,9 +143,8 @@ is
                Serv.Initialize (Serv.Get_Instance (I),
                                 L,
                                 Byte_Length (I.Response_Memory.Size));
-               --  FIXME: the request channel should be a writing response channel
-               Blk.Request_Channel.Activate (Resp_Mem, Blk.Request_Channel.Channel.Header_Field_Type
-                                                            (Musinfo.Instance.TSC_Schedule_Start));
+               Blk.Server_Response_Channel.Activate (Resp_Mem, Blk.Server_Response_Channel.Channel.Header_Field_Type
+                                                                  (Musinfo.Instance.TSC_Schedule_Start));
             end if;
          end if;
       end if;
@@ -162,13 +161,12 @@ is
       Resp_Active : Boolean;
       Status      : Blk.Connection_Status;
    begin
-      Blk.Request_Channel.Is_Active (I.Request_Memory, Req_Active);
-      Blk.Response_Channel.Is_Active (I.Response_Memory, Resp_Active);
+      Blk.Server_Request_Channel.Is_Active (I.Request_Memory, Req_Active);
+      Blk.Server_Response_Channel.Is_Active (I.Response_Memory, Resp_Active);
       Status := Blk.Connection_Matrix (Req_Active, Resp_Active);
       if Status = Blk.Client_Disconnect then
          Serv.Finalize (Serv.Get_Instance (I));
-         --  FIXME: the request channel should be a writing response channel
-         Blk.Request_Channel.Deactivate (I.Response_Memory);
+         Blk.Server_Response_Channel.Deactivate (I.Response_Memory);
          Reg.Registry (I.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
          I.Name                          := Blk.Null_Name;
          I.Registry_Index                := CIM.Invalid_Index;
@@ -220,8 +218,8 @@ is
             and then Resp_Mem.Flags.Channel
             and then Resp_Mem.Flags.Writable
          then
-            Blk.Request_Channel.Is_Active (Req_Mem, Req_Active);
-            Blk.Response_Channel.Is_Active (Resp_Mem, Resp_Active);
+            Blk.Server_Request_Channel.Is_Active (Req_Mem, Req_Active);
+            Blk.Server_Response_Channel.Is_Active (Resp_Mem, Resp_Active);
             Status := Blk.Connection_Matrix (Req_Active, Resp_Active);
             if Status = Blk.Client_Connect or Status = Blk.Client_Disconnect then
                Dispatch (Dispatcher_Capability'(Name   => Name,
