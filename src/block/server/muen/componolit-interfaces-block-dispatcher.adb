@@ -173,6 +173,10 @@ is
          I.Response_Memory               := Musinfo.Null_Memregion;
          I.Queued                        := 0;
          I.Latest_Request                := Blk.Null_Event;
+         I.Latest_Cache_Index            := 0;
+         for J in I.Request_Cache'Range loop
+            I.Request_Cache (J).Age := 0;
+         end loop;
       end if;
    end Session_Cleanup;
 

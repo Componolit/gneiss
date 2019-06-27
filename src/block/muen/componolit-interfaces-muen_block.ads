@@ -95,6 +95,16 @@ is
        Null_Element => Null_Event,
        Protocol     => 16#9851_be32_82fe_f0dc#);
 
+   type Block_Entry is record
+      Age  : Natural;
+      Data : Raw_Data_Type;
+   end record;
+
+   Null_Block_Entry : constant Block_Entry := (Age => 0,
+                                               Data => (others => 0));
+
+   type Block_Cache is array (Positive range 1 .. Element_Count) of Block_Entry;
+
    type Connection_Status is (Inactive, Active, Client_Connect, Client_Disconnect);
 
    --  This type is used to determine the connection state of the bidirectional block channel.

@@ -7,8 +7,8 @@ package Componolit.Interfaces.Internal.Block with
    SPARK_Mode
 is
 
-   type Private_Data is new Integer;
-   Null_Data : constant := 0;
+   type Private_Data is new Natural;
+   Null_Data : constant Private_Data := 0;
 
    type Client_Session is limited record
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
@@ -26,13 +26,15 @@ is
    end record;
 
    type Server_Session is limited record
-      Name            : Componolit.Interfaces.Muen_Block.Session_Name;
-      Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
-      Request_Memory  : Musinfo.Memregion_Type;
-      Request_Reader  : Componolit.Interfaces.Muen_Block.Server_Request_Channel.Reader_Type;
-      Response_Memory : Musinfo.Memregion_Type;
-      Queued          : Natural;
-      Latest_Request  : Componolit.Interfaces.Muen_Block.Event;
+      Name               : Componolit.Interfaces.Muen_Block.Session_Name;
+      Registry_Index     : Componolit.Interfaces.Muen.Session_Index;
+      Request_Memory     : Musinfo.Memregion_Type;
+      Request_Reader     : Componolit.Interfaces.Muen_Block.Server_Request_Channel.Reader_Type;
+      Response_Memory    : Musinfo.Memregion_Type;
+      Queued             : Natural;
+      Latest_Request     : Componolit.Interfaces.Muen_Block.Event;
+      Latest_Cache_Index : Private_Data;
+      Request_Cache      : Componolit.Interfaces.Muen_Block.Block_Cache;
    end record;
 
    type Client_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
