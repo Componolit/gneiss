@@ -30,6 +30,8 @@ is
                   Reg.Call_Block_Client_Event (Session);
                when CIM.Block_Dispatcher =>
                   Reg.Call_Block_Dispatcher_Event (Session);
+               when CIM.Block_Server =>
+                  Reg.Call_Block_Server_Event (Session);
                when others =>
                   null;
             end case;

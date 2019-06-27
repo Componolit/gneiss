@@ -137,7 +137,6 @@ is
                I.Request_Memory     := Req_Mem;
                I.Response_Memory    := Resp_Mem;
                I.Queued             := 0;
-               I.Latest_Request     := Blk.Null_Event;
                Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Server,
                                                           Block_Server_Event => Serv.Event'Address);
                Serv.Initialize (Serv.Get_Instance (I),

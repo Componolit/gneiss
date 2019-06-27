@@ -28,4 +28,14 @@ is
       end if;
    end Call_Block_Dispatcher_Event;
 
+   procedure Call_Block_Server_Event (S : Session_Entry) with
+      SPARK_Mode => Off
+   is
+      procedure Event with
+         Import,
+         Address => S.Block_Server_Event;
+   begin
+      Event;
+   end Call_Block_Server_Event;
+
 end Componolit.Interfaces.Muen_Registry;

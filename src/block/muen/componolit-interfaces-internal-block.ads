@@ -29,6 +29,7 @@ is
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
       Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
       Request_Memory  : Musinfo.Memregion_Type;
+      Request_Reader  : Componolit.Interfaces.Muen_Block.Server_Request_Channel.Reader_Type;
       Response_Memory : Musinfo.Memregion_Type;
       Queued          : Natural;
       Latest_Request  : Componolit.Interfaces.Muen_Block.Event;

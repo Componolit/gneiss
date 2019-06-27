@@ -33,4 +33,7 @@ is
    procedure Call_Block_Dispatcher_Event (S : Session_Entry) with
       Pre => S.Kind = CIM.Block_Dispatcher;
 
+   procedure Call_Block_Server_Event (S : Session_Entry) with
+      Pre => S.Kind = CIM.Block_Server;
+
 end Componolit.Interfaces.Muen_Registry;
