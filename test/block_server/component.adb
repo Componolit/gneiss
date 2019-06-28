@@ -9,7 +9,7 @@ package body Component is
    Buffer_Size : Block.Byte_Length;
 
    subtype Block_Buffer is Buffer (1 .. 512);
-   type Disk is array (Block.Id range 0 .. 1023) of Block_Buffer;
+   type Disk is array (Block.Id range 0 .. 65535) of Block_Buffer;
 
    Ram_Disk : Disk;
 
@@ -21,7 +21,7 @@ package body Component is
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
-      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
+      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "debuglog1");
       Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
       Componolit.Interfaces.Log.Client.Info (Log, "Dispatcher initialized");
@@ -94,15 +94,14 @@ package body Component is
                   while R.Status /= Block.Acknowledged loop
                      Block_Server.Acknowledge (Server, R);
                   end loop;
-                  Block_Server.Discard (Server);
                when Block.Write =>
                   Write (R);
                   while R.Status /= Block.Acknowledged loop
                      Block_Server.Acknowledge (Server, R);
                   end loop;
-                  Block_Server.Discard (Server);
                when others => null;
             end case;
+            Block_Server.Discard (Server);
             exit when R.Kind = Block.None;
          end loop;
       end if;
