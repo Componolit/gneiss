@@ -23,7 +23,7 @@ package body Component is
       Capability := Cap;
       Block_Dispatcher.Initialize (Dispatcher, Cap);
       Block_Dispatcher.Register (Dispatcher);
-      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
+      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "debuglog1");
    end Construct;
 
    procedure Destruct
@@ -152,34 +152,52 @@ package body Component is
    is
       R : Block_Server.Request;
       A : Block_Client.Request;
-      Success : Boolean;
+      Success : Boolean := True;
    begin
       if
          Block_Client.Initialized (Client)
          and Block_Server.Initialized (Server)
       then
-         loop
+         while Success loop
             A := Block_Client.Next (Client);
-            exit when A.Kind = Block.None;
-            if A.Kind = Block.Read and then A.Status = Block.Ok then
-               Block_Client.Read (Client, A);
-            end if;
-            Load (R, A.Kind, A.Start);
-            if R.Kind /= Block.None then
-               R.Status := A.Status;
-               Block_Server.Acknowledge (Server, R);
-            end if;
+            case A.Kind is
+               when Block.Read =>
+                  if A.Status = Block.Ok then
+                     Block_Client.Read (Client, A);
+                  end if;
+                  Load (R, A.Kind, A.Start);
+                  R.Status := A.Status;
+                  Block_Server.Acknowledge (Server, R);
+               when Block.Write | Block.Sync | Block.Trim =>
+                  Load (R, A.Kind, A.Start);
+                  R.Status := A.Status;
+                  Block_Server.Acknowledge (Server, R);
+               when Block.None =>
+                  Success := False;
+               when others =>
+                  null;
+            end case;
             Block_Client.Release (Client, A);
-            exit when R.Kind = Block.None;
          end loop;
 
-         loop
+         Success := True;
+         while Success loop
             R := Block_Server.Head (Server);
-            exit when R.Kind = Block.None;
-            Store (R, Success);
-            exit when not Success;
-            Block_Client.Enqueue (Client, Convert_Request (R));
-            Block_Server.Discard (Server);
+            case R.Kind is
+               when Block.Read | Block.Write | Block.Sync | Block.Trim =>
+                  Store (R, Success);
+                  if Success then
+                     Block_Client.Enqueue (Client, Convert_Request (R));
+                  end if;
+               when Block.Undefined =>
+                  Success := True;
+               when Block.None =>
+                  Success := False;
+                  Block_Server.Discard (Server);
+            end case;
+            if Success then
+               Block_Server.Discard (Server);
+            end if;
          end loop;
          Block_Client.Submit (Client);
       end if;
@@ -202,9 +220,10 @@ package body Component is
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
       pragma Unreferenced (S);
+      pragma Unreferenced (L);
    begin
       if not Block_Client.Initialized (Client) then
-         Block_Client.Initialize (Client, Capability, L, B);
+         Block_Client.Initialize (Client, Capability, "blockdev1", B);
       end if;
    end Initialize_Server;
 

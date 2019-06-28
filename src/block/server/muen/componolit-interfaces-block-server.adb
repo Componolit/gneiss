@@ -3,7 +3,6 @@ with Ada.Unchecked_Conversion;
 with Musinfo;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
-with Componolit.Interfaces.Internal.Block;
 
 with Debuglog.Client;
 with Componolit.Interfaces.Log;
@@ -103,7 +102,7 @@ is
          when Blk.Read =>
             declare
                R : constant Request := (Kind   => Read,
-                               Priv   => Private_Data (S.Latest_Cache_Index),
+                               Priv   => Private_Data'(S.Latest_Cache_Index, S.Latest_Request.Priv),
                                Start  => Id (Count (S.Latest_Request.Id) * Factor),
                                Length => Factor,
                                Status => (if S.Latest_Request.Error = 0 then Raw else Error));
@@ -122,14 +121,14 @@ is
                null;
             end loop;
             return Request'(Kind   => Write,
-                            Priv   => Private_Data (S.Latest_Cache_Index),
+                            Priv   => Private_Data'(S.Latest_Cache_Index, S.Latest_Request.Priv),
                             Start  => Id (Count (S.Latest_Request.Id) * Factor),
                             Length => Factor,
                             Status => (if S.Latest_Request.Error = 0 then Raw else Error));
          when others =>
             Debuglog.Client.Put_Line ("Other");
             return Request'(Kind => Undefined,
-                            Priv => Private_Data (S.Latest_Cache_Index));
+                            Priv => Private_Data'(S.Latest_Cache_Index, S.Latest_Request.Priv));
       end case;
       pragma Warnings (On, "unreachable code");
    end Head;
@@ -165,7 +164,7 @@ is
                                           Result);
          pragma Warnings (On, """Result"" modified by call, but value might not be referenced");
          S.Request_Cache (Index).Data := S.Latest_Request.Data;
-         S.Latest_Cache_Index         := Componolit.Interfaces.Internal.Block.Private_Data (Index);
+         S.Latest_Cache_Index         := Index;
       else
          Debuglog.Client.Put_Line ("No Index");
          loop
@@ -182,7 +181,7 @@ is
                    B :        Buffer)
    is
    begin
-      S.Request_Cache (Positive (R.Priv)).Data := Convert_Buffer (B);
+      S.Request_Cache (Positive (R.Priv.Index)).Data := Convert_Buffer (B);
    end Read;
 
    procedure Write (S : in out Server_Session;
@@ -190,7 +189,7 @@ is
                     B :    out Buffer)
    is
    begin
-      B := Convert_Buffer (S.Request_Cache (Positive (R.Priv)).Data);
+      B := Convert_Buffer (S.Request_Cache (Positive (R.Priv.Index)).Data);
    end Write;
 
    procedure Acknowledge (S : in out Server_Session;
@@ -215,7 +214,7 @@ is
             null;
       end case;
       Ev.Error := (if R.Status = Ok then 0 else -1);
-      Cache_Get_Element (S, Positive (R.Priv), Ev.Data);
+      Cache_Get_Element (S, Positive (R.Priv.Index), Ev.Data);
       Blk.Server_Response_Channel.Write (S.Response_Memory, Ev);
       R.Status := Acknowledged;
    end Acknowledge;

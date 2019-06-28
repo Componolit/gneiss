@@ -1,4 +1,5 @@
 
+with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Musinfo;
@@ -7,8 +8,11 @@ package Componolit.Interfaces.Internal.Block with
    SPARK_Mode
 is
 
-   type Private_Data is new Natural;
-   Null_Data : constant Private_Data := 0;
+   type Private_Data is record
+      Index  : Natural;
+      Mupriv : Standard.Interfaces.Unsigned_64;
+   end record;
+   Null_Data : constant Private_Data := (0, 0);
 
    type Client_Session is limited record
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
@@ -33,7 +37,7 @@ is
       Response_Memory    : Musinfo.Memregion_Type;
       Queued             : Natural;
       Latest_Request     : Componolit.Interfaces.Muen_Block.Event;
-      Latest_Cache_Index : Private_Data;
+      Latest_Cache_Index : Natural;
       Request_Cache      : Componolit.Interfaces.Muen_Block.Block_Cache;
    end record;
 

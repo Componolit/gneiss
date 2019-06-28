@@ -162,12 +162,12 @@ is
    begin
       P_Cap := Cap;
       if not Componolit.Interfaces.Log.Client.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada block test");
+         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "debuglog1");
       end if;
       if Componolit.Interfaces.Log.Client.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Info (Log, "Ada block test");
          if not Block_Client.Initialized (Client) then
-            Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
+            Block_Client.Initialize (Client, Cap, "blockdev1");
          end if;
          if Block_Client.Initialized (Client) then
             if Componolit.Interfaces.Log.Client.Initialized (Log) then
