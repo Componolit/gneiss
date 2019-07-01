@@ -1,9 +1,49 @@
 
 #include <util/reconstructible.h>
 #include <timer_session/connection.h>
+#include <base/duration.h>
 #include <timer_client.h>
 #include <factory.h>
 #include <cai_capability.h>
+
+class Timer_Session
+{
+    private:
+        Timer::Connection _timer;
+        Timer::One_shot_timeout<Timer_Session> _timeout;
+        void (*_callback)();
+
+        void handle_event(Genode::Duration);
+
+    public:
+        Timer_Session(Genode::Env &, void (*)());
+        Timer::Connection &timer();
+        void update_timeout(Genode::Microseconds);
+};
+
+Timer_Session::Timer_Session(Genode::Env &env, void (*callback)()) :
+    _timer(env),
+    _timeout(_timer, *this, &Timer_Session::handle_event),
+    _callback(callback)
+{ }
+
+Timer::Connection &Timer_Session::timer()
+{
+    return _timer;
+}
+
+void Timer_Session::handle_event(Genode::Duration)
+{
+    _callback();
+}
+
+void Timer_Session::update_timeout(Genode::Microseconds d)
+{
+    if(_timeout.scheduled()){
+        _timeout.discard();
+    }
+    _timeout.schedule(d);
+}
 
 Cai::Timer::Client::Client() :
     _session(nullptr)
@@ -14,19 +54,25 @@ bool Cai::Timer::Client::initialized()
     return (bool)_session;
 }
 
-void Cai::Timer::Client::initialize(void *capability)
+void Cai::Timer::Client::initialize(void *capability, void *callback)
 {
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(capability)->env);
-    _session = _factory->create<::Timer::Connection>(*reinterpret_cast<Cai::Env *>(capability)->env);
+    _session = _factory->create<Timer_Session>(*reinterpret_cast<Cai::Env *>(capability)->env,
+                                               reinterpret_cast<void (*)()>(callback));
 }
 
 Genode::uint64_t Cai::Timer::Client::clock()
 {
-    return reinterpret_cast<::Timer::Connection *>(_session)->elapsed_us() * 1000;
+    return reinterpret_cast<Timer_Session *>(_session)->timer().elapsed_us() * 1000;
+}
+
+void Cai::Timer::Client::set_timeout(Genode::uint64_t duration)
+{
+    reinterpret_cast<Timer_Session *>(_session)->update_timeout(Genode::Microseconds(duration / 1000));
 }
 
 void Cai::Timer::Client::finalize()
 {
-    _factory->destroy<::Timer::Connection>(_session);
+    _factory->destroy<Timer_Session>(_session);
     _session = nullptr;
 }
