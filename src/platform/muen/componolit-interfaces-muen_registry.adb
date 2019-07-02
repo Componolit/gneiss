@@ -12,4 +12,15 @@ is
       Event;
    end Call_Block_Event;
 
+   procedure Call_Timer_Event (S : Session_Entry;
+                               I : CIM.Session_Index) with
+      SPARK_Mode => Off
+   is
+      procedure Event (Index : CIM.Session_Index) with
+         Import,
+         Address => S.Timeout_Event;
+   begin
+      Event (I);
+   end Call_Timer_Event;
+
 end Componolit.Interfaces.Muen_Registry;

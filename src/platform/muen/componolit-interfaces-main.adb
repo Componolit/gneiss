@@ -24,10 +24,12 @@ is
    begin
       Component.Main.Construct (Gen_Cap (Null_Cap));
       while CIM.Component_Status = CIM.Running loop
-         for Session of Reg.Registry loop
-            case Session.Kind is
+         for I in Reg.Registry'Range loop
+            case Reg.Registry (I).Kind is
                when CIM.Block_Client =>
-                  Reg.Call_Block_Event (Session);
+                  Reg.Call_Block_Event (Reg.Registry (I));
+               when CIM.Timer_Client =>
+                  Reg.Call_Timer_Event (Reg.Registry (I), I);
                when others =>
                   null;
             end case;
