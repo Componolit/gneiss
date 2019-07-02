@@ -1,5 +1,6 @@
 
 with System;
+with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Musinfo;
@@ -20,6 +21,10 @@ is
             Response_Memory : Musinfo.Memregion_Type;
             Response_Reader : CIMB.Response_Channel.Reader_Type;
             Block_Event     : System.Address;
+         when CIM.Timer_Client =>
+            Next_Timeout    : Standard.Interfaces.Unsigned_64;
+            Timeout_Set     : Boolean;
+            Timeout_Event   : System.Address;
       end case;
    end record;
 
@@ -28,5 +33,9 @@ is
 
    procedure Call_Block_Event (S : Session_Entry) with
       Pre => S.Kind = CIM.Block_Client;
+
+   procedure Call_Timer_Event (S : Session_Entry;
+                               I : CIM.Session_Index) with
+      Pre => S.Kind = CIM.Timer_Client;
 
 end Componolit.Interfaces.Muen_Registry;
