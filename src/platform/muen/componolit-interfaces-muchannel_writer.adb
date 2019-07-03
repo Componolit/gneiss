@@ -2,7 +2,7 @@
 with System;
 
 package body Componolit.Interfaces.Muchannel_Writer with
-   SPARK_Mode
+   SPARK_Mode => Off
 is
 
    procedure Activate (Mem   : Musinfo.Memregion_Type;
