@@ -13,9 +13,7 @@ is
    end record
    with Import, Convention => CPP;
 
-   type Class_Address is private;
    type Class_Array is array (Natural range <>) of Class;
-   type Class_Address_Array is array (Natural range <>) of Class_Address;
 
    function Constructor return Class with
       Global => null;
@@ -97,8 +95,4 @@ is
       Convention => CPP,
       External_Name => "_ZN3Cai5Block10Dispatcher14get_capabilityEv";
 
-private
-   pragma SPARK_Mode (Off);
-
-   type Class_Address is access Class;
 end Cxx.Block.Dispatcher;
