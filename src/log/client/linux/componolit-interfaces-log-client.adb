@@ -21,9 +21,7 @@ is
    -----------------
 
    function Initialized (C : Client_Session) return Boolean is
-   begin
-      return C.Label /= System.Null_Address;
-   end Initialized;
+      (C.Label /= System.Null_Address);
 
    ----------------
    -- Initialize --
@@ -39,12 +37,13 @@ is
                               Lbl : out System.Address) with
          Import,
          Convention    => C,
-         External_Name => "initialize";
+         External_Name => "initialize",
+         Global        => null;
 
       C_Str : String := Label & Character'Val (0);
    begin
       C_Initialize (C_Str'Address, C.Label);
-      C.Length         := Label'Length;
+      C.Length := Label'Length;
    end Initialize;
 
    --------------
@@ -56,7 +55,8 @@ is
       procedure C_Finalize (Label : System.Address) with
          Import,
          Convention    => C,
-         External_Name => "finalize";
+         External_Name => "finalize",
+         Global        => null;
    begin
       C_Finalize (C.Label);
       C.Label  := System.Null_Address;
@@ -69,25 +69,49 @@ is
 
    function Maximum_Message_Length (C : Client_Session) return Integer
    is
-      pragma Unreferenced (C);
-   begin
-      return 4095;
-   end Maximum_Message_Length;
+      (4095);
 
    procedure Print (Msg : System.Address) with
       Import,
       Convention    => C,
-      External_Name => "print";
+      External_Name => "print",
+      Global        => null;
 
-   function Create_String (Label   : String;
+   procedure Print_With_Null_Term (S : String);
+
+   procedure Print_With_Null_Term (S : String) with
+      SPARK_Mode => Off
+   is
+      C_Str : String := S & Character'First;
+   begin
+      Print (C_Str'Address);
+   end Print_With_Null_Term;
+
+   procedure Print_String (Label   : System.Address;
                            Use_L   : Boolean;
                            Prefix  : String;
                            Message : String;
-                           Newline : Boolean) return String is
-      ((if Use_L then "[" & Label & "] " & Prefix else "") & Message
-       & (if Newline
-          then Character'Val (10) & Character'Val (0)
-          else (1 => Character'Val (0))));
+                           Newline : Boolean) with
+      Pre => Label /= System.Null_Address;
+
+   procedure Print_String (Label   : System.Address;
+                           Use_L   : Boolean;
+                           Prefix  : String;
+                           Message : String;
+                           Newline : Boolean)
+   is
+   begin
+      if Use_L then
+         Print_With_Null_Term ("[");
+         Print (Label);
+         Print_With_Null_Term ("] ");
+         Print_With_Null_Term (Prefix);
+      end if;
+      Print_With_Null_Term (Message);
+      if Newline then
+         Print_With_Null_Term ((1 => Character'Val (10)));
+      end if;
+   end Print_String;
 
    ----------
    -- Info --
@@ -95,15 +119,11 @@ is
 
    procedure Info (C       : in out Client_Session;
                    Msg     :        String;
-                   Newline :        Boolean := True) with
-      SPARK_Mode => Off
+                   Newline :        Boolean := True)
    is
-      Label : String (1 .. C.Length) with
-         Address => C.Label;
-      M : String := Create_String (Label, C.Prev_Nl, "Info: ", Msg, Newline);
    begin
       C.Prev_Nl := Newline;
-      Print (M'Address);
+      Print_String (C.Label, C.Prev_Nl, "Info: ", Msg, Newline);
    end Info;
 
    -------------
@@ -112,15 +132,11 @@ is
 
    procedure Warning (C       : in out Client_Session;
                       Msg     :        String;
-                      Newline :        Boolean := True) with
-      SPARK_Mode => Off
+                      Newline :        Boolean := True)
    is
-      Label : String (1 .. C.Length) with
-         Address => C.Label;
-      M : String := Create_String (Label, C.Prev_Nl, "Warning: ", Msg, Newline);
    begin
       C.Prev_Nl := Newline;
-      Print (M'Address);
+      Print_String (C.Label, C.Prev_Nl, "Warning: ", Msg, Newline);
    end Warning;
 
    -----------
@@ -129,15 +145,11 @@ is
 
    procedure Error (C       : in out Client_Session;
                     Msg     :        String;
-                    Newline :        Boolean := True) with
-      SPARK_Mode => Off
+                    Newline :        Boolean := True)
    is
-      Label : String (1 .. C.Length) with
-         Address => C.Label;
-      M : String := Create_String (Label, C.Prev_Nl, "Error: ", Msg, Newline);
    begin
       C.Prev_Nl := Newline;
-      Print (M'Address);
+      Print_String (C.Label, C.Prev_Nl, "Warning: ", Msg, Newline);
    end Error;
 
    -----------
