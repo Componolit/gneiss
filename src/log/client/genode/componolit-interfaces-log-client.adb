@@ -3,8 +3,7 @@ with Cxx;
 with Cxx.Log.Client;
 use all type Cxx.Bool;
 
-package body Componolit.Interfaces.Log.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Log.Client
 is
 
    function Create return Client_Session
@@ -21,7 +20,8 @@ is
 
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Componolit.Interfaces.Types.Capability;
-                         Label          :        String)
+                         Label          :        String) with
+      SPARK_Mode => Off
    is
       C_Label : String := Label & Character'Val (0);
    begin
@@ -50,7 +50,8 @@ is
 
    procedure Info (C       : in out Client_Session;
                    Msg     :        String;
-                   Newline :        Boolean := True)
+                   Newline :        Boolean := True) with
+      SPARK_Mode => Off
    is
       C_Msg : String := Msg & (if Newline then Nl & Terminator else (1 => Terminator));
    begin
@@ -62,7 +63,8 @@ is
 
    procedure Warning (C       : in out Client_Session;
                       Msg     :        String;
-                      Newline :        Boolean := True)
+                      Newline :        Boolean := True) with
+      SPARK_Mode => Off
    is
       C_Msg : String := Blue & "Warning: " & Msg & Reset
                         & (if Newline then Nl & Terminator else (1 => Terminator));
@@ -75,7 +77,8 @@ is
 
    procedure Error (C       : in out Client_Session;
                     Msg     :        String;
-                    Newline :        Boolean := True)
+                    Newline :        Boolean := True) with
+      SPARK_Mode => Off
    is
       C_Msg : String := Red & "Error: " & Msg & Reset
                         & (if Newline then Nl & Terminator else (1 => Terminator));

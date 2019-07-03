@@ -2,8 +2,7 @@
 with Cxx;
 with Cxx.Timer.Client;
 
-package body Componolit.Interfaces.Timer.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Timer.Client
 is
 
    function Create return Client_Session
@@ -20,7 +19,8 @@ is
    end Initialized;
 
    procedure Initialize (C   : in out Client_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability)
+                         Cap :        Componolit.Interfaces.Types.Capability) with
+      SPARK_Mode => Off
    is
    begin
       Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address);

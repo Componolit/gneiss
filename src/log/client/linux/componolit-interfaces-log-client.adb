@@ -2,8 +2,7 @@
 with System;
 use all type System.Address;
 
-package body Componolit.Interfaces.Log.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Log.Client
 is
 
    ------------
@@ -32,7 +31,8 @@ is
 
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Componolit.Interfaces.Types.Capability;
-                         Label          :        String)
+                         Label          :        String) with
+      SPARK_Mode => Off
    is
       pragma Unreferenced (Cap);
       procedure C_Initialize (Str :     System.Address;
@@ -95,7 +95,8 @@ is
 
    procedure Info (C       : in out Client_Session;
                    Msg     :        String;
-                   Newline :        Boolean := True)
+                   Newline :        Boolean := True) with
+      SPARK_Mode => Off
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
@@ -111,7 +112,8 @@ is
 
    procedure Warning (C       : in out Client_Session;
                       Msg     :        String;
-                      Newline :        Boolean := True)
+                      Newline :        Boolean := True) with
+      SPARK_Mode => Off
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
@@ -127,7 +129,8 @@ is
 
    procedure Error (C       : in out Client_Session;
                     Msg     :        String;
-                    Newline :        Boolean := True)
+                    Newline :        Boolean := True) with
+      SPARK_Mode => Off
    is
       Label : String (1 .. C.Length) with
          Address => C.Label;
@@ -141,7 +144,8 @@ is
    -- Flush --
    -----------
 
-   procedure Flush (C : in out Client_Session)
+   procedure Flush (C : in out Client_Session) with
+      SPARK_Mode => Off
    is
       M : String := Character'Val (10) & Character'Val (0);
    begin

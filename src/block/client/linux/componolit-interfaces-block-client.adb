@@ -6,8 +6,7 @@ with C.Block;
 
 use all type System.Address;
 
-package body Componolit.Interfaces.Block.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Block.Client
 is
 
    function Convert_Request (R : Request) return C.Block.Request;
@@ -78,7 +77,8 @@ is
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Componolit.Interfaces.Types.Capability;
                          Path        :        String;
-                         Buffer_Size :        Byte_Length := 0)
+                         Buffer_Size :        Byte_Length := 0) with
+      SPARK_Mode => Off
    is
       pragma Unreferenced (Cap);
       C_Path : String := Path & Character'Val (0);
@@ -112,7 +112,8 @@ is
    -----------
 
    function Ready (C : Client_Session;
-                   R : Request) return Boolean
+                   R : Request) return Boolean with
+      SPARK_Mode => Off
    is
       function C_Ready (T   : System.Address;
                         Req : System.Address) return Integer with
@@ -150,7 +151,8 @@ is
    ------------------
 
    procedure Enqueue (C : in out Client_Session;
-                      R :        Request)
+                      R :        Request) with
+      SPARK_Mode => Off
    is
       procedure C_Enqueue (T   : System.Address;
                            Req : System.Address) with
@@ -197,7 +199,8 @@ is
    ----------
 
    procedure Read (C : in out Client_Session;
-                   R :        Request)
+                   R :        Request) with
+      SPARK_Mode => Off
    is
       procedure C_Read (T   :     System.Address;
                         Req :     System.Address) with
@@ -216,7 +219,8 @@ is
    pragma Warnings (Off, "formal parameter ""R"" is not modified");
    --  R is not modified but the platform state has changed and R becomes invalid on the platform
    procedure Release (C : in out Client_Session;
-                      R : in out Request)
+                      R : in out Request) with
+      SPARK_Mode => Off
    is
       pragma Warnings (On, "formal parameter ""R"" is not modified");
       procedure C_Release (T   : System.Address;

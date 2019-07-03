@@ -7,8 +7,7 @@ is
 
    procedure Pending (Mem    :     Musinfo.Memregion_Type;
                       Reader :     Reader_Type;
-                      Result : out Boolean) with
-      SPARK_Mode => Off
+                      Result : out Boolean)
    is
       Chn : Channel.Channel_Type with
          Address => System'To_Address (Mem.Address),
@@ -20,8 +19,7 @@ is
    procedure Read (Mem     :        Musinfo.Memregion_Type;
                    Reader  : in out Reader_Type;
                    Element :    out Element_Type;
-                   Result  :    out Result_Type) with
-      SPARK_Mode => Off
+                   Result  :    out Result_Type)
    is
       use type Mureader.Result_Type;
       Chn : Channel.Channel_Type with
@@ -40,8 +38,7 @@ is
    end Read;
 
    procedure Drain (Mem    :        Musinfo.Memregion_Type;
-                    Reader : in out Reader_Type) with
-      SPARK_Mode => Off
+                    Reader : in out Reader_Type)
    is
       Chn : Channel.Channel_Type with
          Address => System'To_Address (Mem.Address),

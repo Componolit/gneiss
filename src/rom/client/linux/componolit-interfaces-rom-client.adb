@@ -2,8 +2,7 @@
 with System;
 with C;
 
-package body Componolit.Interfaces.Rom.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Rom.Client
 is
 
    use type System.Address;
@@ -32,7 +31,8 @@ is
 
    procedure Initialize (C    : in out Client_Session;
                          Cap  :        Componolit.Interfaces.Types.Capability;
-                         Name :        String := "")
+                         Name :        String := "") with
+      SPARK_Mode => Off
    is
       procedure C_Initialize (S : in out Client_Session;
                               C : Componolit.Interfaces.Types.Capability;

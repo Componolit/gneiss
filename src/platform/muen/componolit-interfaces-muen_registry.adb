@@ -2,8 +2,7 @@ package body Componolit.Interfaces.Muen_Registry with
    SPARK_Mode
 is
 
-   procedure Call_Block_Event (S : Session_Entry) with
-      SPARK_Mode => Off
+   procedure Call_Block_Event (S : Session_Entry)
    is
       procedure Event with
          Import,
@@ -13,8 +12,7 @@ is
    end Call_Block_Event;
 
    procedure Call_Timer_Event (S : Session_Entry;
-                               I : CIM.Session_Index) with
-      SPARK_Mode => Off
+                               I : CIM.Session_Index)
    is
       procedure Event (Index : CIM.Session_Index) with
          Import,
