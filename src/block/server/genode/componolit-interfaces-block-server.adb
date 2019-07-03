@@ -5,8 +5,7 @@ with Componolit.Interfaces.Block.Util;
 use all type Cxx.Bool;
 use all type Cxx.Genode.Uint64_T;
 
-package body Componolit.Interfaces.Block.Server with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Block.Server
 is
 
    function Create_Request (Kind   : Componolit.Interfaces.Block.Request_Kind;
@@ -90,7 +89,8 @@ is
 
    procedure Read (S : in out Server_Session;
                    R :        Request;
-                   B :        Buffer)
+                   B :        Buffer) with
+      SPARK_Mode => Off
    is
    begin
       Cxx.Block.Server.Read (S.Instance,
@@ -100,7 +100,8 @@ is
 
    procedure Write (S : in out Server_Session;
                     R :        Request;
-                    B :    out Buffer)
+                    B :    out Buffer) with
+      SPARK_Mode => Off
    is
    begin
       Cxx.Block.Server.Write (S.Instance,

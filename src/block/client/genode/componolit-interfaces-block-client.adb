@@ -8,8 +8,7 @@ with Cxx.Genode;
 with Componolit.Interfaces.Block.Util;
 use all type Cxx.Bool;
 
-package body Componolit.Interfaces.Block.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Block.Client
 is
 
    function Create_Request (Kind   : Componolit.Interfaces.Block.Request_Kind;
@@ -115,7 +114,8 @@ is
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Componolit.Interfaces.Types.Capability;
                          Path        :        String;
-                         Buffer_Size :        Byte_Length := 0)
+                         Buffer_Size :        Byte_Length := 0) with
+      SPARK_Mode => Off
    is
       C_Path : constant String := Path & Character'Val (0);
       subtype C_Path_String is String (1 .. C_Path'Length);

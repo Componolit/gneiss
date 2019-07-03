@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Conversion;
+with System;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Componolit.Interfaces.Muen_Registry;
@@ -62,6 +63,15 @@ is
          C.Registry_Index                := CIM.Invalid_Index;
       end if;
    end Set_Null;
+
+   function Event_Address return System.Address;
+
+   function Event_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Event'Address;
+   end Event_Address;
 
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Componolit.Interfaces.Types.Capability;
@@ -126,7 +136,7 @@ is
                Reg.Registry (Index) := Reg.Session_Entry'(Kind            => CIM.Block_Client,
                                                           Response_Memory => Res_Mem,
                                                           Response_Reader => Reader,
-                                                          Block_Event     => Event'Address);
+                                                          Block_Event     => Event_Address);
                C.Registry_Index     := Index;
                C.Name               := Name;
                C.Request_Memory     := Req_Mem;
