@@ -2,7 +2,7 @@
 with System;
 
 package body Componolit.Interfaces.Muchannel_Reader with
-   SPARK_Mode
+   SPARK_Mode => Off
 is
 
    procedure Pending (Mem    :     Musinfo.Memregion_Type;
