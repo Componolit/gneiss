@@ -1,6 +1,5 @@
 
-package body Cxx.Block.Dispatcher with
-   SPARK_Mode => Off
+package body Cxx.Block.Dispatcher
 is
 
    procedure Dispatch (This : Class)

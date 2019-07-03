@@ -1,7 +1,6 @@
 with System;
 
-package body Cxx.Block.Server with
-   SPARK_Mode => Off
+package body Cxx.Block.Server
 is
 
    function Writable (This : Class) return Cxx.Bool

@@ -4,8 +4,7 @@ with Cxx;
 with Cxx.Genode;
 with Cxx.Configuration.Client;
 
-package body Componolit.Interfaces.Rom.Client with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Rom.Client
 is
 
    function Create return Client_Session
@@ -19,7 +18,8 @@ is
 
    procedure Initialize (C    : in out Client_Session;
                          Cap  :        Componolit.Interfaces.Types.Capability;
-                         Name :        String := "")
+                         Name :        String := "") with
+      SPARK_Mode => Off
    is
       C_Name : constant String := (if Name'Length > 0 then Name else "config") & Character'First;
    begin

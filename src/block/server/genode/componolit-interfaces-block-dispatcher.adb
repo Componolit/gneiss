@@ -5,8 +5,7 @@ with Cxx.Block.Server;
 use all type System.Address;
 use all type Cxx.Bool;
 
-package body Componolit.Interfaces.Block.Dispatcher with
-   SPARK_Mode => Off
+package body Componolit.Interfaces.Block.Dispatcher
 is
 
    function Create return Dispatcher_Session
@@ -28,7 +27,8 @@ is
    end Get_Instance;
 
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability)
+                         Cap :        Componolit.Interfaces.Types.Capability) with
+      SPARK_Mode => Off
    is
    begin
       Cxx.Block.Dispatcher.Initialize (D.Instance, Cap, Dispatch'Address);
@@ -74,7 +74,8 @@ is
 
    procedure Session_Accept (D : in out Dispatcher_Session;
                              I : in out Server_Session;
-                             L :        String)
+                             L :        String) with
+      SPARK_Mode => Off
    is
    begin
       Serv.Initialize (Serv.Get_Instance (I), L, Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance)));

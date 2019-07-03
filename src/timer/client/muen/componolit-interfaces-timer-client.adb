@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Conversion;
+with System;
 with Interfaces;
 with Musinfo;
 with Musinfo.Instance;
@@ -27,6 +28,15 @@ is
       return C.Index /= CIM.Invalid_Index;
    end Initialized;
 
+   function Event_Address return System.Address;
+
+   function Event_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Check_Event'Address;
+   end Event_Address;
+
    procedure Initialize (C   : in out Client_Session;
                          Cap :        Componolit.Interfaces.Types.Capability)
    is
@@ -38,7 +48,7 @@ is
             Reg.Registry (I) := Reg.Session_Entry'(Kind          => CIM.Timer_Client,
                                                    Next_Timeout  => 0,
                                                    Timeout_Set   => False,
-                                                   Timeout_Event => Check_Event'Address);
+                                                   Timeout_Event => Event_Address);
             C.Index := I;
             exit;
          end if;
