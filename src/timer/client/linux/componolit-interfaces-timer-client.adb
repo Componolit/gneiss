@@ -4,6 +4,8 @@ with System;
 package body Componolit.Interfaces.Timer.Client
 is
 
+   use type System.Address;
+
    function Create return Client_Session
    is
    begin
@@ -12,10 +14,7 @@ is
 
    function Initialized (C : Client_Session) return Boolean
    is
-      use type System.Address;
-   begin
-      return C.Instance /= System.Null_Address;
-   end Initialized;
+      (C.Instance /= System.Null_Address);
 
    procedure Initialize (C   : in out Client_Session;
                          Cap :        Componolit.Interfaces.Types.Capability) with
@@ -31,14 +30,16 @@ is
       C_Initialize (C.Instance, Cap, Event'Address);
    end Initialize;
 
-   function Clock (C : Client_Session) return Time
+   function Clock (C : Client_Session) return Time with
+      SPARK_Mode => Off
    is
       pragma Unreferenced (C);
       function C_Clock return Time with
          Volatile_Function,
          Import,
-         Convention => C,
-         External_Name => "timer_client_clock";
+         Convention    => C,
+         External_Name => "timer_client_clock",
+         Global        => null;
    begin
       return C_Clock;
    end Clock;
@@ -49,8 +50,9 @@ is
       procedure C_Timeout (Session : System.Address;
                            Dur     : Duration) with
          Import,
-         Convention => C,
-         External_Name => "timer_client_set_timeout";
+         Convention    => C,
+         External_Name => "timer_client_set_timeout",
+         Global        => null;
    begin
       C_Timeout (C.Instance, D);
    end Set_Timeout;
@@ -59,10 +61,12 @@ is
    is
       procedure C_Finalize (Session : in out System.Address) with
          Import,
-         Convention => C,
-         External_Name => "timer_client_finalize";
+         Convention    => C,
+         External_Name => "timer_client_finalize",
+         Global        => null;
    begin
       C_Finalize (C.Instance);
+      C.Instance := System.Null_Address;
    end Finalize;
 
 end Componolit.Interfaces.Timer.Client;
