@@ -128,10 +128,12 @@ is
    --  Status of a block request
    --
    --  @value Raw           Newly created request
+   --  @value Allocated     Request has been successfully allocated
+   --  @value Pending       Request is in flight
    --  @value Ok            Successfully handled request
    --  @value Error         Failed request
    --  @value Acknowledged  Request has been acknoweledged by the platform, only relevant for server
-   type Request_Status is (Raw, Ok, Error, Acknowledged);
+   type Request_Status is (Raw, Allocated, Pending, Ok, Error, Acknowledged);
 
    --  Platform specific data
    type Private_Data is private;
