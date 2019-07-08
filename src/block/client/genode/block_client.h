@@ -8,8 +8,6 @@
 
 namespace Block
 {
-    struct Request;
-
     class Client
     {
         private:
@@ -36,13 +34,18 @@ namespace Block
                     void *rw = nullptr,
                     Genode::uint64_t buffer_size = 0);
             void finalize();
-            bool ready(Request req);
-            bool supported(Kind req);
-            void enqueue(Request req);
+            void allocate_request (void *request,
+                                   int opcode,
+                                   Genode::uint64_t start,
+                                   unsigned long length,
+                                   unsigned long tag);
+            void update_response_queue (int *status,
+                                        unsigned long *tag,
+                                        int *success);
+            void enqueue(void *request);
             void submit();
-            void read(Request req);
-            Request next();
-            void release(Request req);
+            void read(void *request);
+            void release(void *request);
             bool writable();
             Genode::uint64_t block_count();
             Genode::uint64_t block_size();

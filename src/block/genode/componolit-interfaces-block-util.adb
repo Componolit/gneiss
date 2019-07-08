@@ -30,7 +30,8 @@ package body Componolit.Interfaces.Block.Util is
                            when Componolit.Interfaces.Block.Raw          => Cxx.Block.Raw,
                            when Componolit.Interfaces.Block.Ok           => Cxx.Block.Ok,
                            when Componolit.Interfaces.Block.Error        => Cxx.Block.Error,
-                           when Componolit.Interfaces.Block.Acknowledged => Cxx.Block.Ack);
+                           when Componolit.Interfaces.Block.Acknowledged => Cxx.Block.Ack,
+                           when others => raise Constraint_Error);
       end case;
       return Req;
    end Convert_Request;

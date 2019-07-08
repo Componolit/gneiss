@@ -5,66 +5,136 @@ with Cxx;
 with Cxx.Block;
 with Cxx.Block.Client;
 with Cxx.Genode;
-with Componolit.Interfaces.Block.Util;
 use all type Cxx.Bool;
 
 package body Componolit.Interfaces.Block.Client
 is
 
-   function Create_Request (Kind   : Componolit.Interfaces.Block.Request_Kind;
-                            Priv   : Componolit.Interfaces.Block.Private_Data;
-                            Start  : Componolit.Interfaces.Block.Id;
-                            Length : Componolit.Interfaces.Block.Count;
-                            Status : Componolit.Interfaces.Block.Request_Status) return Request;
-
-   function Create_Request (Kind   : Componolit.Interfaces.Block.Request_Kind;
-                            Priv   : Componolit.Interfaces.Block.Private_Data;
-                            Start  : Componolit.Interfaces.Block.Id;
-                            Length : Componolit.Interfaces.Block.Count;
-                            Status : Componolit.Interfaces.Block.Request_Status) return Request
+   function Create_Request return Request
    is
-      R : Request (Kind => (case Kind is
-                            when Componolit.Interfaces.Block.None      => Componolit.Interfaces.Block.None,
-                            when Componolit.Interfaces.Block.Read      => Componolit.Interfaces.Block.Read,
-                            when Componolit.Interfaces.Block.Write     => Componolit.Interfaces.Block.Write,
-                            when Componolit.Interfaces.Block.Sync      => Componolit.Interfaces.Block.Sync,
-                            when Componolit.Interfaces.Block.Trim      => Componolit.Interfaces.Block.Trim,
-                            when Componolit.Interfaces.Block.Undefined => Componolit.Interfaces.Block.Undefined));
    begin
-      R.Priv := Priv;
-      case R.Kind is
-         when None =>
-            null;
-         when others =>
-            R.Start  := Start;
-            R.Length := Length;
-            R.Status := Status;
-      end case;
-      return R;
+      return Request'(Packet => Cxx.Block.Client.Packet_Descriptor'(Offset       => 0,
+                                                                    Bytes        => 0,
+                                                                    Opcode       => -1,
+                                                                    Tag          => 0,
+                                                                    Block_Number => 0,
+                                                                    Block_Count  => 0),
+                      Status => Componolit.Interfaces.Internal.Block.Raw);
    end Create_Request;
 
-   function Get_Kind (R : Request) return Componolit.Interfaces.Block.Request_Kind is
-      (R.Kind);
+   function Request_Type (R : Request) return Request_Kind
+   is
+   begin
+      case R.Packet.Opcode is
+         when 0 => return Read;
+         when 1 => return Write;
+         when 2 => return Sync;
+         when 3 => return Trim;
+         when others =>
+            raise Constraint_Error;
+      end case;
+   end Request_Type;
 
-   function Get_Priv (R : Request) return Componolit.Interfaces.Block.Private_Data is
-      (R.Priv);
+   function Request_State (R : Request) return Request_Status
+   is
+   begin
+      case R.Status is
+         when Componolit.Interfaces.Internal.Block.Raw          => return Raw;
+         when Componolit.Interfaces.Internal.Block.Allocated    => return Allocated;
+         when Componolit.Interfaces.Internal.Block.Pending      => return Pending;
+         when Componolit.Interfaces.Internal.Block.Ok           => return Ok;
+         when Componolit.Interfaces.Internal.Block.Error        => return Error;
+         when Componolit.Interfaces.Internal.Block.Acknowledged => return Acknowledged;
+      end case;
+   end Request_State;
 
-   function Get_Start (R : Request) return Componolit.Interfaces.Block.Id is
-      (if R.Kind = Componolit.Interfaces.Block.None then 0 else R.Start);
+   function Request_Start (R : Request) return Id
+   is
+   begin
+      return Id (R.Packet.Block_Number);
+   end Request_Start;
 
-   function Get_Length (R : Request) return Componolit.Interfaces.Block.Count is
-      (if R.Kind = Componolit.Interfaces.Block.None then 0 else R.Length);
+   function Request_Length (R : Request) return Count
+   is
+   begin
+      return Count (R.Packet.Block_Count);
+   end Request_Length;
 
-   function Get_Status (R : Request) return Componolit.Interfaces.Block.Request_Status is
-      (if R.Kind = Componolit.Interfaces.Block.None then Componolit.Interfaces.Block.Raw else R.Status);
+   function Request_Identifier (R : Request) return Request_Id
+   is
+   begin
+      return Request_Id'Val (R.Packet.Tag);
+   end Request_Identifier;
 
-   package Client_Util is new Block.Util (Request,
-                                          Create_Request,
-                                          Get_Kind,
-                                          Get_Priv,
-                                          Get_Start,
-                                          Get_Length,
-                                          Get_Status);
+   procedure Allocate_Request (C      : in out Client_Session;
+                               R      : in out Request;
+                               Kind   :        Request_Kind;
+                               Start  :        Id;
+                               Length :        Count;
+                               Ident  :        Request_Id)
+   is
+      use type Cxx.Unsigned_Long;
+      Opcode : Integer;
+   begin
+      case Kind is
+         when Read  => Opcode := 0;
+         when Write => Opcode := 1;
+         when Sync  => Opcode := 2;
+         when Trim  => Opcode := 3;
+         when others => Opcode := -1;
+      end case;
+      R.Packet.Block_Count := 0;
+      Cxx.Block.Client.Allocate_Request (C.Instance, R.Packet, Opcode,
+                                         Cxx.Genode.Uint64_T (Start),
+                                         Cxx.Unsigned_Long (Length),
+                                         Cxx.Unsigned_Long (Request_Id'Pos (Ident)));
+      if R.Packet.Block_Count > 0 then
+         R.Status := Componolit.Interfaces.Internal.Block.Allocated;
+      end if;
+   end Allocate_Request;
+
+   function Valid_Capability (C : Request_Capability) return Boolean
+   is
+   begin
+      return C.Valid;
+   end Valid_Capability;
+
+   function Request_Identifier (C : Request_Capability) return Request_Id
+   is
+   begin
+      return Request_Id'Val (C.Tag);
+   end Request_Identifier;
+
+   procedure Update_Response_Queue (C     : in out Client_Session;
+                                    R_Cap :    out Request_Capability)
+   is
+      Status  : Integer;
+      Success : Integer;
+      Tag     : Cxx.Unsigned_Long;
+   begin
+      Cxx.Block.Client.Update_Response_Queue (C.Instance, Status, Tag, Success);
+      if Status = 1 then
+         R_Cap := Request_Capability'(Valid   => True,
+                                      Tag     => Tag,
+                                      Success => Success = 1);
+      else
+         R_Cap := Request_Capability'(False, 0, False);
+      end if;
+   end Update_Response_Queue;
+
+   procedure Update_Request (C     : in out Client_Session;
+                             R     : in out Request;
+                             R_Cap :        Request_Capability)
+   is
+      pragma Unreferenced (C);
+   begin
+      R.Status := (if
+                      R_Cap.Success
+                   then
+                      Componolit.Interfaces.Internal.Block.Ok
+                   else
+                      Componolit.Interfaces.Internal.Block.Error);
+   end Update_Request;
 
    function Create return Client_Session
    is
@@ -137,31 +207,12 @@ is
       Cxx.Block.Client.Finalize (C.Instance);
    end Finalize;
 
-   function Ready (C : Client_Session;
-                   R : Request) return Boolean
-   is
-   begin
-      return Cxx.Block.Client.Ready (C.Instance, Client_Util.Convert_Request (R)) = Cxx.Bool'Val (1);
-   end Ready;
-
-   function Supported (C : Client_Session;
-                       R : Request_Kind) return Boolean
-   is
-   begin
-      return Cxx.Block.Client.Supported (C.Instance, (case R is
-                                                      when None      => Cxx.Block.None,
-                                                      when Read      => Cxx.Block.Read,
-                                                      when Write     => Cxx.Block.Write,
-                                                      when Sync      => Cxx.Block.Sync,
-                                                      when Trim      => Cxx.Block.Trim,
-                                                      when Undefined => Cxx.Block.None)) = Cxx.Bool'Val (1);
-   end Supported;
-
    procedure Enqueue (C : in out Client_Session;
-                      R :        Request)
+                      R : in out Request)
    is
    begin
-      Cxx.Block.Client.Enqueue (C.Instance, Client_Util.Convert_Request (R));
+      Cxx.Block.Client.Enqueue (C.Instance, R.Packet);
+      R.Status := Componolit.Interfaces.Internal.Block.Pending;
    end Enqueue;
 
    procedure Submit (C : in out Client_Session)
@@ -170,30 +221,19 @@ is
       Cxx.Block.Client.Submit (C.Instance);
    end Submit;
 
-   function Next (C : Client_Session) return Request
-   is
-   begin
-      return Client_Util.Convert_Request (Cxx.Block.Client.Next (C.Instance));
-   end Next;
-
    procedure Read (C : in out Client_Session;
                    R :        Request)
    is
    begin
-      Cxx.Block.Client.Read (C.Instance,
-                             Client_Util.Convert_Request (R));
+      Cxx.Block.Client.Read (C.Instance, R.Packet);
    end Read;
 
-   pragma Warnings (Off, "formal parameter ""R"" is not modified");
-   --  R is not modified but the platform state has changed and R becomes invalid on the platform
    procedure Release (C : in out Client_Session;
                       R : in out Request)
    is
-   pragma Warnings (On, "formal parameter ""R"" is not modified");
    begin
-      if R.Kind /= None and R.Kind /= Undefined then
-         Cxx.Block.Client.Release (C.Instance, Client_Util.Convert_Request (R));
-      end if;
+      Cxx.Block.Client.Release (C.Instance, R.Packet);
+      R.Status := Componolit.Interfaces.Internal.Block.Raw;
    end Release;
 
    function Writable (C : Client_Session) return Boolean
