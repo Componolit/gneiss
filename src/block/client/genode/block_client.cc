@@ -7,7 +7,6 @@
 #include <ada/exception.h>
 #include <cai_capability.h>
 
-#include <genode_packet.h>
 namespace Cai {
 #include <block_client.h>
 }
@@ -119,122 +118,69 @@ void Cai::Block::Client::finalize()
     _env = nullptr;
 }
 
-class Packet_allocator
+void Cai::Block::Client::allocate_request (void *request,
+                                           int opcode,
+                                           Genode::uint64_t start,
+                                           unsigned long length,
+                                           unsigned long tag)
 {
-    private:
-        ::Block::Packet_descriptor _alloc_packet;
-
-    public:
-        Packet_allocator() :
-            _alloc_packet()
-        { }
-
-        void free(void *device)
-        {
-            if(_alloc_packet.size()){
-                blk(device)->tx()->release_packet(_alloc_packet);
-            }
-        }
-
-        void reallocate(void *device, Genode::uint64_t size)
-        {
-            if(size != _alloc_packet.size()){
-                free(device);
-                _alloc_packet = blk(device)->alloc_packet(size);
-            }
-        }
-
-        ::Block::Packet_descriptor take()
-        {
-            ::Block::Packet_descriptor packet = ::Block::Packet_descriptor(
-                    _alloc_packet.offset(),
-                    _alloc_packet.size());
-            _alloc_packet = ::Block::Packet_descriptor();
-            return packet;
-        }
-};
-
-static Packet_allocator _packet_allocator {};
-
-bool Cai::Block::Client::ready(Cai::Block::Request req)
-{
-    if(_device && (req.kind == Cai::Block::READ || req.kind == Cai::Block::WRITE)){
-        try {
-            _packet_allocator.reallocate(_device, block_size() * req.length);
-        } catch (...) {
-            return false;
-        }
+    ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
+    if(opcode == ::Block::Packet_descriptor::Opcode::READ
+            || opcode == ::Block::Packet_descriptor::Opcode::WRITE){
+        try{
+            *packet = ::Block::Packet_descriptor(blk(_device)->alloc_packet (block_size() * length),
+                    static_cast<::Block::Packet_descriptor::Opcode>(opcode),
+                    start,
+                    length,
+                    {tag});
+        }catch(...){}
     }
-    return _device && (blk(_device)->tx()->ready_to_submit()
-                       || req.kind == Cai::Block::SYNC
-                       || req.kind == Cai::Block::TRIM);
 }
 
-bool Cai::Block::Client::supported(Cai::Block::Kind kind)
+void Cai::Block::Client::update_response_queue(int *status,
+                                               unsigned long *tag,
+                                               int *success)
 {
-    return kind == Cai::Block::READ || kind == Cai::Block::WRITE;
+    if(blk(_device)->tx()->ack_avail()){
+        ::Block::Packet_descriptor packet = blk(_device)->tx()->get_acked_packet();
+        *success = static_cast<int>(packet.succeeded());
+        *status = 1;
+        *tag = packet.tag().value;
+    }else{
+        *status = 0;
+    }
 }
 
-void Cai::Block::Client::enqueue(Cai::Block::Request req)
+void Cai::Block::Client::enqueue(void *request)
 {
-    _packet_allocator.reallocate(_device, block_size() * req.length);
-    ::Block::Packet_descriptor packet(
-            _packet_allocator.take(),
-            req.kind == Cai::Block::READ ? ::Block::Packet_descriptor::READ : ::Block::Packet_descriptor::WRITE,
-            req.start, req.length);
-    if(req.kind == Cai::Block::WRITE){
+    ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
+    if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
         ((void (*)(void *, Cai::Block::Kind, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_rw))(
-                get_instance(), req.kind, block_size(), req.start, req.length,
-                blk(_device)->tx()->packet_content(packet));
+                get_instance(), Cai::Block::WRITE, block_size(), packet->block_number(), packet->block_count(),
+                blk(_device)->tx()->packet_content(*packet));
     }
-    blk(_device)->tx()->submit_packet(packet);
+    blk(_device)->tx()->submit_packet(*packet);
 }
 
 void Cai::Block::Client::submit()
 { }
 
-static const ::Block::Packet_descriptor empty_packet = ::Block::Packet_descriptor();
-
-static bool packet_empty(::Block::Packet_descriptor const &packet)
+void Cai::Block::Client::read(void *request)
 {
-    return packet.operation() == empty_packet.operation()
-        && packet.block_number() == empty_packet.block_number()
-        && packet.block_count() == empty_packet.block_count()
-        && packet.succeeded() == empty_packet.succeeded();
-}
-
-static ::Block::Packet_descriptor last_ack = empty_packet;
-
-Cai::Block::Request Cai::Block::Client::next()
-{
-    Cai::Block::Request req = {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
-    if(packet_empty(last_ack)){
-        if(blk(_device)->tx()->ack_avail()){
-            last_ack = blk(_device)->tx()->get_acked_packet();
-            req = create_cai_block_request (last_ack);
-        }
-    }else{
-        req = create_cai_block_request (last_ack);
-    }
-    return req;
-}
-
-void Cai::Block::Client::read(Cai::Block::Request req)
-{
-    ::Block::Packet_descriptor packet = create_packet_descriptor(req);
+    ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     ((void (*)(void *, Cai::Block::Kind, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_rw))(
-            get_instance(), req.kind, block_size(), req.start, req.length,
-            blk(_device)->tx()->packet_content(packet));
+            get_instance(), Cai::Block::READ, block_size(), packet->block_number(), packet->block_count(),
+            blk(_device)->tx()->packet_content(*packet));
 }
 
 
-void Cai::Block::Client::release(Cai::Block::Request)
+void Cai::Block::Client::release(void *request)
 {
-    if(last_ack.operation() == ::Block::Packet_descriptor::READ
-            || last_ack.operation() == ::Block::Packet_descriptor::WRITE){
-        blk(_device)->tx()->release_packet(last_ack);
+    ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
+    if(packet->operation() == ::Block::Packet_descriptor::READ
+            || packet->operation() == ::Block::Packet_descriptor::WRITE){
+        blk(_device)->tx()->release_packet(*packet);
     }
-    last_ack = empty_packet;
 }
 
 bool Cai::Block::Client::writable()

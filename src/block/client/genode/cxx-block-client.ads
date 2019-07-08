@@ -9,6 +9,15 @@ is
    type Private_Uint64_T_Address_Array is array (Natural range <>) of Private_Uint64_T_Address;
    type Private_Void is limited private;
 
+   type Packet_Descriptor is limited record
+      Offset       : Cxx.Long;
+      Bytes        : Cxx.Unsigned_Long;
+      Opcode       : Integer;
+      Tag          : Cxx.Unsigned_Long;
+      Block_Number : Cxx.Unsigned_Long_Long;
+      Block_Count  : Cxx.Unsigned_Long;
+   end record;
+
    type Class is
    limited record
       Private_X_Block_Count : Private_Uint64_T;
@@ -58,26 +67,32 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client8finalizeEv";
 
-   function Ready (This : Class;
-                   Req  : Cxx.Block.Request.Class) return Cxx.Bool with
+   procedure Allocate_Request (This   :        Class;
+                               Req    : in out Packet_Descriptor;
+                               Opcode :        Integer;
+                               Start  :        Cxx.Genode.Uint64_T;
+                               Length :        Cxx.Unsigned_Long;
+                               Tag    :        Cxx.Unsigned_Long) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client5readyENS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Client16allocate_requestEPviymm";
 
-   function Supported (This : Class;
-                       Req  : Cxx.Block.Kind) return Cxx.Bool with
+   procedure Update_Response_Queue (This    :     Class;
+                                    State   : out Integer;
+                                    Tag     : out Cxx.Unsigned_Long;
+                                    Success : out Integer) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client9supportedENS0_4KindE";
+      External_Name => "_ZN3Cai5Block6Client21update_response_queueEPiPmS2_";
 
    procedure Enqueue (This : Class;
-                      Req  : Cxx.Block.Request.Class) with
+                      Req  : in out Packet_Descriptor) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client7enqueueENS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Client7enqueueEPv";
 
    procedure Submit (This : Class) with
       Global        => null,
@@ -85,25 +100,19 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client6submitEv";
 
-   function Next (This : Class) return Cxx.Block.Request.Class with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client4nextEv";
-
    procedure Read (This :        Class;
-                   Req  :        Cxx.Block.Request.Class) with
+                   Req  :        Packet_Descriptor) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client4readENS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Client4readEPv";
 
    procedure Release (This : Class;
-                      Req  : Cxx.Block.Request.Class) with
+                      Req  : in out Packet_Descriptor) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client7releaseENS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Client7releaseEPv";
 
    function Writable (This : Class) return Cxx.Bool with
       Global        => null,
