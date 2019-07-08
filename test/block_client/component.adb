@@ -8,6 +8,8 @@ package body Component with
   SPARK_Mode
 is
 
+   type Request_Id is mod 8;
+
    package Block is new Componolit.Interfaces.Block (Character, Positive, String);
 
    procedure Write (C : Block.Client_Instance;
@@ -22,7 +24,11 @@ is
                    L : Block.Count;
                    D : String);
 
-   package Block_Client is new Block.Client (Run, Read, Write);
+   package Block_Client is new Block.Client (Request_Id, Run, Read, Write);
+
+   type Request_Cache_Type is array (Request_Id'Range) of Block_Client.Request;
+
+   Request_Cache : Request_Cache_Type := (others => Block_Client.Create_Request);
 
    use all type Block.Count;
    use all type Block.Size;
@@ -74,64 +80,73 @@ is
                      Operation :        Block.Request_Kind)
    is
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
+      Req_Cap    : Block_Client.Request_Capability;
+      Req_Id     : Request_Id;
+      Alloc      : Request_Id;
+      Alloc_Succ : Boolean := False;
    begin
       if S.Acked < Request_Count then
          loop
             pragma Loop_Invariant (Block_Client.Initialized (Client));
             pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
             pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
-            declare
-               R   : Block_Client.Request := Block_Client.Next (Client);
-            begin
-               exit when S.Acked >= Request_Count;
-               case R.Kind is
-                  when Block.Write =>
-                     if R.Status /= Block.Ok then
-                        Componolit.Interfaces.Log.Client.Error (Log, "Write failed.");
-                     end if;
-                     S.Acked := S.Acked + 1;
-                  when Block.Read =>
-                     if R.Status = Block.Ok and R.Length = 1 then
-                        Block_Client.Read (Client, R);
-                     else
-                        Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
-                     end if;
-                     S.Acked := S.Acked + 1;
-                  when others =>
-                     null;
-               end case;
-               --  pragma Warnings (Off, "unused assignment to ""R""");
-               Block_Client.Release (Client, R);
-               --  pragma Warnings (On, "unused assignment to ""R""");
-               exit when R.Kind = Block.None;
-            end;
+            Block_Client.Update_Response_Queue (Client, Req_Cap);
+            exit when not Block_Client.Valid_Capability (Req_Cap);
+            exit when S.Acked >= Request_Count;
+            Req_Id := Block_Client.Request_Identifier (Req_Cap);
+            Block_Client.Update_Request (Client, Request_Cache (Req_Id), Req_Cap);
+            case Block_Client.Request_Type (Request_Cache (Req_Id)) is
+               when Block.Write =>
+                  if Block_Client.Request_State (Request_Cache (Req_Id)) /= Block.Ok then
+                     Componolit.Interfaces.Log.Client.Error (Log, "Write failed.");
+                  end if;
+                  S.Acked := S.Acked + 1;
+               when Block.Read =>
+                  if
+                     Block_Client.Request_State (Request_Cache (Req_Id)) = Block.Ok
+                     and then Block_Client.Request_Length (Request_Cache (Req_Id)) = 1
+                  then
+                     Block_Client.Read (Client, Request_Cache (Req_Id));
+                  else
+                     Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
+                  end if;
+                  S.Acked := S.Acked + 1;
+               when others =>
+                  null;
+            end case;
+            Block_Client.Release (Client, Request_Cache (Req_Id));
          end loop;
       end if;
-      if Block_Size <= 4096 and Block_Size >= 256 and Block_Client.Supported (Client, Operation) then
-         declare
-            Req : Block_Client.Request (Kind => Operation);
-         begin
-            Req.Priv   := Block.Null_Data;
-            Req.Length := 1;
-            Req.Status := Block.Raw;
-            if S.Sent < Request_Count then
-               pragma Assert (Block_Client.Supported (Client, Operation));
-               loop
-                  pragma Loop_Invariant (Block_Client.Initialized (Client));
-                  pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
-                  pragma Loop_Invariant (S.Sent < Integer'Last);
-                  pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
-                  pragma Loop_Invariant (Block_Client.Supported (Client, Operation));
-                  Req.Start := Block.Id (S.Sent + 1);
-                  exit when not Block_Client.Ready (Client, Req)
-                            or S.Sent >= Request_Count
-                            or S.Sent = Integer'Last;
-                  Block_Client.Enqueue (Client, Req);
-                  S.Sent := S.Sent + 1;
+      if Block_Size <= 4096 and Block_Size >= 256 then
+         if S.Sent < Request_Count then
+            loop
+               pragma Loop_Invariant (Block_Client.Initialized (Client));
+               pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
+               pragma Loop_Invariant (S.Sent < Integer'Last);
+               pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
+               for I in Request_Cache'Range loop
+                  if Block_Client.Request_State (Request_Cache (I)) = Block.Raw then
+                     Alloc := I;
+                     Alloc_Succ := True;
+                     exit;
+                  end if;
                end loop;
-               Block_Client.Submit (Client);
-            end if;
-         end;
+               exit when not Alloc_Succ
+                         or S.Sent >= Request_Count
+                         or S.Sent = Integer'Last;
+               Block_Client.Allocate_Request (Client,
+                                              Request_Cache (Alloc),
+                                              Operation,
+                                              Block.Id (S.Sent + 1),
+                                              1,
+                                              Alloc);
+               exit when Block_Client.Request_State (Request_Cache (Alloc)) /= Block.Allocated;
+               Block_Client.Enqueue (Client, Request_Cache (Alloc));
+               S.Sent := S.Sent + 1;
+               Alloc_Succ := False;
+            end loop;
+            Block_Client.Submit (Client);
+         end if;
       else
          Componolit.Interfaces.Log.Client.Error (Log, "Failed to send write requests. Invalid block size.");
       end if;
