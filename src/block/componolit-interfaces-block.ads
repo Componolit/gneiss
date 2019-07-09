@@ -132,8 +132,7 @@ is
    --  @value Pending       Request is in flight
    --  @value Ok            Successfully handled request
    --  @value Error         Failed request
-   --  @value Acknowledged  Request has been acknoweledged by the platform, only relevant for server
-   type Request_Status is (Raw, Allocated, Pending, Ok, Error, Acknowledged);
+   type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
    --  Platform specific data
    type Private_Data is private;

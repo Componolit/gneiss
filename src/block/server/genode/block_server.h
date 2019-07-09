@@ -37,11 +37,10 @@ namespace Block
                     void *writable);
             void finalize();
             Ada bool writable();
-            Request head();
-            void discard();
-            void read(Request request, void *buffer);
-            void write(Request request, void *buffer);
-            void acknowledge(Request &request);
+            void process_request(void *request, int *success);
+            void read(void *request, void *buffer);
+            void write(void *request, void *buffer);
+            void acknowledge(void *request, int *success);
             bool initialized();
             void unblock_client();
     };

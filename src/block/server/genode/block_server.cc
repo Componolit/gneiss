@@ -5,7 +5,6 @@
 #include <util/reconstructible.h>
 #include <cai_capability.h>
 
-#include <genode_packet.h>
 #include <block_root.h>
 namespace Cai {
 #include <block_server.h>
@@ -134,55 +133,46 @@ static Cai::Block::Block_session_component &blk(void *session)
     return static_cast<Cai::Block::Block_root *>(session)->_session;
 }
 
-Cai::Block::Request Cai::Block::Server::head()
+void Cai::Block::Server::process_request(void *request, int *success)
 {
-    Request request = Cai::Block::Request {Cai::Block::NONE, {}, 0, 0, Cai::Block::RAW};
-    blk(_session).with_requests([&] (::Block::Request req) {
-        request = create_cai_block_request (req);
-        request.status = Cai::Block::RAW;
-        return Cai::Block::Block_session_component::Response::RETRY;
-    });
-    return request;
-}
-
-void Cai::Block::Server::discard()
-{
-    bool accepted = false;
-    blk(_session).with_requests([&] (::Block::Request) {
-        if(accepted){
+    *success = 0;
+    ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
+    blk(_session).with_requests([&] (::Block::Request r) {
+        if(*success){
             return Cai::Block::Block_session_component::Response::RETRY;
         }else{
-            accepted = true;
+            *req = r;
+            *success = 1;
             return Cai::Block::Block_session_component::Response::ACCEPTED;
         }
     });
 }
 
-void Cai::Block::Server::read(Cai::Block::Request request, void *buffer)
+void Cai::Block::Server::read(void *request, void *buffer)
 {
-    ::Block::Request req = create_genode_block_request(request);
-    blk(_session).with_content(req, [&] (void *ptr, Genode::size_t size){
+    ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
+    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
         Genode::memcpy(ptr, buffer, size);
     });
 }
 
-void Cai::Block::Server::write(Cai::Block::Request request, void *buffer)
+void Cai::Block::Server::write(void *request, void *buffer)
 {
-    ::Block::Request req = create_genode_block_request(request);
-    blk(_session).with_content(req, [&] (void *ptr, Genode::size_t size){
+    ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
+    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
         Genode::memcpy(buffer, ptr, size);
     });
 }
 
-void Cai::Block::Server::acknowledge(Cai::Block::Request &req)
+void Cai::Block::Server::acknowledge(void *request, int *success)
 {
-    bool acked = false;
+    ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
+    req->success = static_cast<bool>(*success);
+    *success = 0;
     blk(_session).try_acknowledge([&] (Cai::Block::Block_session_component::Ack &ack){
-        if (acked) {
-            req.status = Cai::Block::ACK;
-        } else {
-            ack.submit(create_genode_block_request(req));
-            acked = true;
+        if(!*success){
+            ack.submit(*req);
+            *success = 1;
         }
     });
 }

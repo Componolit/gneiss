@@ -9,6 +9,8 @@
 --  GNU Affero General Public License version 3.
 --
 
+private with Componolit.Interfaces.Internal.Block;
+
 pragma Warnings (Off, "procedure ""Event"" is not referenced");
 pragma Warnings (Off, "function ""Block_Count"" is not referenced");
 pragma Warnings (Off, "function ""Block_Size"" is not referenced");
@@ -63,26 +65,41 @@ package Componolit.Interfaces.Block.Server with
    SPARK_Mode
 is
 
-   --  Redefinition of Componolit.Interfaces.Block.Client.Request
-   --  since SPARK does not allow discriminants of derived types
-   --  SPARK RM 3.7 (2)
+   --  Block server request
+   type Request is limited private;
+
+   --  Create empty request
    --
-   --  @field Kind    Request type
-   --  @field Priv    Private platform data
-   --  @field Start   First block to access
-   --  @field Length  Number of consecutive blocks to access including the first block
-   --  @field Status  Request status
-   type Request (Kind : Request_Kind := None) is record
-      Priv : Private_Data;
-      case Kind is
-         when None | Undefined =>
-            null;
-         when Read .. Trim =>
-            Start  : Id;
-            Length : Count;
-            Status : Request_Status;
-      end case;
-   end record;
+   --  @return  empty, uninitialized request
+   function Create_Request return Request with
+      Post => Request_State (Create_Request'Result) = Raw;
+
+   --  Get request type
+   --
+   --  @param R  Request
+   --  @return   Request type
+   function Request_Type (R : Request) return Request_Kind with
+      Pre => Request_State (R) = Pending;
+
+   --  Get request status
+   --
+   --  @param R  Request
+   --  @return   Request status
+   function Request_State (R : Request) return Request_Status;
+
+   --  Get request start block
+   --
+   --  @param R  Request
+   --  @return   First block id to be handled by this request
+   function Request_Start (R : Request) return Id with
+      Pre => Request_State (R) = Pending;
+
+   --  Get request length in blocks
+   --
+   --  @param R  Request
+   --  @return   Number of consecutive blocks handled by this request
+   function Request_Length (R : Request) return Count with
+      Pre => Request_State (R) = Pending;
 
    --  Check if S is initialized
    --
@@ -101,21 +118,19 @@ is
    function Get_Instance (S : Server_Session) return Server_Instance with
       Pre => Initialized (S);
 
-   --  Get the next request that is pending for consumption
+   --  Process an incoming request
    --
-   --  It will not remove the request from the queue.
-   --  Request.Kind is None if no request is available.
-   --
-   --  @param S  Server session instance
-   function Head (S : Server_Session) return Request with
-      Pre => Initialized (S);
-
-   --  Discards the request currently available from Head making the next one available
+   --  A raw request can be used to process an incoming request. If the request is Pending after this procedure
+   --  call it holds a request that needs to be handled. If it is still raw there is nothing to handle.
    --
    --  @param S  Server session instance
-   procedure Discard (S : in out Server_Session) with
-      Pre  => Initialized (S),
-      Post => Initialized (S);
+   --  @param R  Raw request slot
+   procedure Process_Request (S : in out Server_Session;
+                              R : in out Request) with
+      Pre  => Initialized (S)
+              and then Request_State (R) = Raw,
+      Post => Initialized (S)
+              and then Request_State (R) in Raw | Pending;
 
    --  Provide the requested data for a read request
    --
@@ -126,8 +141,9 @@ is
                    R :        Request;
                    B :        Buffer) with
       Pre  => Initialized (S)
-              and R.Kind = Read
-              and B'Length = R.Length * Block_Size (Get_Instance (S)),
+              and then Request_State (R) = Pending
+              and then Request_Type (R) = Read
+              and then B'Length = Request_Length (R) * Block_Size (Get_Instance (S)),
       Post => Initialized (S);
 
    --  Get the data of a write request that shall be written
@@ -139,18 +155,26 @@ is
                     R :        Request;
                     B :    out Buffer) with
       Pre  => Initialized (S)
-              and R.Kind = Write
-              and B'Length = R.Length * Block_Size (Get_Instance (S)),
+              and then Request_State (R) = Pending
+              and then Request_Type (R) = Write
+              and then B'Length = Request_Length (R) * Block_Size (Get_Instance (S)),
       Post => Initialized (S);
 
    --  Acknowledge a handled request
    --
+   --  If the request type is Raw after this procedure call, the request has been acknowledged successfully,
+   --  if not the acknowledgement has failed and needs to be retried.
+   --
    --  @param S  Server session instance
    --  @param R  Request to acknowledge
-   procedure Acknowledge (S : in out Server_Session;
-                          R : in out Request) with
-      Pre  => Initialized (S) and (R.Status = Ok or R.Status = Error),
-      Post => Initialized (S);
+   procedure Acknowledge (S      : in out Server_Session;
+                          R      : in out Request;
+                          Status :        Request_Status) with
+      Pre  => Initialized (S)
+              and then Request_State (R) = Pending
+              and then Status in Ok | Error,
+      Post => Initialized (S)
+              and then Request_State (R) in Raw | Pending;
 
    --  Signal client to wake up
    --
@@ -159,5 +183,9 @@ is
    --
    --  @param S  Server session instance
    procedure Unblock_Client (S : in out Server_Session);
+
+private
+
+   type Request is new Componolit.Interfaces.Internal.Block.Server_Request;
 
 end Componolit.Interfaces.Block.Server;

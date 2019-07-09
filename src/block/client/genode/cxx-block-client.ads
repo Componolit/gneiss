@@ -1,4 +1,5 @@
 with Componolit.Interfaces.Types;
+with Cxx.Genode;
 
 package Cxx.Block.Client
    with SPARK_Mode => On
