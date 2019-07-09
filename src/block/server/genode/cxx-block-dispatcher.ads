@@ -1,5 +1,5 @@
 with Cxx.Block.Server;
-
+with Cxx.Genode;
 with Componolit.Interfaces.Types;
 
 package Cxx.Block.Dispatcher
