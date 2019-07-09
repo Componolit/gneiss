@@ -12,16 +12,12 @@ is
 
    package Block is new Componolit.Interfaces.Block (Character, Positive, String);
 
-   procedure Write (C : Block.Client_Instance;
-                    B : Block.Size;
-                    S : Block.Id;
-                    L : Block.Count;
+   procedure Write (C :     Block.Client_Instance;
+                    R :     Request_Id;
                     D : out String);
 
    procedure Read (C : Block.Client_Instance;
-                   B : Block.Size;
-                   S : Block.Id;
-                   L : Block.Count;
+                   R : Request_Id;
                    D : String);
 
    package Block_Client is new Block.Client (Request_Id, Run, Read, Write);
@@ -62,18 +58,14 @@ is
       Post => Block_Client.Initialized (Client)
               and Componolit.Interfaces.Log.Client.Initialized (Log);
 
-   procedure Write (C : Block.Client_Instance;
-                    B : Block.Size;
-                    S : Block.Id;
-                    L : Block.Count;
+   procedure Write (C :     Block.Client_Instance;
+                    R :     Request_Id;
                     D : out String)
    is
       pragma Unreferenced (C);
-      pragma Unreferenced (B);
-      pragma Unreferenced (L);
       use type Block.Id;
    begin
-      D := (others => Character'Val (33 + Integer (S mod 93)));
+      D := (others => Character'Val (33 + Integer (Block_Client.Request_Start (Request_Cache (R)) mod 93)));
    end Write;
 
    procedure Single (S         : in out State;
@@ -153,15 +145,11 @@ is
    end Single;
 
    procedure Read (C : Block.Client_Instance;
-                   B : Block.Size;
-                   S : Block.Id;
-                   L : Block.Count;
+                   R : Request_Id;
                    D : String)
    is
       pragma Unreferenced (C);
-      pragma Unreferenced (B);
-      pragma Unreferenced (S);
-      pragma Unreferenced (L);
+      pragma Unreferenced (R);
    begin
       Componolit.Interfaces.Log.Client.Info (Log, "Read succeeded:");
       if D'Length >= Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) then
