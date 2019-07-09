@@ -10,7 +10,7 @@ package Componolit.Interfaces.Internal.Block is
    type Private_Data is new Cxx.Genode_Uint8_T_Array (1 .. 16);
    Null_Data : Private_Data := (others => 0);
 
-   type Request_Status is (Raw, Allocated, Pending, Ok, Error, Acknowledged);
+   type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
    type Client_Request is limited record
       Packet : Cxx.Block.Client.Packet_Descriptor;
@@ -21,6 +21,11 @@ package Componolit.Interfaces.Internal.Block is
       Valid   : Boolean;
       Tag     : Cxx.Unsigned_Long;
       Success : Boolean;
+   end record;
+
+   type Server_Request is limited record
+      Request : Cxx.Block.Server.Request;
+      Status  : Request_Status;
    end record;
 
    type Client_Session is limited record

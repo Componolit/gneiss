@@ -44,7 +44,6 @@ is
          when Componolit.Interfaces.Internal.Block.Pending      => return Pending;
          when Componolit.Interfaces.Internal.Block.Ok           => return Ok;
          when Componolit.Interfaces.Internal.Block.Error        => return Error;
-         when Componolit.Interfaces.Internal.Block.Acknowledged => return Acknowledged;
       end case;
    end Request_State;
 

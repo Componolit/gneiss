@@ -1,4 +1,5 @@
 with Componolit.Interfaces.Types;
+with Cxx.Genode;
 
 package Cxx.Block.Server
    with SPARK_Mode => On
@@ -13,6 +14,15 @@ is
       Writable              : Cxx.Void_Address;
    end record
    with Import, Convention => CPP;
+
+   type Request is limited record
+      Kind         : Integer;
+      Block_Number : Cxx.Genode.Uint64_T;
+      Block_Count  : Cxx.Unsigned_Long;
+      Success      : Cxx.Bool;
+      Offset       : Cxx.Long;
+      Tag          : Cxx.Unsigned_Long;
+   end record;
 
    function Constructor return Class with
       Global => null;
@@ -49,40 +59,37 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Server8writableEv";
 
-   function Head (This : Class) return Cxx.Block.Request.Class with
-      Global        => null,
+   procedure Process_Request (This :        Class;
+                              Req  : in out Request;
+                              Suc  :    out Integer) with
+      Global => null,
       Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server4headEv";
-
-   procedure Discard (This : Class) with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server7discardEv";
+      Convention => CPP,
+      External_Name => "_ZN3Cai5Block6Server15process_requestEPvPi";
 
    procedure Read (This   : Class;
-                   Req    : Cxx.Block.Request.Class;
+                   Req    : Request;
                    Buffer : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server4readENS0_7RequestEPv";
+      External_Name => "_ZN3Cai5Block6Server4readEPvS2_";
 
    procedure Write (This   : Class;
-                    Req    : Cxx.Block.Request.Class;
+                    Req    : Request;
                     Buffer : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server5writeENS0_7RequestEPv";
+      External_Name => "_ZN3Cai5Block6Server5writeEPvS2_";
 
-   procedure Acknowledge (This :        Class;
-                          Req  : in out Cxx.Block.Request.Class) with
+   procedure Acknowledge (This   :        Class;
+                          Req    : in out Request;
+                          Status : in out Integer) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server11acknowledgeERNS0_7RequestE";
+      External_Name => "_ZN3Cai5Block6Server11acknowledgeEPvPi";
 
    function Initialized (This : Class) return Cxx.Bool with
       Global        => null,
