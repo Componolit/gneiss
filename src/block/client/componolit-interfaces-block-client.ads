@@ -33,9 +33,7 @@ pragma Warnings (Off, "procedure ""Write"" is not referenced");
    --  @param Length  Number of blocks to read
    --  @param Data    Read data
    with procedure Read (C      : Client_Instance;
-                        Bsize  : Size;
-                        Start  : Id;
-                        Length : Count;
+                        Req    : Request_Id;
                         Data   : Buffer);
 
    --  Write procedure called when the platform required data to write
@@ -47,9 +45,7 @@ pragma Warnings (Off, "procedure ""Write"" is not referenced");
    --  @param Length  Number of blocks that will be written
    --  @param Data    Data that will be written
    with procedure Write (C      :     Client_Instance;
-                         Bsize  :     Size;
-                         Start  :     Id;
-                         Length :     Count;
+                         Req    :     Request_Id;
                          Data   : out Buffer);
 pragma Warnings (On, "procedure ""Event"" is not referenced");
 pragma Warnings (On, "procedure ""Read"" is not referenced");

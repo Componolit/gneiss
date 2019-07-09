@@ -154,11 +154,13 @@ void Cai::Block::Client::update_response_queue(int *status,
 void Cai::Block::Client::enqueue(void *request)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
-    if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
-        ((void (*)(void *, Cai::Block::Kind, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_rw))(
-                get_instance(), Cai::Block::WRITE, block_size(), packet->block_number(), packet->block_count(),
-                blk(_device)->tx()->packet_content(*packet));
-    }
+    ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
+            get_instance(),
+            static_cast<int>(packet->operation()),
+            block_size(),
+            packet->tag().value,
+            packet->block_count(),
+            blk(_device)->tx()->packet_content(*packet));
     blk(_device)->tx()->submit_packet(*packet);
 }
 
@@ -168,8 +170,12 @@ void Cai::Block::Client::submit()
 void Cai::Block::Client::read(void *request)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
-    ((void (*)(void *, Cai::Block::Kind, Genode::uint64_t, Genode::uint64_t, Genode::uint64_t, void *))(_rw))(
-            get_instance(), Cai::Block::READ, block_size(), packet->block_number(), packet->block_count(),
+    ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
+            get_instance(),
+            static_cast<int>(packet->operation()),
+            block_size(),
+            packet->tag().value,
+            packet->block_count(),
             blk(_device)->tx()->packet_content(*packet));
 }
 
