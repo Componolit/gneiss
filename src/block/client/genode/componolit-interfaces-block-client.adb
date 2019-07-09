@@ -155,27 +155,27 @@ is
    end Initialized;
 
    procedure Crw (C : Client_Instance;
-                  K : Cxx.Block.Kind;
+                  O : Integer;
                   B : Size;
-                  S : Id;
+                  T : Cxx.Unsigned_Long;
                   L : Count;
                   D : System.Address);
 
    procedure Crw (C : Client_Instance;
-                  K : Cxx.Block.Kind;
+                  O : Integer;
                   B : Size;
-                  S : Id;
+                  T : Cxx.Unsigned_Long;
                   L : Count;
                   D : System.Address)
    is
       Data : Buffer (1 .. B * L) with
          Address => D;
    begin
-      case K is
-         when Cxx.Block.Write =>
-            Write (C, B, S, L, Data);
-         when Cxx.Block.Read =>
-            Read (C, B, S, L, Data);
+      case O is
+         when 1 =>
+            Write (C, Request_Id'Val (T), Data);
+         when 0 =>
+            Read (C, Request_Id'Val (T), Data);
          when others =>
             null;
       end case;
