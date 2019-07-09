@@ -154,13 +154,15 @@ void Cai::Block::Client::update_response_queue(int *status,
 void Cai::Block::Client::enqueue(void *request)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
-    ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
-            get_instance(),
-            static_cast<int>(packet->operation()),
-            block_size(),
-            packet->tag().value,
-            packet->block_count(),
-            blk(_device)->tx()->packet_content(*packet));
+    if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
+        ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
+                get_instance(),
+                static_cast<int>(packet->operation()),
+                block_size(),
+                packet->tag().value,
+                packet->block_count(),
+                blk(_device)->tx()->packet_content(*packet));
+    }
     blk(_device)->tx()->submit_packet(*packet);
 }
 
