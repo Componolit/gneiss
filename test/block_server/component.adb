@@ -13,6 +13,15 @@ package body Component is
 
    Ram_Disk : Disk;
 
+   type Request_Index is mod 8;
+   type Cache_Element is limited record
+      Req     : Block_Server.Request;
+      Success : Boolean;
+   end record;
+   type Request_Cache_Type is array (Request_Index'Range) of Cache_Element;
+   Request_Cache : Request_Cache_Type := (others => (Req     => Block_Server.Create_Request,
+                                                     Success => False));
+
    use all type Block.Id;
    use all type Block.Count;
    use all type Block.Request_Kind;
@@ -38,72 +47,85 @@ package body Component is
       end if;
    end Destruct;
 
-   procedure Read (R : in out Block_Server.Request);
+   procedure Read (R : in out Cache_Element);
 
-   procedure Read (R : in out Block_Server.Request)
+   procedure Read (R : in out Cache_Element)
    is
-      Buf : Buffer (1 .. R.Length * Block_Size (Block_Server.Get_Instance (Server)));
+      Start  : constant Block.Id    := Block_Server.Request_Start (R.Req);
+      Length : constant Block.Count := Block_Server.Request_Length (R.Req);
+      Buf    : Buffer (1 .. Length * Block_Size (Block_Server.Get_Instance (Server)));
    begin
       if Buf'Length mod Block_Buffer'Length = 0 and then
-         R.Start in Ram_Disk'Range and then
-         R.Start + (R.Length - 1) in Ram_Disk'Range
+         Start in Ram_Disk'Range and then
+         Start + (Length - 1) in Ram_Disk'Range
       then
-         for I in Block.Id range R.Start .. R.Start + (R.Length - 1) loop
-            Buf (Buf'First + (I - R.Start) * Block_Buffer'Length ..
-               Buf'First + (I - R.Start + 1) * Block_Buffer'Length - 1) := Ram_Disk (I);
+         for I in Block.Id range Start .. Start + (Length - 1) loop
+            Buf (Buf'First + (I - Start) * Block_Buffer'Length ..
+               Buf'First + (I - Start + 1) * Block_Buffer'Length - 1) := Ram_Disk (I);
          end loop;
-         Block_Server.Read (Server, R, Buf);
-         R.Status := Block.Ok;
-      else
-         R.Status := Block.Error;
+         Block_Server.Read (Server, R.Req, Buf);
+         R.Success := True;
       end if;
    end Read;
 
-   procedure Write (R : in out Block_Server.Request);
+   procedure Write (R : in out Cache_Element);
 
-   procedure Write (R : in out Block_Server.Request)
+   procedure Write (R : in out Cache_Element)
    is
-      B : Buffer (1 .. R.Length * Block_Size (Block_Server.Get_Instance (Server)));
+      Start  : constant Block.Id    := Block_Server.Request_Start (R.Req);
+      Length : constant Block.Count := Block_Server.Request_Length (R.Req);
+      B      : Buffer (1 .. Length * Block_Size (Block_Server.Get_Instance (Server)));
    begin
-      R.Status := Block.Error;
       if
          B'Length mod Block_Buffer'Length = 0 and then
-         R.Start in Ram_Disk'Range and then
-         R.Start + (R.Length - 1) in Ram_Disk'Range
+         Start in Ram_Disk'Range and then
+         Start + (Length - 1) in Ram_Disk'Range
       then
-         Block_Server.Write (Server, R, B);
-         for I in Block.Id range R.Start .. R.Start + (R.Length - 1) loop
+         Block_Server.Write (Server, R.Req, B);
+         for I in Block.Id range Start .. Start + (Length - 1) loop
             Ram_Disk (I) :=
-               B (B'First + (I - R.Start) * Block_Buffer'Length ..
-                  B'First + ((I - R.Start) + 1) * Block_Buffer'Length - 1);
+               B (B'First + (I - Start) * Block_Buffer'Length ..
+                  B'First + ((I - Start) + 1) * Block_Buffer'Length - 1);
          end loop;
-         R.Status := Block.Ok;
+         R.Success := True;
       end if;
    end Write;
 
    procedure Event
    is
-      R : Block_Server.Request;
+      Alloc         : Request_Index;
+      Alloc_Success : Boolean := False;
    begin
       if Block_Server.Initialized (Server) then
          loop
-            R := Block_Server.Head (Server);
-            case R.Kind is
+            for I in Request_Cache'Range loop
+               if Block_Server.Request_State (Request_Cache (I).Req) = Raw then
+                  Alloc := I;
+                  Alloc_Success := True;
+                  exit;
+               end if;
+            end loop;
+            exit when not Alloc_Success;
+            Request_Cache (Alloc).Success := False;
+            Block_Server.Process_Request (Server, Request_Cache (Alloc).Req);
+            exit when Block_Server.Request_State (Request_Cache (Alloc).Req) = Raw;
+            case Block_Server.Request_Type (Request_Cache (Alloc).Req) is
                when Block.Read =>
-                  Read (R);
-                  while R.Status /= Block.Acknowledged loop
-                     Block_Server.Acknowledge (Server, R);
+                  Read (Request_Cache (Alloc));
+                  loop
+                     Block_Server.Acknowledge (Server, Request_Cache (Alloc).Req,
+                                               (if Request_Cache (Alloc).Success then Block.Ok else Block.Error));
+                     exit when Block_Server.Request_State (Request_Cache (Alloc).Req) = Raw;
                   end loop;
-                  Block_Server.Discard (Server);
                when Block.Write =>
-                  Write (R);
-                  while R.Status /= Block.Acknowledged loop
-                     Block_Server.Acknowledge (Server, R);
+                  Write (Request_Cache (Alloc));
+                  loop
+                     Block_Server.Acknowledge (Server, Request_Cache (Alloc).Req,
+                                               (if Request_Cache (Alloc).Success then Block.Ok else Block.Error));
+                     exit when Block_Server.Request_State (Request_Cache (Alloc).Req) = Raw;
                   end loop;
-                  Block_Server.Discard (Server);
                when others => null;
             end case;
-            exit when R.Kind = Block.None;
          end loop;
       end if;
       Block_Server.Unblock_Client (Server);
