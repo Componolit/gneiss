@@ -4,8 +4,6 @@ with Componolit.Interfaces.Log.Client;
 
 package body Component is
 
-   use all type Block_Server.Request;
-   use all type Block.Id;
    use all type Block.Request_Kind;
    use all type Block.Request_Status;
 
@@ -38,148 +36,99 @@ package body Component is
    end Destruct;
 
    type Cache_Entry is record
-      Used : Boolean;
-      Request : Block_Server.Request;
+      C : Block_Client.Request;
+      S : Block_Server.Request;
    end record;
 
-   type Registry is array (1 .. 16) of Cache_Entry;
+   type Registry is array (Request_Index'Range) of Cache_Entry;
 
-   Cache : Registry := (others => (False, (Kind => Block.None, Priv => Block.Null_Data)));
-
-   procedure Store (R : Block_Server.Request; Success : out Boolean);
-
-   function Peek (K : Block.Request_Kind; B : Block.Id) return Block_Server.Request;
-
-   procedure Load (R : out Block_Server.Request; K : Block.Request_Kind; B : Block.Id);
-
-   procedure Store (R : Block_Server.Request; Success : out Boolean)
-   is
-      First_Free : Integer := 0;
-   begin
-      Success := False;
-      for I in Cache'Range loop
-         if not Cache (I).Used and First_Free = 0 then
-            First_Free := I;
-         end if;
-         if Cache (I).Used and then Cache (I).Request = R then
-            Success := True;
-            return;
-         end if;
-      end loop;
-      if First_Free > 0 then
-         Cache (First_Free).Used := True;
-         Cache (First_Free).Request := R;
-         Success := True;
-      end if;
-   end Store;
-
-   function Peek (K : Block.Request_Kind; B : Block.Id) return Block_Server.Request
-   is
-   begin
-      for I in Cache'Range loop
-         if
-            Cache (I).Used
-            and then Cache (I).Request.Kind = K
-            and then Cache (I).Request.Start = B
-         then
-            return Cache (I).Request;
-         end if;
-      end loop;
-      return Block_Server.Request'(Kind => None, Priv => Block.Null_Data);
-   end Peek;
-
-   procedure Load (R : out Block_Server.Request; K : Block.Request_Kind; B : Block.Id)
-   is
-   begin
-      R := Block_Server.Request'(Kind => None, Priv => Block.Null_Data);
-      for I in Cache'Range loop
-         if
-            Cache (I).Used
-            and then Cache (I).Request.Kind = K
-            and then Cache (I).Request.Start = B
-         then
-            R := Cache (I).Request;
-            Cache (I).Used := False;
-            return;
-         end if;
-      end loop;
-   end Load;
+   Cache : Registry := (others => (C => Block_Client.Create_Request,
+                                   S => Block_Server.Create_Request));
 
    procedure Write (C :     Block.Client_Instance;
-                    B :     Block.Size;
-                    S :     Block.Id;
-                    L :     Block.Count;
+                    I :     Request_Index;
                     D : out Buffer)
    is
       pragma Unreferenced (C);
-      pragma Unreferenced (B);
-      pragma Unreferenced (L);
-      S_R : constant Block_Server.Request := Peek (Block.Write, S);
    begin
-      Block_Server.Write (Server, S_R, D);
+      Block_Server.Write (Server, Cache (I).S, D);
    end Write;
 
    procedure Read (C : Block.Client_Instance;
-                   B : Block.Size;
-                   S : Block.Id;
-                   L : Block.Count;
+                   I : Request_Index;
                    D : Buffer)
    is
       pragma Unreferenced (C);
-      pragma Unreferenced (B);
-      pragma Unreferenced (L);
-      S_R : constant Block_Server.Request := Peek (Block.Read, S);
    begin
-      Block_Server.Read (Server, S_R, D);
+      Block_Server.Read (Server, Cache (I).S, D);
    end Read;
-
-   function Convert_Request (R : Block_Server.Request) return Block_Client.Request;
-
-   function Convert_Request (R : Block_Server.Request) return Block_Client.Request
-   is
-      C : Block_Client.Request (Kind => R.Kind);
-   begin
-      if C.Kind /= Block.None then
-         C.Priv := Block.Null_Data;
-         C.Start := R.Start;
-         C.Length := R.Length;
-         C.Status := Block.Raw;
-      end if;
-      return C;
-   end Convert_Request;
 
    procedure Event
    is
-      R : Block_Server.Request;
-      A : Block_Client.Request;
-      Success : Boolean;
+      Rc : Block_Client.Request_Capability;
+      Ri : Request_Index;
+      As : Boolean;
    begin
       if
          Block_Client.Initialized (Client)
          and Block_Server.Initialized (Server)
       then
-         loop
-            A := Block_Client.Next (Client);
-            exit when A.Kind = Block.None;
-            if A.Kind = Block.Read and then A.Status = Block.Ok then
-               Block_Client.Read (Client, A);
+         for I in Cache'Range loop
+            if
+               Block_Server.Request_State (Cache (I).S) = Block.Pending
+               and then Block_Client.Request_State (Cache (I).C) = Block.Raw
+            then
+               Block_Client.Allocate_Request (Client,
+                                              Cache (I).C,
+                                              Block_Server.Request_Type (Cache (I).S),
+                                              Block_Server.Request_Start (Cache (I).S),
+                                              Block_Server.Request_Length (Cache (I).S),
+                                              I);
+               if Block_Client.Request_State (Cache (I).C) = Block.Allocated then
+                  Componolit.Interfaces.Log.Client.Info (Log, "Enq cache");
+                  Block_Client.Enqueue (Client, Cache (I).C);
+               end if;
             end if;
-            Load (R, A.Kind, A.Start);
-            if R.Kind /= Block.None then
-               R.Status := A.Status;
-               Block_Server.Acknowledge (Server, R);
-            end if;
-            Block_Client.Release (Client, A);
-            exit when R.Kind = Block.None;
          end loop;
-
+         Block_Client.Submit (Client);
          loop
-            R := Block_Server.Head (Server);
-            exit when R.Kind = Block.None;
-            Store (R, Success);
-            exit when not Success;
-            Block_Client.Enqueue (Client, Convert_Request (R));
-            Block_Server.Discard (Server);
+            Block_Client.Update_Response_Queue (Client, Rc);
+            exit when not Block_Client.Valid_Capability (Rc);
+            Ri := Block_Client.Request_Identifier (Rc);
+            Block_Client.Update_Request (Client, Cache (Ri).C, Rc);
+            if
+               Block_Client.Request_State (Cache (Ri).C) = Ok
+               and then Block_Client.Request_Type (Cache (Ri).C) = Read
+            then
+               Block_Client.Read (Client, Cache (Ri).C);
+            end if;
+            loop
+               Block_Server.Acknowledge (Server, Cache (Ri).S, Block_Client.Request_State (Cache (Ri).C));
+               exit when Block_Server.Request_State (Cache (Ri).S) = Block.Raw;
+            end loop;
+            Block_Client.Release (Client, Cache (Ri).C);
+         end loop;
+         As := False;
+         loop
+            for I in Cache'Range loop
+               if Block_Server.Request_State (Cache (I).S) = Block.Raw then
+                  Ri := I;
+                  As := True;
+                  exit;
+               end if;
+            end loop;
+            exit when not As;
+            Block_Server.Process_Request (Server, Cache (Ri).S);
+            exit when Block_Server.Request_State (Cache (Ri).S) = Block.Raw;
+            Block_Client.Allocate_Request (Client,
+                                           Cache (Ri).C,
+                                           Block_Server.Request_Type (Cache (Ri).S),
+                                           Block_Server.Request_Start (Cache (Ri).S),
+                                           Block_Server.Request_Length (Cache (Ri).S),
+                                           Ri);
+            exit when Block_Client.Request_State (Cache (Ri).C) /= Block.Allocated;
+            Block_Client.Enqueue (Client, Cache (Ri).C);
+            As := False;
          end loop;
          Block_Client.Submit (Client);
       end if;
