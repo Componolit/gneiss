@@ -4,8 +4,6 @@
 
 #include <base/fixed_stdint.h>
 
-#include <block.h>
-
 namespace Block
 {
     class Client
