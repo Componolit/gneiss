@@ -16,6 +16,7 @@ package Component is
    type Byte is mod 2 ** 8;
    subtype Unsigned_Long is Long_Integer range 0 .. Long_Integer'Last;
    type Buffer is array (Unsigned_Long range <>) of Byte;
+   type Request_Index is mod 8;
 
    package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer);
 
@@ -29,18 +30,14 @@ package Component is
    function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length;
 
    procedure Write (C :     Block.Client_Instance;
-                    B :     Block.Size;
-                    S :     Block.Id;
-                    L :     Block.Count;
+                    I :     Request_Index;
                     D : out Buffer);
 
    procedure Read (C : Block.Client_Instance;
-                   B : Block.Size;
-                   S : Block.Id;
-                   L : Block.Count;
+                   I : Request_Index;
                    D : Buffer);
 
-   package Block_Client is new Block.Client (Event, Read, Write);
+   package Block_Client is new Block.Client (Request_Index, Event, Read, Write);
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
                                              Block_Size,
