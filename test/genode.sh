@@ -1,5 +1,20 @@
 #!/bin/sh
 
+cd /ada-interfaces
+git submodule update --init --recursive
+make -C ada-runtime && make -C ada-runtime platform
+
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -u componolit-interfaces-log
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode --clean
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=hello_world -u component
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=hello_world -u component --clean
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=block_client -u component
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=block_client -u component --clean
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=timer -u component
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=timer -u component --clean
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=rom -u component
+gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=genode -XTEST=rom -u component --clean
+
 set -e
 cd /genode
 git remote add jklmnn https://github.com/jklmnn/genode.git
