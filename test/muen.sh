@@ -9,4 +9,4 @@ ln -fs /ada-interfaces components/cai/src
 make -j$(nproc) SPARK_WARNINGS=continue
 make -j$(nproc) SPARK_WARNINGS=continue COMPONENTS=spark_runtime
 set -e
-make -j$(nproc) SPARK_WARNINGS=continue RTS_DIR=/home/jk/workspace/muen/components/spark_runtime/obj/ AGGREGATE=cai/ada_interface.gpr COMPONENTS_BUILD="sdump"
+make -j$(nproc) SPARK_WARNINGS=continue RTS_DIR=/muen/components/spark_runtime/obj/ AGGREGATE=cai/ada_interface.gpr COMPONENTS_BUILD="sdump"
