@@ -1,44 +1,9 @@
-sudo: true
-language: c
-git:
-    submodules: true
-before_install:
-    - sudo apt-get update
-    - sudo apt-get install -y build-essential git wget libfontconfig1 libx11-xcb1
-before_script:
-    - wget http://mirrors.cdn.adacore.com/art/5cdffc5409dcd015aaf82626 -O /tmp/gnat-community-2019-20190517-x86_64-linux-bin
-    - git clone https://github.com/AdaCore/gnat_community_install_script.git /tmp/gnat_community_install_script
-    - /tmp/gnat_community_install_script/install_package.sh /tmp/gnat-community-2019-20190517-x86_64-linux-bin /usr/local/gnat
-env:
-    - PATH=/usr/local/gnat/bin:$PATH
+sudo: required
+
+services:
+    - docker
+
 script:
-    - cd ada-runtime
-    - make && make platform
-    - cd ..
-    - gprbuild -P ada_interface.gpr -XPLATFORM=genode
-    - gprclean -P ada_interface.gpr -XPLATFORM=genode
-    - gprbuild -P ada_interface.gpr -XPLATFORM=linux
-    - gprclean -P ada_interface.gpr -XPLATFORM=linux
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-interfaces-log
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
-    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component
-    - ./build/hello_world
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component --clean
-    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=hello_world
-    - dd if=/dev/zero of=/tmp/test_disk.img bs=4k count=64
-    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u component
-    - ./build/block_client
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=block_client -u component --clean
-    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=block_client
-    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=timer
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=timer -u component
-    - ./build/timer
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=timer -u component --clean
-    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=timer
-    - gprbuild -P ada_interface.gpr -XPLATFORM=linux -XTEST=rom
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=rom -u component
-    - ./build/rom test/rom/cai.conf & (sleep 2 && touch test/rom/cai.conf)
-    - gnatprove -P ada_interface.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=rom -u component --clean
-    - gprclean -P ada_interface.gpr -XPLATFORM=linux -XTEST=rom
+    - docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/genode.sh
+    - docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/linux.sh
+      #    - docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/muen.sh
