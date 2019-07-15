@@ -19,7 +19,7 @@ package body Component is
       Success : Boolean;
    end record;
    type Request_Cache_Type is array (Request_Index'Range) of Cache_Element;
-   Request_Cache : Request_Cache_Type := (others => (Req     => Block_Server.Create_Request,
+   Request_Cache : Request_Cache_Type := (others => (Req     => Block_Server.Null_Request,
                                                      Success => False));
 
    use all type Block.Id;
@@ -51,9 +51,9 @@ package body Component is
 
    procedure Read (R : in out Cache_Element)
    is
-      Start  : constant Block.Id    := Block_Server.Request_Start (R.Req);
-      Length : constant Block.Count := Block_Server.Request_Length (R.Req);
-      Buf    : Buffer (1 .. Length * Block_Size (Block_Server.Get_Instance (Server)));
+      Start  : constant Block.Id    := Block_Server.Start (R.Req);
+      Length : constant Block.Count := Block_Server.Length (R.Req);
+      Buf    : Buffer (1 .. Length * Block_Size (Block_Server.Instance (Server)));
    begin
       if Buf'Length mod Block_Buffer'Length = 0 and then
          Start in Ram_Disk'Range and then
@@ -72,9 +72,9 @@ package body Component is
 
    procedure Write (R : in out Cache_Element)
    is
-      Start  : constant Block.Id    := Block_Server.Request_Start (R.Req);
-      Length : constant Block.Count := Block_Server.Request_Length (R.Req);
-      B      : Buffer (1 .. Length * Block_Size (Block_Server.Get_Instance (Server)));
+      Start  : constant Block.Id    := Block_Server.Start (R.Req);
+      Length : constant Block.Count := Block_Server.Length (R.Req);
+      B      : Buffer (1 .. Length * Block_Size (Block_Server.Instance (Server)));
    begin
       if
          B'Length mod Block_Buffer'Length = 0 and then
@@ -99,7 +99,7 @@ package body Component is
       if Block_Server.Initialized (Server) then
          loop
             for I in Request_Cache'Range loop
-               if Block_Server.Request_State (Request_Cache (I).Req) = Raw then
+               if Block_Server.Status (Request_Cache (I).Req) = Raw then
                   Alloc := I;
                   Alloc_Success := True;
                   exit;
@@ -107,22 +107,22 @@ package body Component is
             end loop;
             exit when not Alloc_Success;
             Request_Cache (Alloc).Success := False;
-            Block_Server.Process_Request (Server, Request_Cache (Alloc).Req);
-            exit when Block_Server.Request_State (Request_Cache (Alloc).Req) = Raw;
-            case Block_Server.Request_Type (Request_Cache (Alloc).Req) is
+            Block_Server.Process (Server, Request_Cache (Alloc).Req);
+            exit when Block_Server.Status (Request_Cache (Alloc).Req) = Raw;
+            case Block_Server.Kind (Request_Cache (Alloc).Req) is
                when Block.Read =>
                   Read (Request_Cache (Alloc));
                   loop
                      Block_Server.Acknowledge (Server, Request_Cache (Alloc).Req,
                                                (if Request_Cache (Alloc).Success then Block.Ok else Block.Error));
-                     exit when Block_Server.Request_State (Request_Cache (Alloc).Req) = Raw;
+                     exit when Block_Server.Status (Request_Cache (Alloc).Req) = Raw;
                   end loop;
                when Block.Write =>
                   Write (Request_Cache (Alloc));
                   loop
                      Block_Server.Acknowledge (Server, Request_Cache (Alloc).Req,
                                                (if Request_Cache (Alloc).Success then Block.Ok else Block.Error));
-                     exit when Block_Server.Request_State (Request_Cache (Alloc).Req) = Raw;
+                     exit when Block_Server.Status (Request_Cache (Alloc).Req) = Raw;
                   end loop;
                when others => null;
             end case;
