@@ -42,8 +42,8 @@ package body Component is
 
    type Registry is array (Request_Index'Range) of Cache_Entry;
 
-   Cache : Registry := (others => (C => Block_Client.Create_Request,
-                                   S => Block_Server.Create_Request));
+   Cache : Registry := (others => (C => Block_Client.Null_Request,
+                                   S => Block_Server.Null_Request));
 
    procedure Write (C :     Block.Client_Instance;
                     I :     Request_Index;
@@ -65,7 +65,7 @@ package body Component is
 
    procedure Event
    is
-      Rc : Block_Client.Request_Capability;
+      Rc : Block_Client.Request_Handle;
       Ri : Request_Index;
       As : Boolean;
    begin
@@ -75,16 +75,16 @@ package body Component is
       then
          for I in Cache'Range loop
             if
-               Block_Server.Request_State (Cache (I).S) = Block.Pending
-               and then Block_Client.Request_State (Cache (I).C) = Block.Raw
+               Block_Server.Status (Cache (I).S) = Block.Pending
+               and then Block_Client.Status (Cache (I).C) = Block.Raw
             then
                Block_Client.Allocate_Request (Client,
                                               Cache (I).C,
-                                              Block_Server.Request_Type (Cache (I).S),
-                                              Block_Server.Request_Start (Cache (I).S),
-                                              Block_Server.Request_Length (Cache (I).S),
+                                              Block_Server.Kind (Cache (I).S),
+                                              Block_Server.Start (Cache (I).S),
+                                              Block_Server.Length (Cache (I).S),
                                               I);
-               if Block_Client.Request_State (Cache (I).C) = Block.Allocated then
+               if Block_Client.Status (Cache (I).C) = Block.Allocated then
                   Componolit.Interfaces.Log.Client.Info (Log, "Enq cache");
                   Block_Client.Enqueue (Client, Cache (I).C);
                end if;
@@ -93,40 +93,40 @@ package body Component is
          Block_Client.Submit (Client);
          loop
             Block_Client.Update_Response_Queue (Client, Rc);
-            exit when not Block_Client.Valid_Capability (Rc);
-            Ri := Block_Client.Request_Identifier (Rc);
+            exit when not Block_Client.Valid (Rc);
+            Ri := Block_Client.Identifier (Rc);
             Block_Client.Update_Request (Client, Cache (Ri).C, Rc);
             if
-               Block_Client.Request_State (Cache (Ri).C) = Ok
-               and then Block_Client.Request_Type (Cache (Ri).C) = Read
+               Block_Client.Status (Cache (Ri).C) = Ok
+               and then Block_Client.Kind (Cache (Ri).C) = Read
             then
                Block_Client.Read (Client, Cache (Ri).C);
             end if;
             loop
-               Block_Server.Acknowledge (Server, Cache (Ri).S, Block_Client.Request_State (Cache (Ri).C));
-               exit when Block_Server.Request_State (Cache (Ri).S) = Block.Raw;
+               Block_Server.Acknowledge (Server, Cache (Ri).S, Block_Client.Status (Cache (Ri).C));
+               exit when Block_Server.Status (Cache (Ri).S) = Block.Raw;
             end loop;
             Block_Client.Release (Client, Cache (Ri).C);
          end loop;
          As := False;
          loop
             for I in Cache'Range loop
-               if Block_Server.Request_State (Cache (I).S) = Block.Raw then
+               if Block_Server.Status (Cache (I).S) = Block.Raw then
                   Ri := I;
                   As := True;
                   exit;
                end if;
             end loop;
             exit when not As;
-            Block_Server.Process_Request (Server, Cache (Ri).S);
-            exit when Block_Server.Request_State (Cache (Ri).S) = Block.Raw;
+            Block_Server.Process (Server, Cache (Ri).S);
+            exit when Block_Server.Status (Cache (Ri).S) = Block.Raw;
             Block_Client.Allocate_Request (Client,
                                            Cache (Ri).C,
-                                           Block_Server.Request_Type (Cache (Ri).S),
-                                           Block_Server.Request_Start (Cache (Ri).S),
-                                           Block_Server.Request_Length (Cache (Ri).S),
+                                           Block_Server.Kind (Cache (Ri).S),
+                                           Block_Server.Start (Cache (Ri).S),
+                                           Block_Server.Length (Cache (Ri).S),
                                            Ri);
-            exit when Block_Client.Request_State (Cache (Ri).C) /= Block.Allocated;
+            exit when Block_Client.Status (Cache (Ri).C) /= Block.Allocated;
             Block_Client.Enqueue (Client, Cache (Ri).C);
             As := False;
          end loop;
