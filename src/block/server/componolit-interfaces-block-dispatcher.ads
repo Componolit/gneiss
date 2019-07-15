@@ -40,7 +40,7 @@ is
    --  Return the instance ID of D
    --
    --  @param D  Dispatcher session instance
-   function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance with
+   function Instance (D : Dispatcher_Session) return Dispatcher_Instance with
       Pre => Initialized (D);
 
    --  Initialize dispatcher session with the system capability Cap

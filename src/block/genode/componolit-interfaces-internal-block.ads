@@ -17,7 +17,7 @@ package Componolit.Interfaces.Internal.Block is
       Status : Request_Status;
    end record;
 
-   type Client_Request_Capability is record
+   type Client_Request_Handle is record
       Valid   : Boolean;
       Tag     : Cxx.Unsigned_Long;
       Success : Boolean;

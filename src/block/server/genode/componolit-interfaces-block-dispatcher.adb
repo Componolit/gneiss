@@ -20,11 +20,11 @@ is
       return Cxx.Block.Dispatcher.Initialized (D.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
-   function Get_Instance (D : Dispatcher_Session) return Dispatcher_Instance
+   function Instance (D : Dispatcher_Session) return Dispatcher_Instance
    is
    begin
       return Dispatcher_Instance (Cxx.Block.Dispatcher.Get_Instance (D.Instance));
-   end Get_Instance;
+   end Instance;
 
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Componolit.Interfaces.Types.Capability) with
@@ -78,7 +78,7 @@ is
       SPARK_Mode => Off
    is
    begin
-      Serv.Initialize (Serv.Get_Instance (I), L, Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance)));
+      Serv.Initialize (Serv.Instance (I), L, Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance)));
       Cxx.Block.Server.Initialize (I.Instance,
                                    Cxx.Block.Dispatcher.Get_Capability (D.Instance),
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance),
@@ -97,7 +97,7 @@ is
       if
          Cxx.Block.Dispatcher.Session_Cleanup (D.Instance, I.Instance) = Cxx.Bool'Val (1)
       then
-         Serv.Finalize (Serv.Get_Instance (I));
+         Serv.Finalize (Serv.Instance (I));
          Cxx.Block.Server.Finalize (I.Instance);
       end if;
    end Session_Cleanup;
