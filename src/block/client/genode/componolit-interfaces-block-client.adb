@@ -10,7 +10,7 @@ use all type Cxx.Bool;
 package body Componolit.Interfaces.Block.Client
 is
 
-   function Create_Request return Request
+   function Null_Request return Request
    is
    begin
       return Request'(Packet => Cxx.Block.Client.Packet_Descriptor'(Offset       => 0,
@@ -20,9 +20,9 @@ is
                                                                     Block_Number => 0,
                                                                     Block_Count  => 0),
                       Status => Componolit.Interfaces.Internal.Block.Raw);
-   end Create_Request;
+   end Null_Request;
 
-   function Request_Type (R : Request) return Request_Kind
+   function Kind (R : Request) return Request_Kind
    is
    begin
       case R.Packet.Opcode is
@@ -33,9 +33,9 @@ is
          when others =>
             raise Constraint_Error;
       end case;
-   end Request_Type;
+   end Kind;
 
-   function Request_State (R : Request) return Request_Status
+   function Status (R : Request) return Request_Status
    is
    begin
       case R.Status is
@@ -45,25 +45,25 @@ is
          when Componolit.Interfaces.Internal.Block.Ok           => return Ok;
          when Componolit.Interfaces.Internal.Block.Error        => return Error;
       end case;
-   end Request_State;
+   end Status;
 
-   function Request_Start (R : Request) return Id
+   function Start (R : Request) return Id
    is
    begin
       return Id (R.Packet.Block_Number);
-   end Request_Start;
+   end Start;
 
-   function Request_Length (R : Request) return Count
+   function Length (R : Request) return Count
    is
    begin
       return Count (R.Packet.Block_Count);
-   end Request_Length;
+   end Length;
 
-   function Request_Identifier (R : Request) return Request_Id
+   function Identifier (R : Request) return Request_Id
    is
    begin
       return Request_Id'Val (R.Packet.Tag);
-   end Request_Identifier;
+   end Identifier;
 
    procedure Allocate_Request (C      : in out Client_Session;
                                R      : in out Request;
@@ -92,20 +92,20 @@ is
       end if;
    end Allocate_Request;
 
-   function Valid_Capability (C : Request_Capability) return Boolean
+   function Valid (H : Request_Handle) return Boolean
    is
    begin
-      return C.Valid;
-   end Valid_Capability;
+      return H.Valid;
+   end Valid;
 
-   function Request_Identifier (C : Request_Capability) return Request_Id
+   function Identifier (H : Request_Handle) return Request_Id
    is
    begin
-      return Request_Id'Val (C.Tag);
-   end Request_Identifier;
+      return Request_Id'Val (H.Tag);
+   end Identifier;
 
-   procedure Update_Response_Queue (C     : in out Client_Session;
-                                    R_Cap :    out Request_Capability)
+   procedure Update_Response_Queue (C : in out Client_Session;
+                                    H :    out Request_Handle)
    is
       Status  : Integer;
       Success : Integer;
@@ -113,22 +113,22 @@ is
    begin
       Cxx.Block.Client.Update_Response_Queue (C.Instance, Status, Tag, Success);
       if Status = 1 then
-         R_Cap := Request_Capability'(Valid   => True,
-                                      Tag     => Tag,
-                                      Success => Success = 1);
+         H := Request_Handle'(Valid   => True,
+                              Tag     => Tag,
+                              Success => Success = 1);
       else
-         R_Cap := Request_Capability'(False, 0, False);
+         H := Request_Handle'(False, 0, False);
       end if;
    end Update_Response_Queue;
 
-   procedure Update_Request (C     : in out Client_Session;
-                             R     : in out Request;
-                             R_Cap :        Request_Capability)
+   procedure Update_Request (C : in out Client_Session;
+                             R : in out Request;
+                             H :        Request_Handle)
    is
       pragma Unreferenced (C);
    begin
       R.Status := (if
-                      R_Cap.Success
+                      H.Success
                    then
                       Componolit.Interfaces.Internal.Block.Ok
                    else
@@ -141,11 +141,11 @@ is
       return Client_Session'(Instance => Cxx.Block.Client.Constructor);
    end Create;
 
-   function Get_Instance (C : Client_Session) return Client_Instance
+   function Instance (C : Client_Session) return Client_Instance
    is
    begin
       return Client_Instance (Cxx.Block.Client.Get_Instance (C.Instance));
-   end Get_Instance;
+   end Instance;
 
    function Initialized (C : Client_Session) return Boolean
    is

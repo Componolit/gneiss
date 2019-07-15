@@ -25,24 +25,22 @@ pragma Warnings (Off, "procedure ""Write"" is not referenced");
    with procedure Event;
 
    --  Called when a read has been triggered and data is available
-   --  Pre => Data'Length = Bsize * Length
+   --
+   --  The length of Data always corresponds to the request length in bytes (block size * block count)
    --
    --  @param C       Client session instance identifier
-   --  @param Bsize   Block size of C
-   --  @param Start   Start block that has been read from
-   --  @param Length  Number of blocks to read
+   --  @param Req     Request identifier of request to write
    --  @param Data    Read data
    with procedure Read (C      : Client_Instance;
                         Req    : Request_Id;
                         Data   : Buffer);
 
    --  Write procedure called when the platform required data to write
-   --  Pre => Data'Length = Bsize * Length
+   --
+   --  The length of Data always corresponds to the request length in bytes (block size * block count)
    --
    --  @param C       Client session instance identifier
-   --  @param Bsize   Block size of C
-   --  @param Start   Start block that is written to
-   --  @param Length  Number of blocks that will be written
+   --  @param Req     Request identifier of request to write
    --  @param Data    Data that will be written
    with procedure Write (C      :     Client_Instance;
                          Req    :     Request_Id;
@@ -58,47 +56,47 @@ is
    type Request is limited private;
 
    --  Request capability, holds unevaluated meta data of an incoming request response
-   type Request_Capability is private;
+   type Request_Handle is private;
 
    --  Create empty request
    --
    --  @return  empty, uninitialized request
-   function Create_Request return Request with
-      Post => Request_State (Create_Request'Result) = Raw;
+   function Null_Request return Request with
+      Post => Status (Null_Request'Result) = Raw;
 
    --  Get request type
    --
    --  @param R  Request
    --  @return   Request type
-   function Request_Type (R : Request) return Request_Kind with
-      Pre => Request_State (R) /= Raw;
+   function Kind (R : Request) return Request_Kind with
+      Pre => Status (R) /= Raw;
 
    --  Get request status
    --
    --  @param R  Request
    --  @return   Request status
-   function Request_State (R : Request) return Request_Status;
+   function Status (R : Request) return Request_Status;
 
    --  Get request start block
    --
    --  @param R  Request
    --  @return   First block id to be handled by this request
-   function Request_Start (R : Request) return Id with
-      Pre => Request_State (R) /= Raw;
+   function Start (R : Request) return Id with
+      Pre => Status (R) /= Raw;
 
    --  Get request length
    --
    --  @param R  Request
    --  @return   Number of consecutive blocks handled by this request
-   function Request_Length (R : Request) return Count with
-      Pre => Request_State (R) /= Raw;
+   function Length (R : Request) return Count with
+      Pre => Status (R) /= Raw;
 
    --  Get request identifier
    --
    --  @param R  Request
    --  @return   Unique identifier of the request
-   function Request_Identifier (R : Request) return Request_Id with
-      Pre => Request_State (R) /= Raw;
+   function Identifier (R : Request) return Request_Id with
+      Pre => Status (R) /= Raw;
 
    --  Allocate request
    --
@@ -119,35 +117,46 @@ is
                                Start  :        Id;
                                Length :        Count;
                                Ident  :        Request_Id) with
-      Pre => Initialized (C) and then Request_State (R) = Raw;
+      Pre => Initialized (C) and then Status (R) = Raw;
 
-   --  Check if the request capability is valid
+   --  Check if the request handle is valid
    --
-   --  @param C  Request capability
-   --  @return   True if capability is valid
-   function Valid_Capability (C : Request_Capability) return Boolean;
+   --  @param H  Request handle
+   --  @return   True if handle is valid
+   function Valid (H : Request_Handle) return Boolean;
 
    --  Get the request identifier linked with the capability
    --
-   --  @param C  Request capability
+   --  @param H  Request handle
    --  @return   Identifier of the request linked to this capability
-   function Request_Identifier (C : Request_Capability) return Request_Id with
-      Pre => Valid_Capability (C);
+   function Identifier (H : Request_Handle) return Request_Id with
+      Pre => Valid (H);
 
    --  Check the response queue for updates
    --
    --  Reads the first element from the response queue and saves its meta data into the request capability.
    --  The capability is required to update a request with the according metadata.
-   procedure Update_Response_Queue (C     : in out Client_Session;
-                                    R_Cap :    out Request_Capability) with
+   --
+   --  @param C  Client session instance
+   --  @param H  Platform handle that indicates the request status change
+   procedure Update_Response_Queue (C : in out Client_Session;
+                                    H :    out Request_Handle) with
       Pre => Initialized (C);
 
-   procedure Update_Request (C     : in out Client_Session;
-                             R     : in out Request;
-                             R_Cap :        Request_Capability) with
+   --  Update request according to request handle
+   --
+   --  Takes a request handle and updates the request according to the platform state
+   --  linked to the request handle
+   --
+   --  @param C  Client session instance
+   --  @param R  Request that shall be updated
+   --  @param H  Request handle to link the request to platform state
+   procedure Update_Request (C : in out Client_Session;
+                             R : in out Request;
+                             H :        Request_Handle) with
       Pre => Initialized (C)
-             and then Valid_Capability (R_Cap)
-             and then Request_Identifier (R) = Request_Identifier (R_Cap);
+             and then Valid (H)
+             and then Identifier (R) = Identifier (H);
 
    --  Return True if C is initialized
    --
@@ -163,7 +172,7 @@ is
    --  Get the instance ID of C
    --
    --  @param C  Client session instance
-   function Get_Instance (C : Client_Session) return Client_Instance with
+   function Instance (C : Client_Session) return Client_Instance with
       Pre => Initialized (C);
 
    --  Initialize client instance
@@ -195,13 +204,13 @@ is
    procedure Enqueue (C : in out Client_Session;
                       R : in out Request) with
       Pre  => Initialized (C)
-              and then Request_State (R) = Allocated,
+              and then Status (R) = Allocated,
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Request_State (R)             = Pending;
+              and Status (R)                    = Pending;
 
    --  Submit all enqueued requests for processing
    --
@@ -221,8 +230,8 @@ is
    procedure Read (C : in out Client_Session;
                    R :        Request) with
       Pre  => Initialized (C)
-              and then Request_Type (R) = Read
-              and then Request_State (R) = Ok,
+              and then Kind (R)   = Read
+              and then Status (R) = Ok,
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
@@ -241,13 +250,13 @@ is
    procedure Release (C : in out Client_Session;
                       R : in out Request) with
       Pre  => Initialized (C)
-              and then Request_State (R) /= Raw,
+              and then Status (R) /= Raw,
       Post => Initialized (C)
               and Writable (C)'Old              = Writable (C)
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Request_State (R)             = Raw;
+              and Status (R)                    = Raw;
 
    --  Check if the block device is writable
    --
@@ -277,6 +286,6 @@ is
 private
 
    type Request is new Componolit.Interfaces.Internal.Block.Client_Request;
-   type Request_Capability is new Componolit.Interfaces.Internal.Block.Client_Request_Capability;
+   type Request_Handle is new Componolit.Interfaces.Internal.Block.Client_Request_Handle;
 
 end Componolit.Interfaces.Block.Client;
