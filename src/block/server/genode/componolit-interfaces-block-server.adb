@@ -7,7 +7,7 @@ use all type Cxx.Genode.Uint64_T;
 package body Componolit.Interfaces.Block.Server
 is
 
-   function Create_Request return Request
+   function Null_Request return Request
    is
    begin
       return Request'(Request => Cxx.Block.Server.Request'(Kind         => -1,
@@ -17,9 +17,9 @@ is
                                                            Offset       => 0,
                                                            Tag          => 0),
                       Status  => Componolit.Interfaces.Internal.Block.Raw);
-   end Create_Request;
+   end Null_Request;
 
-   function Request_Type (R : Request) return Request_Kind
+   function Kind (R : Request) return Request_Kind
    is
    begin
       case R.Request.Kind is
@@ -29,9 +29,9 @@ is
          when 4 => return Trim;
          when others => raise Constraint_Error;
       end case;
-   end Request_Type;
+   end Kind;
 
-   function Request_State (R : Request) return Request_Status
+   function Status (R : Request) return Request_Status
    is
    begin
       case R.Status is
@@ -41,19 +41,19 @@ is
          when Componolit.Interfaces.Internal.Block.Ok           => return Ok;
          when Componolit.Interfaces.Internal.Block.Error        => return Error;
       end case;
-   end Request_State;
+   end Status;
 
-   function Request_Start (R : Request) return Id
+   function Start (R : Request) return Id
    is
    begin
       return Id (R.Request.Block_Number);
-   end Request_Start;
+   end Start;
 
-   function Request_Length (R : Request) return Count
+   function Length (R : Request) return Count
    is
    begin
       return Count (R.Request.Block_Count);
-   end Request_Length;
+   end Length;
 
    function Create return Server_Session
    is
@@ -61,14 +61,14 @@ is
       return Server_Session'(Instance => Cxx.Block.Server.Constructor);
    end Create;
 
-   function Get_Instance (S : Server_Session) return Server_Instance
+   function Instance (S : Server_Session) return Server_Instance
    is
    begin
       return Server_Instance (Cxx.Block.Server.Get_Instance (S.Instance));
-   end Get_Instance;
+   end Instance;
 
-   procedure Process_Request (S : in out Server_Session;
-                              R : in out Request)
+   procedure Process (S : in out Server_Session;
+                      R : in out Request)
    is
       Status : Integer;
    begin
@@ -76,7 +76,7 @@ is
       if Status = 1 then
          R.Status := Componolit.Interfaces.Internal.Block.Pending;
       end if;
-   end Process_Request;
+   end Process;
 
    procedure Read (S : in out Server_Session;
                    R :        Request;
@@ -102,9 +102,9 @@ is
 
    procedure Acknowledge (S      : in out Server_Session;
                           R      : in out Request;
-                          Status :        Request_Status)
+                          Result :        Request_Status)
    is
-      Success : Integer := (if Status = Ok then 1 else 0);
+      Success : Integer := (if Result = Ok then 1 else 0);
    begin
       Cxx.Block.Server.Acknowledge (S.Instance, R.Request, Success);
       if Success = 1 then

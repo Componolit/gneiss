@@ -71,35 +71,35 @@ is
    --  Create empty request
    --
    --  @return  empty, uninitialized request
-   function Create_Request return Request with
-      Post => Request_State (Create_Request'Result) = Raw;
+   function Null_Request return Request with
+      Post => Status (Null_Request'Result) = Raw;
 
    --  Get request type
    --
    --  @param R  Request
    --  @return   Request type
-   function Request_Type (R : Request) return Request_Kind with
-      Pre => Request_State (R) = Pending;
+   function Kind (R : Request) return Request_Kind with
+      Pre => Status (R) = Pending;
 
    --  Get request status
    --
    --  @param R  Request
    --  @return   Request status
-   function Request_State (R : Request) return Request_Status;
+   function Status (R : Request) return Request_Status;
 
    --  Get request start block
    --
    --  @param R  Request
    --  @return   First block id to be handled by this request
-   function Request_Start (R : Request) return Id with
-      Pre => Request_State (R) = Pending;
+   function Start (R : Request) return Id with
+      Pre => Status (R) = Pending;
 
    --  Get request length in blocks
    --
    --  @param R  Request
    --  @return   Number of consecutive blocks handled by this request
-   function Request_Length (R : Request) return Count with
-      Pre => Request_State (R) = Pending;
+   function Length (R : Request) return Count with
+      Pre => Status (R) = Pending;
 
    --  Check if S is initialized
    --
@@ -115,7 +115,7 @@ is
    --  Get the instance ID of S
    --
    --  @param S  Server session instance
-   function Get_Instance (S : Server_Session) return Server_Instance with
+   function Instance (S : Server_Session) return Server_Instance with
       Pre => Initialized (S);
 
    --  Process an incoming request
@@ -125,12 +125,12 @@ is
    --
    --  @param S  Server session instance
    --  @param R  Raw request slot
-   procedure Process_Request (S : in out Server_Session;
-                              R : in out Request) with
+   procedure Process (S : in out Server_Session;
+                      R : in out Request) with
       Pre  => Initialized (S)
-              and then Request_State (R) = Raw,
+              and then Status (R) = Raw,
       Post => Initialized (S)
-              and then Request_State (R) in Raw | Pending;
+              and then Status (R) in Raw | Pending;
 
    --  Provide the requested data for a read request
    --
@@ -141,9 +141,9 @@ is
                    R :        Request;
                    B :        Buffer) with
       Pre  => Initialized (S)
-              and then Request_State (R) = Pending
-              and then Request_Type (R) = Read
-              and then B'Length = Request_Length (R) * Block_Size (Get_Instance (S)),
+              and then Status (R) = Pending
+              and then Kind (R) = Read
+              and then B'Length = Length (R) * Block_Size (Instance (S)),
       Post => Initialized (S);
 
    --  Get the data of a write request that shall be written
@@ -155,9 +155,9 @@ is
                     R :        Request;
                     B :    out Buffer) with
       Pre  => Initialized (S)
-              and then Request_State (R) = Pending
-              and then Request_Type (R) = Write
-              and then B'Length = Request_Length (R) * Block_Size (Get_Instance (S)),
+              and then Status (R) = Pending
+              and then Kind (R) = Write
+              and then B'Length = Length (R) * Block_Size (Instance (S)),
       Post => Initialized (S);
 
    --  Acknowledge a handled request
@@ -169,12 +169,12 @@ is
    --  @param R  Request to acknowledge
    procedure Acknowledge (S      : in out Server_Session;
                           R      : in out Request;
-                          Status :        Request_Status) with
+                          Result :        Request_Status) with
       Pre  => Initialized (S)
-              and then Request_State (R) = Pending
-              and then Status in Ok | Error,
+              and then Status (R) = Pending
+              and then Result in Ok | Error,
       Post => Initialized (S)
-              and then Request_State (R) in Raw | Pending;
+              and then Status (R) in Raw | Pending;
 
    --  Signal client to wake up
    --
