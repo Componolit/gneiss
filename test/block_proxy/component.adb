@@ -65,7 +65,7 @@ package body Component is
 
    procedure Event
    is
-      Rc : Block_Client.Request_Handle;
+      Rh : Block_Client.Request_Handle;
       Ri : Request_Index;
       As : Boolean;
    begin
@@ -92,10 +92,10 @@ package body Component is
          end loop;
          Block_Client.Submit (Client);
          loop
-            Block_Client.Update_Response_Queue (Client, Rc);
-            exit when not Block_Client.Valid (Rc);
-            Ri := Block_Client.Identifier (Rc);
-            Block_Client.Update_Request (Client, Cache (Ri).C, Rc);
+            Block_Client.Update_Response_Queue (Client, Rh);
+            exit when not Block_Client.Valid (Rh);
+            Ri := Block_Client.Identifier (Rh);
+            Block_Client.Update_Request (Client, Cache (Ri).C, Rh);
             if
                Block_Client.Status (Cache (Ri).C) = Ok
                and then Block_Client.Kind (Cache (Ri).C) = Read

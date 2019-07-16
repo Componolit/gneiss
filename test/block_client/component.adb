@@ -72,7 +72,7 @@ is
                      Operation :        Block.Request_Kind)
    is
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
-      Req_Cap    : Block_Client.Request_Handle;
+      Req_Handle : Block_Client.Request_Handle;
       Req_Id     : Request_Id;
       Alloc      : Request_Id;
       Alloc_Succ : Boolean := False;
@@ -82,11 +82,11 @@ is
             pragma Loop_Invariant (Block_Client.Initialized (Client));
             pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
             pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
-            Block_Client.Update_Response_Queue (Client, Req_Cap);
-            exit when not Block_Client.Valid (Req_Cap);
+            Block_Client.Update_Response_Queue (Client, Req_Handle);
+            exit when not Block_Client.Valid (Req_Handle);
             exit when S.Acked >= Request_Count;
-            Req_Id := Block_Client.Identifier (Req_Cap);
-            Block_Client.Update_Request (Client, Request_Cache (Req_Id), Req_Cap);
+            Req_Id := Block_Client.Identifier (Req_Handle);
+            Block_Client.Update_Request (Client, Request_Cache (Req_Id), Req_Handle);
             case Block_Client.Kind (Request_Cache (Req_Id)) is
                when Block.Write =>
                   if Block_Client.Status (Request_Cache (Req_Id)) /= Block.Ok then
