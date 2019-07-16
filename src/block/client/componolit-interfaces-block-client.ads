@@ -55,7 +55,7 @@ is
    --  Block client request
    type Request is limited private;
 
-   --  Request capability, holds unevaluated meta data of an incoming request response
+   --  Request handle, holds unevaluated meta data of an incoming request response
    type Request_Handle is private;
 
    --  Create empty request
@@ -125,17 +125,17 @@ is
    --  @return   True if handle is valid
    function Valid (H : Request_Handle) return Boolean;
 
-   --  Get the request identifier linked with the capability
+   --  Get the request identifier linked with the handle
    --
    --  @param H  Request handle
-   --  @return   Identifier of the request linked to this capability
+   --  @return   Identifier of the request linked to this handle
    function Identifier (H : Request_Handle) return Request_Id with
       Pre => Valid (H);
 
    --  Check the response queue for updates
    --
-   --  Reads the first element from the response queue and saves its meta data into the request capability.
-   --  The capability is required to update a request with the according metadata.
+   --  Reads the first element from the response queue and saves its meta data into the request handle.
+   --  The handle is required to update a request with the according metadata.
    --
    --  @param C  Client session instance
    --  @param H  Platform handle that indicates the request status change
@@ -146,7 +146,7 @@ is
    --  Update request according to request handle
    --
    --  Takes a request handle and updates the request according to the platform state
-   --  linked to the request handle
+   --  linked to the request handle. The update includes the requests status and internal platform state.
    --
    --  @param C  Client session instance
    --  @param R  Request that shall be updated
@@ -240,7 +240,7 @@ is
 
    --  Release a request
    --
-   --  If a request has been handled and is not needed anymore it needs to be release. This resets the
+   --  If a request has been handled and is not needed anymore it needs to be released. This resets the
    --  request status to Raw and frees the resources aquired for this request on the platform.
    --  While only finished requests should be released it is possible to release unfinished requests
    --  as a measure to prevent resource leaks.
