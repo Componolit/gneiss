@@ -65,17 +65,17 @@ is
       return Request_Id'Val (R.Packet.Tag);
    end Identifier;
 
-   procedure Allocate_Request (C      : in out Client_Session;
-                               R      : in out Request;
-                               Kind   :        Request_Kind;
-                               Start  :        Id;
-                               Length :        Count;
-                               Ident  :        Request_Id)
+   procedure Allocate_Request (C : in out Client_Session;
+                               R : in out Request;
+                               K :        Request_Kind;
+                               S :        Id;
+                               L :        Count;
+                               I :        Request_Id)
    is
       use type Cxx.Unsigned_Long;
       Opcode : Integer;
    begin
-      case Kind is
+      case K is
          when Read  => Opcode := 0;
          when Write => Opcode := 1;
          when Sync  => Opcode := 2;
@@ -84,9 +84,9 @@ is
       end case;
       R.Packet.Block_Count := 0;
       Cxx.Block.Client.Allocate_Request (C.Instance, R.Packet, Opcode,
-                                         Cxx.Genode.Uint64_T (Start),
-                                         Cxx.Unsigned_Long (Length),
-                                         Cxx.Unsigned_Long (Request_Id'Pos (Ident)));
+                                         Cxx.Genode.Uint64_T (S),
+                                         Cxx.Unsigned_Long (L),
+                                         Cxx.Unsigned_Long (Request_Id'Pos (I)));
       if R.Packet.Block_Count > 0 then
          R.Status := Componolit.Interfaces.Internal.Block.Allocated;
       end if;
@@ -107,12 +107,12 @@ is
    procedure Update_Response_Queue (C : in out Client_Session;
                                     H :    out Request_Handle)
    is
-      Status  : Integer;
+      State   : Integer;
       Success : Integer;
       Tag     : Cxx.Unsigned_Long;
    begin
-      Cxx.Block.Client.Update_Response_Queue (C.Instance, Status, Tag, Success);
-      if Status = 1 then
+      Cxx.Block.Client.Update_Response_Queue (C.Instance, State, Tag, Success);
+      if State = 1 then
          H := Request_Handle'(Valid   => True,
                               Tag     => Tag,
                               Success => Success = 1);
