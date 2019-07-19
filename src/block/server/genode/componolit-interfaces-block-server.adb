@@ -70,10 +70,10 @@ is
    procedure Process (S : in out Server_Session;
                       R : in out Request)
    is
-      Status : Integer;
+      State : Integer;
    begin
-      Cxx.Block.Server.Process_Request (S.Instance, R.Request, Status);
-      if Status = 1 then
+      Cxx.Block.Server.Process_Request (S.Instance, R.Request, State);
+      if State = 1 then
          R.Status := Componolit.Interfaces.Internal.Block.Pending;
       end if;
    end Process;

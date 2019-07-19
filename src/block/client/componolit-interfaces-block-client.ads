@@ -105,18 +105,18 @@ is
    --  e.g. if not enough memory is available to allocate the block data store. In the case of success
    --  the request status will change from Raw to Allocated. In case of a failure it will stay Raw.
    --
-   --  @param C       Client session instance
-   --  @param R       Request to allocate
-   --  @param Kind    Request type
-   --  @param Start   First block to be handled by the request
-   --  @param Length  Number of consecutive blocks to be handled
-   --  @param Ident   Unique identifier for this request, chosen by the application
-   procedure Allocate_Request (C      : in out Client_Session;
-                               R      : in out Request;
-                               Kind   :        Request_Kind;
-                               Start  :        Id;
-                               Length :        Count;
-                               Ident  :        Request_Id) with
+   --  @param C  Client session instance
+   --  @param R  Request to allocate
+   --  @param K  Request type
+   --  @param S  First block to be handled by the request
+   --  @param L  Number of consecutive blocks to be handled
+   --  @param I  Unique identifier for this request, chosen by the application
+   procedure Allocate_Request (C : in out Client_Session;
+                               R : in out Request;
+                               K :        Request_Kind;
+                               S :        Id;
+                               L :        Count;
+                               I :        Request_Id) with
       Pre => Initialized (C) and then Status (R) = Raw;
 
    --  Check if the request handle is valid
