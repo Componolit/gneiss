@@ -74,8 +74,6 @@ is
    type C_float_Address_Array is array (Natural range <>) of C_float_Address;
    type Double_Address is private;
    type Double_Address_Array is array (Natural range <>) of Double_Address;
-   type Long_Double_Address is private;
-   type Long_Double_Address_Array is array (Natural range <>) of Long_Double_Address;
 
    subtype Genode_Int8_T is Cxx.Signed_Char;
    subtype Genode_Int8_T_Array is Cxx.Signed_Char_Array;
@@ -113,6 +111,5 @@ private
    type Long_Long_Address is access all Long_Long;
    type C_float_Address is access all C_float;
    type Double_Address is access all Double;
-   type Long_Double_Address is access all Interfaces.C.long_double;
 
 end Cxx;
