@@ -26,7 +26,7 @@ package Component is
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize (S : Block.Server_Instance);
 
-   procedure Request;
+   procedure Request (C : Block.Dispatcher_Capability);
 
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
