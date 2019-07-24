@@ -137,13 +137,11 @@ package body Component is
 
    procedure Dispatch (C : Block.Dispatcher_Capability)
    is
-      Label : String (1 .. 160);
-      Last : Natural;
       Valid : Boolean;
    begin
-      Block_Dispatcher.Session_Request (Dispatcher, C, Valid, Label, Last);
+      Block_Dispatcher.Session_Request (Dispatcher, C, Valid);
       if Valid and not Block_Server.Initialized (Server) then
-         Block_Dispatcher.Session_Accept (Dispatcher, C, Server, Label (1 .. Last));
+         Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
       end if;
       Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Dispatch;
