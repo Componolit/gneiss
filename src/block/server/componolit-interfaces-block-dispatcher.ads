@@ -67,23 +67,31 @@ is
       Pre  => Initialized (D),
       Post => not Initialized (D);
 
-   --  Retrieve information about a session request, must only be used in Dispatch
+   --  Check if the passed dispatcher capability contains a valid session request
    --
-   --  If a request is available and Session_Accept is called the session is accepted on the platform.
-   --  If Session_Accept is not called before the return of Dispatch the session is rejected.
+   --  @param D  Dispatcher session instance
+   --  @param C  Unique capability for this session request
+   --  @return   Dispatcher capability contains a valid request
+   function Valid_Session_Request (D : Dispatcher_Session;
+                                   C : Dispatcher_Capability) return Boolean with
+      Pre => Initialized (D);
+
+   --  Initialize session that should accept the request
    --
-   --  @param D      Dispatcher session instance
-   --  @param Cap    Unique capability for this session request
-   --  @param Valid  Session has been requested if True
-   procedure Session_Request (D     : in out Dispatcher_Session;
-                              Cap   :        Dispatcher_Capability;
-                              Valid :    out Boolean) with
-      Pre  => Initialized (D),
+   --  It initializes the server on the platform and calls Serv.Initialize.
+   --
+   --  @param D  Dispatcher session instance
+   --  @param C  Unique capability for this session request
+   --  @param I  Server session instance to be initialized
+   procedure Session_Initialize (D : in out Dispatcher_Session;
+                                 C :        Dispatcher_Capability;
+                                 I : in out Server_Session) with
+      Pre  => Initialized (D)
+              and then Valid_Session_Request (D, C)
+              and then not Serv.Initialized (I),
       Post => Initialized (D);
 
-   --  Accept session request and provide the server label L
-   --  This procedure must only be used in Dispatch.
-   --  It also initializes the server on the platform and calls Serv.Initialize.
+   --  Accept session request
    --
    --  @param D  Dispatcher session instance
    --  @param C  Unique capability for this session request
@@ -91,7 +99,9 @@ is
    procedure Session_Accept (D : in out Dispatcher_Session;
                              C :        Dispatcher_Capability;
                              I : in out Server_Session) with
-      Pre  => Initialized (D),
+      Pre  => Initialized (D)
+              and then Valid_Session_Request (D, C)
+              and then Serv.Initialized (I),
       Post => Initialized (D);
 
    --  Garbage collects disconnected sessions
