@@ -52,8 +52,7 @@ is
    is
       use type Cxx.Genode.Uint64_T;
    begin
-      return Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance) /= System.Null_Address
-             and then Cxx.Block.Dispatcher.Label_Length (D.Instance, C.Instance) > 0;
+      return Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance) /= System.Null_Address;
    end Valid_Session_Request;
 
    procedure Session_Initialize (D : in out Dispatcher_Session;
@@ -62,13 +61,19 @@ is
       SPARK_Mode => Off
    is
       Label_Address : constant System.Address := Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance);
-      Label_Length  : constant Positive       := Positive (Cxx.Block.Dispatcher.Label_Length (D.Instance, C.Instance));
+      Label_Length  : constant Natural       := Natural (Cxx.Block.Dispatcher.Label_Length (D.Instance, C.Instance));
       Label : String (1 .. Label_Length) with
          Address => Label_Address;
    begin
-      Serv.Initialize (Serv.Instance (I),
-                       Label,
-                       Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
+      if Label_Length = 0 then
+         Serv.Initialize (Serv.Instance (I),
+                          "",
+                          Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
+      else
+         Serv.Initialize (Serv.Instance (I),
+                          Label,
+                          Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
+      end if;
       if not Serv.Initialized (Serv.Instance (I)) then
          return;
       end if;
