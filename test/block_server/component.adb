@@ -159,6 +159,13 @@ package body Component is
       return Buffer_Size;
    end Maximum_Transfer_Size;
 
+   function Initialized (S : Block.Server_Instance) return Boolean
+   is
+      pragma Unreferenced (S);
+   begin
+      return True;
+   end Initialized;
+
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
       pragma Unreferenced (S);
@@ -178,11 +185,12 @@ package body Component is
 
    procedure Request (C : Block.Dispatcher_Capability)
    is
-      Valid : Boolean;
    begin
-      Block_Dispatcher.Session_Request (Dispatcher, C, Valid);
-      if Valid and not Block_Server.Initialized (Server) then
-         Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+      if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block_Server.Initialized (Server) then
+         Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
+         if Block_Server.Initialized (Server) then
+            Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+         end if;
       end if;
       Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Request;

@@ -137,11 +137,12 @@ package body Component is
 
    procedure Dispatch (C : Block.Dispatcher_Capability)
    is
-      Valid : Boolean;
    begin
-      Block_Dispatcher.Session_Request (Dispatcher, C, Valid);
-      if Valid and not Block_Server.Initialized (Server) then
-         Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+      if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block_Server.Initialized (Server) then
+         Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
+         if Block_Server.Initialized (Server) then
+            Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+         end if;
       end if;
       Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Dispatch;
@@ -203,5 +204,12 @@ package body Component is
    begin
       return 16#ffffffff#;
    end Maximum_Transfer_Size;
+
+   function Initialized (S : Block.Server_Instance) return Boolean
+   is
+      pragma Unreferenced (S);
+   begin
+      return Block_Client.Initialized (Client);
+   end Initialized;
 
 end Component;
