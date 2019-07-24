@@ -115,7 +115,7 @@ is
    function Initialized (S : Server_Session) return Boolean
    is
    begin
-      return Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1);
+      return Initialized (Instance (S)) and Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1);
    end Initialized;
 
    procedure Unblock_Client (S : in out Server_Session)
