@@ -2,6 +2,7 @@
 with System;
 with Cxx.Block.Dispatcher;
 with Cxx.Block.Server;
+with Cxx.Genode;
 use all type System.Address;
 use all type Cxx.Bool;
 
@@ -48,43 +49,26 @@ is
 
    procedure Session_Request (D     : in out Dispatcher_Session;
                               Cap   :        Dispatcher_Capability;
-                              Valid :    out Boolean;
-                              Label :    out String;
-                              Last  :    out Natural)
+                              Valid :    out Boolean)
    is
-      Label_Address : constant System.Address :=
-         Cxx.Block.Dispatcher.Label_Content (D.Instance, Cap.Instance);
-      Label_Length  : Natural;
+      use type Cxx.Genode.Uint64_T;
    begin
-      Valid := False;
-      Label := (others => Character'Val (0));
-      Last  := 0;
-      if Label_Address /= System.Null_Address then
-         Label_Length := Natural (Cxx.Block.Dispatcher.Label_Length (D.Instance, Cap.Instance));
-         if
-            Label_Length <= Label'Length
-         then
-            declare
-               Lbl : String (1 .. Label_Length)
-               with Address => Label_Address;
-            begin
-               Valid                                               := True;
-               Label (Label'First .. Label'First + Lbl'Length - 1) := Lbl;
-               Last                                                := Label'First + Lbl'Length - 1;
-            end;
-         end if;
-      end if;
+      Valid := Cxx.Block.Dispatcher.Label_Content (D.Instance, Cap.Instance) /= System.Null_Address
+               and then Cxx.Block.Dispatcher.Label_Length (D.Instance, Cap.Instance) > 0;
    end Session_Request;
 
    procedure Session_Accept (D : in out Dispatcher_Session;
                              C :        Dispatcher_Capability;
-                             I : in out Server_Session;
-                             L :        String) with
+                             I : in out Server_Session) with
       SPARK_Mode => Off
    is
+      Label_Address : constant System.Address := Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance);
+      Label_Length  : constant Positive       := Positive (Cxx.Block.Dispatcher.Label_Length (D.Instance, C.Instance));
+      Label : String (1 .. Label_Length) with
+         Address => Label_Address;
    begin
       Serv.Initialize (Serv.Instance (I),
-                       L,
+                       Label,
                        Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
       Cxx.Block.Server.Initialize (I.Instance,
                                    Cxx.Block.Dispatcher.Get_Capability (D.Instance),
