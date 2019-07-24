@@ -44,6 +44,8 @@ generic
    --  @param S  Server session instance identifier
    with function Maximum_Transfer_Size (S : Server_Instance) return Byte_Length;
 
+   with function Initialized (S : Server_Instance) return Boolean;
+
    --  Custom initialization for the server,
    --  automatically called by Componolit.Interfaces.Block.Dispatcher.Session_Accept
    --

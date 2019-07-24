@@ -47,19 +47,18 @@ is
       Cxx.Block.Dispatcher.Announce (D.Instance);
    end Register;
 
-   procedure Session_Request (D     : in out Dispatcher_Session;
-                              Cap   :        Dispatcher_Capability;
-                              Valid :    out Boolean)
+   function Valid_Session_Request (D : Dispatcher_Session;
+                                   C : Dispatcher_Capability) return Boolean
    is
       use type Cxx.Genode.Uint64_T;
    begin
-      Valid := Cxx.Block.Dispatcher.Label_Content (D.Instance, Cap.Instance) /= System.Null_Address
-               and then Cxx.Block.Dispatcher.Label_Length (D.Instance, Cap.Instance) > 0;
-   end Session_Request;
+      return Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance) /= System.Null_Address
+             and then Cxx.Block.Dispatcher.Label_Length (D.Instance, C.Instance) > 0;
+   end Valid_Session_Request;
 
-   procedure Session_Accept (D : in out Dispatcher_Session;
-                             C :        Dispatcher_Capability;
-                             I : in out Server_Session) with
+   procedure Session_Initialize (D : in out Dispatcher_Session;
+                                 C :        Dispatcher_Capability;
+                                 I : in out Server_Session) with
       SPARK_Mode => Off
    is
       Label_Address : constant System.Address := Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance);
@@ -70,6 +69,9 @@ is
       Serv.Initialize (Serv.Instance (I),
                        Label,
                        Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
+      if not Serv.Initialized (Serv.Instance (I)) then
+         return;
+      end if;
       Cxx.Block.Server.Initialize (I.Instance,
                                    Cxx.Block.Dispatcher.Get_Capability (D.Instance),
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance),
@@ -78,6 +80,16 @@ is
                                    Serv.Block_Size'Address,
                                    Serv.Maximum_Transfer_Size'Address,
                                    Serv.Writable'Address);
+      if Cxx.Block.Server.Initialized (I.Instance) /= Cxx.Bool'Val (1) then
+         Serv.Finalize (Serv.Instance (I));
+      end if;
+   end Session_Initialize;
+
+   procedure Session_Accept (D : in out Dispatcher_Session;
+                             C :        Dispatcher_Capability;
+                             I : in out Server_Session)
+   is
+   begin
       Cxx.Block.Dispatcher.Session_Accept (D.Instance, C.Instance, I.Instance);
    end Session_Accept;
 
