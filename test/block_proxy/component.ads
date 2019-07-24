@@ -21,7 +21,7 @@ package Component is
    package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer);
 
    procedure Event;
-   procedure Dispatch;
+   procedure Dispatch (C : Block.Dispatcher_Capability);
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize_Server (S : Block.Server_Instance);
    function Block_Count (S : Block.Server_Instance) return Block.Count;
