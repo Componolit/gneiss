@@ -135,17 +135,17 @@ package body Component is
       Block_Server.Unblock_Client (Server);
    end Event;
 
-   procedure Dispatch
+   procedure Dispatch (C : Block.Dispatcher_Capability)
    is
       Label : String (1 .. 160);
       Last : Natural;
       Valid : Boolean;
    begin
-      Block_Dispatcher.Session_Request (Dispatcher, Valid, Label, Last);
+      Block_Dispatcher.Session_Request (Dispatcher, C, Valid, Label, Last);
       if Valid and not Block_Server.Initialized (Server) then
-         Block_Dispatcher.Session_Accept (Dispatcher, Server, Label (1 .. Last));
+         Block_Dispatcher.Session_Accept (Dispatcher, C, Server, Label (1 .. Last));
       end if;
-      Block_Dispatcher.Session_Cleanup (Dispatcher, Server);
+      Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Dispatch;
 
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length)

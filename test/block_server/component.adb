@@ -176,18 +176,18 @@ package body Component is
       null;
    end Finalize;
 
-   procedure Request
+   procedure Request (C : Block.Dispatcher_Capability)
    is
       Label : String (1 .. 160);
       Last : Natural;
       Valid : Boolean;
    begin
-      Block_Dispatcher.Session_Request (Dispatcher, Valid, Label, Last);
+      Block_Dispatcher.Session_Request (Dispatcher, C, Valid, Label, Last);
       if Valid and not Block_Server.Initialized (Server) then
          Componolit.Interfaces.Log.Client.Info (Log, "Received request with label " & Label (1 .. Last));
-         Block_Dispatcher.Session_Accept (Dispatcher, Server, Label (1 .. Last));
+         Block_Dispatcher.Session_Accept (Dispatcher, C, Server, Label (1 .. Last));
       end if;
-      Block_Dispatcher.Session_Cleanup (Dispatcher, Server);
+      Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Request;
 
 end Component;
