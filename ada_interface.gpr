@@ -7,7 +7,7 @@ project Ada_Interface is
    Platform : Platform_Type := external ("PLATFORM", "linux");
    Test := external ("TEST", "");
 
-   Source := "src";
+   Source := ("src", "src/common");
    Source_Platform := "src/platform";
    Source_Block := "src/block";
    Source_Block_Client := "src/block/client";
@@ -19,8 +19,8 @@ project Ada_Interface is
    Source_Rom := "src/rom";
    Source_Rom_Client := "src/rom/client";
 
-   Linux_Source := (Source,
-                    Source_Platform,
+   Linux_Source := Source &
+                   (Source_Platform,
                     Source_Platform & "/linux",
                     Source_Block,
                     Source_Block & "/linux",
@@ -39,8 +39,8 @@ project Ada_Interface is
                     Source_Rom_Client,
                     Source_Rom_Client & "/linux");
 
-   Genode_Source := (Source,
-                     Source_Platform,
+   Genode_Source := Source &
+                    (Source_Platform,
                      Source_Platform & "/genode",
                      Source_Block,
                      Source_Block & "/genode",
