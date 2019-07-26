@@ -20,8 +20,9 @@ cd /genode
 git remote add jklmnn https://github.com/jklmnn/genode.git
 git fetch jklmnn
 git checkout b0d01103e20981d64a81b8494359c9606017e4bf
-git clone https://github.com/Componolit/ada-components.git /genode/repos/ada-components -b ada_interfaces_issue_69
+git clone https://github.com/Componolit/ada-components.git /genode/repos/ada-components
 cd /genode/repos/ada-components
+git checkout 7c3d94265e9e11fb4aafbba0619b81d1f59561ed
 rm -r /genode/repos/ada-components/libs/ada-interface
 ln -fs /ada-interfaces /genode/repos/ada-components/libs/ada-interface
 /genode/tool/create_builddir x86_64
