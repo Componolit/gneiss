@@ -3,6 +3,7 @@ with Componolit.Interfaces.Block;
 with Componolit.Interfaces.Block.Client;
 with Componolit.Interfaces.Log;
 with Componolit.Interfaces.Log.Client;
+with Componolit.Interfaces.Strings_Generic;
 
 package body Component with
   SPARK_Mode
@@ -19,6 +20,9 @@ is
    procedure Read (C : Block.Client_Instance;
                    R : Request_Id;
                    D : String);
+
+   function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Block.Count);
+   function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Block.Size);
 
    package Block_Client is new Block.Client (Request_Id, Run, Read, Write);
 
@@ -175,11 +179,9 @@ is
          if Block_Client.Initialized (Client) then
             if Componolit.Interfaces.Log.Client.Initialized (Log) then
                Componolit.Interfaces.Log.Client.Info (Log, "Block device with "
-                                    & Componolit.Interfaces.Log.Image
-                                         (Long_Integer (Block_Client.Block_Count (Client)))
+                                    & Image (Block_Client.Block_Count (Client))
                                     & " blocks of size "
-                                    & Componolit.Interfaces.Log.Image
-                                         (Long_Integer (Block_Client.Block_Size (Client))));
+                                    & Image (Block_Client.Block_Size (Client)));
             end if;
             if Block_Client.Writable (Client) then
                Run;
