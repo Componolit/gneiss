@@ -7,12 +7,12 @@ package Componolit.Interfaces.Strings with
 is
 
    --  Image instances for the most common ranged and modular types
-   function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Integer);
-   function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Long_Integer);
-   function Image is new Componolit.Interfaces.Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_8);
-   function Image is new Componolit.Interfaces.Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_16);
-   function Image is new Componolit.Interfaces.Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_32);
-   function Image is new Componolit.Interfaces.Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_64);
+   function Image is new Strings_Generic.Image_Ranged (Integer);
+   function Image is new Strings_Generic.Image_Ranged (Long_Integer);
+   function Image is new Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_8);
+   function Image is new Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_16);
+   function Image is new Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_32);
+   function Image is new Strings_Generic.Image_Modular (Standard.Interfaces.Unsigned_64);
 
    --  Image function for Boolean
    --
@@ -26,6 +26,6 @@ is
    --  @param V  Duration value
    --  @param    Duration as string with 6 decimals
    function Image (V : Duration) return String with
-      Post => Image'Result'Length <= 27 and Image'Result'First = 1;
+      Post => Image'Result'Length <= 28 and Image'Result'First = 1;
 
 end Componolit.Interfaces.Strings;
