@@ -3,6 +3,7 @@ with Componolit.Interfaces.Log;
 with Componolit.Interfaces.Log.Client;
 with Componolit.Interfaces.Timer;
 with Componolit.Interfaces.Timer.Client;
+with Componolit.Interfaces.Strings;
 
 package body Component with
    SPARK_Mode
@@ -33,7 +34,7 @@ is
          Timer_Client.Set_Timeout (Timer, 60.0);
          Timer_Client.Set_Timeout (Timer, 1.5);
          Componolit.Interfaces.Log.Client.Info
-            (Log, "Time: " & Componolit.Interfaces.Log.Image (Duration (Timer_Client.Clock (Timer))));
+            (Log, "Time: " & Componolit.Interfaces.Strings.Image (Duration (Timer_Client.Clock (Timer))));
       else
          Main.Vacate (Cap, Main.Failure);
       end if;
@@ -47,7 +48,7 @@ is
          and Timer_Client.Initialized (Timer)
       then
          Componolit.Interfaces.Log.Client.Info
-            (Log, "Time: " & Componolit.Interfaces.Log.Image (Duration (Timer_Client.Clock (Timer))));
+            (Log, "Time: " & Componolit.Interfaces.Strings.Image (Duration (Timer_Client.Clock (Timer))));
          Main.Vacate (Capability, Main.Success);
       else
          Main.Vacate (Capability, Main.Failure);
