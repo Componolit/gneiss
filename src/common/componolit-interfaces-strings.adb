@@ -34,26 +34,26 @@ is
       if V < -9223372036.0 then
          V2 := -9223372036.0;
       end if;
-      if V = 0.0 then
+      if V2 = 0.0 then
          Seconds := 0;
-      elsif V < 0.0 then
-         Seconds := Long_Integer (V + 0.5);
-      else --  V > 0.0
-         Seconds := Long_Integer (V - 0.5);
+      elsif V2 < 0.0 then
+         Seconds := Long_Integer (V2 + 0.5);
+      else --  V2 > 0.0
+         Seconds := Long_Integer (V2 - 0.5);
       end if;
       Frac := abs (V2 - Duration (Seconds));
       Frac := Frac * 1000000 - 0.5;
       declare
-         F_Image : constant String          := Image (Long_Integer (Frac));
+         F_Image : constant String          := Image (Long_Integer (Frac), 10, True);
          Pad     : constant String (1 .. 6) := (others => '0');
       begin
          if Frac = -0.5 then
-            return Image (Seconds) & "." & Pad;
+            return Image (Seconds, 10, True) & "." & Pad;
          end if;
          if F_Image'Length >= 6 then
-            return Image (Seconds) & "." & F_Image (1 .. 6);
+            return Image (Seconds, 10, True) & "." & F_Image (1 .. 6);
          else --  F_Image'Length < 6
-            return Image (Seconds) & "." & Pad (1 .. 6 - F_Image'Length) & F_Image;
+            return Image (Seconds, 10, True) & "." & Pad (1 .. 6 - F_Image'Length) & F_Image;
          end if;
       end;
    end Image;
