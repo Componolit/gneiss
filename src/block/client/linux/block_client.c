@@ -11,137 +11,82 @@
 #include <errno.h>
 #include <signal.h>
 
-size_t ring_alloc(ring_t *r, uint64_t buffer_size)
+void block_client_allocate_request(block_client_t *client, request_t *request)
 {
-    r->size = buffer_size ? buffer_size / sizeof(struct ctrl) : _SC_AIO_LISTIO_MAX - 1;
-    r->buffer = malloc(r->size * sizeof(struct ctrl *));
-    if(r->buffer){
-        for(size_t i = 0; i < r->size; i++){
-            r->buffer[i] = malloc(sizeof(struct ctrl));
-            if(!r->buffer[i]){
-                return 0;
-            }
-            memset(r->buffer[i], 0, sizeof(struct ctrl));
+    printf("%s\n", __func__);
+    int aio_opcode;
+    struct aiocb *aiocb;
+    void *buffer;
+    int queue_slot = -1;
+    request->status = CAI_BLOCK_RAW;
+    for(unsigned i = 0; i < QUEUE_SIZE; i++){
+        if(!client->queue[i]){
+            queue_slot = i;
+            break;
         }
     }
-    r->enqueue = 0;
-    r->dequeue = 0;
-    r->submit = 0;
-    return r->buffer ? r->size : 0;
-}
-
-int ring_avail(ring_t const *r)
-{
-    return r->buffer[r->enqueue]->status == 0;
-}
-
-void ring_enqueue(ring_t *r, block_client_t *c, request_t const *req)
-{
-    memset(&(r->buffer[r->enqueue]->aio_cb), 0, sizeof(struct aiocb));
-    r->buffer[r->enqueue]->aio_cb.aio_fildes = c->fd;
-    r->buffer[r->enqueue]->aio_cb.aio_sigevent.sigev_notify = SIGEV_NONE; // the proper signal is set in submit
-    switch(req->type){
-        case READ:
-            r->buffer[r->enqueue]->status = RW;
-            r->buffer[r->enqueue]->aio_cb.aio_lio_opcode = LIO_READ;
-            r->buffer[r->enqueue]->aio_cb.aio_offset = req->start * c->block_size;
-            r->buffer[r->enqueue]->aio_cb.aio_nbytes = req->length * c->block_size;
-            r->buffer[r->enqueue]->aio_cb.aio_buf = malloc(req->length * c->block_size);
-            if(!(r->buffer[r->enqueue]->aio_cb.aio_buf)){
-                r->buffer[r->enqueue]->status = FAILED;
-            }
+    if(queue_slot < 0){
+        return;
+    }
+    switch(request->kind){
+        case 1:
+            aio_opcode = LIO_READ;
             break;
-        case WRITE:
-            r->buffer[r->enqueue]->status = RW;
-            r->buffer[r->enqueue]->aio_cb.aio_lio_opcode = LIO_WRITE;
-            r->buffer[r->enqueue]->aio_cb.aio_offset = req->start * c->block_size;
-            r->buffer[r->enqueue]->aio_cb.aio_nbytes = req->length * c->block_size;
-            r->buffer[r->enqueue]->aio_cb.aio_buf = malloc(req->length * c->block_size);
-            if((r->buffer[r->enqueue]->aio_cb.aio_buf)){
-                c->rw(c, req->type, c->block_size, req->start, req->length, (void *)(r->buffer[r->enqueue]->aio_cb.aio_buf));
-            }else{
-                r->buffer[r->enqueue]->status = FAILED;
-            }
-            break;
-        case SYNC:
-            r->buffer[r->enqueue]->status = FSYNC;
+        case 2:
+            aio_opcode = LIO_WRITE;
             break;
         default:
-            break;
+            return;
     }
-    r->enqueue = (r->enqueue + 1) % r->size;
+    aiocb = (struct aiocb *)malloc(sizeof(struct aiocb));
+    buffer = malloc(request->length * client->block_size);
+    if(aiocb == 0 || buffer == 0){
+        free(aiocb);
+        free(buffer);
+        return;
+    }
+    aiocb->aio_fildes = client->fd;
+    aiocb->aio_offset = request->start * client->block_size;
+    aiocb->aio_nbytes = request->length * client->block_size;
+    aiocb->aio_lio_opcode = aio_opcode;
+    aiocb->aio_buf = buffer;
+    request->aio_cb = aiocb;
+    request->status = CAI_BLOCK_ALLOCATED;
+    client->queue[queue_slot] = request;
 }
 
-void ring_peek(ring_t const *r, block_client_t const *c, request_t *req)
+void block_client_update_response_queue(block_client_t *client, request_handle_t *handle)
 {
-    int aio_status;
-    ring_t *mut_r = (ring_t *)r;
-    memset(req, 0, sizeof(request_t));
-    switch(r->buffer[r->dequeue]->status){
-        case EMPTY:
-            req->type = NONE;
-            break;
-        case SUBMITTED:
-            aio_status = aio_error(&r->buffer[r->dequeue]->aio_cb);
-            req->type = r->buffer[r->dequeue]->aio_cb.aio_lio_opcode == LIO_READ ? READ : WRITE;
-            req->start = r->buffer[r->dequeue]->aio_cb.aio_offset / c->block_size;
-            req->length = r->buffer[r->dequeue]->aio_cb.aio_nbytes / c->block_size;
-            switch(aio_status){
-                case 0:
-                    req->status = aio_return(&r->buffer[r->dequeue]->aio_cb) == r->buffer[r->dequeue]->aio_cb.aio_nbytes ? OK : ERROR;
-                    break;
+    printf("%s\n", __func__);
+    memset(handle, 0, sizeof(request_handle_t));
+    for(unsigned i = 0; i < QUEUE_SIZE; i++){
+        if(client->queue[i] && client->queue[i]->status == CAI_BLOCK_SUBMITTED){
+            switch(aio_error(client->queue[i]->aio_cb)){
                 case EINPROGRESS:
-                    req->type = NONE;
-                    break;
-                case ECANCELED:
-                    req->status = ERROR;
                     break;
                 default:
-                    fprintf(stderr, "invalid request status: %d\n", aio_status);
-                    break;
+                    client->queue[i]->status = CAI_BLOCK_FINISHED;
+                    handle->tag = client->queue[i]->tag;
+                    handle->valid = 1;
+                    return;
             }
-            break;
-        case FSYNC:
-            // since sync requests are not answered we need to fast forward over it
-            mut_r->buffer[r->dequeue]->status = EMPTY;
-            mut_r->dequeue = (r->dequeue + 1) % r->size;
-            ring_peek(r, c, req);
-            break;
-        case FAILED:
-            req->status = ERROR;
-            req->type = r->buffer[r->dequeue]->aio_cb.aio_lio_opcode == LIO_READ ? READ : WRITE;
-            req->start = r->buffer[r->dequeue]->aio_cb.aio_offset / c->block_size;
-            req->length = r->buffer[r->dequeue]->aio_cb.aio_nbytes / c->block_size;
-            break;
+        }
     }
 }
 
-void ring_dequeue(ring_t *r)
+void block_client_update_request(block_client_t *client, request_t *request, request_handle_t *handle)
 {
-    free((void *)(r->buffer[r->dequeue]->aio_cb.aio_buf));
-    r->buffer[r->dequeue]->aio_cb.aio_buf = 0;
-    r->buffer[r->dequeue]->status = EMPTY;
-    r->dequeue = (r->dequeue + 1) % r->size;
-}
-
-unsigned ring_submit_length(ring_t const *r)
-{
-    unsigned avail = 0;
-    for(avail; avail < _SC_AIO_LISTIO_MAX
-               && r->submit + avail < r->size
-               && r->buffer[r->submit + avail]->status == RW; avail++);
-    return avail;
-}
-void ring_submitted(ring_t *r, unsigned s)
-{
-    for(unsigned i = r->submit; i < r->submit + s; i++){
-        r->buffer[i % r->size]->status = SUBMITTED;
+    printf("%s\n", __func__);
+    if(aio_return(request->aio_cb) == request->aio_cb->aio_nbytes){
+        request->status = CAI_BLOCK_OK;
+    }else{
+        request->status = CAI_BLOCK_ERROR;
     }
-    r->submit = (r->submit + s) % r->size;
 }
 
 const block_client_t *block_client_get_instance(const block_client_t *client)
 {
+    printf("%s\n", __func__);
     return client;
 }
 
@@ -149,11 +94,12 @@ void block_client_initialize(block_client_t **client,
                              const char *path,
                              uint64_t buffer_size,
                              void (*event)(void),
-                             void (*rw)(block_client_t *, uint32_t, uint64_t, uint64_t, uint64_t, void*))
+                             void (*rw)(block_client_t *, request_t const *, void*))
 {
+    printf("%s\n", __func__);
     struct stat st;
     *client = malloc(sizeof(block_client_t));
-    if(*client && ring_alloc(&(*client)->queue, buffer_size)){
+    if(*client){
         // try to open the file read-write
         // also no support for symlinks to prevent handling special cases
         (*client)->fd = open(path, O_RDWR | O_NOFOLLOW);
@@ -193,6 +139,7 @@ void block_client_initialize(block_client_t **client,
             }
             (*client)->event = event;
             (*client)->rw = rw;
+            memset((*client)->queue, 0, sizeof(request_t *) * QUEUE_SIZE);
         }else{
             perror(path);
             block_client_finalize(client);
@@ -207,105 +154,109 @@ void block_client_initialize(block_client_t **client,
 
 void block_client_finalize(block_client_t **client)
 {
+    printf("%s\n", __func__);
+    aio_cancel((*client)->fd, 0);
     close((*client)->fd);
-    if((*client)->queue.buffer){
-        for(size_t i = 0; i < (*client)->queue.size; i++){
-            free((*client)->queue.buffer[i]);
-        }
-        free((*client)->queue.buffer);
-    }
+    // we do not free the queues as they should be freed before finalizing
     free(*client);
     *client = 0;
 }
 
-int block_client_ready(const block_client_t *client, const request_t *request)
+void block_client_enqueue(block_client_t *client, request_t *request)
 {
-    return ring_avail(&client->queue);
-}
-
-int block_client_supported(const block_client_t *client, uint32_t kind)
-{
-    return kind == READ
-           || kind == WRITE
-           || kind == SYNC;
-}
-
-void block_client_enqueue(block_client_t *client, const request_t *request)
-{
-    ring_enqueue(&client->queue, client, request);
+    printf("%s\n", __func__);
+    request->status = CAI_BLOCK_PENDING;
 }
 
 void block_client_submit(block_client_t *client)
 {
+    printf("%s\n", __func__);
     int cont = 1;
-    unsigned length;
+    unsigned length = 0;
     struct sigevent sige;
+    struct aiocb *queue[_SC_AIO_LISTIO_MAX];
+    memset(queue, 0, sizeof(struct aiocb *) * _SC_AIO_LISTIO_MAX);
     sige.sigev_notify = SIGEV_SIGNAL;
     sige.sigev_signo = SIGIO;
     sige.sigev_value.sival_ptr = (void *)client;
-    while(cont){
-        length = ring_submit_length(&client->queue);
-        if(length){
-            // cast struct ctrl ** to struct aiocb * const * restrict since aiocb is always the first member of ctrl
-            if(lio_listio(LIO_NOWAIT, (struct aiocb * const * restrict)&client->queue.buffer[client->queue.submit], length, &sige) == -1){
+    for(unsigned i = 0; i < QUEUE_SIZE || length;){
+        printf("%u: %p\n", i, client->queue[i]);
+        if(i < QUEUE_SIZE && (!client->queue[i] || client->queue[i]->status != CAI_BLOCK_PENDING)){
+            printf("continue\n");
+            i++;
+            continue;
+        }
+        if(i < QUEUE_SIZE && length < _SC_AIO_LISTIO_MAX){
+            printf("update queue\n");
+            queue[length] = client->queue[i]->aio_cb;
+            client->queue[i]->status = CAI_BLOCK_SUBMITTED;
+            i++;
+            length++;
+        }
+        if(length == _SC_AIO_LISTIO_MAX || i == QUEUE_SIZE){
+            printf("send queue\n");
+            if(lio_listio(LIO_NOWAIT, queue, length, &sige) == -1){
                 switch(errno){
                     case EAGAIN:
-                        cont = 0;
-                        // TODO: check if any request is pending in this instance, if not there might be no signal if we stop here
                         break;
                     case EIO:
-                        ring_submitted(&client->queue, length);
+                        length = 0;
                         break;
                     default:
+                        length = 0;
                         perror("lio_listio failed");
-                        cont = 0;
+                        break;
                 }
             }else{
-                ring_submitted(&client->queue, length);
+                length = 0;
             }
-        }else if(client->queue.buffer[client->queue.submit]->status == FSYNC){
-            aio_fsync(O_SYNC, &client->queue.buffer[client->queue.submit]->aio_cb);
-            client->queue.submit = (client->queue.submit + 1) % client->queue.size;
-            cont = 1;
-        }else{
-            cont = 0;
         }
     }
-}
-
-void block_client_next(const block_client_t *client, request_t *request)
-{
-    ring_peek(&client->queue, client, request);
+    printf("%s\n", __func__);
 }
 
 void block_client_read(block_client_t *client, const request_t *request)
 {
-    client->rw(client, request->type, client->block_size, request->start, request->length,
-               (void *)client->queue.buffer[client->queue.dequeue]->aio_cb.aio_buf);
+    printf("%s\n", __func__);
+    client->rw(client, request, (void *)(request->aio_cb->aio_buf));
 }
 
-void block_client_release(block_client_t *client, const request_t *request)
+void block_client_release(block_client_t *client, request_t *request)
 {
-    ring_dequeue(&client->queue);
+    printf("%s\n", __func__);
+    aio_cancel(client->fd, request->aio_cb);
+    free((void *)(request->aio_cb->aio_buf));
+    free(request->aio_cb);
+    for(unsigned i; i < QUEUE_SIZE; i++){
+        if(client->queue[i] = request){
+            client->queue[i] = 0;
+            memset(request, 0, sizeof(request_t));
+            return;
+        }
+    }
 }
 
 int block_client_writable(const block_client_t *client)
 {
+    printf("%s\n", __func__);
     return client->writable;
 }
 
 uint64_t block_client_block_count(const block_client_t *client)
 {
+    printf("%s\n", __func__);
     return client->block_count;
 }
 
 uint64_t block_client_block_size(const block_client_t *client)
 {
+    printf("%s\n", __func__);
     return client->block_size;
 }
 
 uint64_t block_client_maximum_transfer_size(const block_client_t *client)
 {
+    printf("%s\n", __func__);
     if(client->maximum_transfer_size < client->block_size * client->block_count){
         return client->maximum_transfer_size;
     }else{

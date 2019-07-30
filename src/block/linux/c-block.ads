@@ -17,7 +17,7 @@ package C.Block is
 
    type Request is record
       Kind   : Request_Kind;
-      Priv   : Uint8_T_Array (1 .. 16);
+      Tag    : Uint32_T;
       Start  : Uint64_T;
       Length : Uint64_T;
       Status : Request_Status;

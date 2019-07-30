@@ -15,17 +15,24 @@
 /* request status */
 
 #define RAW 0
-#define OK 1
-#define ERROR 2
-#define ACKNOWLEDGED 3
+#define ALLOCATED 1
+#define PENDING 2
+#define OK 3
+#define ERROR 4
 
 typedef struct request
 {
     uint32_t type;
-    uint8_t priv[16];
+    uint32_t tag;
     uint64_t start;
     uint64_t length;
     uint32_t status;
 } request_t;
+
+typedef struct request_handle
+{
+    uint32_t tag;
+    uint32_t valid;
+} request_handle_t;
 
 #endif /* ifndef _BLOCK_H_ */
