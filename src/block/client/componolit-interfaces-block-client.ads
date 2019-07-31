@@ -55,9 +55,6 @@ is
    --  Block client request
    type Request is limited private;
 
-   --  Request handle, holds unevaluated meta data of an incoming request response
-   type Request_Handle is private;
-
    --  Create empty request
    --
    --  @return  empty, uninitialized request
@@ -119,44 +116,16 @@ is
                                I :        Request_Id) with
       Pre => Initialized (C) and then Status (R) = Raw;
 
-   --  Check if the request handle is valid
-   --
-   --  @param H  Request handle
-   --  @return   True if handle is valid
-   function Valid (H : Request_Handle) return Boolean;
-
-   --  Get the request identifier linked with the handle
-   --
-   --  @param H  Request handle
-   --  @return   Identifier of the request linked to this handle
-   function Identifier (H : Request_Handle) return Request_Id with
-      Pre => Valid (H);
-
-   --  Check the response queue for updates
-   --
-   --  Reads the first element from the response queue and saves its meta data into the request handle.
-   --  The handle is required to update a request with the according metadata.
-   --
-   --  @param C  Client session instance
-   --  @param H  Platform handle that indicates the request status change
-   procedure Update_Response_Queue (C : in out Client_Session;
-                                    H :    out Request_Handle) with
-      Pre => Initialized (C);
-
-   --  Update request according to request handle
-   --
-   --  Takes a request handle and updates the request according to the platform state
-   --  linked to the request handle. The update includes the requests status and internal platform state.
+   --  Checks if a request has been changed by the platform
    --
    --  @param C  Client session instance
    --  @param R  Request that shall be updated
-   --  @param H  Request handle to link the request to platform state
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Request;
-                             H :        Request_Handle) with
-      Pre => Initialized (C)
-             and then Valid (H)
-             and then Identifier (R) = Identifier (H);
+                             R : in out Request) with
+      Pre  => Initialized (C)
+              and Status (R) = Pending,
+      Post => Initialized (C)
+              and Status (R) in Pending | Ok | Error;
 
    --  Return True if C is initialized
    --
@@ -286,6 +255,5 @@ is
 private
 
    type Request is new Componolit.Interfaces.Internal.Block.Client_Request;
-   type Request_Handle is new Componolit.Interfaces.Internal.Block.Client_Request_Handle;
 
 end Componolit.Interfaces.Block.Client;
