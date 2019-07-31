@@ -1,17 +1,123 @@
 
-with Ada.Unchecked_Conversion;
-with System;
 with C;
-with C.Block;
+with System;
 
 use all type System.Address;
 
 package body Componolit.Interfaces.Block.Client
 is
+   ------------------
+   -- Null_Request --
+   ------------------
 
-   function Convert_Request (R : Request) return C.Block.Request;
-   function Convert_Request (R : C.Block.Request) return Request with
-      Pre => R.Length in C.Uint64_T (Count'First) .. C.Uint64_T (Count'Last);
+   function Null_Request return Request
+   is
+      (Request'(Kind   => 0,
+                Tag    => 0,
+                Start  => 0,
+                Length => 0,
+                Status => 0,
+                Aiocb  => System.Null_Address,
+                Queue  => System.Null_Address));
+
+   ----------
+   -- Kind --
+   ----------
+
+   function Kind (R : Request) return Request_Kind
+   is
+      (case R.Kind is
+         when Componolit.Interfaces.Internal.Block.Read  => Read,
+         when Componolit.Interfaces.Internal.Block.Write => Write,
+         when Componolit.Interfaces.Internal.Block.Sync  => Sync,
+         when Componolit.Interfaces.Internal.Block.Trim  => Trim,
+         when others                                     => None);
+
+   ------------
+   -- Status --
+   ------------
+
+   function Status (R : Request) return Request_Status
+   is
+      (case R.Status is
+         when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
+         when Componolit.Interfaces.Internal.Block.Pending   => Pending,
+         when Componolit.Interfaces.Internal.Block.Ok        => Ok,
+         when Componolit.Interfaces.Internal.Block.Error     => Error,
+         when others                                         => Raw);
+
+   -----------
+   -- Start --
+   -----------
+
+   function Start (R : Request) return Id
+   is
+      (Id (R.Start));
+
+   ------------
+   -- Length --
+   ------------
+
+   function Length (R : Request) return Count
+   is
+      (Count (R.Length));
+
+   ----------------
+   -- Identifier --
+   ----------------
+
+   function Identifier (R : Request) return Request_Id
+   is
+      (Request_Id'Val (R.Tag));
+
+   ----------------------
+   -- Allocate_Request --
+   ----------------------
+
+   procedure Allocate_Request (C : in out Client_Session;
+                               R : in out Request;
+                               K :        Request_Kind;
+                               S :        Id;
+                               L :        Count;
+                               I :        Request_Id)
+   is
+      procedure C_Allocate_Request (Inst :        System.Address;
+                                    Req  : in out Request) with
+         Import,
+         Convention    => C,
+         External_Name => "block_client_allocate_request",
+         Global        => null;
+   begin
+      case K is
+         when None      => R.Kind := Componolit.Interfaces.Internal.Block.None;
+         when Read      => R.Kind := Componolit.Interfaces.Internal.Block.Read;
+         when Write     => R.Kind := Componolit.Interfaces.Internal.Block.Write;
+         when Sync      => R.Kind := Componolit.Interfaces.Internal.Block.Sync;
+         when Trim      => R.Kind := Componolit.Interfaces.Internal.Block.Trim;
+         when Undefined => R.Kind := Componolit.Interfaces.Internal.Block.None;
+      end case;
+      R.Start  := Standard.C.Uint64_T (S);
+      R.Length := Standard.C.Uint64_T (L);
+      R.Tag    := Request_Id'Pos (I);
+      C_Allocate_Request (C.Instance, R);
+   end Allocate_Request;
+
+   --------------------
+   -- Update_Request --
+   --------------------
+
+   procedure Update_Request (C : in out Client_Session;
+                             R : in out Request)
+   is
+      procedure C_Update_Request (Inst   :        System.Address;
+                                  Req    : in out Request) with
+         Import,
+         Convention    => C,
+         External_Name => "block_client_update_request",
+         Global        => null;
+   begin
+      C_Update_Request (C.Instance, R);
+   end Update_Request;
 
    ------------
    -- Create --
@@ -26,7 +132,7 @@ is
    -- Get_Instance --
    ------------------
 
-   function Get_Instance (C : Client_Session) return Client_Instance is
+   function Instance (C : Client_Session) return Client_Instance is
       function C_Get_Instance (T : System.Address) return Client_Instance with
          Import,
          Convention    => CPP,
@@ -34,7 +140,7 @@ is
          Global        => null;
    begin
       return C_Get_Instance (C.Instance);
-   end Get_Instance;
+   end Instance;
 
    -----------------
    -- Initialized --
@@ -48,28 +154,24 @@ is
    ----------------
 
    procedure Crw (C : Client_Instance;
-                  K : Standard.C.Block.Request_Kind;
                   B : Size;
-                  S : Id;
-                  L : Count;
+                  R : Request;
                   D : System.Address);
 
    procedure Crw (C : Client_Instance;
-                  K : Standard.C.Block.Request_Kind;
                   B : Size;
-                  S : Id;
-                  L : Count;
+                  R : Request;
                   D : System.Address) with
       SPARK_Mode => Off
    is
-      Data : Buffer (1 .. B * L) with
+      Data : Buffer (1 .. B * Count (R.Length)) with
          Address => D;
    begin
-      case K is
-         when Standard.C.Block.Read =>
-            Read (C, B, S, L, Data);
-         when Standard.C.Block.Write =>
-            Write (C, B, S, L, Data);
+      case R.Kind is
+         when Componolit.Interfaces.Internal.Block.Read =>
+            Read (C, Request_Id'Val (R.Tag), Data);
+         when Componolit.Interfaces.Internal.Block.Write =>
+            Write (C, Request_Id'Val (R.Tag), Data);
          when others =>
             null;
       end case;
@@ -112,92 +214,22 @@ is
       C.Instance := System.Null_Address;
    end Finalize;
 
-   -----------
-   -- Ready --
-   -----------
-
-   function Ready (C : Client_Session;
-                   R : Request) return Boolean with
-      SPARK_Mode => Off
-   is
-      function C_Ready (T   : System.Address;
-                        Req : System.Address) return Integer with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_ready",
-         Global        => null;
-      Req : Standard.C.Block.Request := Convert_Request (R);
-   begin
-      return C_Ready (C.Instance, Req'Address) = 1;
-   end Ready;
-
-   ---------------
-   -- Supported --
-   ---------------
-
-   function C_Supported (T   : System.Address;
-                         Req : Standard.C.Block.Request_Kind) return Integer with
-      Import,
-      Convention     => C,
-      External_Name  => "block_client_supported",
-      Global         => null;
-
-   procedure C_Supported (Cs   : Client_Session;
-                          Req1 : Standard.C.Block.Request_Kind;
-                          Req2 : Request_Kind) with
-      Ghost,
-      Annotate => (GNATprove, Terminating),
-      Post => (C_Supported (Cs.Instance, Req1) = 1) = Supported (Get_Instance (Cs), Req2);
-
-   procedure C_Supported (Cs   : Client_Session;
-                          Req1 : Standard.C.Block.Request_Kind;
-                          Req2 : Request_Kind) with
-      SPARK_Mode => Off
-   is
-      pragma Unreferenced (Cs);
-      pragma Unreferenced (Req1);
-      pragma Unreferenced (Req2);
-   begin
-      null;
-   end C_Supported;
-
-   function Supported (C : Client_Session;
-                       R : Request_Kind) return Boolean
-   is
-   begin
-      if R = None or R = Undefined then
-         return False;
-      end if;
-      C_Supported (C, Standard.C.Block.Read, Read);
-      C_Supported (C, Standard.C.Block.Write, Write);
-      C_Supported (C, Standard.C.Block.Sync, Sync);
-      C_Supported (C, Standard.C.Block.Trim, Trim);
-      return C_Supported (C.Instance, (case R is
-                                       when None      => Standard.C.Block.None,
-                                       when Read      => Standard.C.Block.Read,
-                                       when Write     => Standard.C.Block.Write,
-                                       when Sync      => Standard.C.Block.Sync,
-                                       when Trim      => Standard.C.Block.Trim,
-                                       when Undefined => Standard.C.Block.None)) = 1;
-   end Supported;
-
-   ------------------
-   -- Enqueue_Read --
-   ------------------
+   -------------
+   -- Enqueue --
+   -------------
 
    procedure Enqueue (C : in out Client_Session;
-                      R :        Request) with
+                      R : in out Request) with
       SPARK_Mode => Off
    is
-      procedure C_Enqueue (T   : System.Address;
-                           Req : System.Address) with
+      procedure C_Enqueue (T   :        System.Address;
+                           Req : in out Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_enqueue",
          Global        => null;
-      Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      C_Enqueue (C.Instance, Req'Address);
+      C_Enqueue (C.Instance, R);
    end Enqueue;
 
    ------------
@@ -215,41 +247,6 @@ is
    end Submit;
 
    ----------
-   -- Next --
-   ----------
-
-   function Next (C : Client_Session) return Request
-   is
-      use type Standard.C.Uint64_T;
-      use type Standard.C.Block.Request_Kind;
-      use type Standard.C.Block.Request_Status;
-      procedure C_Next (T :     System.Address;
-                        R : out Standard.C.Block.Request) with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_next",
-         Global        => null;
-      R : Standard.C.Block.Request;
-   begin
-      C_Next (C.Instance, R);
-      if R.Kind = Standard.C.Block.None then
-         R.Start := 0;
-         R.Length := 0;
-      else
-         if
-            R.Length > Standard.C.Uint64_T (Count'Last)
-         then
-            R.Length := 0;
-            R.Status := Standard.C.Block.Error;
-         end if;
-      end if;
-      if R.Status /= Standard.C.Block.Ok then
-         R.Status := Standard.C.Block.Error;
-      end if;
-      return Convert_Request (R);
-   end Next;
-
-   ----------
    -- Read --
    ----------
 
@@ -257,39 +254,32 @@ is
                    R :        Request) with
       SPARK_Mode => Off
    is
-      procedure C_Read (T   :     System.Address;
-                        Req :     System.Address) with
+      procedure C_Read (T   : System.Address;
+                        Req : Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_read",
          Global        => null;
-      Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      C_Read (C.Instance, Req'Address);
+      C_Read (C.Instance, R);
    end Read;
 
    -------------
    -- Release --
    -------------
 
-   pragma Warnings (Off, "formal parameter ""R"" is not modified");
-   --  R is not modified but the platform state has changed and R becomes invalid on the platform
    procedure Release (C : in out Client_Session;
                       R : in out Request) with
       SPARK_Mode => Off
    is
-      pragma Warnings (On, "formal parameter ""R"" is not modified");
-      procedure C_Release (T   : System.Address;
-                           Req : System.Address) with
+      procedure C_Release (T   :        System.Address;
+                           Req : in out Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_release",
          Global        => null;
-      Req : Standard.C.Block.Request := Convert_Request (R);
    begin
-      if R.Kind /= None and R.Kind /= Undefined then
-         C_Release (C.Instance, Req'Address);
-      end if;
+      C_Release (C.Instance, R);
    end Release;
 
    --------------
@@ -347,93 +337,5 @@ is
    begin
       return C_Maximum_Transfer_Size (C.Instance);
    end Maximum_Transfer_Size;
-
-   function Convert_Request (R : Request) return C.Block.Request
-   is
-      subtype C_Private_Data is C.Uint8_T_Array (1 .. 16);
-      function Convert_Priv is new Ada.Unchecked_Conversion (Private_Data, C_Private_Data);
-      Req : C.Block.Request := (Kind   => (case R.Kind is
-                                           when None      => C.Block.None,
-                                           when Read      => C.Block.Read,
-                                           when Write     => C.Block.Write,
-                                           when Sync      => C.Block.Sync,
-                                           when Trim      => C.Block.Trim,
-                                           when Undefined => C.Block.None),
-                                Priv   => Convert_Priv (R.Priv),
-                                Start  => 0,
-                                Length => 0,
-                                Status => C.Block.Raw);
-   begin
-      case R.Kind is
-         when None | Undefined =>
-            null;
-         when Read .. Trim =>
-            Req.Start  := C.Uint64_T (R.Start);
-            Req.Length := C.Uint64_T (R.Length);
-            Req.Status := (case R.Status is
-                           when Raw          => C.Block.Raw,
-                           when Ok           => C.Block.Ok,
-                           when Error        => C.Block.Error,
-                           when Acknowledged => C.Block.Acknowledged);
-      end case;
-      return Req;
-   end Convert_Request;
-
-   subtype C_Private_Data is C.Uint8_T_Array (1 .. 16);
-   function Convert_Priv is new Ada.Unchecked_Conversion (C_Private_Data,
-                                                          Private_Data);
-
-   function Convert_Request (R : C.Block.Request) return Request
-   is
-      (case R.Kind is
-         when C.Block.None =>
-            Request'(Kind => None, Priv => Convert_Priv (R.Priv)),
-         when C.Block.Read =>
-            Request'(Kind => Read,
-                     Priv => Convert_Priv (R.Priv),
-                     Start => Id (R.Start),
-                     Length => Count (R.Length),
-                     Status => (case R.Status is
-                           when C.Block.Raw          => Raw,
-                           when C.Block.Ok           => Ok,
-                           when C.Block.Error        => Error,
-                           when C.Block.Acknowledged => Acknowledged,
-                           when others               => Error)),
-         when C.Block.Write =>
-            Request'(Kind => Write,
-                     Priv => Convert_Priv (R.Priv),
-                     Start => Id (R.Start),
-                     Length => Count (R.Length),
-                     Status => (case R.Status is
-                           when C.Block.Raw          => Raw,
-                           when C.Block.Ok           => Ok,
-                           when C.Block.Error        => Error,
-                           when C.Block.Acknowledged => Acknowledged,
-                           when others               => Error)),
-         when C.Block.Sync =>
-            Request'(Kind => Sync,
-                     Priv => Convert_Priv (R.Priv),
-                     Start => Id (R.Start),
-                     Length => Count (R.Length),
-                     Status => (case R.Status is
-                           when C.Block.Raw          => Raw,
-                           when C.Block.Ok           => Ok,
-                           when C.Block.Error        => Error,
-                           when C.Block.Acknowledged => Acknowledged,
-                           when others               => Error)),
-         when C.Block.Trim =>
-            Request'(Kind => Trim,
-                     Priv => Convert_Priv (R.Priv),
-                     Start => Id (R.Start),
-                     Length => Count (R.Length),
-                     Status => (case R.Status is
-                           when C.Block.Raw          => Raw,
-                           when C.Block.Ok           => Ok,
-                           when C.Block.Error        => Error,
-                           when C.Block.Acknowledged => Acknowledged,
-                           when others               => Error)),
-         when others =>
-            Request'(Kind => Undefined, Priv => Convert_Priv (R.Priv))
-      );
 
 end Componolit.Interfaces.Block.Client;

@@ -134,10 +134,6 @@ is
    --  @value Error         Failed request
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
-   --  Platform specific data
-   type Private_Data is private;
-   Null_Data : constant Private_Data;
-
    --  Session types, represent actual session objects
    type Client_Session is limited private;
    type Dispatcher_Session is limited private;
@@ -153,8 +149,6 @@ is
 
 private
 
-   type Private_Data is new Componolit.Interfaces.Internal.Block.Private_Data;
-   Null_Data : constant Private_Data := Private_Data (Componolit.Interfaces.Internal.Block.Null_Data);
    type Client_Session is new Componolit.Interfaces.Internal.Block.Client_Session;
    type Dispatcher_Session is new Componolit.Interfaces.Internal.Block.Dispatcher_Session;
    type Server_Session is new Componolit.Interfaces.Internal.Block.Server_Session;
