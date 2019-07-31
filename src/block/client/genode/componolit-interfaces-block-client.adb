@@ -10,6 +10,16 @@ use all type Cxx.Bool;
 package body Componolit.Interfaces.Block.Client
 is
 
+   type Request_Handle is record
+      Valid   : Boolean;
+      Tag     : Cxx.Unsigned_Long;
+      Success : Boolean;
+   end record;
+
+   type Request_Handle_Cache is array (Integer range 1 .. 128) of Request_Handle;
+
+   H_Cache : Request_Handle_Cache := (others => (False, 0, False));
+
    function Null_Request return Request
    is
    begin
@@ -92,47 +102,48 @@ is
       end if;
    end Allocate_Request;
 
-   function Valid (H : Request_Handle) return Boolean
-   is
-   begin
-      return H.Valid;
-   end Valid;
-
-   function Identifier (H : Request_Handle) return Request_Id
-   is
-   begin
-      return Request_Id'Val (H.Tag);
-   end Identifier;
-
+   pragma Warnings (Off, "formal parameter ""C"" is not modified");
+   --  Cxx.Block.Client.Update_Response_Queue modifies state
    procedure Update_Response_Queue (C : in out Client_Session;
-                                    H :    out Request_Handle)
+                                    H : in out Request_Handle)
    is
       State   : Integer;
       Success : Integer;
       Tag     : Cxx.Unsigned_Long;
    begin
-      Cxx.Block.Client.Update_Response_Queue (C.Instance, State, Tag, Success);
-      if State = 1 then
-         H := Request_Handle'(Valid   => True,
-                              Tag     => Tag,
-                              Success => Success = 1);
-      else
-         H := Request_Handle'(False, 0, False);
+      if not H.Valid then
+         Cxx.Block.Client.Update_Response_Queue (C.Instance, State, Tag, Success);
+         if State = 1 then
+            H := Request_Handle'(Valid   => True,
+                                 Tag     => Tag,
+                                 Success => Success = 1);
+         end if;
       end if;
    end Update_Response_Queue;
+   pragma Warnings (On, "formal parameter ""C"" is not modified");
 
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Request;
-                             H :        Request_Handle)
+                             R : in out Request)
    is
-      pragma Unreferenced (C);
+      use type Cxx.Unsigned_Long;
    begin
-      R.Status := (if
-                      H.Success
-                   then
-                      Componolit.Interfaces.Internal.Block.Ok
-                   else
-                      Componolit.Interfaces.Internal.Block.Error);
+      for I in H_Cache'Range loop
+         Update_Response_Queue (C, H_Cache (I));
+         if
+            H_Cache (I).Valid
+            and then H_Cache (I).Tag = R.Packet.Tag
+         then
+            R.Status := (if
+                            H_Cache (I).Success
+                         then
+                            Componolit.Interfaces.Internal.Block.Ok
+                         else
+                            Componolit.Interfaces.Internal.Block.Error);
+            H_Cache (I) := Request_Handle'(Valid   => False,
+                                           Tag     => 0,
+                                           Success => False);
+         end if;
+      end loop;
    end Update_Request;
 
    function Create return Client_Session
