@@ -65,9 +65,8 @@ package body Component is
 
    procedure Event
    is
-      Rh : Block_Client.Request_Handle;
-      Ri : Request_Index;
       As : Boolean;
+      Ri : Request_Index;
    begin
       if
          Block_Client.Initialized (Client)
@@ -91,22 +90,23 @@ package body Component is
             end if;
          end loop;
          Block_Client.Submit (Client);
-         loop
-            Block_Client.Update_Response_Queue (Client, Rh);
-            exit when not Block_Client.Valid (Rh);
-            Ri := Block_Client.Identifier (Rh);
-            Block_Client.Update_Request (Client, Cache (Ri).C, Rh);
-            if
-               Block_Client.Status (Cache (Ri).C) = Ok
-               and then Block_Client.Kind (Cache (Ri).C) = Read
-            then
-               Block_Client.Read (Client, Cache (Ri).C);
+         for I in Cache'Range loop
+            if Block_Client.Status (Cache (I).C) = Block.Pending then
+               Block_Client.Update_Request (Client, Cache (I).C);
+               if
+                  Block_Client.Status (Cache (I).C) = Block.Ok
+                  and then Block_Client.Kind (Cache (I).C) = Read
+               then
+                  Block_Client.Read (Client, Cache (I).C);
+               end if;
+               if Block_Client.Status (Cache (I).C) in Block.Ok | Block.Error then
+                  loop
+                     Block_Server.Acknowledge (Server, Cache (I).S, Block_Client.Status (Cache (I).C));
+                     exit when Block_Server.Status (Cache (I).S) = Block.Raw;
+                  end loop;
+                  Block_Client.Release (Client, Cache (I).C);
+               end if;
             end if;
-            loop
-               Block_Server.Acknowledge (Server, Cache (Ri).S, Block_Client.Status (Cache (Ri).C));
-               exit when Block_Server.Status (Cache (Ri).S) = Block.Raw;
-            end loop;
-            Block_Client.Release (Client, Cache (Ri).C);
          end loop;
          As := False;
          loop

@@ -76,41 +76,33 @@ is
                      Operation :        Block.Request_Kind)
    is
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
-      Req_Handle : Block_Client.Request_Handle;
-      Req_Id     : Request_Id;
       Alloc      : Request_Id;
       Alloc_Succ : Boolean := False;
    begin
       if S.Acked < Request_Count then
-         loop
-            pragma Loop_Invariant (Block_Client.Initialized (Client));
-            pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
-            pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
-            Block_Client.Update_Response_Queue (Client, Req_Handle);
-            exit when not Block_Client.Valid (Req_Handle);
-            exit when S.Acked >= Request_Count;
-            Req_Id := Block_Client.Identifier (Req_Handle);
-            Block_Client.Update_Request (Client, Request_Cache (Req_Id), Req_Handle);
-            case Block_Client.Kind (Request_Cache (Req_Id)) is
-               when Block.Write =>
-                  if Block_Client.Status (Request_Cache (Req_Id)) /= Block.Ok then
-                     Componolit.Interfaces.Log.Client.Error (Log, "Write failed.");
-                  end if;
-                  S.Acked := S.Acked + 1;
-               when Block.Read =>
-                  if
-                     Block_Client.Status (Request_Cache (Req_Id)) = Block.Ok
-                     and then Block_Client.Length (Request_Cache (Req_Id)) = 1
-                  then
-                     Block_Client.Read (Client, Request_Cache (Req_Id));
-                  else
-                     Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
-                  end if;
-                  S.Acked := S.Acked + 1;
-               when others =>
-                  null;
-            end case;
-            Block_Client.Release (Client, Request_Cache (Req_Id));
+         for I in Request_Cache'Range loop
+            if Block_Client.Status (Request_Cache (I)) = Block.Pending then
+               Block_Client.Update_Request (Client, Request_Cache (I));
+               if Block_Client.Status (Request_Cache (I)) = Block.Ok then
+                  case Block_Client.Kind (Request_Cache (I)) is
+                     when Block.Write =>
+                        S.Acked := S.Acked + 1;
+                     when Block.Read =>
+                        if Block_Client.Length (Request_Cache (I)) = 1 then
+                           Block_Client.Read (Client, Request_Cache (I));
+                        else
+                           Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
+                        end if;
+                        S.Acked := S.Acked + 1;
+                     when others =>
+                        null;
+                  end case;
+                  Block_Client.Release (Client, Request_Cache (I));
+               elsif Block_Client.Status (Request_Cache (I)) = Block.Error then
+                  Componolit.Interfaces.Log.Client.Error (Log, "Request failed");
+                  Block_Client.Release (Client, Request_Cache (I));
+               end if;
+            end if;
          end loop;
       end if;
       if Block_Size <= 4096 and Block_Size >= 256 then
