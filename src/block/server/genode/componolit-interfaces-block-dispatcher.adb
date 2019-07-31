@@ -2,7 +2,6 @@
 with System;
 with Cxx.Block.Dispatcher;
 with Cxx.Block.Server;
-with Cxx.Genode;
 use all type System.Address;
 use all type Cxx.Bool;
 
@@ -50,7 +49,6 @@ is
    function Valid_Session_Request (D : Dispatcher_Session;
                                    C : Dispatcher_Capability) return Boolean
    is
-      use type Cxx.Genode.Uint64_T;
    begin
       return Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance) /= System.Null_Address;
    end Valid_Session_Request;
