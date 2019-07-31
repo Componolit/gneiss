@@ -27,23 +27,31 @@ generic
    --  Return the block count of session S
    --
    --  @param S  Server session instance identifier
+   --  @return   Number of blocks on the device
    with function Block_Count (S : Server_Instance) return Count;
 
    --  Return the block size of session S in bytes
    --
    --  @param S  Server session instance identifier
+   --  @return   Size of a block
    with function Block_Size (S : Server_Instance) return Size;
 
    --  Return if session S is writable
    --
    --  @param S  Server session instance identifier
+   --  @return   True if the device can be written
    with function Writable (S : Server_Instance) return Boolean;
 
    --  Return the maximum request size of session S in bytes
    --
    --  @param S  Server session instance identifier
+   --  @return   Maximum size of a single request
    with function Maximum_Transfer_Size (S : Server_Instance) return Byte_Length;
 
+   --  Checks if the server is initialized
+   --
+   --  @param S  Server session instance identifier
+   --  @return   True if the server is initialized
    with function Initialized (S : Server_Instance) return Boolean;
 
    --  Custom initialization for the server,

@@ -22,7 +22,7 @@ namespace Block
                     void *callback = nullptr);
             void finalize();
             void announce();
-            __attribute__((annotate("ada"))) void dispatch(void *dcap);
+            void dispatch(void *dcap);
             char *label_content(void *dcap);
             Genode::uint64_t label_length(void *dcap);
             Genode::uint64_t session_size(void *dcap);

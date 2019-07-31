@@ -8,8 +8,8 @@ is
    use type SI.Unsigned_8;
    use type SI.Unsigned_64;
 
-   function Hex (U : SI.Unsigned_8;
-                 C : Boolean) return Character
+   function Digit (U : SI.Unsigned_8;
+                   C : Boolean) return Character
    is
       (if
           U < 10
@@ -47,7 +47,7 @@ is
       T     : SI.Unsigned_64                := SI.Unsigned_64 (V);
    begin
       for I in reverse Image'First .. Image'Last loop
-         Image (I) := Hex (SI.Unsigned_8 (T rem SI.Unsigned_64 (B)), C);
+         Image (I) := Digit (SI.Unsigned_8 (T rem SI.Unsigned_64 (B)), C);
          T       := T / SI.Unsigned_64 (B);
          if T = 0 then
             return
