@@ -7,8 +7,8 @@ package Componolit.Interfaces.Internal.Block with
    SPARK_Mode
 is
 
-   type Private_Data is new Integer;
-   Null_Data : constant := 0;
+   type Response_Cache is array (1 .. Componolit.Interfaces.Muen_Block.Element_Count * 2) of
+      Componolit.Interfaces.Muen_Block.Event;
 
    type Client_Session is limited record
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
@@ -16,7 +16,14 @@ is
       Request_Memory  : Musinfo.Memregion_Type;
       Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
       Queued          : Natural;
-      Latest_Response : Componolit.Interfaces.Muen_Block.Event;
+      Responses       : Response_Cache;
+   end record;
+
+   type Request_Status is (Raw, Allocated, Pending, Ok, Error);
+
+   type Client_Request is limited record
+      Status : Request_Status;
+      Event  : Componolit.Interfaces.Muen_Block.Event;
    end record;
 
    type Dispatcher_Session is null record;
@@ -24,5 +31,6 @@ is
    type Client_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
    type Dispatcher_Instance is null record;
    type Server_Instance is null record;
+   type Dispatcher_Capability is null record;
 
 end Componolit.Interfaces.Internal.Block;
