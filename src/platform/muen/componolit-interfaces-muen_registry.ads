@@ -32,8 +32,14 @@ is
    type Session_Registry is array (CIM.Session_Index range 1 .. CIM.Session_Index'Last) of Session_Entry;
    Registry : Session_Registry := (others => Session_Entry'(Kind => CIM.None));
 
-   procedure Call_Block_Event (S : Session_Entry) with
+   procedure Call_Block_Client_Event (S : Session_Entry) with
       Pre => S.Kind = CIM.Block_Client;
+
+   procedure Call_Block_Dispatcher_Event (S : Session_Entry) with
+      Pre => S.Kind = CIM.Block_Dispatcher;
+
+   procedure Call_Block_Server_Event (S : Session_Entry) with
+      Pre => S.Kind = CIM.Block_Server;
 
    procedure Call_Timer_Event (S : Session_Entry;
                                I : CIM.Session_Index) with

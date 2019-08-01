@@ -12,8 +12,7 @@
 with Componolit.Interfaces.Types;
 with Componolit.Interfaces.Block.Server;
 
-pragma Warnings (Off, "package ""Serv"" is not referenced");
-pragma Warnings (Off, "procedure ""Dispatch"" is not referenced");
+pragma Warnings (Off);
 --  Supress unreferenced warnings since not every platform needs each subprogram/package
 
 generic
@@ -23,8 +22,7 @@ generic
    --  Called when a client connects or disconnects
    with procedure Dispatch (Cap : Dispatcher_Capability);
 
-   pragma Warnings (On, "package ""Serv"" is not referenced");
-   pragma Warnings (On, "procedure ""Dispatch"" is not referenced");
+   pragma Warnings (On);
 package Componolit.Interfaces.Block.Dispatcher with
    SPARK_Mode
 is
