@@ -47,27 +47,40 @@ is
       Pad   at 8 range 0 .. 32703;
    end record;
 
-   type Event is record
+   type Event_Header is record
       Kind  : Event_Type;
       Error : Integer;
       Id    : Sector;
-      Priv  : Standard.Interfaces.Unsigned_64;
-      Data  : Raw_Data_Type;
+      Valid : Boolean;
+      Priv  : Standard.Interfaces.Unsigned_32;
    end record;
 
-   for Event use record
+   for Event_Header use record
       Kind  at  0 range 0 .. 31;
       Error at  4 range 0 .. 31;
       Id    at  8 range 0 .. 63;
-      Priv  at 16 range 0 .. 63;
-      Data  at 24 range 0 .. 32767;
+      Valid at 16 range 0 .. 31;
+      Priv  at 20 range 0 .. 31;
    end record;
 
-   Null_Event : constant Event := (Kind  => Read,
-                                   Error => 0,
-                                   Id    => Sync,
-                                   Priv  => 0,
-                                   Data  => (others => 0));
+   type Event is record
+      Header : Event_Header;
+      Data   : Raw_Data_Type;
+   end record;
+
+   for Event use record
+      Header at  0 range 0 ..   191;
+      Data   at 24 range 0 .. 32767;
+   end record;
+
+   Null_Event_Header : constant Event_Header := (Kind  => Read,
+                                                 Error => 0,
+                                                 Id    => Sync,
+                                                 Valid => False,
+                                                 Priv  => 0);
+
+   Null_Event : constant Event := (Header => Null_Event_Header,
+                                   Data   => (others => 0));
 
    Element_Count : constant Positive := 16#0010_0000# / (Event'Size / 8);
 

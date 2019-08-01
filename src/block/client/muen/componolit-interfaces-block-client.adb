@@ -29,7 +29,7 @@ is
    function Kind (R : Request) return Request_Kind
    is
    begin
-      case R.Event.Kind is
+      case R.Event.Header.Kind is
          when Blk.Read  => return Read;
          when Blk.Write => return Write;
          when others    => return None;
@@ -50,14 +50,14 @@ is
 
    function Start (R : Request) return Id
    is
-      (Id (R.Event.Id));
+      (Id (R.Event.Header.Id));
 
    function Length (R : Request) return Count is
       (1);
 
    function Identifier (R : Request) return Request_Id
    is
-      (Request_Id'Val (R.Event.Priv));
+      (Request_Id'Val (R.Event.Header.Priv));
 
    procedure Allocate_Request (C : in out Client_Session;
                                R : in out Request;
@@ -79,22 +79,22 @@ is
          when Write  => Ev_Type := Blk.Write;
          when others => return;
       end case;
-      R.Status      := Componolit.Interfaces.Internal.Block.Allocated;
-      R.Event.Kind  := Ev_Type;
-      R.Event.Id    := Blk.Sector (S);
-      R.Event.Priv  := Request_Id'Pos (I);
-      R.Event.Error := 0;
-      C.Queued := C.Queued + 1;
+      R.Status             := Componolit.Interfaces.Internal.Block.Allocated;
+      R.Event.Header.Kind  := Ev_Type;
+      R.Event.Header.Id    := Blk.Sector (S);
+      R.Event.Header.Priv  := Request_Id'Pos (I);
+      R.Event.Header.Error := 0;
+      R.Event.Header.Valid := True;
+      C.Queued             := C.Queued + 1;
    end Allocate_Request;
 
    procedure Update_Response_Cache (C : in out Client_Session)
    is
-      use type Blk.Event;
       use type Blk.Response_Channel.Result_Type;
       Result : Blk.Response_Channel.Result_Type;
    begin
       for I in C.Responses'Range loop
-         if C.Responses (I) = Blk.Null_Event then
+         if not C.Responses (I).Header.Valid then
             Blk.Response_Channel.Read (Reg.Registry (C.Registry_Index).Response_Memory,
                                        Reg.Registry (C.Registry_Index).Response_Reader,
                                        C.Responses (I),
@@ -107,21 +107,24 @@ is
    procedure Update_Request (C : in out Client_Session;
                              R : in out Request)
    is
-      use type Blk.Event;
-      use type Standard.Interfaces.Unsigned_64;
+      use type Blk.Event_Type;
+      use type Standard.Interfaces.Unsigned_32;
    begin
       Update_Response_Cache (C);
       for I in C.Responses'Range loop
          if
-            C.Responses (I) /= Blk.Null_Event
-            and then C.Responses (I).Priv = R.Event.Priv
+            C.Responses (I).Header.Valid
+            and then C.Responses (I).Header.Priv = R.Event.Header.Priv
          then
-            if C.Responses (I).Error = 0 then
+            if C.Responses (I).Header.Error = 0 then
                R.Status := Componolit.Interfaces.Internal.Block.Ok;
+               if R.Event.Header.Kind = Blk.Read then
+                  R.Event.Data := C.Responses (I).Data;
+               end if;
             else
                R.Status := Componolit.Interfaces.Internal.Block.Error;
             end if;
-            C.Responses (I) := Blk.Null_Event;
+            C.Responses (I).Header.Valid := False;
             return;
          end if;
       end loop;
@@ -201,10 +204,11 @@ is
       Req_Mem    : Musinfo.Memregion_Type;
       Res_Mem    : Musinfo.Memregion_Type;
       Index      : CIM.Session_Index := CIM.Invalid_Index;
-      Size_Event : Blk.Event := (Kind  => Blk.Command,
-                                 Error => 0,
-                                 Id    => Blk.Size,
-                                 Priv  => 0,
+      Size_Event : Blk.Event := (Header => (Kind  => Blk.Command,
+                                            Error => 0,
+                                            Id    => Blk.Size,
+                                            Valid => True,
+                                            Priv  => 0),
                                  Data  => (others => 0));
       Reader     : Blk.Response_Channel.Reader_Type := Blk.Response_Channel.Null_Reader;
       Result     : Blk.Response_Channel.Result_Type := Blk.Response_Channel.Inactive;
@@ -239,7 +243,7 @@ is
                          or Result = Blk.Response_Channel.Success;
             end loop;
             if
-               Size_Event.Kind = Blk.Command and Size_Event.Id = Blk.Size
+               Size_Event.Header.Kind = Blk.Command and Size_Event.Header.Id = Blk.Size
                and (Result = Blk.Response_Channel.Success or Result = Blk.Response_Channel.Epoch_Changed)
             then
                Reg.Registry (Index) := Reg.Session_Entry'(Kind            => CIM.Block_Client,
@@ -271,9 +275,9 @@ is
       use type Blk.Event_Type;
    begin
       Enqueue_Buffer := (others => Byte'First);
-      if R.Event.Kind = Blk.Write then
+      if R.Event.Header.Kind = Blk.Write then
          Write (Instance (C),
-                Request_Id'Val (R.Event.Priv),
+                Request_Id'Val (R.Event.Header.Priv),
                 Enqueue_Buffer);
          R.Event.Data  := Convert_Buffer (Enqueue_Buffer);
       end if;
@@ -293,7 +297,7 @@ is
    is
    begin
       Read (Instance (C),
-            Request_Id'Val (R.Event.Priv),
+            Request_Id'Val (R.Event.Header.Priv),
             Convert_Buffer (R.Event.Data));
    end Read;
    pragma Warnings (On, "mode could be ""in"" instead of ""in out""");
@@ -301,20 +305,19 @@ is
    procedure Release (C : in out Client_Session;
                       R : in out Request)
    is
-      use type Blk.Event;
-      use type Standard.Interfaces.Unsigned_64;
+      use type Standard.Interfaces.Unsigned_32;
    begin
       for I in C.Responses'Range loop
          if
-            C.Responses (I) /= Blk.Null_Event
-            and then R.Event.Priv = C.Responses (I).Priv
+            C.Responses (I).Header.Valid
+            and then R.Event.Header.Priv = C.Responses (I).Header.Priv
          then
-            C.Responses (I) := Blk.Null_Event;
+            C.Responses (I).Header.Valid := False;
             exit;
          end if;
       end loop;
-      R.Status := Componolit.Interfaces.Internal.Block.Raw;
-      R.Event  := Blk.Null_Event;
+      R.Status       := Componolit.Interfaces.Internal.Block.Raw;
+      R.Event.Header := Blk.Null_Event_Header;
    end Release;
 
    function Writable (C : Client_Session) return Boolean
