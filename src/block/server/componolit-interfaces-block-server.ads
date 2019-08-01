@@ -11,13 +11,7 @@
 
 private with Componolit.Interfaces.Internal.Block;
 
-pragma Warnings (Off, "procedure ""Event"" is not referenced");
-pragma Warnings (Off, "function ""Block_Count"" is not referenced");
-pragma Warnings (Off, "function ""Block_Size"" is not referenced");
-pragma Warnings (Off, "function ""Writable"" is not referenced");
-pragma Warnings (Off, "function ""Maximum_Transfer_Size"" is not referenced");
-pragma Warnings (Off, "procedure ""Initialize"" is not referenced");
-pragma Warnings (Off, "procedure ""Finalize"" is not referenced");
+pragma Warnings (Off);
 --  Supress unreferenced warnings since not every platform needs each subprogram
 
 generic
@@ -71,6 +65,8 @@ generic
    --
    --  @param S  Server session instance identifier
    with procedure Finalize (S : Server_Instance);
+
+   pragma Warnings (On);
 package Componolit.Interfaces.Block.Server with
    SPARK_Mode
 is
