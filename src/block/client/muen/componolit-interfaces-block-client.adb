@@ -90,16 +90,16 @@ is
 
    procedure Update_Response_Cache (C : in out Client_Session)
    is
-      use type Blk.Response_Channel.Result_Type;
-      Result : Blk.Response_Channel.Result_Type;
+      use type Blk.Client_Response_Channel.Result_Type;
+      Result : Blk.Client_Response_Channel.Result_Type;
    begin
       for I in C.Responses'Range loop
          if not C.Responses (I).Header.Valid then
-            Blk.Response_Channel.Read (Reg.Registry (C.Registry_Index).Response_Memory,
-                                       Reg.Registry (C.Registry_Index).Response_Reader,
-                                       C.Responses (I),
-                                       Result);
-            exit when Result /= Blk.Response_Channel.Success;
+            Blk.Client_Response_Channel.Read (C.Response_Memory,
+                                              C.Response_Reader,
+                                              C.Responses (I),
+                                              Result);
+            exit when Result /= Blk.Client_Response_Channel.Success;
          end if;
       end loop;
    end Update_Response_Cache;
@@ -249,10 +249,10 @@ is
             end loop;
             if
                Size_Event.Header.Kind = Blk.Command and Size_Event.Header.Id = Blk.Size
-               and (Result = Blk.Response_Channel.Success or Result = Blk.Response_Channel.Epoch_Changed)
+               and (Result = Blk.Client_Response_Channel.Success or Result = Blk.Client_Response_Channel.Epoch_Changed)
             then
-               Reg.Registry (Index) := Reg.Session_Entry'(Kind            => CIM.Block_Client,
-                                                          Block_Event     => Event_Address);
+               Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Client,
+                                                          Block_Client_Event => Event_Address);
                C.Registry_Index     := Index;
                C.Name               := Name;
                C.Request_Memory     := Req_Mem;
@@ -286,7 +286,7 @@ is
                 Enqueue_Buffer);
          R.Event.Data  := Convert_Buffer (Enqueue_Buffer);
       end if;
-      Blk.Request_Channel.Write (C.Request_Memory, R.Event);
+      Blk.Client_Request_Channel.Write (C.Request_Memory, R.Event);
       R.Status := Componolit.Interfaces.Internal.Block.Pending;
    end Enqueue;
 
