@@ -13,10 +13,8 @@ with Componolit.Interfaces.Types;
 private with Componolit.Interfaces.Internal.Block;
 
 generic
-pragma Warnings (Off, "procedure ""Event"" is not referenced");
-pragma Warnings (Off, "procedure ""Read"" is not referenced");
-pragma Warnings (Off, "procedure ""Write"" is not referenced");
---  Supress unreferenced warnings since not every platform needs this procedure
+   pragma Warnings (Off, "* is not referenced");
+   --  Supress unreferenced warnings since not every platform needs this procedure
 
    --  max 32bit request identifier
    type Request_Id is (<>);
@@ -45,9 +43,7 @@ pragma Warnings (Off, "procedure ""Write"" is not referenced");
    with procedure Write (C      :     Client_Instance;
                          Req    :     Request_Id;
                          Data   : out Buffer);
-pragma Warnings (On, "procedure ""Event"" is not referenced");
-pragma Warnings (On, "procedure ""Read"" is not referenced");
-pragma Warnings (On, "procedure ""Write"" is not referenced");
+   pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is

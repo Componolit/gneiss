@@ -11,10 +11,10 @@
 
 private with Componolit.Interfaces.Internal.Block;
 
-pragma Warnings (Off);
---  Supress unreferenced warnings since not every platform needs each subprogram
-
 generic
+   pragma Warnings (Off, "* is not referenced");
+   --  Supress unreferenced warnings since not every platform needs each subprogram
+
    --  Event handler, is called on received requests, ready queues, etc.
    with procedure Event;
 
@@ -66,7 +66,7 @@ generic
    --  @param S  Server session instance identifier
    with procedure Finalize (S : Server_Instance);
 
-   pragma Warnings (On);
+   pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block.Server with
    SPARK_Mode
 is
