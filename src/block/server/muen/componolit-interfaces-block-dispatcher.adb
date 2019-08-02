@@ -111,8 +111,7 @@ is
       I.Registry_Index     := Index;
       I.Request_Memory     := Req_Mem;
       I.Response_Memory    := Resp_Mem;
-      I.Queued             := 0;
-      I.Latest_Request     := Blk.Null_Event;
+      I.Read_Select        := (others => Blk.Null_Event_Header);
       Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Server,
                                                  Block_Server_Event => Serv.Event'Address);
       Serv.Initialize (Serv.Instance (I),
@@ -124,8 +123,6 @@ is
          I.Registry_Index                := CIM.Invalid_Index;
          I.Request_Memory                := Musinfo.Null_Memregion;
          I.Response_Memory               := Musinfo.Null_Memregion;
-         I.Queued                        := 0;
-         I.Latest_Request                := Blk.Null_Event;
          return;
       end if;
    end Session_Initialize;
@@ -164,8 +161,8 @@ is
          I.Registry_Index                := CIM.Invalid_Index;
          I.Request_Memory                := Musinfo.Null_Memregion;
          I.Response_Memory               := Musinfo.Null_Memregion;
-         I.Queued                        := 0;
-         I.Latest_Request                := Blk.Null_Event;
+         I.Read_Select                   := (others => Blk.Null_Event_Header);
+         I.Read_Data                     := (others => (others => 0));
       end if;
    end Session_Cleanup;
 

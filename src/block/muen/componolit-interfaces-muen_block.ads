@@ -129,6 +129,7 @@ is
       (False => (False => Inactive,       True => Client_Disconnect),
        True  => (False => Client_Connect, True => Active));
 
+   function Set_Size_Command_Data is new Ada.Unchecked_Conversion (Size_Command_Data_Type, Raw_Data_Type);
    function Get_Size_Command_Data is new Ada.Unchecked_Conversion (Raw_Data_Type, Size_Command_Data_Type);
 
 end Componolit.Interfaces.Muen_Block;
