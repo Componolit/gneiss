@@ -1,4 +1,5 @@
 
+with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Musinfo;
@@ -6,6 +7,10 @@ with Musinfo;
 package Componolit.Interfaces.Internal.Block with
    SPARK_Mode
 is
+
+   type Read_Select_List is array (Positive range 1 .. Componolit.Interfaces.Muen_Block.Element_Count) of
+      Componolit.Interfaces.Muen_Block.Event_Header;
+   type Read_Data_List is array (Read_Select_List'Range) of Componolit.Interfaces.Muen_Block.Raw_Data_Type;
 
    type Response_Cache is array (1 .. Componolit.Interfaces.Muen_Block.Element_Count * 2) of
       Componolit.Interfaces.Muen_Block.Event;
@@ -29,7 +34,8 @@ is
    end record;
 
    type Server_Request is limited record
-      Event : Componolit.Interfaces.Muen_Block.Event;
+      Length : Standard.Interfaces.Unsigned_64;
+      Event  : Componolit.Interfaces.Muen_Block.Event;
    end record;
 
    type Dispatcher_Session is record
@@ -39,9 +45,10 @@ is
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
       Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
       Request_Memory  : Musinfo.Memregion_Type;
+      Request_Reader  : Componolit.Interfaces.Muen_Block.Server_Request_Channel.Reader_Type;
       Response_Memory : Musinfo.Memregion_Type;
-      Queued          : Natural;
-      Latest_Request  : Componolit.Interfaces.Muen_Block.Event;
+      Read_Select     : Read_Select_List;
+      Read_Data       : Read_Data_List;
    end record;
    type Client_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
    type Dispatcher_Instance is new Componolit.Interfaces.Muen.Session_Index;
