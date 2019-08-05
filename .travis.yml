@@ -5,7 +5,12 @@ language: c
 services:
     - docker
 
+env:
+    - TEST_SUITE=linux
+    - TEST_SUITE=genode
+    - TEST_SUITE=muen
+
 script:
-    - docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/genode.sh
-    - docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/linux.sh
-      #    - docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/muen.sh
+    - if [ "$TEST_SUITE" = "genode" ]; then docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/genode.sh; fi
+    - if [ "$TEST_SUITE" = "linux" ]; then docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/linux.sh; fi
+    - if [ "$TEST_SUITE" = "muen" ]; then travis_wait 60 docker run -v $PWD:/ada-interfaces -t jklmnn/componolit-ci /ada-interfaces/test/muen.sh; fi
