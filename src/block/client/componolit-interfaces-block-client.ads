@@ -164,6 +164,9 @@ is
 
    --  Enqueue request
    --
+   --  Enqueueing the request might fail. If this happens the request status will stay Allocated.
+   --  If the request has been successfully enqueued it will be Pending.
+   --
    --  @param C  Client session instance
    --  @param R  Request to enqueue
    procedure Enqueue (C : in out Client_Session;
@@ -175,7 +178,7 @@ is
               and Block_Count (C)'Old           = Block_Count (C)
               and Block_Size (C)'Old            = Block_Size (C)
               and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Status (R)                    = Pending;
+              and Status (R) in Allocated | Pending;
 
    --  Submit all enqueued requests for processing
    --
