@@ -66,11 +66,9 @@ is
                                L :        Count;
                                I :        Request_Id)
    is
+      pragma Unreferenced (C);
       Ev_Type : Blk.Event_Type;
    begin
-      if C.Queued >= Blk.Element_Count then
-         return;
-      end if;
       if L /= 1 then
          return;
       end if;
@@ -85,7 +83,6 @@ is
       R.Event.Header.Priv  := Request_Id'Pos (I);
       R.Event.Header.Error := 0;
       R.Event.Header.Valid := True;
-      C.Queued             := C.Queued + 1;
    end Allocate_Request;
 
    procedure Update_Response_Cache (C : in out Client_Session)
@@ -279,15 +276,19 @@ is
    is
       use type Blk.Event_Type;
    begin
+      if C.Queued >= Blk.Element_Count then
+         return;
+      end if;
       Enqueue_Buffer := (others => Byte'First);
       if R.Event.Header.Kind = Blk.Write then
          Write (Instance (C),
                 Request_Id'Val (R.Event.Header.Priv),
                 Enqueue_Buffer);
-         R.Event.Data  := Convert_Buffer (Enqueue_Buffer);
+         R.Event.Data := Convert_Buffer (Enqueue_Buffer);
       end if;
       Blk.Client_Request_Channel.Write (C.Request_Memory, R.Event);
       R.Status := Componolit.Interfaces.Internal.Block.Pending;
+      C.Queued := C.Queued + 1;
    end Enqueue;
 
    procedure Submit (C : in out Client_Session)
