@@ -76,11 +76,12 @@ is
                      Operation :        Block.Request_Kind)
    is
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
-      Alloc      : Request_Id;
-      Alloc_Succ : Boolean := False;
    begin
-      if S.Acked < Request_Count then
+      if
+         Block_Size <= 4096 and Block_Size >= 256
+      then
          for I in Request_Cache'Range loop
+
             if Block_Client.Status (Request_Cache (I)) = Block.Pending then
                Block_Client.Update_Request (Client, Request_Cache (I));
                if Block_Client.Status (Request_Cache (I)) = Block.Ok then
@@ -103,40 +104,27 @@ is
                   Block_Client.Release (Client, Request_Cache (I));
                end if;
             end if;
-         end loop;
-      end if;
-      if Block_Size <= 4096 and Block_Size >= 256 then
-         if S.Sent < Request_Count then
-            loop
-               pragma Loop_Invariant (Block_Client.Initialized (Client));
-               pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
-               pragma Loop_Invariant (S.Sent < Integer'Last);
-               pragma Loop_Invariant (Block_Client.Block_Size (Client) = Block_Size);
-               for I in Request_Cache'Range loop
-                  if Block_Client.Status (Request_Cache (I)) = Block.Raw then
-                     Alloc := I;
-                     Alloc_Succ := True;
-                     exit;
-                  end if;
-               end loop;
-               exit when not Alloc_Succ
-                         or S.Sent >= Request_Count
-                         or S.Sent = Integer'Last;
+
+            if
+               S.Sent < Request_Count
+               and then Block_Client.Status (Request_Cache (I)) = Block.Raw
+            then
                Block_Client.Allocate_Request (Client,
-                                              Request_Cache (Alloc),
+                                              Request_Cache (I),
                                               Operation,
                                               Block.Id (S.Sent + 1),
                                               1,
-                                              Alloc);
-               exit when Block_Client.Status (Request_Cache (Alloc)) /= Block.Allocated;
-               Block_Client.Enqueue (Client, Request_Cache (Alloc));
+                                              I);
+            end if;
+            if Block_Client.Status (Request_Cache (I)) = Block.Allocated then
                S.Sent := S.Sent + 1;
-               Alloc_Succ := False;
-            end loop;
-            Block_Client.Submit (Client);
-         end if;
+               Block_Client.Enqueue (Client, Request_Cache (I));
+            end if;
+
+         end loop;
+         Block_Client.Submit (Client);
       else
-         Componolit.Interfaces.Log.Client.Error (Log, "Failed to send write requests. Invalid block size.");
+         Componolit.Interfaces.Log.Client.Error (Log, "Failed to send requests. Invalid block size.");
       end if;
    end Single;
 
