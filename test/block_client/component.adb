@@ -170,8 +170,8 @@ is
          end if;
          if Block_Client.Initialized (Client) then
             if Componolit.Interfaces.Log.Client.Initialized (Log) then
-               -- FIXME: Calls of Image with explicit default parameters
-               -- Componolit/Workarounds#2
+               --  FIXME: Calls of Image with explicit default parameters
+               --  Componolit/Workarounds#2
                Componolit.Interfaces.Log.Client.Info (Log, "Block device with "
                                     & Image (Block_Client.Block_Count (Client), 10, True)
                                     & " blocks of size "
