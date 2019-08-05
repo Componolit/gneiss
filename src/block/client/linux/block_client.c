@@ -11,63 +11,12 @@
 #include <errno.h>
 #include <signal.h>
 
-/*
- * Request memory lifetime:
- *
- * Requests need allocations at three different points:
- *  - aio control block
- *  - request data buffer
- *  - lio request list
- *
- *  The first two are simple memory allocations, if either of them failes all previous allocations are freed.
- *  The last one is a bit more complicated. We use an enqueue->submit scheme here and call lio_listio
- *  with a list of aio control blocks. Since submit cannot fail we need to ensure that the list provided
- *  is constrained in length (not longer than _SC_AIO_LISTIO_MAX. This is a constraint for a single call,
- *  we can call it multiple times in a row with different lists. To prevent use after free errors each list
- *  must exist until all requests are finished (and therefor not used by aio anymore). Also to have an arbitrary
- *  number of lists they live freely in the heap without any statically known reference.
- *
- *  The usage scheme is usually as follows:
- *   - allocate request
- *   - enqueue request into list
- *   - submit list
- *   - update requests to check their state
- *   - free requests
- *
- *   To ensure the constraint of the list length in submit there is a current_queue in the client
- *   that is used for the next submit. If it is null, it will be allocated with the request. The next
- *   request will be accounted on the already allocated queue. When enqueue is called the requests
- *   can be enqueued in any order. Since enqueue also cannot fail there can only be as many allocated requests
- *   as there are slots in a single queue. When submit is called the current_queue is set to null (but not freed!)
- *   so a new queue can be allocated.
- *
- *   Now theres a memory leak with floating pending queues. To prevent this each request knows the queue is has
- *   been assigned onto allocation. Also each queue has a reference counter how many requests are referencing it
- *   which is increased on each allocation.
- *   When a pending request is finished and gets released, it will, aside from freeing its data buffer and
- *   aio control block, remove itself from the queue and decrease the reference counter. If the counter drops to
- *   zero it will also free the queue.
- */
-
 void block_client_allocate_request(block_client_t *client, request_t *request)
 {
     int aio_opcode;
     struct aiocb *aiocb;
     void *buffer;
-    int queue_slot = -1;
     request->status = CAI_BLOCK_RAW;
-    if(client->current_queue){
-        if(client->current_queue->refcount >= _SC_AIO_LISTIO_MAX){
-            return;
-        }
-    }else{
-        client->current_queue = (queue_t *)malloc(sizeof(queue_t));
-        if(client->current_queue){
-            memset(client->current_queue, 0, sizeof(queue_t));
-        }else{
-            return;
-        }
-    }
     switch(request->kind){
         case 1:
             aio_opcode = LIO_READ;
@@ -91,11 +40,12 @@ void block_client_allocate_request(block_client_t *client, request_t *request)
     aiocb->aio_offset = request->start * client->block_size;
     aiocb->aio_nbytes = request->length * client->block_size;
     aiocb->aio_lio_opcode = aio_opcode;
+    aiocb->aio_sigevent.sigev_notify = SIGEV_SIGNAL;
+    aiocb->aio_sigevent.sigev_signo = SIGIO;
+    aiocb->aio_sigevent.sigev_value.sival_ptr = (void *)client;
     aiocb->aio_buf = buffer;
     request->aio_cb = aiocb;
     request->status = CAI_BLOCK_ALLOCATED;
-    request->queue = client->current_queue;
-    request->queue->refcount += 1;
 }
 
 void block_client_update_request(block_client_t *client, request_t *request)
@@ -162,7 +112,6 @@ void block_client_initialize(block_client_t **client,
             }
             (*client)->event = event;
             (*client)->rw = rw;
-            (*client)->current_queue = 0;
         }else{
             perror(path);
             block_client_finalize(client);
@@ -178,7 +127,6 @@ void block_client_initialize(block_client_t **client,
 void block_client_finalize(block_client_t **client)
 {
     aio_cancel((*client)->fd, 0);
-    // we do not free the queues as they should be freed before finalizing
     close((*client)->fd);
     free(*client);
     *client = 0;
@@ -186,55 +134,29 @@ void block_client_finalize(block_client_t **client)
 
 void block_client_enqueue(block_client_t *client, request_t *request)
 {
-    request->status = CAI_BLOCK_PENDING;
-    for(unsigned i = 0; i < _SC_AIO_LISTIO_MAX; i++){
-        if(request->queue->lio_queue[i] == 0){
-            request->queue->lio_queue[i] = request->aio_cb;
-            if(request->kind == CAI_BLOCK_WRITE){
-                client->rw(client, block_client_block_size (client), request, (void *)(request->aio_cb->aio_buf));
-            }
-            return;
+    int status;
+    switch(request->kind){
+        case CAI_BLOCK_WRITE:
+            client->rw(client, block_client_block_size (client), request, (void *)(request->aio_cb->aio_buf));
+            status = aio_write(request->aio_cb);
+            break;
+        case CAI_BLOCK_READ:
+            status = aio_read(request->aio_cb);
+            break;
+        default:
+            status = 1;
+    }
+    if(status == 0){
+        request->status = CAI_BLOCK_PENDING;
+    }else{
+        if(status < 0){
+            perror("aio_read|aio_write failed");
         }
     }
 }
 
 void block_client_submit(block_client_t *client)
-{
-    unsigned length;
-    struct sigevent sige;
-    if(client->current_queue){
-        memset(&sige, 0, sizeof(struct sigevent));
-        for(length = 0; length < _SC_AIO_LISTIO_MAX - 1 && client->current_queue->lio_queue[length] != 0; length++);
-        if(!length){
-            return;
-        }
-        // since length counts the index of the queue we need to increase it to get the actual length
-        length++;
-        sige.sigev_notify = SIGEV_SIGNAL;
-        sige.sigev_signo = SIGIO;
-        sige.sigev_value.sival_ptr = (void *)client;
-retry:
-        if(lio_listio(LIO_NOWAIT, client->current_queue->lio_queue, length, &sige) == -1){
-            switch(errno){
-                case EAGAIN:
-                    // there is no error handling for submit so we retry until it works
-                    goto retry;
-                    break;
-                case EIO:
-                    // EIO means that a request failed so we can handle it as a successful submit
-                    client->current_queue = 0;
-                    break;
-                default:
-                    // lio_listio was called wrongly, this should never happen
-                    // (and even if it does we can't handle it)
-                    perror("lio_listio failed");
-                    break;
-            }
-        }else{
-            client->current_queue = 0;
-        }
-    }
-}
+{ }
 
 void block_client_read(block_client_t *client, const request_t *request)
 {
@@ -246,19 +168,8 @@ void block_client_release(block_client_t *client, request_t *request)
     if(request->aio_cb){
         aio_cancel(client->fd, request->aio_cb);
         free((void *)(request->aio_cb->aio_buf));
-        for(long i = 0; i < _SC_AIO_LISTIO_MAX; i++){
-            if(request->queue->lio_queue[i] = request->aio_cb){
-                request->queue->lio_queue[i] = 0;
-                request->queue->refcount -= 1;
-                break;
-            }
-        }
     }
     free(request->aio_cb);
-    if(request->queue && request->queue->refcount <= 0){
-        // free the queue if we are the last one referencing it
-        free(request->queue);
-    }
     memset(request, 0, sizeof(request_t));
 }
 
