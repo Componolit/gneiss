@@ -16,10 +16,12 @@ package body Component is
    type Request_Index is mod 8;
    type Cache_Element is limited record
       Req     : Block_Server.Request;
+      Handled : Boolean;
       Success : Boolean;
    end record;
    type Request_Cache_Type is array (Request_Index'Range) of Cache_Element;
    Request_Cache : Request_Cache_Type := (others => (Req     => Block_Server.Null_Request,
+                                                     Handled => False,
                                                      Success => False));
 
    use all type Block.Id;
@@ -93,42 +95,37 @@ package body Component is
 
    procedure Event
    is
-      Alloc         : Request_Index;
-      Alloc_Success : Boolean := False;
    begin
       if Block_Server.Initialized (Server) then
-         loop
-            for I in Request_Cache'Range loop
-               if Block_Server.Status (Request_Cache (I).Req) = Raw then
-                  Alloc := I;
-                  Alloc_Success := True;
-                  exit;
-               end if;
-            end loop;
-            exit when not Alloc_Success;
-            Request_Cache (Alloc).Success := False;
-            Block_Server.Process (Server, Request_Cache (Alloc).Req);
-            exit when Block_Server.Status (Request_Cache (Alloc).Req) = Raw;
-            case Block_Server.Kind (Request_Cache (Alloc).Req) is
-               when Block.Read =>
-                  Read (Request_Cache (Alloc));
-                  loop
-                     Block_Server.Acknowledge (Server, Request_Cache (Alloc).Req,
-                                               (if Request_Cache (Alloc).Success then Block.Ok else Block.Error));
-                     exit when Block_Server.Status (Request_Cache (Alloc).Req) = Raw;
-                  end loop;
-               when Block.Write =>
-                  Write (Request_Cache (Alloc));
-                  loop
-                     Block_Server.Acknowledge (Server, Request_Cache (Alloc).Req,
-                                               (if Request_Cache (Alloc).Success then Block.Ok else Block.Error));
-                     exit when Block_Server.Status (Request_Cache (Alloc).Req) = Raw;
-                  end loop;
-               when others => null;
-            end case;
+         for I in Request_Cache'Range loop
+            if Block_Server.Status (Request_Cache (I).Req) = Block.Raw then
+               Request_Cache (I).Success := False;
+               Request_Cache (I).Handled := False;
+               Block_Server.Process (Server, Request_Cache (I).Req);
+            end if;
+            if
+               Block_Server.Status (Request_Cache (I).Req) = Block.Pending
+               and then not Request_Cache (I).Handled
+            then
+               Request_Cache (I).Handled := True;
+               case Block_Server.Kind (Request_Cache (I).Req) is
+                  when Block.Read =>
+                     Read (Request_Cache (I));
+                  when Block.Write =>
+                     Write (Request_Cache (I));
+                  when others => null;
+               end case;
+            end if;
+            if
+               Block_Server.Status (Request_Cache (I).Req) = Block.Pending
+               and then Request_Cache (I).Handled
+            then
+               Block_Server.Acknowledge (Server, Request_Cache (I).Req,
+                                         (if Request_Cache(I).Success then Block.Ok else Block.Error));
+            end if;
          end loop;
+         Block_Server.Unblock_Client (Server);
       end if;
-      Block_Server.Unblock_Client (Server);
    end Event;
 
    function Block_Count (S : Block.Server_Instance) return Block.Count
