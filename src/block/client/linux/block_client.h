@@ -22,7 +22,6 @@
 
 typedef struct block_client block_client_t;
 typedef struct request request_t;
-typedef struct queue queue_t;
 
 struct request
 {
@@ -32,13 +31,6 @@ struct request
     uint64_t length;
     uint32_t status;
     struct aiocb *aio_cb;
-    queue_t *queue;
-};
-
-struct queue
-{
-    struct aiocb *lio_queue[_SC_AIO_LISTIO_MAX];
-    long refcount;
 };
 
 struct block_client
@@ -53,7 +45,6 @@ struct block_client
     uint64_t block_size;
     uint64_t block_count;
     uint64_t maximum_transfer_size;
-    queue_t *current_queue;
 };
 
 void block_client_allocate_request(block_client_t *client, request_t *request);
