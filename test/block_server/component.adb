@@ -121,7 +121,7 @@ package body Component is
                and then Request_Cache (I).Handled
             then
                Block_Server.Acknowledge (Server, Request_Cache (I).Req,
-                                         (if Request_Cache(I).Success then Block.Ok else Block.Error));
+                                         (if Request_Cache (I).Success then Block.Ok else Block.Error));
             end if;
          end loop;
          Block_Server.Unblock_Client (Server);
