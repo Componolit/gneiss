@@ -37,7 +37,7 @@ struct block_client
 {
     void (*event)(void);
     void (*rw)(block_client_t *client,
-               uint64_t,
+               uint64_t size,
                request_t const *request,
                void *data);
     int fd;
