@@ -11,12 +11,13 @@
 #include <errno.h>
 #include <signal.h>
 
-void block_client_allocate_request(block_client_t *client, request_t *request)
+void block_client_allocate_request(block_client_t *client, request_t *request, int *retry)
 {
     int aio_opcode;
     struct aiocb *aiocb;
     void *buffer;
     request->status = CAI_BLOCK_RAW;
+    *retry = 0;
     switch(request->kind){
         case 1:
             aio_opcode = LIO_READ;
@@ -32,6 +33,7 @@ void block_client_allocate_request(block_client_t *client, request_t *request)
     if(aiocb == 0 || buffer == 0){
         free(aiocb);
         free(buffer);
+        *retry = 2;
         return;
     }
     memset(aiocb, 0, sizeof(struct aiocb));
@@ -87,7 +89,6 @@ void block_client_initialize(block_client_t **client,
                 if(S_ISREG(st.st_mode)){
                     (*client)->block_size = st.st_blksize;
                     (*client)->block_count = st.st_size / st.st_blksize;
-                    (*client)->maximum_transfer_size = -1;
                 }else if(S_ISBLK(st.st_mode)){
                     size_t bytes;
                     size_t max_blocks;
@@ -96,11 +97,9 @@ void block_client_initialize(block_client_t **client,
                     // this code most probably only works on linux
                     ioctl((*client)->fd, _IO(0x12,104), &((*client)->block_size)); // block device sector size
                     ioctl((*client)->fd, _IOR(0x12,114,size_t), &bytes); // number of bytes
-                    ioctl((*client)->fd, _IO(0x12,103), &max_blocks); // max sectors per request
                     // writability needs to be checked on the block device itself as device files are always rw
                     ioctl((*client)->fd, _IO(0x12,94), &ro); // read only
                     (*client)->block_count = bytes / (*client)->block_size;
-                    (*client)->maximum_transfer_size = max_blocks * (*client)->block_size;
                     (*client)->writable = !ro;
                 }else{
                     fprintf(stderr, "Unsupported file type: 0%o\n", st.st_mode >> 12);
@@ -186,13 +185,4 @@ uint64_t block_client_block_count(const block_client_t *client)
 uint64_t block_client_block_size(const block_client_t *client)
 {
     return client->block_size;
-}
-
-uint64_t block_client_maximum_transfer_size(const block_client_t *client)
-{
-    if(client->maximum_transfer_size < client->block_size * client->block_count){
-        return client->maximum_transfer_size;
-    }else{
-        return client->block_size * client->block_count;
-    }
 }

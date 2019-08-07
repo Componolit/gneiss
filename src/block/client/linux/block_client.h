@@ -44,10 +44,9 @@ struct block_client
     int writable;
     uint64_t block_size;
     uint64_t block_count;
-    uint64_t maximum_transfer_size;
 };
 
-void block_client_allocate_request(block_client_t *client, request_t *request);
+void block_client_allocate_request(block_client_t *client, request_t *request, int *retry);
 
 void block_client_update_request(block_client_t *client, request_t *request);
 
@@ -74,7 +73,5 @@ int block_client_writable(const block_client_t *client);
 uint64_t block_client_block_count(const block_client_t *client);
 
 uint64_t block_client_block_size(const block_client_t *client);
-
-uint64_t block_client_maximum_transfer_size(const block_client_t *client);
 
 #endif /* ifndef _BLOCK_CLIENT_H_ */
