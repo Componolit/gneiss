@@ -57,7 +57,7 @@ is
    --  @value Retry          The platform currently cannot allocate this request, but it might be possible later.
    --  @value Out_Of_Memory  There is currently insufficient memory available to allocate the requests data
    --                        section. This can mean that the request is too large to fit the available memory
-   --                        altogether or that the buffer is currently too ful to take that request. Either way
+   --                        altogether or that the buffer is currently too full to take that request. Either way
    --                        this result signals to split up the request into smaller ones.
    --  @value Unsupported    These request parameters cannot be handled at all. This happens mostly for
    --                        operations that are possibly not supported such as Sync and Trim.
