@@ -11,7 +11,6 @@ namespace Block
         private:
             Genode::uint64_t _block_count;
             Genode::uint64_t _block_size;
-            Genode::uint64_t _buffer_size;
             void *_device; //Block_session in block_client.cc
             void *_callback; //procedure Event;
             void *_rw; //procedure Crw (Instance, Kind, Block_size, Start, Length, Data)
@@ -36,7 +35,8 @@ namespace Block
                                    int opcode,
                                    Genode::uint64_t start,
                                    unsigned long length,
-                                   unsigned long tag);
+                                   unsigned long tag,
+                                   int *result);
             void update_response_queue (int *status,
                                         unsigned long *tag,
                                         int *success);
@@ -47,7 +47,6 @@ namespace Block
             bool writable();
             Genode::uint64_t block_count();
             Genode::uint64_t block_size();
-            Genode::uint64_t maximum_transfer_size();
     };
 }
 

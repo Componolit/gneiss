@@ -81,7 +81,6 @@ is
                                    Serv.Event'Address,
                                    Serv.Block_Count'Address,
                                    Serv.Block_Size'Address,
-                                   Serv.Maximum_Transfer_Size'Address,
                                    Serv.Writable'Address);
       if Cxx.Block.Server.Initialized (I.Instance) /= Cxx.Bool'Val (1) then
          Serv.Finalize (Serv.Instance (I));
