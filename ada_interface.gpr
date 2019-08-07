@@ -6,6 +6,7 @@ project Ada_Interface is
 
    Platform : Platform_Type := external ("PLATFORM", "linux");
    Test := external ("TEST", "");
+   Custom_Runtime := external ("RUNTIME", "componolit");
 
    Source := ("src", "src/common");
    Source_Platform := "src/platform";
@@ -88,10 +89,20 @@ project Ada_Interface is
    end Compiler;
 
    package Linker is
-      for Required_Switches use ("-L../ada-runtime/obj/lib", "-lposix_rts", "-lpthread", "-lrt");
+      case Custom_Runtime is
+         when "componolit" =>
+            for Required_Switches use ("-L../ada-runtime/obj/lib", "-lposix_rts", "-lpthread", "-lrt");
+         when others =>
+            for Required_Switches use ("-lrt");
+      end case;
    end Linker;
 
-   for Runtime ("Ada") use "ada-runtime/obj";
+   case Custom_Runtime is
+      when "componolit" =>
+         for Runtime ("Ada") use "ada-runtime/obj";
+      when others =>
+         null;
+   end case;
 
    case Platform is
       when "linux" =>
