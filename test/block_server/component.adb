@@ -1,14 +1,18 @@
 
 with Componolit.Interfaces.Log.Client;
 
-package body Component is
+package body Component with
+   SPARK_Mode
+is
+   use type Block.Id;
+   use type Block.Request_Status;
+   use type Block.Request_Kind;
 
    Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
    Dispatcher  : Block.Dispatcher_Session                 := Block_Dispatcher.Create;
    Server      : Block.Server_Session                     := Block_Server.Create;
 
-   subtype Block_Buffer is Buffer (1 .. 512);
-   type Disk is array (Block.Id range 0 .. 1023) of Block_Buffer;
+   subtype Disk is Buffer (0 .. 524287); --  Disk_Block_Size * Disk_Block_Count - 1
 
    Ram_Disk : Disk;
 
@@ -23,18 +27,26 @@ package body Component is
                                                      Handled => False,
                                                      Success => False));
 
-   use all type Block.Id;
-   use all type Block.Count;
-   use all type Block.Request_Kind;
-   use all type Block.Request_Status;
-
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
-      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
-      Block_Dispatcher.Initialize (Dispatcher, Cap);
-      Block_Dispatcher.Register (Dispatcher);
-      Componolit.Interfaces.Log.Client.Info (Log, "Dispatcher initialized");
+      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
+      end if;
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         if not Block_Dispatcher.Initialized (Dispatcher) then
+            Block_Dispatcher.Initialize (Dispatcher, Cap);
+         end if;
+         if Block_Dispatcher.Initialized (Dispatcher) then
+            Block_Dispatcher.Register (Dispatcher);
+            Componolit.Interfaces.Log.Client.Info (Log, "Dispatcher initialized");
+         else
+            Componolit.Interfaces.Log.Client.Error (Log, "Failed to initialize dispatcher");
+            Main.Vacate (Cap, Main.Failure);
+         end if;
+      else
+         Main.Vacate (Cap, Main.Failure);
+      end if;
    end Construct;
 
    procedure Destruct
@@ -48,47 +60,59 @@ package body Component is
       end if;
    end Destruct;
 
-   procedure Read (R : in out Cache_Element);
+   procedure Read (R : in out Cache_Element) with
+      Pre  => Block_Server.Initialized (Server)
+              and then Block_Server.Status (R.Req) = Block.Pending
+              and then Block_Server.Kind (R.Req) = Block.Read
+              and then Block_Server.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
+              and then Block_Server.Length (R.Req) > 0
+              and then Block_Server.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size),
+      Post => Block_Server.Initialized (Server);
 
    procedure Read (R : in out Cache_Element)
    is
-      Start  : constant Block.Id    := Block_Server.Start (R.Req);
+      Start  : constant Block.Count := Block.Count (Block_Server.Start (R.Req));
       Length : constant Block.Count := Block_Server.Length (R.Req);
-      Buf    : Buffer (1 .. Length * Block_Size (Block_Server.Instance (Server)));
    begin
-      if Buf'Length mod Block_Buffer'Length = 0 and then
-         Start in Ram_Disk'Range and then
-         Start + (Length - 1) in Ram_Disk'Range
+      if
+         Start * Disk_Block_Size in Ram_Disk'Range
+         and then (Start + Length) * Disk_Block_Size - 1 in Ram_Disk'Range
       then
-         for I in Block.Id range Start .. Start + (Length - 1) loop
-            Buf (Buf'First + (I - Start) * Block_Buffer'Length ..
-               Buf'First + (I - Start + 1) * Block_Buffer'Length - 1) := Ram_Disk (I);
-         end loop;
-         Block_Server.Read (Server, R.Req, Buf);
+         Block_Server.Read
+            (Server,
+             R.Req,
+             Ram_Disk (Start * Disk_Block_Size .. (Start + Length) * Disk_Block_Size - 1));
          R.Success := True;
+      else
+         R.Success := False;
       end if;
    end Read;
 
-   procedure Write (R : in out Cache_Element);
+   procedure Write (R : in out Cache_Element) with
+      Pre  => Block_Server.Initialized (Server)
+              and then Block_Server.Status (R.Req) = Block.Pending
+              and then Block_Server.Kind (R.Req) = Block.Write
+              and then Block_Server.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
+              and then Block_Server.Length (R.Req) > 0
+              and then Block_Server.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size),
+      Post => Block_Server.Initialized (Server);
 
    procedure Write (R : in out Cache_Element)
    is
-      Start  : constant Block.Id    := Block_Server.Start (R.Req);
+      Start  : constant Block.Count := Block.Count (Block_Server.Start (R.Req));
       Length : constant Block.Count := Block_Server.Length (R.Req);
-      B      : Buffer (1 .. Length * Block_Size (Block_Server.Instance (Server)));
    begin
       if
-         B'Length mod Block_Buffer'Length = 0 and then
-         Start in Ram_Disk'Range and then
-         Start + (Length - 1) in Ram_Disk'Range
+         Start * Disk_Block_Size in Ram_Disk'Range
+         and then (Start + Length) * Disk_Block_Size - 1 in Ram_Disk'Range
       then
-         Block_Server.Write (Server, R.Req, B);
-         for I in Block.Id range Start .. Start + (Length - 1) loop
-            Ram_Disk (I) :=
-               B (B'First + (I - Start) * Block_Buffer'Length ..
-                  B'First + ((I - Start) + 1) * Block_Buffer'Length - 1);
-         end loop;
+         Block_Server.Write
+            (Server,
+             R.Req,
+             Ram_Disk (Start * Disk_Block_Size .. (Start + Length) * Disk_Block_Size - 1));
          R.Success := True;
+      else
+         R.Success := False;
       end if;
    end Write;
 
@@ -107,13 +131,22 @@ package body Component is
                and then not Request_Cache (I).Handled
             then
                Request_Cache (I).Handled := True;
-               case Block_Server.Kind (Request_Cache (I).Req) is
-                  when Block.Read =>
-                     Read (Request_Cache (I));
-                  when Block.Write =>
-                     Write (Request_Cache (I));
-                  when others => null;
-               end case;
+               if
+                  Block_Server.Start (Request_Cache (I).Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
+                  and then Block_Server.Length (Request_Cache (I).Req) > 0
+                  and then Block_Server.Length (Request_Cache (I).Req) <=
+                     Block.Count (Ram_Disk'Length / Disk_Block_Size)
+               then
+                  case Block_Server.Kind (Request_Cache (I).Req) is
+                     when Block.Read =>
+                        Read (Request_Cache (I));
+                     when Block.Write =>
+                        Write (Request_Cache (I));
+                     when others => null;
+                  end case;
+               else
+                  Request_Cache (I).Success := False;
+               end if;
             end if;
             if
                Block_Server.Status (Request_Cache (I).Req) = Block.Pending
@@ -131,14 +164,14 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      return Block.Count (Ram_Disk'Length);
+      return Disk_Block_Count;
    end Block_Count;
 
    function Block_Size (S : Block.Server_Instance) return Block.Size
    is
       pragma Unreferenced (S);
    begin
-      return Block.Size (Block_Buffer'Length);
+      return Disk_Block_Size;
    end Block_Size;
 
    function Writable (S : Block.Server_Instance) return Boolean
@@ -159,10 +192,28 @@ package body Component is
    is
       pragma Unreferenced (S);
       pragma Unreferenced (B);
+      Max : Natural;
    begin
-      Componolit.Interfaces.Log.Client.Info (Log, "Server initialize with label: " & L);
-      Ram_Disk := (others => (others => 0));
-      Componolit.Interfaces.Log.Client.Info (Log, "Initialized");
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Max := Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log);
+         Componolit.Interfaces.Log.Client.Info (Log, "Server initialize with label: ");
+         if L'Length <= Max then
+            Componolit.Interfaces.Log.Client.Info (Log, L);
+         else
+            for I in Natural range 0 .. Natural'Last / Max - L'First - 1 loop
+               pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
+               pragma Loop_Invariant (Max = Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log));
+               if L'First + (I + 1) * Max <= L'Last then
+                  Componolit.Interfaces.Log.Client.Info (Log, L (L'First + I * Max .. L'First + (I + 1) * Max - 1));
+               else
+                  Componolit.Interfaces.Log.Client.Info (Log, L (L'First + I * Max .. L'Last));
+                  exit;
+               end if;
+            end loop;
+         end if;
+         Componolit.Interfaces.Log.Client.Info (Log, "Initialized");
+      end if;
+      Ram_Disk := (others => 0);
    end Initialize;
 
    procedure Finalize (S : Block.Server_Instance)
@@ -175,13 +226,18 @@ package body Component is
    procedure Request (C : Block.Dispatcher_Capability)
    is
    begin
-      if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block_Server.Initialized (Server) then
-         Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
-         if Block_Server.Initialized (Server) then
-            Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+      if Block_Dispatcher.Initialized (Dispatcher) then
+         if
+            Block_Dispatcher.Valid_Session_Request (Dispatcher, C)
+            and then not Block_Server.Initialized (Server)
+         then
+            Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
+            if Block_Server.Initialized (Server) then
+               Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+            end if;
          end if;
+         Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
       end if;
-      Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Request;
 
 end Component;
