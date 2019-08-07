@@ -39,7 +39,6 @@ package Componolit.Interfaces.Internal.Block is
       Length : C.Uint64_T;
       Status : Request_Status;
       Aiocb  : System.Address;
-      Queue  : System.Address;
    end record;
 
    type Client_Request_Handle is record

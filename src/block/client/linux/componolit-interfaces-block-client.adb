@@ -17,8 +17,7 @@ is
                 Start  => 0,
                 Length => 0,
                 Status => 0,
-                Aiocb  => System.Null_Address,
-                Queue  => System.Null_Address));
+                Aiocb  => System.Null_Address));
 
    ----------
    -- Kind --
@@ -79,14 +78,17 @@ is
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
-                               I :        Request_Id)
+                               I :        Request_Id;
+                               E :    out Result)
    is
       procedure C_Allocate_Request (Inst :        System.Address;
-                                    Req  : in out Request) with
+                                    Req  : in out Request;
+                                    Ret  :    out Integer) with
          Import,
          Convention    => C,
          External_Name => "block_client_allocate_request",
          Global        => null;
+      Retr : Integer;
    begin
       case K is
          when None      => R.Kind := Componolit.Interfaces.Internal.Block.None;
@@ -99,7 +101,16 @@ is
       R.Start  := Standard.C.Uint64_T (S);
       R.Length := Standard.C.Uint64_T (L);
       R.Tag    := Request_Id'Pos (I);
-      C_Allocate_Request (C.Instance, R);
+      C_Allocate_Request (C.Instance, R, Retr);
+      if Status (R) = Allocated then
+         E := Success;
+      else
+         case Retr is
+            when 1 => E := Retry;
+            when 2 => E := Out_Of_Memory;
+            when others => E := Unsupported;
+         end case;
+      end if;
    end Allocate_Request;
 
    --------------------
@@ -323,19 +334,5 @@ is
    begin
       return C_Block_Size (C.Instance);
    end Block_Size;
-
-   ---------------------------
-   -- Maximum_Transfer_Size --
-   ---------------------------
-
-   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length is
-      function C_Maximum_Transfer_Size (T : System.Address) return Byte_Length with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_maximum_transfer_size",
-         Global        => null;
-   begin
-      return C_Maximum_Transfer_Size (C.Instance);
-   end Maximum_Transfer_Size;
 
 end Componolit.Interfaces.Block.Client;
