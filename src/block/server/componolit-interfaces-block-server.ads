@@ -36,12 +36,6 @@ generic
    --  @return   True if the device can be written
    with function Writable (S : Server_Instance) return Boolean;
 
-   --  Return the maximum request size of session S in bytes
-   --
-   --  @param S  Server session instance identifier
-   --  @return   Maximum size of a single request
-   with function Maximum_Transfer_Size (S : Server_Instance) return Byte_Length;
-
    --  Checks if the server is initialized
    --
    --  @param S  Server session instance identifier

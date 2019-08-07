@@ -51,6 +51,21 @@ is
    --  Block client request
    type Request is limited private;
 
+   --  Result type for request allocation
+   --
+   --  @value Success        The request has been successfully allocated.
+   --  @value Retry          The platform currently cannot allocate this request, but it might be possible later.
+   --  @value Out_Of_Memory  There is currently insufficient memory available to allocate the requests data
+   --                        section. This can mean that the request is too large to fit the available memory
+   --                        altogether or that the buffer is currently too ful to take that request. Either way
+   --                        this result signals to split up the request into smaller ones.
+   --  @value Unsupported    These request parameters cannot be handled at all. This happens mostly for
+   --                        operations that are possibly not supported such as Sync and Trim.
+   type Result is (Success,
+                   Retry,
+                   Out_Of_Memory,
+                   Unsupported);
+
    --  Create empty request
    --
    --  @return  empty, uninitialized request
@@ -104,13 +119,17 @@ is
    --  @param S  First block to be handled by the request
    --  @param L  Number of consecutive blocks to be handled
    --  @param I  Unique identifier for this request, chosen by the application
+   --  @param E  Result of the allocation
    procedure Allocate_Request (C : in out Client_Session;
                                R : in out Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
-                               I :        Request_Id) with
-      Pre => Initialized (C) and then Status (R) = Raw;
+                               I :        Request_Id;
+                               E :    out Result) with
+      Pre            => Initialized (C) and then Status (R) = Raw,
+      Contract_Cases => (E = Success => Status (R) = Allocated,
+                         others      => Status (R) = Raw);
 
    --  Checks if a request has been changed by the platform
    --
@@ -174,10 +193,9 @@ is
       Pre  => Initialized (C)
               and then Status (R) = Allocated,
       Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C)
               and Status (R) in Allocated | Pending;
 
    --  Submit all enqueued requests for processing
@@ -186,10 +204,9 @@ is
    procedure Submit (C : in out Client_Session) with
       Pre  => Initialized (C),
       Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C);
 
    --  Read the returned data from a successfully acknowledged read request
    --
@@ -201,10 +218,9 @@ is
               and then Kind (R)   = Read
               and then Status (R) = Ok,
       Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C);
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C);
 
    --  Release a request
    --
@@ -220,11 +236,10 @@ is
       Pre  => Initialized (C)
               and then Status (R) /= Raw,
       Post => Initialized (C)
-              and Writable (C)'Old              = Writable (C)
-              and Block_Count (C)'Old           = Block_Count (C)
-              and Block_Size (C)'Old            = Block_Size (C)
-              and Maximum_Transfer_Size (C)'Old = Maximum_Transfer_Size (C)
-              and Status (R)                    = Raw;
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C)
+              and Status (R)          = Raw;
 
    --  Check if the block device is writable
    --
@@ -243,12 +258,6 @@ is
    --  @param C  Client session instance
    function Block_Size (C : Client_Session) return Size with
       Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
-
-   --  Get the maximum number of bytes for a single request
-   --
-   --  @param C  Client session instance
-   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length with
       Pre => Initialized (C);
 
 private
