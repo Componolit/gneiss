@@ -52,15 +52,15 @@ is
    Read_State  : State := (others => -1);
 
    function State_Finished (S : State) return Boolean is
-      (S.Sent = Request_Count and S.Acked = Request_Count);
+      (S.Acked >= Request_Count);
 
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
       Pre  => Block_Client.Initialized (Client)
-              and Componolit.Interfaces.Log.Client.Initialized (Log)
-              and Operation in Block.Read .. Block.Write,
+              and then Componolit.Interfaces.Log.Client.Initialized (Log)
+              and then Operation in Block.Read .. Block.Write,
       Post => Block_Client.Initialized (Client)
-              and Componolit.Interfaces.Log.Client.Initialized (Log);
+              and then Componolit.Interfaces.Log.Client.Initialized (Log);
 
    procedure Write (C :     Block.Client_Instance;
                     R :     Request_Id;
@@ -75,15 +75,17 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind)
    is
+      use type Block_Client.Result;
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
       Result     : Block_Client.Result;
    begin
-      if
-         Block_Size <= 4096 and Block_Size >= 256
-      then
+      if Block_Size <= 4096 and Block_Size >= 256 then
          for I in Request_Cache'Range loop
 
-            if Block_Client.Status (Request_Cache (I)) = Block.Pending then
+            if
+               S.Acked < Request_Count
+               and then Block_Client.Status (Request_Cache (I)) = Block.Pending
+            then
                Block_Client.Update_Request (Client, Request_Cache (I));
                if Block_Client.Status (Request_Cache (I)) = Block.Ok then
                   case Block_Client.Kind (Request_Cache (I)) is
@@ -128,6 +130,9 @@ is
                      Main.Vacate (P_Cap, Main.Failure);
                end case;
             end if;
+
+            pragma Loop_Invariant (Block_Client.Initialized (Client));
+            pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
          end loop;
          Block_Client.Submit (Client);
       else
