@@ -27,7 +27,6 @@ package Component is
    function Block_Count (S : Block.Server_Instance) return Block.Count;
    function Block_Size (S : Block.Server_Instance) return Block.Size;
    function Writable (S : Block.Server_Instance) return Boolean;
-   function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length;
    function Initialized (S : Block.Server_Instance) return Boolean;
 
    procedure Write (C :     Block.Client_Instance;
@@ -43,7 +42,6 @@ package Component is
                                              Block_Count,
                                              Block_Size,
                                              Writable,
-                                             Maximum_Transfer_Size,
                                              Initialized,
                                              Initialize_Server,
                                              Finalize_Server);

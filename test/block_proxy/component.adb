@@ -65,8 +65,10 @@ package body Component is
 
    procedure Event
    is
+      use type Block_Client.Result;
       As : Boolean;
       Ri : Request_Index;
+      Re : Block_Client.Result;
    begin
       if
          Block_Client.Initialized (Client)
@@ -82,8 +84,9 @@ package body Component is
                                               Block_Server.Kind (Cache (I).S),
                                               Block_Server.Start (Cache (I).S),
                                               Block_Server.Length (Cache (I).S),
-                                              I);
-               if Block_Client.Status (Cache (I).C) = Block.Allocated then
+                                              I,
+                                              Re);
+               if Re = Block_Client.Success then
                   Componolit.Interfaces.Log.Client.Info (Log, "Enq cache");
                   Block_Client.Enqueue (Client, Cache (I).C);
                end if;
@@ -125,8 +128,9 @@ package body Component is
                                            Block_Server.Kind (Cache (Ri).S),
                                            Block_Server.Start (Cache (Ri).S),
                                            Block_Server.Length (Cache (Ri).S),
-                                           Ri);
-            exit when Block_Client.Status (Cache (Ri).C) /= Block.Allocated;
+                                           Ri,
+                                           Re);
+            exit when Re /= Block_Client.Success;
             Block_Client.Enqueue (Client, Cache (Ri).C);
             As := False;
          end loop;
@@ -197,13 +201,6 @@ package body Component is
          return False;
       end if;
    end Writable;
-
-   function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length
-   is
-      pragma Unreferenced (S);
-   begin
-      return 16#ffffffff#;
-   end Maximum_Transfer_Size;
 
    function Initialized (S : Block.Server_Instance) return Boolean
    is
