@@ -6,7 +6,6 @@ package body Component is
    Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
    Dispatcher  : Block.Dispatcher_Session                 := Block_Dispatcher.Create;
    Server      : Block.Server_Session                     := Block_Server.Create;
-   Buffer_Size : Block.Byte_Length;
 
    subtype Block_Buffer is Buffer (1 .. 512);
    type Disk is array (Block.Id range 0 .. 1023) of Block_Buffer;
@@ -149,13 +148,6 @@ package body Component is
       return True;
    end Writable;
 
-   function Maximum_Transfer_Size (S : Block.Server_Instance) return Block.Byte_Length
-   is
-      pragma Unreferenced (S);
-   begin
-      return Buffer_Size;
-   end Maximum_Transfer_Size;
-
    function Initialized (S : Block.Server_Instance) return Boolean
    is
       pragma Unreferenced (S);
@@ -166,10 +158,10 @@ package body Component is
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
       pragma Unreferenced (S);
+      pragma Unreferenced (B);
    begin
       Componolit.Interfaces.Log.Client.Info (Log, "Server initialize with label: " & L);
       Ram_Disk := (others => (others => 0));
-      Buffer_Size := B;
       Componolit.Interfaces.Log.Client.Info (Log, "Initialized");
    end Initialize;
 

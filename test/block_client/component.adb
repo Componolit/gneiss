@@ -76,6 +76,7 @@ is
                      Operation :        Block.Request_Kind)
    is
       Block_Size : constant Block.Size := Block_Client.Block_Size (Client);
+      Result     : Block_Client.Result;
    begin
       if
          Block_Size <= 4096 and Block_Size >= 256
@@ -114,13 +115,19 @@ is
                                               Operation,
                                               Block.Id (S.Sent + 1),
                                               1,
-                                              I);
+                                              I,
+                                              Result);
+               case Result is
+                  when Block_Client.Success =>
+                     S.Sent := S.Sent + 1;
+                     Block_Client.Enqueue (Client, Request_Cache (I));
+                  when Block_Client.Retry | Block_Client.Out_Of_Memory =>
+                     null;
+                  when Block_Client.Unsupported =>
+                     Componolit.Interfaces.Log.Client.Error (Log, "Cannot allocate request");
+                     Main.Vacate (P_Cap, Main.Failure);
+               end case;
             end if;
-            if Block_Client.Status (Request_Cache (I)) = Block.Allocated then
-               S.Sent := S.Sent + 1;
-               Block_Client.Enqueue (Client, Request_Cache (I));
-            end if;
-
          end loop;
          Block_Client.Submit (Client);
       else
