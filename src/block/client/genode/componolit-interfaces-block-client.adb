@@ -80,10 +80,12 @@ is
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
-                               I :        Request_Id)
+                               I :        Request_Id;
+                               E :    out Result)
    is
       use type Cxx.Unsigned_Long;
       Opcode : Integer;
+      Res    : Integer;
    begin
       case K is
          when Read  => Opcode := 0;
@@ -96,9 +98,17 @@ is
       Cxx.Block.Client.Allocate_Request (C.Instance, R.Packet, Opcode,
                                          Cxx.Genode.Uint64_T (S),
                                          Cxx.Unsigned_Long (L),
-                                         Cxx.Unsigned_Long (Request_Id'Pos (I)));
-      if R.Packet.Block_Count > 0 then
+                                         Cxx.Unsigned_Long (Request_Id'Pos (I)),
+                                         Res);
+      if R.Packet.Block_Count > 0 and Res = 0 then
          R.Status := Componolit.Interfaces.Internal.Block.Allocated;
+         E        := Success;
+      else
+         if Res = 1 then
+            E := Out_Of_Memory;
+         else
+            E := Unsupported;
+         end if;
       end if;
    end Allocate_Request;
 
@@ -263,11 +273,5 @@ is
    begin
       return Size (Cxx.Block.Client.Block_Size (C.Instance));
    end Block_Size;
-
-   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length
-   is
-   begin
-      return Byte_Length (Cxx.Block.Client.Maximum_Transfer_Size (C.Instance));
-   end Maximum_Transfer_Size;
 
 end Componolit.Interfaces.Block.Client;

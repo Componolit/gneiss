@@ -23,7 +23,6 @@ is
    limited record
       Private_X_Block_Count : Private_Uint64_T;
       Private_X_Block_Size  : Private_Uint64_T;
-      Private_X_Buffer_Size : Private_Uint64_T;
       Private_X_Device      : Private_Void;
       Private_X_Callback    : Private_Void;
       Private_X_Write       : Private_Void;
@@ -73,11 +72,12 @@ is
                                Opcode :        Integer;
                                Start  :        Cxx.Genode.Uint64_T;
                                Length :        Cxx.Unsigned_Long;
-                               Tag    :        Cxx.Unsigned_Long) with
+                               Tag    :        Cxx.Unsigned_Long;
+                               Oom    :    out Integer) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client16allocate_requestEPviymm";
+      External_Name => "_ZN3Cai5Block6Client16allocate_requestEPviymmPi";
 
    procedure Update_Response_Queue (This    :     Class;
                                     State   : out Integer;
@@ -132,12 +132,6 @@ is
       Import,
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client10block_sizeEv";
-
-   function Maximum_Transfer_Size (This : Class) return Cxx.Genode.Uint64_T with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client21maximum_transfer_sizeEv";
 
 private
    pragma SPARK_Mode (Off);

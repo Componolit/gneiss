@@ -63,7 +63,6 @@ inline ::Block::Connection<> *blk(void *device)
 Cai::Block::Client::Client() :
     _block_count(0),
     _block_size(0),
-    _buffer_size(0),
     _device(nullptr),
     _callback(nullptr),
     _rw(nullptr),
@@ -88,7 +87,6 @@ void Cai::Block::Client::initialize(
         Genode::uint64_t buffer_size)
 {
     const char default_device[] = "";
-    Genode::uint64_t alloc_size;
     Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
     _rw = rw;
@@ -102,8 +100,6 @@ void Cai::Block::Client::initialize(
             &Client::callback);
     _block_size = blk(_device)->info().block_size;
     _block_count = blk(_device)->info().block_count;
-    alloc_size = reinterpret_cast<Block_session *>(_device)->available();
-    _buffer_size = alloc_size - (alloc_size % _block_size);
 }
 
 void Cai::Block::Client::finalize()
@@ -111,7 +107,6 @@ void Cai::Block::Client::finalize()
     _factory->destroy<Block_session>(_device);
     _block_count = 0;
     _block_size = 0;
-    _buffer_size = 0;
     _device = nullptr;
     _callback = nullptr;
     _rw = nullptr;
@@ -122,7 +117,8 @@ void Cai::Block::Client::allocate_request (void *request,
                                            int opcode,
                                            Genode::uint64_t start,
                                            unsigned long length,
-                                           unsigned long tag)
+                                           unsigned long tag,
+                                           int *result)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     if(opcode == ::Block::Packet_descriptor::Opcode::READ
@@ -133,7 +129,12 @@ void Cai::Block::Client::allocate_request (void *request,
                     start,
                     length,
                     {tag});
-        }catch(...){}
+            *result = 0;
+        }catch(...){
+            *result = 1;
+        }
+    }else{
+        *result = 0;
     }
 }
 
@@ -204,11 +205,6 @@ Genode::uint64_t Cai::Block::Client::block_count()
 Genode::uint64_t Cai::Block::Client::block_size()
 {
     return _block_size;
-}
-
-Genode::uint64_t Cai::Block::Client::maximum_transfer_size()
-{
-    return _buffer_size;
 }
 
 void Cai::Block::Client::callback()
