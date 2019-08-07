@@ -64,19 +64,24 @@ is
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
-                               I :        Request_Id)
+                               I :        Request_Id;
+                               E :    out Result)
    is
       pragma Unreferenced (C);
       Ev_Type : Blk.Event_Type;
    begin
       if L /= 1 then
+         E := Unsupported;
          return;
       end if;
       case K is
          when Read   => Ev_Type := Blk.Read;
          when Write  => Ev_Type := Blk.Write;
-         when others => return;
+         when others =>
+            E := Unsupported;
+            return;
       end case;
+      E                    := Success;
       R.Status             := Componolit.Interfaces.Internal.Block.Allocated;
       R.Event.Header.Kind  := Ev_Type;
       R.Event.Header.Id    := Blk.Sector (S);
@@ -88,15 +93,15 @@ is
    procedure Update_Response_Cache (C : in out Client_Session)
    is
       use type Blk.Client_Response_Channel.Result_Type;
-      Result : Blk.Client_Response_Channel.Result_Type;
+      Res : Blk.Client_Response_Channel.Result_Type;
    begin
       for I in C.Responses'Range loop
          if not C.Responses (I).Header.Valid then
             Blk.Client_Response_Channel.Read (C.Response_Memory,
                                               C.Response_Reader,
                                               C.Responses (I),
-                                              Result);
-            exit when Result /= Blk.Client_Response_Channel.Success;
+                                              Res);
+            exit when Res /= Blk.Client_Response_Channel.Success;
          end if;
       end loop;
    end Update_Response_Cache;
@@ -213,7 +218,7 @@ is
                                             Priv  => 0),
                                  Data  => (others => 0));
       Reader     : Blk.Client_Response_Channel.Reader_Type := Blk.Client_Response_Channel.Null_Reader;
-      Result     : Blk.Client_Response_Channel.Result_Type := Blk.Client_Response_Channel.Inactive;
+      Res        : Blk.Client_Response_Channel.Result_Type := Blk.Client_Response_Channel.Inactive;
    begin
       if Path'Length <= Blk.Session_Name'Length then
          for I in Reg.Registry'Range loop
@@ -240,13 +245,13 @@ is
                                                       (Musinfo.Instance.TSC_Schedule_Start));
             Blk.Client_Request_Channel.Write (Req_Mem, Size_Event);
             loop
-               Blk.Client_Response_Channel.Read (Res_Mem, Reader, Size_Event, Result);
-               exit when Result = Blk.Client_Response_Channel.Epoch_Changed
-                         or Result = Blk.Client_Response_Channel.Success;
+               Blk.Client_Response_Channel.Read (Res_Mem, Reader, Size_Event, Res);
+               exit when Res = Blk.Client_Response_Channel.Epoch_Changed
+                         or Res = Blk.Client_Response_Channel.Success;
             end loop;
             if
                Size_Event.Header.Kind = Blk.Command and Size_Event.Header.Id = Blk.Size
-               and (Result = Blk.Client_Response_Channel.Success or Result = Blk.Client_Response_Channel.Epoch_Changed)
+               and (Res = Blk.Client_Response_Channel.Success or Res = Blk.Client_Response_Channel.Epoch_Changed)
             then
                Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Client,
                                                           Block_Client_Event => Event_Address);
@@ -345,12 +350,5 @@ is
    begin
       return Blk.Event_Block_Size;
    end Block_Size;
-
-   function Maximum_Transfer_Size (C : Client_Session) return Byte_Length
-   is
-      pragma Unreferenced (C);
-   begin
-      return Blk.Event_Block_Size;
-   end Maximum_Transfer_Size;
 
 end Componolit.Interfaces.Block.Client;
