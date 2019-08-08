@@ -7,9 +7,9 @@ package body Component is
    use all type Block.Request_Kind;
    use all type Block.Request_Status;
 
-   Client     : Block.Client_Session     := Block_Client.Create;
-   Dispatcher : Block.Dispatcher_Session := Block_Dispatcher.Create;
-   Server     : Block.Server_Session     := Block_Server.Create;
+   Client     : Block.Client_Session     := Block.Create;
+   Dispatcher : Block.Dispatcher_Session := Block.Create;
+   Server     : Block.Server_Session     := Block.Create;
 
    Capability : Componolit.Interfaces.Types.Capability;
 
@@ -23,10 +23,10 @@ package body Component is
          Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
       end if;
       if Componolit.Interfaces.Log.Client.Initialized (Log) then
-         if not Block_Dispatcher.Initialized (Dispatcher) then
+         if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap);
          end if;
-         if Block_Dispatcher.Initialized (Dispatcher) then
+         if Block.Initialized (Dispatcher) then
             Block_Dispatcher.Register (Dispatcher);
          else
             Componolit.Interfaces.Log.Client.Error (Log, "Failed to initialize Dispatcher");
@@ -43,21 +43,21 @@ package body Component is
       if Componolit.Interfaces.Log.Client.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
-      if Block_Dispatcher.Initialized (Dispatcher) then
+      if Block.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
       end if;
    end Destruct;
 
    type Cache_Entry is record
-      C : Block_Client.Request;
-      S : Block_Server.Request;
+      C : Block.Client_Request;
+      S : Block.Server_Request;
       A : Boolean;
    end record;
 
    type Registry is array (Request_Index'Range) of Cache_Entry;
 
-   Cache : Registry := (others => (C => Block_Client.Null_Request,
-                                   S => Block_Server.Null_Request,
+   Cache : Registry := (others => (C => Block.Null_Request,
+                                   S => Block.Null_Request,
                                    A => False));
 
    procedure Write (C :     Block.Client_Instance;
@@ -80,56 +80,55 @@ package body Component is
 
    procedure Event
    is
-      use type Block_Client.Result;
-      Re : Block_Client.Result;
+      Re : Block.Result;
    begin
       if
-         Block_Client.Initialized (Client)
-         and Block_Server.Initialized (Server)
+         Block.Initialized (Client)
+         and Block.Initialized (Server)
       then
          for I in Cache'Range loop
-            pragma Loop_Invariant (Block_Client.Initialized (Client));
-            pragma Loop_Invariant (Block_Server.Initialized (Server));
-            if Block_Server.Status (Cache (I).S) = Block.Raw then
-               if Block_Client.Status (Cache (I).C) in Block.Ok | Block.Error then
+            pragma Loop_Invariant (Block.Initialized (Client));
+            pragma Loop_Invariant (Block.Initialized (Server));
+            if Block.Status (Cache (I).S) = Block.Raw then
+               if Block.Status (Cache (I).C) in Block.Ok | Block.Error then
                   Block_Client.Release (Client, Cache (I).C);
                   Cache (I).A := False;
                end if;
-               if Block_Client.Status (Cache (I).C) = Block.Raw then
+               if Block.Status (Cache (I).C) = Block.Raw then
                   Block_Server.Process (Server, Cache (I).S);
                end if;
             end if;
-            if Block_Server.Status (Cache (I).S) = Block.Pending then
-               if Block_Client.Status (Cache (I).C) = Block.Pending then
+            if Block.Status (Cache (I).S) = Block.Pending then
+               if Block.Status (Cache (I).C) = Block.Pending then
                   Block_Client.Update_Request (Client, Cache (I).C);
                end if;
-               if Block_Client.Status (Cache (I).C) in Block.Ok | Block.Error then
+               if Block.Status (Cache (I).C) in Block.Ok | Block.Error then
                   if
-                     Block_Client.Status (Cache (I).C) = Block.Ok
-                     and then Block_Client.Kind (Cache (I).C) = Block.Read
+                     Block.Status (Cache (I).C) = Block.Ok
+                     and then Block.Kind (Cache (I).C) = Block.Read
                   then
                      Block_Client.Read (Client, Cache (I).C);
                   end if;
-                  Block_Server.Acknowledge (Server, Cache (I).S, Block_Client.Status (Cache (I).C));
+                  Block_Server.Acknowledge (Server, Cache (I).S, Block.Status (Cache (I).C));
                end if;
-               if Block_Client.Status (Cache (I).C) = Block.Raw then
+               if Block.Status (Cache (I).C) = Block.Raw then
                   Block_Client.Allocate_Request (Client,
                                                  Cache (I).C,
-                                                 Block_Server.Kind (Cache (I).S),
-                                                 Block_Server.Start (Cache (I).S),
-                                                 Block_Server.Length (Cache (I).S),
+                                                 Block.Kind (Cache (I).S),
+                                                 Block.Start (Cache (I).S),
+                                                 Block.Length (Cache (I).S),
                                                  I,
                                                  Re);
                   case Re is
-                     when Block_Client.Success =>
+                     when Block.Success =>
                         Block_Client.Enqueue (Client, Cache (I).C);
-                     when Block_Client.Retry =>
+                     when Block.Retry =>
                         null;
                      when others =>
                         Cache (I).A := True;
                   end case;
                end if;
-               if Block_Client.Status (Cache (I).C) = Block.Allocated then
+               if Block.Status (Cache (I).C) = Block.Allocated then
                   Block_Client.Enqueue (Client, Cache (I).C);
                end if;
             end if;
@@ -142,10 +141,10 @@ package body Component is
    procedure Dispatch (C : Block.Dispatcher_Capability)
    is
    begin
-      if Block_Dispatcher.Initialized (Dispatcher) then
-         if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block_Server.Initialized (Server) then
+      if Block.Initialized (Dispatcher) then
+         if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block.Initialized (Server) then
             Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
-            if Block_Server.Initialized (Server) then
+            if Block.Initialized (Server) then
                Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
             end if;
          end if;
@@ -157,7 +156,7 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      if not Block_Client.Initialized (Client) then
+      if not Block.Initialized (Client) then
          Block_Client.Initialize (Client, Capability, L, B);
       end if;
    end Initialize_Server;
@@ -166,7 +165,7 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      if Block_Client.Initialized (Client) then
+      if Block.Initialized (Client) then
          Block_Client.Finalize (Client);
       end if;
    end Finalize_Server;
@@ -175,8 +174,8 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      if Block_Client.Initialized (Client) then
-         return Block_Client.Block_Count (Client);
+      if Block.Initialized (Client) then
+         return Block.Block_Count (Client);
       else
          return 0;
       end if;
@@ -186,8 +185,8 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      if Block_Client.Initialized (Client) then
-         return Block_Client.Block_Size (Client);
+      if Block.Initialized (Client) then
+         return Block.Block_Size (Client);
       else
          return 0;
       end if;
@@ -197,8 +196,8 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      if Block_Client.Initialized (Client) then
-         return Block_Client.Writable (Client);
+      if Block.Initialized (Client) then
+         return Block.Writable (Client);
       else
          return False;
       end if;
@@ -208,7 +207,7 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      return Block_Client.Initialized (Client);
+      return Block.Initialized (Client);
    end Initialized;
 
 end Component;
