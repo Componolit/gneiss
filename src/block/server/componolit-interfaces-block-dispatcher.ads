@@ -49,7 +49,8 @@ is
    --  @param D    Dispatcher session instance
    --  @param Cap  System capability
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability);
+                         Cap :        Componolit.Interfaces.Types.Capability) with
+      Pre => not Initialized (D);
 
    --  Register the server implementation Serv on the platform
    --
@@ -87,7 +88,8 @@ is
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
               and then not Serv.Initialized (I),
-      Post => Initialized (D);
+      Post => Initialized (D)
+      and then Valid_Session_Request (D, C);
 
    --  Accept session request
    --
@@ -100,7 +102,8 @@ is
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
               and then Serv.Initialized (I),
-      Post => Initialized (D);
+      Post => Initialized (D)
+      and then not Valid_Session_Request (D, C);
 
    --  Garbage collects disconnected sessions
    --
