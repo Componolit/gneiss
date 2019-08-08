@@ -7,68 +7,8 @@ use all type Cxx.Genode.Uint64_T;
 package body Componolit.Interfaces.Block.Server
 is
 
-   function Null_Request return Request
-   is
-   begin
-      return Request'(Request => Cxx.Block.Server.Request'(Kind         => -1,
-                                                           Block_Number => 0,
-                                                           Block_Count  => 0,
-                                                           Success      => 0,
-                                                           Offset       => 0,
-                                                           Tag          => 0),
-                      Status  => Componolit.Interfaces.Internal.Block.Raw);
-   end Null_Request;
-
-   function Kind (R : Request) return Request_Kind
-   is
-   begin
-      case R.Request.Kind is
-         when 1 => return Read;
-         when 2 => return Write;
-         when 3 => return Sync;
-         when 4 => return Trim;
-         when others => raise Constraint_Error;
-      end case;
-   end Kind;
-
-   function Status (R : Request) return Request_Status
-   is
-   begin
-      case R.Status is
-         when Componolit.Interfaces.Internal.Block.Raw          => return Raw;
-         when Componolit.Interfaces.Internal.Block.Allocated    => return Allocated;
-         when Componolit.Interfaces.Internal.Block.Pending      => return Pending;
-         when Componolit.Interfaces.Internal.Block.Ok           => return Ok;
-         when Componolit.Interfaces.Internal.Block.Error        => return Error;
-      end case;
-   end Status;
-
-   function Start (R : Request) return Id
-   is
-   begin
-      return Id (R.Request.Block_Number);
-   end Start;
-
-   function Length (R : Request) return Count
-   is
-   begin
-      return Count (R.Request.Block_Count);
-   end Length;
-
-   function Create return Server_Session
-   is
-   begin
-      return Server_Session'(Instance => Cxx.Block.Server.Constructor);
-   end Create;
-
-   function Instance (S : Server_Session) return Server_Instance
-   is
-   begin
-      return Server_Instance (Cxx.Block.Server.Get_Instance (S.Instance));
-   end Instance;
-
    procedure Process (S : in out Server_Session;
-                      R : in out Request)
+                      R : in out Server_Request)
    is
       State : Integer;
    begin
@@ -79,7 +19,7 @@ is
    end Process;
 
    procedure Read (S : in out Server_Session;
-                   R :        Request;
+                   R :        Server_Request;
                    B :        Buffer) with
       SPARK_Mode => Off
    is
@@ -90,7 +30,7 @@ is
    end Read;
 
    procedure Write (S : in out Server_Session;
-                    R :        Request;
+                    R :        Server_Request;
                     B :    out Buffer) with
       SPARK_Mode => Off
    is
@@ -100,23 +40,17 @@ is
                               B'Address);
    end Write;
 
-   procedure Acknowledge (S      : in out Server_Session;
-                          R      : in out Request;
-                          Result :        Request_Status)
+   procedure Acknowledge (S   : in out Server_Session;
+                          R   : in out Server_Request;
+                          Res :        Request_Status)
    is
-      Success : Integer := (if Result = Ok then 1 else 0);
+      Succ : Integer := (if Res = Ok then 1 else 0);
    begin
-      Cxx.Block.Server.Acknowledge (S.Instance, R.Request, Success);
-      if Success = 1 then
+      Cxx.Block.Server.Acknowledge (S.Instance, R.Request, Succ);
+      if Succ = 1 then
          R.Status := Componolit.Interfaces.Internal.Block.Raw;
       end if;
    end Acknowledge;
-
-   function Initialized (S : Server_Session) return Boolean
-   is
-   begin
-      return Initialized (Instance (S)) and Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1);
-   end Initialized;
 
    procedure Unblock_Client (S : in out Server_Session)
    is
