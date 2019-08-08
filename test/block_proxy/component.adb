@@ -19,9 +19,22 @@ package body Component is
    is
    begin
       Capability := Cap;
-      Block_Dispatcher.Initialize (Dispatcher, Cap);
-      Block_Dispatcher.Register (Dispatcher);
-      Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
+      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
+      end if;
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         if not Block_Dispatcher.Initialized (Dispatcher) then
+            Block_Dispatcher.Initialize (Dispatcher, Cap);
+         end if;
+         if Block_Dispatcher.Initialized (Dispatcher) then
+            Block_Dispatcher.Register (Dispatcher);
+         else
+            Componolit.Interfaces.Log.Client.Error (Log, "Failed to initialize Dispatcher");
+            Main.Vacate (Capability, Main.Failure);
+         end if;
+      else
+         Main.Vacate (Capability, Main.Failure);
+      end if;
    end Construct;
 
    procedure Destruct
@@ -38,12 +51,14 @@ package body Component is
    type Cache_Entry is record
       C : Block_Client.Request;
       S : Block_Server.Request;
+      A : Boolean;
    end record;
 
    type Registry is array (Request_Index'Range) of Cache_Entry;
 
    Cache : Registry := (others => (C => Block_Client.Null_Request,
-                                   S => Block_Server.Null_Request));
+                                   S => Block_Server.Null_Request,
+                                   A => False));
 
    procedure Write (C :     Block.Client_Instance;
                     I :     Request_Index;
@@ -66,8 +81,6 @@ package body Component is
    procedure Event
    is
       use type Block_Client.Result;
-      As : Boolean;
-      Ri : Request_Index;
       Re : Block_Client.Result;
    begin
       if
@@ -75,80 +88,69 @@ package body Component is
          and Block_Server.Initialized (Server)
       then
          for I in Cache'Range loop
-            if
-               Block_Server.Status (Cache (I).S) = Block.Pending
-               and then Block_Client.Status (Cache (I).C) = Block.Raw
-            then
-               Block_Client.Allocate_Request (Client,
-                                              Cache (I).C,
-                                              Block_Server.Kind (Cache (I).S),
-                                              Block_Server.Start (Cache (I).S),
-                                              Block_Server.Length (Cache (I).S),
-                                              I,
-                                              Re);
-               if Re = Block_Client.Success then
-                  Componolit.Interfaces.Log.Client.Info (Log, "Enq cache");
+            pragma Loop_Invariant (Block_Client.Initialized (Client));
+            pragma Loop_Invariant (Block_Server.Initialized (Server));
+            if Block_Server.Status (Cache (I).S) = Block.Raw then
+               if Block_Client.Status (Cache (I).C) in Block.Ok | Block.Error then
+                  Block_Client.Release (Client, Cache (I).C);
+                  Cache (I).A := False;
+               end if;
+               if Block_Client.Status (Cache (I).C) = Block.Raw then
+                  Block_Server.Process (Server, Cache (I).S);
+               end if;
+            end if;
+            if Block_Server.Status (Cache (I).S) = Block.Pending then
+               if Block_Client.Status (Cache (I).C) = Block.Pending then
+                  Block_Client.Update_Request (Client, Cache (I).C);
+               end if;
+               if Block_Client.Status (Cache (I).C) in Block.Ok | Block.Error then
+                  if
+                     Block_Client.Status (Cache (I).C) = Block.Ok
+                     and then Block_Client.Kind (Cache (I).C) = Block.Read
+                  then
+                     Block_Client.Read (Client, Cache (I).C);
+                  end if;
+                  Block_Server.Acknowledge (Server, Cache (I).S, Block_Client.Status (Cache (I).C));
+               end if;
+               if Block_Client.Status (Cache (I).C) = Block.Raw then
+                  Block_Client.Allocate_Request (Client,
+                                                 Cache (I).C,
+                                                 Block_Server.Kind (Cache (I).S),
+                                                 Block_Server.Start (Cache (I).S),
+                                                 Block_Server.Length (Cache (I).S),
+                                                 I,
+                                                 Re);
+                  case Re is
+                     when Block_Client.Success =>
+                        Block_Client.Enqueue (Client, Cache (I).C);
+                     when Block_Client.Retry =>
+                        null;
+                     when others =>
+                        Cache (I).A := True;
+                  end case;
+               end if;
+               if Block_Client.Status (Cache (I).C) = Block.Allocated then
                   Block_Client.Enqueue (Client, Cache (I).C);
                end if;
             end if;
          end loop;
          Block_Client.Submit (Client);
-         for I in Cache'Range loop
-            if Block_Client.Status (Cache (I).C) = Block.Pending then
-               Block_Client.Update_Request (Client, Cache (I).C);
-               if
-                  Block_Client.Status (Cache (I).C) = Block.Ok
-                  and then Block_Client.Kind (Cache (I).C) = Read
-               then
-                  Block_Client.Read (Client, Cache (I).C);
-               end if;
-               if Block_Client.Status (Cache (I).C) in Block.Ok | Block.Error then
-                  loop
-                     Block_Server.Acknowledge (Server, Cache (I).S, Block_Client.Status (Cache (I).C));
-                     exit when Block_Server.Status (Cache (I).S) = Block.Raw;
-                  end loop;
-                  Block_Client.Release (Client, Cache (I).C);
-               end if;
-            end if;
-         end loop;
-         As := False;
-         loop
-            for I in Cache'Range loop
-               if Block_Server.Status (Cache (I).S) = Block.Raw then
-                  Ri := I;
-                  As := True;
-                  exit;
-               end if;
-            end loop;
-            exit when not As;
-            Block_Server.Process (Server, Cache (Ri).S);
-            exit when Block_Server.Status (Cache (Ri).S) = Block.Raw;
-            Block_Client.Allocate_Request (Client,
-                                           Cache (Ri).C,
-                                           Block_Server.Kind (Cache (Ri).S),
-                                           Block_Server.Start (Cache (Ri).S),
-                                           Block_Server.Length (Cache (Ri).S),
-                                           Ri,
-                                           Re);
-            exit when Re /= Block_Client.Success;
-            Block_Client.Enqueue (Client, Cache (Ri).C);
-            As := False;
-         end loop;
-         Block_Client.Submit (Client);
+         Block_Server.Unblock_Client (Server);
       end if;
-      Block_Server.Unblock_Client (Server);
    end Event;
 
    procedure Dispatch (C : Block.Dispatcher_Capability)
    is
    begin
-      if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block_Server.Initialized (Server) then
-         Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
-         if Block_Server.Initialized (Server) then
-            Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+      if Block_Dispatcher.Initialized (Dispatcher) then
+         if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block_Server.Initialized (Server) then
+            Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
+            if Block_Server.Initialized (Server) then
+               Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
+            end if;
          end if;
+         Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
       end if;
-      Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
    end Dispatch;
 
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
