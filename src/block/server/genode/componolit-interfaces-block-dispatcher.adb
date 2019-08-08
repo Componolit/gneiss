@@ -8,24 +8,6 @@ use all type Cxx.Bool;
 package body Componolit.Interfaces.Block.Dispatcher
 is
 
-   function Create return Dispatcher_Session
-   is
-   begin
-      return Dispatcher_Session'(Instance => Cxx.Block.Dispatcher.Constructor);
-   end Create;
-
-   function Initialized (D : Dispatcher_Session) return Boolean
-   is
-   begin
-      return Cxx.Block.Dispatcher.Initialized (D.Instance) = Cxx.Bool'Val (1);
-   end Initialized;
-
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance
-   is
-   begin
-      return Dispatcher_Instance (Cxx.Block.Dispatcher.Get_Instance (D.Instance));
-   end Instance;
-
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Componolit.Interfaces.Types.Capability) with
       SPARK_Mode => Off
@@ -64,15 +46,15 @@ is
          Address => Label_Address;
    begin
       if Label_Length = 0 then
-         Serv.Initialize (Serv.Instance (I),
+         Serv.Initialize (Instance (I),
                           "",
                           Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
       else
-         Serv.Initialize (Serv.Instance (I),
+         Serv.Initialize (Instance (I),
                           Label,
                           Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
       end if;
-      if not Serv.Initialized (Serv.Instance (I)) then
+      if not Serv.Initialized (Instance (I)) then
          return;
       end if;
       Cxx.Block.Server.Initialize (I.Instance,
@@ -83,7 +65,7 @@ is
                                    Serv.Block_Size'Address,
                                    Serv.Writable'Address);
       if Cxx.Block.Server.Initialized (I.Instance) /= Cxx.Bool'Val (1) then
-         Serv.Finalize (Serv.Instance (I));
+         Serv.Finalize (Instance (I));
       end if;
    end Session_Initialize;
 
@@ -103,7 +85,7 @@ is
       if
          Cxx.Block.Dispatcher.Session_Cleanup (D.Instance, C.Instance, I.Instance) = Cxx.Bool'Val (1)
       then
-         Serv.Finalize (Serv.Instance (I));
+         Serv.Finalize (Instance (I));
          Cxx.Block.Server.Finalize (I.Instance);
       end if;
    end Session_Cleanup;

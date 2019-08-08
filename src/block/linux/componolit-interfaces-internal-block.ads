@@ -41,10 +41,7 @@ package Componolit.Interfaces.Internal.Block is
       Aiocb  : System.Address;
    end record;
 
-   type Client_Request_Handle is record
-      Tag   : C.Uint32_T;
-      Valid : C.Uint32_T;
-   end record;
+   type Server_Request is null record;
 
    type Dispatcher_Capability is null record;
 

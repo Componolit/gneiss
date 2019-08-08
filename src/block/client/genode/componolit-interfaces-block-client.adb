@@ -20,63 +20,8 @@ is
 
    H_Cache : Request_Handle_Cache := (others => (False, 0, False));
 
-   function Null_Request return Request
-   is
-   begin
-      return Request'(Packet => Cxx.Block.Client.Packet_Descriptor'(Offset       => 0,
-                                                                    Bytes        => 0,
-                                                                    Opcode       => -1,
-                                                                    Tag          => 0,
-                                                                    Block_Number => 0,
-                                                                    Block_Count  => 0),
-                      Status => Componolit.Interfaces.Internal.Block.Raw);
-   end Null_Request;
-
-   function Kind (R : Request) return Request_Kind
-   is
-   begin
-      case R.Packet.Opcode is
-         when 0 => return Read;
-         when 1 => return Write;
-         when 2 => return Sync;
-         when 3 => return Trim;
-         when others =>
-            raise Constraint_Error;
-      end case;
-   end Kind;
-
-   function Status (R : Request) return Request_Status
-   is
-   begin
-      case R.Status is
-         when Componolit.Interfaces.Internal.Block.Raw          => return Raw;
-         when Componolit.Interfaces.Internal.Block.Allocated    => return Allocated;
-         when Componolit.Interfaces.Internal.Block.Pending      => return Pending;
-         when Componolit.Interfaces.Internal.Block.Ok           => return Ok;
-         when Componolit.Interfaces.Internal.Block.Error        => return Error;
-      end case;
-   end Status;
-
-   function Start (R : Request) return Id
-   is
-   begin
-      return Id (R.Packet.Block_Number);
-   end Start;
-
-   function Length (R : Request) return Count
-   is
-   begin
-      return Count (R.Packet.Block_Count);
-   end Length;
-
-   function Identifier (R : Request) return Request_Id
-   is
-   begin
-      return Request_Id'Val (R.Packet.Tag);
-   end Identifier;
-
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Request;
+                               R : in out Client_Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -136,7 +81,7 @@ is
    pragma Warnings (On, "formal parameter ""C"" is not modified");
 
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Request)
+                             R : in out Client_Request)
    is
       use type Cxx.Unsigned_Long;
    begin
@@ -158,24 +103,6 @@ is
          end if;
       end loop;
    end Update_Request;
-
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Instance => Cxx.Block.Client.Constructor);
-   end Create;
-
-   function Instance (C : Client_Session) return Client_Instance
-   is
-   begin
-      return Client_Instance (Cxx.Block.Client.Get_Instance (C.Instance));
-   end Instance;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-   begin
-      return Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
-   end Initialized;
 
    procedure Crw (C : Client_Instance;
                   O : Integer;
@@ -231,7 +158,7 @@ is
    end Finalize;
 
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Request)
+                      R : in out Client_Request)
    is
    begin
       Cxx.Block.Client.Enqueue (C.Instance, R.Packet);
@@ -245,36 +172,18 @@ is
    end Submit;
 
    procedure Read (C : in out Client_Session;
-                   R :        Request)
+                   R :        Client_Request)
    is
    begin
       Cxx.Block.Client.Read (C.Instance, R.Packet);
    end Read;
 
    procedure Release (C : in out Client_Session;
-                      R : in out Request)
+                      R : in out Client_Request)
    is
    begin
       Cxx.Block.Client.Release (C.Instance, R.Packet);
       R.Status := Componolit.Interfaces.Internal.Block.Raw;
    end Release;
-
-   function Writable (C : Client_Session) return Boolean
-   is
-   begin
-      return Cxx.Block.Client.Writable (C.Instance) /= Cxx.Bool'Val (0);
-   end Writable;
-
-   function Block_Count (C : Client_Session) return Count
-   is
-   begin
-      return Count (Cxx.Block.Client.Block_Count (C.Instance));
-   end Block_Count;
-
-   function Block_Size (C : Client_Session) return Size
-   is
-   begin
-      return Size (Cxx.Block.Client.Block_Size (C.Instance));
-   end Block_Size;
 
 end Componolit.Interfaces.Block.Client;
