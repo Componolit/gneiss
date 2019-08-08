@@ -13,7 +13,6 @@ private with Componolit.Interfaces.Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
-   --  Buffer is only provided to be used in child packages
 
    --  Buffer element type, must be 8bit in size
    type Byte is (<>);
@@ -23,6 +22,9 @@ generic
 
    --  Buffer type to be used with all operations of this instance
    type Buffer is array (Buffer_Index range <>) of Byte;
+
+   --  max 32bit request identifier
+   type Request_Id is (<>);
 
    pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block with
@@ -116,6 +118,18 @@ is
       (Count (Subtract (Left, Right))) with
       Pre => Left >= Right and Subtract (Left, Right) in Id (Count'First) .. Id (Count'Last);
 
+   --  Result type for request allocation
+   --
+   --  @value Success        The request has been successfully allocated.
+   --  @value Retry          The platform currently cannot allocate this request, but it might be possible later.
+   --  @value Out_Of_Memory  There is currently insufficient memory available to allocate the requests data
+   --                        section. This can mean that the request is too large to fit the available memory
+   --                        altogether or that the buffer is currently too full to take that request. Either way
+   --                        this result signals to split up the request into smaller ones.
+   --  @value Unsupported    These request parameters cannot be handled at all. This happens mostly for
+   --                        operations that are possibly not supported such as Sync and Trim.
+   type Result is (Success, Retry, Out_Of_Memory, Unsupported);
+
    --  Type of a block request
    --
    --  @value None       Invalid request
@@ -135,6 +149,12 @@ is
    --  @value Error         Failed request
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
+   --  Block client request
+   type Client_Request is limited private;
+
+   --  Block server request
+   type Server_Request is limited private;
+
    --  Session types, represent actual session objects
    type Client_Session is limited private;
    type Dispatcher_Session is limited private;
@@ -148,6 +168,160 @@ is
    --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
 
+   --  Create empty request
+   --
+   --  @return  empty, uninitialized request
+   function Null_Request return Client_Request with
+      Annotate => (GNATprove, Terminating),
+      Post => Status (Null_Request'Result) = Raw;
+
+   --  Get request type
+   --
+   --  @param R  Request
+   --  @return   Request type
+   function Kind (R : Client_Request) return Request_Kind with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) /= Raw;
+
+   --  Get request status
+   --
+   --  @param R  Request
+   --  @return   Request status
+   function Status (R : Client_Request) return Request_Status with
+      Annotate => (GNATprove, Terminating);
+
+   --  Get request start block
+   --
+   --  @param R  Request
+   --  @return   First block id to be handled by this request
+   function Start (R : Client_Request) return Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) /= Raw;
+
+   --  Get request length
+   --
+   --  @param R  Request
+   --  @return   Number of consecutive blocks handled by this request
+   function Length (R : Client_Request) return Count with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) /= Raw;
+
+   --  Get request identifier
+   --
+   --  @param R  Request
+   --  @return   Unique identifier of the request
+   function Identifier (R : Client_Request) return Request_Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) /= Raw;
+
+   --  Return True if C is initialized
+   --
+   --  @param C  Client session instance
+   function Initialized (C : Client_Session) return Boolean with
+      Annotate => (GNATprove, Terminating);
+
+   --  Create uninitialized client session
+   --
+   --  @return Uninitialized client session
+   function Create return Client_Session with
+      Annotate => (GNATprove, Terminating),
+      Post => not Initialized (Create'Result);
+
+   --  Get the instance ID of C
+   --
+   --  @param C  Client session instance
+   function Instance (C : Client_Session) return Client_Instance with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C);
+
+   --  Check if the block device is writable
+   --
+   --  @param C  Client session instance
+   function Writable (C : Client_Session) return Boolean with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C);
+
+   --  Get the total number of blocks of the device
+   --
+   --  @param C  Client session instance
+   function Block_Count (C : Client_Session) return Count with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C);
+
+   --  Get the block size in bytes
+   --
+   --  @param C  Client session instance
+   function Block_Size (C : Client_Session) return Size with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C);
+
+   --  Create empty request
+   --
+   --  @return  empty, uninitialized request
+   function Null_Request return Server_Request with
+      Post => Status (Null_Request'Result) = Raw;
+
+   --  Get request type
+   --
+   --  @param R  Request
+   --  @return   Request type
+   function Kind (R : Server_Request) return Request_Kind with
+      Pre => Status (R) = Pending;
+
+   --  Get request status
+   --
+   --  @param R  Request
+   --  @return   Request status
+   function Status (R : Server_Request) return Request_Status;
+
+   --  Get request start block
+   --
+   --  @param R  Request
+   --  @return   First block id to be handled by this request
+   function Start (R : Server_Request) return Id with
+      Pre => Status (R) = Pending;
+
+   --  Get request length in blocks
+   --
+   --  @param R  Request
+   --  @return   Number of consecutive blocks handled by this request
+   function Length (R : Server_Request) return Count with
+      Pre => Status (R) = Pending;
+
+   --  Check if S is initialized
+   --
+   --  @param S  Server session instance
+   function Initialized (S : Server_Session) return Boolean;
+
+   --  Create new server session
+   --
+   --  @return Uninitialized server session
+   function Create return Server_Session with
+      Post => not Initialized (Create'Result);
+
+   --  Get the instance ID of S
+   --
+   --  @param S  Server session instance
+   function Instance (S : Server_Session) return Server_Instance with
+      Pre => Initialized (S);
+
+   --  Checks if D is initialized
+   --
+   --  @param D  Dispatcher session instance
+   function Initialized (D : Dispatcher_Session) return Boolean;
+
+   --  Create new dispatcher session
+   --
+   --  @return Uninitialized dispatcher session
+   function Create return Dispatcher_Session with
+      Post => not Initialized (Create'Result);
+
+   --  Return the instance ID of D
+   --
+   --  @param D  Dispatcher session instance
+   function Instance (D : Dispatcher_Session) return Dispatcher_Instance with
+      Pre => Initialized (D);
+
 private
 
    type Client_Session is new Componolit.Interfaces.Internal.Block.Client_Session;
@@ -157,5 +331,8 @@ private
    type Dispatcher_Instance is new Componolit.Interfaces.Internal.Block.Dispatcher_Instance;
    type Server_Instance is new Componolit.Interfaces.Internal.Block.Server_Instance;
    type Dispatcher_Capability is new Componolit.Interfaces.Internal.Block.Dispatcher_Capability;
+
+   type Client_Request is new Componolit.Interfaces.Internal.Block.Client_Request;
+   type Server_Request is new Componolit.Interfaces.Internal.Block.Server_Request;
 
 end Componolit.Interfaces.Block;
