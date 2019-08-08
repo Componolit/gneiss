@@ -17,8 +17,9 @@ is
    type Byte is mod 2 ** 8;
    subtype Unsigned_Long is Long_Integer range 0 .. Long_Integer'Last;
    type Buffer is array (Unsigned_Long range <>) of Byte;
+   type Request_Index is mod 8;
 
-   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer);
+   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Request_Index);
 
    use type Block.Count;
    use type Block.Size;

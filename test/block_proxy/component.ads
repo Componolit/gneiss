@@ -18,7 +18,7 @@ package Component is
    type Buffer is array (Unsigned_Long range <>) of Byte;
    type Request_Index is mod 8;
 
-   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer);
+   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Request_Index);
 
    procedure Event;
    procedure Dispatch (C : Block.Dispatcher_Capability);
@@ -37,7 +37,7 @@ package Component is
                    I : Request_Index;
                    D : Buffer);
 
-   package Block_Client is new Block.Client (Request_Index, Event, Read, Write);
+   package Block_Client is new Block.Client (Event, Read, Write);
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
                                              Block_Size,
