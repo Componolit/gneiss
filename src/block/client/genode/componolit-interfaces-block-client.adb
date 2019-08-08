@@ -112,21 +112,24 @@ is
       end if;
    end Allocate_Request;
 
+   procedure Update_Response_Queue (C : in out Client_Session;
+                                    H : in out Request_Handle);
+
    pragma Warnings (Off, "formal parameter ""C"" is not modified");
    --  Cxx.Block.Client.Update_Response_Queue modifies state
    procedure Update_Response_Queue (C : in out Client_Session;
                                     H : in out Request_Handle)
    is
-      State   : Integer;
-      Success : Integer;
-      Tag     : Cxx.Unsigned_Long;
+      State : Integer;
+      Succ  : Integer;
+      Tag   : Cxx.Unsigned_Long;
    begin
       if not H.Valid then
-         Cxx.Block.Client.Update_Response_Queue (C.Instance, State, Tag, Success);
+         Cxx.Block.Client.Update_Response_Queue (C.Instance, State, Tag, Succ);
          if State = 1 then
             H := Request_Handle'(Valid   => True,
                                  Tag     => Tag,
-                                 Success => Success = 1);
+                                 Success => Succ = 1);
          end if;
       end if;
    end Update_Response_Queue;

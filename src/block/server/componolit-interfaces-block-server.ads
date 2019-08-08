@@ -182,7 +182,9 @@ is
    --  If this procedure is not called at least once before returning from the event handler a deadlock might occur.
    --
    --  @param S  Server session instance
-   procedure Unblock_Client (S : in out Server_Session);
+   procedure Unblock_Client (S : in out Server_Session) with
+      Pre  => Initialized (S),
+      Post => Initialized (S);
 
 private
 
