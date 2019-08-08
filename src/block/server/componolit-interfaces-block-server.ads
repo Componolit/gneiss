@@ -9,8 +9,6 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Componolit.Interfaces.Internal.Block;
-
 generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs each subprogram
@@ -65,59 +63,6 @@ package Componolit.Interfaces.Block.Server with
    SPARK_Mode
 is
 
-   --  Block server request
-   type Request is limited private;
-
-   --  Create empty request
-   --
-   --  @return  empty, uninitialized request
-   function Null_Request return Request with
-      Post => Status (Null_Request'Result) = Raw;
-
-   --  Get request type
-   --
-   --  @param R  Request
-   --  @return   Request type
-   function Kind (R : Request) return Request_Kind with
-      Pre => Status (R) = Pending;
-
-   --  Get request status
-   --
-   --  @param R  Request
-   --  @return   Request status
-   function Status (R : Request) return Request_Status;
-
-   --  Get request start block
-   --
-   --  @param R  Request
-   --  @return   First block id to be handled by this request
-   function Start (R : Request) return Id with
-      Pre => Status (R) = Pending;
-
-   --  Get request length in blocks
-   --
-   --  @param R  Request
-   --  @return   Number of consecutive blocks handled by this request
-   function Length (R : Request) return Count with
-      Pre => Status (R) = Pending;
-
-   --  Check if S is initialized
-   --
-   --  @param S  Server session instance
-   function Initialized (S : Server_Session) return Boolean;
-
-   --  Create new server session
-   --
-   --  @return Uninitialized server session
-   function Create return Server_Session with
-      Post => not Initialized (Create'Result);
-
-   --  Get the instance ID of S
-   --
-   --  @param S  Server session instance
-   function Instance (S : Server_Session) return Server_Instance with
-      Pre => Initialized (S);
-
    --  Process an incoming request
    --
    --  A raw request can be used to process an incoming request. If the request is Pending after this procedure
@@ -126,7 +71,7 @@ is
    --  @param S  Server session instance
    --  @param R  Raw request slot
    procedure Process (S : in out Server_Session;
-                      R : in out Request) with
+                      R : in out Server_Request) with
       Pre  => Initialized (S)
               and then Status (R) = Raw,
       Post => Initialized (S)
@@ -138,7 +83,7 @@ is
    --  @param R  Request to handle
    --  @param B  Buffer with read data
    procedure Read (S : in out Server_Session;
-                   R :        Request;
+                   R :        Server_Request;
                    B :        Buffer) with
       Pre  => Initialized (S)
               and then Status (R) = Pending
@@ -152,7 +97,7 @@ is
    --  @param R  Request to handle
    --  @param B  Buffer with data to be written after
    procedure Write (S : in out Server_Session;
-                    R :        Request;
+                    R :        Server_Request;
                     B :    out Buffer) with
       Pre  => Initialized (S)
               and then Status (R) = Pending
@@ -167,12 +112,12 @@ is
    --
    --  @param S  Server session instance
    --  @param R  Request to acknowledge
-   procedure Acknowledge (S      : in out Server_Session;
-                          R      : in out Request;
-                          Result :        Request_Status) with
+   procedure Acknowledge (S   : in out Server_Session;
+                          R   : in out Server_Request;
+                          Res :        Request_Status) with
       Pre  => Initialized (S)
               and then Status (R) = Pending
-              and then Result in Ok | Error,
+              and then Res in Ok | Error,
       Post => Initialized (S)
               and then Status (R) in Raw | Pending;
 
@@ -185,9 +130,5 @@ is
    procedure Unblock_Client (S : in out Server_Session) with
       Pre  => Initialized (S),
       Post => Initialized (S);
-
-private
-
-   type Request is new Componolit.Interfaces.Internal.Block.Server_Request;
 
 end Componolit.Interfaces.Block.Server;

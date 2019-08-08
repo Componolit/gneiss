@@ -27,23 +27,6 @@ package Componolit.Interfaces.Block.Dispatcher with
    SPARK_Mode
 is
 
-   --  Checks if D is initialized
-   --
-   --  @param D  Dispatcher session instance
-   function Initialized (D : Dispatcher_Session) return Boolean;
-
-   --  Create new dispatcher session
-   --
-   --  @return Uninitialized dispatcher session
-   function Create return Dispatcher_Session with
-      Post => not Initialized (Create'Result);
-
-   --  Return the instance ID of D
-   --
-   --  @param D  Dispatcher session instance
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance with
-      Pre => Initialized (D);
-
    --  Initialize dispatcher session with the system capability Cap
    --
    --  @param D    Dispatcher session instance
@@ -87,7 +70,8 @@ is
                                  I : in out Server_Session) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
-              and then not Serv.Initialized (I),
+              and then not Serv.Initialized (Instance (I))
+              and then not Initialized (I),
       Post => Initialized (D)
       and then Valid_Session_Request (D, C);
 
@@ -101,7 +85,8 @@ is
                              I : in out Server_Session) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
-              and then Serv.Initialized (I),
+              and then Serv.Initialized (Instance (I))
+              and then Initialized (I),
       Post => Initialized (D)
       and then not Valid_Session_Request (D, C);
 
