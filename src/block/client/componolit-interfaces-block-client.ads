@@ -83,7 +83,8 @@ is
    --
    --  @param R  Request
    --  @return   Request status
-   function Status (R : Request) return Request_Status;
+   function Status (R : Request) return Request_Status with
+      Annotate => (GNATprove, Terminating);
 
    --  Get request start block
    --
@@ -127,9 +128,13 @@ is
                                L :        Count;
                                I :        Request_Id;
                                E :    out Result) with
-      Pre            => Initialized (C) and then Status (R) = Raw,
-      Contract_Cases => (E = Success => Status (R) = Allocated,
-                         others      => Status (R) = Raw);
+      Pre  => Initialized (C)
+              and Status (R) = Raw,
+      Post => Initialized (C)
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C)
+              and (if E = Success then Status (R) = Allocated else Status (R) = Raw);
 
    --  Checks if a request has been changed by the platform
    --
@@ -140,7 +145,10 @@ is
       Pre  => Initialized (C)
               and Status (R) = Pending,
       Post => Initialized (C)
-              and Status (R) in Pending | Ok | Error;
+              and Status (R) in Pending | Ok | Error
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C);
 
    --  Return True if C is initialized
    --
