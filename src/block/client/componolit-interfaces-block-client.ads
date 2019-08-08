@@ -10,14 +10,10 @@
 --
 
 with Componolit.Interfaces.Types;
-private with Componolit.Interfaces.Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs this procedure
-
-   --  max 32bit request identifier
-   type Request_Id is (<>);
 
    --  Block client event handler
    with procedure Event;
@@ -48,65 +44,6 @@ package Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
 
-   --  Block client request
-   type Request is limited private;
-
-   --  Result type for request allocation
-   --
-   --  @value Success        The request has been successfully allocated.
-   --  @value Retry          The platform currently cannot allocate this request, but it might be possible later.
-   --  @value Out_Of_Memory  There is currently insufficient memory available to allocate the requests data
-   --                        section. This can mean that the request is too large to fit the available memory
-   --                        altogether or that the buffer is currently too full to take that request. Either way
-   --                        this result signals to split up the request into smaller ones.
-   --  @value Unsupported    These request parameters cannot be handled at all. This happens mostly for
-   --                        operations that are possibly not supported such as Sync and Trim.
-   type Result is (Success,
-                   Retry,
-                   Out_Of_Memory,
-                   Unsupported);
-
-   --  Create empty request
-   --
-   --  @return  empty, uninitialized request
-   function Null_Request return Request with
-      Post => Status (Null_Request'Result) = Raw;
-
-   --  Get request type
-   --
-   --  @param R  Request
-   --  @return   Request type
-   function Kind (R : Request) return Request_Kind with
-      Pre => Status (R) /= Raw;
-
-   --  Get request status
-   --
-   --  @param R  Request
-   --  @return   Request status
-   function Status (R : Request) return Request_Status with
-      Annotate => (GNATprove, Terminating);
-
-   --  Get request start block
-   --
-   --  @param R  Request
-   --  @return   First block id to be handled by this request
-   function Start (R : Request) return Id with
-      Pre => Status (R) /= Raw;
-
-   --  Get request length
-   --
-   --  @param R  Request
-   --  @return   Number of consecutive blocks handled by this request
-   function Length (R : Request) return Count with
-      Pre => Status (R) /= Raw;
-
-   --  Get request identifier
-   --
-   --  @param R  Request
-   --  @return   Unique identifier of the request
-   function Identifier (R : Request) return Request_Id with
-      Pre => Status (R) /= Raw;
-
    --  Allocate request
    --
    --  This procedure allocates a request on the platform. This means setting the intended request range
@@ -122,7 +59,7 @@ is
    --  @param I  Unique identifier for this request, chosen by the application
    --  @param E  Result of the allocation
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Request;
+                               R : in out Client_Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -141,7 +78,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request that shall be updated
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Request) with
+                             R : in out Client_Request) with
       Pre  => Initialized (C)
               and Status (R) = Pending,
       Post => Initialized (C)
@@ -149,23 +86,6 @@ is
               and Writable (C)'Old    = Writable (C)
               and Block_Count (C)'Old = Block_Count (C)
               and Block_Size (C)'Old  = Block_Size (C);
-
-   --  Return True if C is initialized
-   --
-   --  @param C  Client session instance
-   function Initialized (C : Client_Session) return Boolean;
-
-   --  Create uninitialized client session
-   --
-   --  @return Uninitialized client session
-   function Create return Client_Session with
-      Post => not Initialized (Create'Result);
-
-   --  Get the instance ID of C
-   --
-   --  @param C  Client session instance
-   function Instance (C : Client_Session) return Client_Instance with
-      Pre => Initialized (C);
 
    --  Initialize client instance
    --
@@ -197,7 +117,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request to enqueue
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Request) with
+                      R : in out Client_Request) with
       Pre  => Initialized (C)
               and then Status (R) = Allocated,
       Post => Initialized (C)
@@ -221,7 +141,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request to read data from
    procedure Read (C : in out Client_Session;
-                   R :        Request) with
+                   R :        Client_Request) with
       Pre  => Initialized (C)
               and then Kind (R)   = Read
               and then Status (R) = Ok,
@@ -240,7 +160,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request to release
    procedure Release (C : in out Client_Session;
-                      R : in out Request) with
+                      R : in out Client_Request) with
       Pre  => Initialized (C)
               and then Status (R) /= Raw,
       Post => Initialized (C)
@@ -248,28 +168,5 @@ is
               and Block_Count (C)'Old = Block_Count (C)
               and Block_Size (C)'Old  = Block_Size (C)
               and Status (R)          = Raw;
-
-   --  Check if the block device is writable
-   --
-   --  @param C  Client session instance
-   function Writable (C : Client_Session) return Boolean with
-      Pre => Initialized (C);
-
-   --  Get the total number of blocks of the device
-   --
-   --  @param C  Client session instance
-   function Block_Count (C : Client_Session) return Count with
-      Pre => Initialized (C);
-
-   --  Get the block size in bytes
-   --
-   --  @param C  Client session instance
-   function Block_Size (C : Client_Session) return Size with
-      Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
-
-private
-
-   type Request is new Componolit.Interfaces.Internal.Block.Client_Request;
 
 end Componolit.Interfaces.Block.Client;
