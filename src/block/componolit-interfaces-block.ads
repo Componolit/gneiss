@@ -308,7 +308,17 @@ is
    --  Checks if D is initialized
    --
    --  @param D  Dispatcher session instance
-   function Initialized (D : Dispatcher_Session) return Boolean;
+   --  @return   True if D is initialized
+   function Initialized (D : Dispatcher_Session) return Boolean with
+      Post => Initialized'Result = Initialized (Instance (D));
+
+   --  Check if the Dispatcher session of D is initialized
+   --
+   --  @param D  Dispatcher instance
+   --  @return   True if the session that belongs to D is initialized
+   function Initialized (D : Dispatcher_Instance) return Boolean with
+      Ghost,
+      Import;
 
    --  Create new dispatcher session
    --
@@ -319,8 +329,9 @@ is
    --  Return the instance ID of D
    --
    --  @param D  Dispatcher session instance
+   --  @return   Instance identifier of D
    function Instance (D : Dispatcher_Session) return Dispatcher_Instance with
-      Pre => Initialized (D);
+      Post => Initialized (Instance'Result) = Initialized (Instance'Result);
 
 private
 
