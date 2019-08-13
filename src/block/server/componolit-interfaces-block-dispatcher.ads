@@ -20,7 +20,8 @@ generic
    with package Serv is new Componolit.Interfaces.Block.Server (<>);
 
    --  Called when a client connects or disconnects
-   with procedure Dispatch (Cap : Dispatcher_Capability);
+   with procedure Dispatch (I : Dispatcher_Instance;
+                            C : Dispatcher_Capability);
 
    pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block.Dispatcher with
@@ -104,5 +105,21 @@ is
                               I : in out Server_Session) with
       Pre  => Initialized (D),
       Post => Initialized (D);
+
+   pragma Annotate (GNATprove, False_Positive,
+                    "ghost procedure ""Lemma_Dispatch"" cannot have non-ghost global output *",
+                    "This procedure is only used to enforce the precondition of Dispatch");
+
+   --  Enforces the precondition of Dispatch
+   --
+   --  The only valid precondition for Dispatch is Initialized (D). This enforced by this
+   --  ghost procedure that calls Dispatch but is never called.
+   --
+   --  @param D  Dispatcher instance
+   --  @param C  Dispatcher capability
+   procedure Lemma_Dispatch (D : Dispatcher_Instance;
+                             C : Dispatcher_Capability) with
+      Ghost,
+      Pre => Initialized (D);
 
 end Componolit.Interfaces.Block.Dispatcher;
