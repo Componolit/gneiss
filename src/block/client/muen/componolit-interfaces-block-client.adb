@@ -22,45 +22,8 @@ is
 
    procedure Update_Response_Cache (C : in out Client_Session);
 
-   function Null_Request return Request is
-      (Request'(Status => Componolit.Interfaces.Internal.Block.Raw,
-                Event  => Blk.Null_Event));
-
-   function Kind (R : Request) return Request_Kind
-   is
-   begin
-      case R.Event.Header.Kind is
-         when Blk.Read  => return Read;
-         when Blk.Write => return Write;
-         when others    => return None;
-      end case;
-   end Kind;
-
-   function Status (R : Request) return Request_Status
-   is
-   begin
-      case R.Status is
-         when Componolit.Interfaces.Internal.Block.Raw       => return Raw;
-         when Componolit.Interfaces.Internal.Block.Allocated => return Allocated;
-         when Componolit.Interfaces.Internal.Block.Pending   => return Pending;
-         when Componolit.Interfaces.Internal.Block.Ok        => return Ok;
-         when Componolit.Interfaces.Internal.Block.Error     => return Error;
-      end case;
-   end Status;
-
-   function Start (R : Request) return Id
-   is
-      (Id (R.Event.Header.Id));
-
-   function Length (R : Request) return Count is
-      (1);
-
-   function Identifier (R : Request) return Request_Id
-   is
-      (Request_Id'Val (R.Event.Header.Priv));
-
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Request;
+                               R : in out Client_Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -107,7 +70,7 @@ is
    end Update_Response_Cache;
 
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Request)
+                             R : in out Client_Request)
    is
       use type Blk.Event_Type;
       use type Standard.Interfaces.Unsigned_32;
@@ -131,40 +94,6 @@ is
          end if;
       end loop;
    end Update_Request;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-      use type Blk.Count;
-      use type Blk.Session_Name;
-      use type Blk.Client_Response_Channel.Reader_Type;
-      use type CIM.Session_Index;
-   begin
-      return C.Name /= Componolit.Interfaces.Muen_Block.Null_Name
-             and C.Count > 0
-             and C.Request_Memory /= Musinfo.Null_Memregion
-             and C.Response_Memory /= Musinfo.Null_Memregion
-             and C.Response_Reader /= Blk.Client_Response_Channel.Null_Reader
-             and C.Registry_Index /= CIM.Invalid_Index;
-   end Initialized;
-
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Name            => Blk.Null_Name,
-                             Count           => 0,
-                             Request_Memory  => Musinfo.Null_Memregion,
-                             Response_Memory => Musinfo.Null_Memregion,
-                             Response_Reader => Blk.Client_Response_Channel.Null_Reader,
-                             Registry_Index  => CIM.Invalid_Index,
-                             Queued          => 0,
-                             Responses      => (others => Blk.Null_Event));
-   end Create;
-
-   function Instance (C : Client_Session) return Client_Instance
-   is
-   begin
-      return Client_Instance (C.Name);
-   end Instance;
 
    procedure Set_Null (C : in out Client_Session) with
       Post => not Initialized (C);
@@ -277,7 +206,7 @@ is
    Enqueue_Buffer : Block_Buffer;
 
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Request)
+                      R : in out Client_Request)
    is
       use type Blk.Event_Type;
    begin
@@ -304,7 +233,7 @@ is
 
    pragma Warnings (Off, "mode could be ""in"" instead of ""in out""");
    procedure Read (C : in out Client_Session;
-                   R :        Request)
+                   R :        Client_Request)
    is
    begin
       Read (Instance (C),
@@ -314,7 +243,7 @@ is
    pragma Warnings (On, "mode could be ""in"" instead of ""in out""");
 
    procedure Release (C : in out Client_Session;
-                      R : in out Request)
+                      R : in out Client_Request)
    is
       use type Standard.Interfaces.Unsigned_32;
    begin
@@ -331,24 +260,20 @@ is
       R.Event.Header := Blk.Null_Event_Header;
    end Release;
 
-   function Writable (C : Client_Session) return Boolean
+   procedure Lemma_Read (C      : Client_Instance;
+                         Req    : Request_Id;
+                         Data   : Buffer)
    is
-      pragma Unreferenced (C);
    begin
-      return True;
-   end Writable;
+      Read (C, Req, Data);
+   end Lemma_Read;
 
-   function Block_Count (C : Client_Session) return Count
+   procedure Lemma_Write (C      :     Client_Instance;
+                          Req    :     Request_Id;
+                          Data   : out Buffer)
    is
    begin
-      return Count (C.Count);
-   end Block_Count;
-
-   function Block_Size (C : Client_Session) return Size
-   is
-      pragma Unreferenced (C);
-   begin
-      return Blk.Event_Block_Size;
-   end Block_Size;
+      Write (C, Req, Data);
+   end Lemma_Write;
 
 end Componolit.Interfaces.Block.Client;

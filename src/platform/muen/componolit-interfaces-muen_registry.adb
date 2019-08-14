@@ -11,13 +11,14 @@ is
       Event;
    end Call_Block_Client_Event;
 
-   procedure Call_Block_Dispatcher_Event (S : Session_Entry)
+   procedure Call_Block_Dispatcher_Event (S : Session_Entry;
+                                          I : CIM.Session_Index)
    is
-      procedure Event with
+      procedure Event (D : CIM.Session_Index) with
          Import,
          Address => S.Block_Dispatch_Event;
    begin
-      Event;
+      Event (I);
    end Call_Block_Dispatcher_Event;
 
    procedure Call_Block_Server_Event (S : Session_Entry)

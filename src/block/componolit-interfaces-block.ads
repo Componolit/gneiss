@@ -196,7 +196,7 @@ is
    --  @return   First block id to be handled by this request
    function Start (R : Client_Request) return Id with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (R) /= Raw;
+      Pre => Status (R) not in Raw | Error;
 
    --  Get request length
    --
@@ -204,7 +204,7 @@ is
    --  @return   Number of consecutive blocks handled by this request
    function Length (R : Client_Request) return Count with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (R) /= Raw;
+      Pre => Status (R) not in Raw | Error;
 
    --  Get request identifier
    --
@@ -212,7 +212,7 @@ is
    --  @return   Unique identifier of the request
    function Identifier (R : Client_Request) return Request_Id with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (R) /= Raw;
+      Pre => Status (R) not in Raw | Error;
 
    --  Return True if C is initialized
    --
@@ -268,6 +268,7 @@ is
    --
    --  @return  empty, uninitialized request
    function Null_Request return Server_Request with
+      Annotate => (GNATprove, Terminating),
       Post => Status (Null_Request'Result) = Raw;
 
    --  Get request type
@@ -275,19 +276,22 @@ is
    --  @param R  Request
    --  @return   Request type
    function Kind (R : Server_Request) return Request_Kind with
+      Annotate => (GNATprove, Terminating),
       Pre => Status (R) = Pending;
 
    --  Get request status
    --
    --  @param R  Request
    --  @return   Request status
-   function Status (R : Server_Request) return Request_Status;
+   function Status (R : Server_Request) return Request_Status with
+      Annotate => (GNATprove, Terminating);
 
    --  Get request start block
    --
    --  @param R  Request
    --  @return   First block id to be handled by this request
    function Start (R : Server_Request) return Id with
+      Annotate => (GNATprove, Terminating),
       Pre => Status (R) = Pending;
 
    --  Get request length in blocks
@@ -295,12 +299,14 @@ is
    --  @param R  Request
    --  @return   Number of consecutive blocks handled by this request
    function Length (R : Server_Request) return Count with
+      Annotate => (GNATprove, Terminating),
       Pre => Status (R) = Pending;
 
    --  Check if S is initialized
    --
    --  @param S  Server session instance
    function Initialized (S : Server_Session) return Boolean with
+      Annotate => (GNATprove, Terminating),
       Post => Initialized'Result = Initialized (Instance (S));
 
    --  Check if the Server session of S is initialized
@@ -334,8 +340,7 @@ is
    --  @param D  Dispatcher instance
    --  @return   True if the session that belongs to D is initialized
    function Initialized (D : Dispatcher_Instance) return Boolean with
-      Ghost,
-      Import;
+      Ghost;
 
    --  Create new dispatcher session
    --

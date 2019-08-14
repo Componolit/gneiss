@@ -41,6 +41,7 @@ is
    type Dispatcher_Session is record
       Registry_Index : Componolit.Interfaces.Muen.Session_Index;
    end record;
+
    type Server_Session is limited record
       Name            : Componolit.Interfaces.Muen_Block.Session_Name;
       Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
