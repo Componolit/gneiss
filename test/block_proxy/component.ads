@@ -21,21 +21,30 @@ package Component is
    package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Request_Index);
 
    procedure Event;
-   procedure Dispatch (C : Block.Dispatcher_Capability);
-   procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
-   procedure Finalize_Server (S : Block.Server_Instance);
-   function Block_Count (S : Block.Server_Instance) return Block.Count;
-   function Block_Size (S : Block.Server_Instance) return Block.Size;
-   function Writable (S : Block.Server_Instance) return Boolean;
+   procedure Dispatch (I : Block.Dispatcher_Instance;
+                       C : Block.Dispatcher_Capability) with
+      Pre => Block.Initialized (I);
    function Initialized (S : Block.Server_Instance) return Boolean;
+   procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length) with
+      Pre => not Initialized (S);
+   procedure Finalize_Server (S : Block.Server_Instance) with
+      Pre => Initialized (S);
+   function Block_Count (S : Block.Server_Instance) return Block.Count with
+      Pre => Initialized (S);
+   function Block_Size (S : Block.Server_Instance) return Block.Size with
+      Pre => Initialized (S);
+   function Writable (S : Block.Server_Instance) return Boolean with
+      Pre => Initialized (S);
 
    procedure Write (C :     Block.Client_Instance;
                     I :     Request_Index;
-                    D : out Buffer);
+                    D : out Buffer) with
+      Pre => Block.Initialized (C);
 
    procedure Read (C : Block.Client_Instance;
                    I : Request_Index;
-                   D : Buffer);
+                   D : Buffer) with
+      Pre => Block.Initialized (C);
 
    package Block_Client is new Block.Client (Event, Read, Write);
    package Block_Server is new Block.Server (Event,
