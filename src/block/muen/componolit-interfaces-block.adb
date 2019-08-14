@@ -35,7 +35,7 @@ is
 
    function Status (R : Client_Request) return Request_Status is
       (if
-          R.Event.Header.Priv <= Standard.Interfaces.Unsigned_32 (Request_Id'Pos (Request_Id'Last))
+          R.Event.Header.Priv <= Request_Id'Pos (Request_Id'Last)
        then
           (case R.Status is
               when Componolit.Interfaces.Internal.Block.Raw       => Raw,
@@ -58,12 +58,20 @@ is
       (Request_Id'Val (R.Event.Header.Priv));
 
    function Initialized (C : Client_Session) return Boolean is
-      (C.Name /= Componolit.Interfaces.Muen_Block.Null_Name
+      (Musinfo.Instance.Is_Valid
+       and then C.Name /= Componolit.Interfaces.Muen_Block.Null_Name
        and then C.Count > 0
        and then C.Request_Memory /= Musinfo.Null_Memregion
        and then C.Response_Memory /= Musinfo.Null_Memregion
-       and then C.Response_Reader /= Blk.Client_Response_Channel.Null_Reader
        and then C.Registry_Index /= CIM.Invalid_Index);
+
+   function Initialized (C : Client_Instance) return Boolean is
+      (Musinfo.Instance.Is_Valid
+       and then C.Name /= Componolit.Interfaces.Muen_Block.Null_Name
+       and then C.Cnt > 0
+       and then C.Req /= Musinfo.Null_Memregion
+       and then C.Resp /= Musinfo.Null_Memregion
+       and then C.Idx /= CIM.Invalid_Index);
 
    function Create return Client_Session is
       (Client_Session'(Name            => Blk.Null_Name,
@@ -76,7 +84,11 @@ is
                        Responses       => (others => Blk.Null_Event)));
 
    function Instance (C : Client_Session) return Client_Instance is
-      (Client_Instance (C.Name));
+      (Client_Instance'(Name => C.Name,
+                        Req  => C.Request_Memory,
+                        Resp => C.Response_Memory,
+                        Idx  => C.Registry_Index,
+                        Cnt  => C.Count));
 
    function Writable (C : Client_Session) return Boolean is
       (True);
