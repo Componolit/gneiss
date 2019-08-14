@@ -26,6 +26,8 @@ is
                                                      Handled => False,
                                                      Success => False));
 
+   Ready : Boolean := False;
+
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
@@ -63,7 +65,7 @@ is
       Pre  => Block.Initialized (Server)
               and then Block.Status (R.Req) = Block.Pending
               and then Block.Kind (R.Req) = Block.Read
-              and then Block.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
+              and then Block.Start (R.Req) < Block.Id (Ram_Disk'Length / Disk_Block_Size)
               and then Block.Length (R.Req) > 0
               and then Block.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size),
       Post => Block.Initialized (Server);
@@ -73,8 +75,11 @@ is
       Start  : constant Block.Count := Block.Count (Block.Start (R.Req));
       Length : constant Block.Count := Block.Length (R.Req);
    begin
+      pragma Assert (Start < 1024);
+      pragma Assert (Unsigned_Long (Block.Size (Start) * Disk_Block_Size) in Ram_Disk'Range);
+      pragma Assert (Start * Disk_Block_Size in Ram_Disk'Range);
       if
-         Start * Disk_Block_Size in Ram_Disk'Range
+         Unsigned_Long (Block.Size (Start) * Disk_Block_Size) in Ram_Disk'Range
          and then (Start + Length) * Disk_Block_Size - 1 in Ram_Disk'Range
       then
          Block_Server.Read
@@ -180,12 +185,8 @@ is
       return True;
    end Writable;
 
-   function Initialized (S : Block.Server_Instance) return Boolean
-   is
-      pragma Unreferenced (S);
-   begin
-      return True;
-   end Initialized;
+   function Initialized (S : Block.Server_Instance) return Boolean is
+      (Ready);
 
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
@@ -211,6 +212,7 @@ is
             end loop;
          end if;
          Componolit.Interfaces.Log.Client.Info (Log, "Initialized");
+         Ready := True;
       end if;
       Ram_Disk := (others => 0);
    end Initialize;
@@ -219,19 +221,22 @@ is
    is
       pragma Unreferenced (S);
    begin
-      null;
+      Ready := False;
    end Finalize;
 
-   procedure Request (C : Block.Dispatcher_Capability)
+   procedure Request (I : Block.Dispatcher_Instance;
+                      C : Block.Dispatcher_Capability)
    is
+      use type Block.Dispatcher_Instance;
    begin
-      if Block.Initialized (Dispatcher) then
+      if Block.Instance (Dispatcher) = I then
          if
             Block_Dispatcher.Valid_Session_Request (Dispatcher, C)
+            and then not Ready
             and then not Block.Initialized (Server)
          then
             Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
-            if Block.Initialized (Server) then
+            if Ready and then Block.Initialized (Server) then
                Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
             end if;
          end if;

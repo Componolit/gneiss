@@ -38,7 +38,9 @@ is
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize (S : Block.Server_Instance);
 
-   procedure Request (C : Block.Dispatcher_Capability);
+   procedure Request (I : Block.Dispatcher_Instance;
+                      C : Block.Dispatcher_Capability) with
+      Pre => Block.Initialized (I);
 
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
