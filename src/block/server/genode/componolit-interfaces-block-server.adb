@@ -58,4 +58,18 @@ is
       Cxx.Block.Server.Unblock_Client (S.Instance);
    end Unblock_Client;
 
+   procedure Lemma_Initialize (S : Server_Instance;
+                               L : String;
+                               B : Byte_Length)
+   is
+   begin
+      Initialize (S, L, B);
+   end Lemma_Initialize;
+
+   procedure Lemma_Finalize (S : Server_Instance)
+   is
+   begin
+      Finalize (S);
+   end Lemma_Finalize;
+
 end Componolit.Interfaces.Block.Server;
