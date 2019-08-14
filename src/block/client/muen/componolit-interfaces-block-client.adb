@@ -20,7 +20,12 @@ is
    function Convert_Buffer is new Ada.Unchecked_Conversion (Blk.Raw_Data_Type, Block_Buffer);
    function Convert_Buffer is new Ada.Unchecked_Conversion (Block_Buffer, Blk.Raw_Data_Type);
 
-   procedure Update_Response_Cache (C : in out Client_Session);
+   procedure Update_Response_Cache (C : in out Client_Session) with
+      Pre  => Initialized (C),
+      Post => Initialized (C)
+              and Writable (C)'Old    = Writable (C)
+              and Block_Count (C)'Old = Block_Count (C)
+              and Block_Size (C)'Old  = Block_Size (C);
 
    procedure Allocate_Request (C : in out Client_Session;
                                R : in out Client_Request;
@@ -30,10 +35,16 @@ is
                                I :        Request_Id;
                                E :    out Result)
    is
+      use type Componolit.Interfaces.Internal.Block.Request_Status;
+      use type Standard.Interfaces.Unsigned_32;
       pragma Unreferenced (C);
       Ev_Type : Blk.Event_Type;
    begin
       if L /= 1 then
+         E := Unsupported;
+         return;
+      end if;
+      if S > Id (Blk.Sector'Last) then
          E := Unsupported;
          return;
       end if;
@@ -51,11 +62,18 @@ is
       R.Event.Header.Priv  := Request_Id'Pos (I);
       R.Event.Header.Error := 0;
       R.Event.Header.Valid := True;
+      pragma Assert (Request_Id'Pos (I) <= Request_Id'Pos (Request_Id'Last));
+      pragma Assert (Request_Id'Pos (I) = R.Event.Header.Priv);
+      pragma Assert (R.Event.Header.Priv <= Request_Id'Pos (Request_Id'Last));
    end Allocate_Request;
 
    procedure Update_Response_Cache (C : in out Client_Session)
    is
       use type Blk.Client_Response_Channel.Result_Type;
+      use type Blk.Session_Name;
+      use type Blk.Count;
+      use type CIM.Session_Index;
+      use type Musinfo.Memregion_Type;
       Res : Blk.Client_Response_Channel.Result_Type;
    begin
       for I in C.Responses'Range loop
@@ -77,6 +95,8 @@ is
    begin
       Update_Response_Cache (C);
       for I in C.Responses'Range loop
+         pragma Loop_Invariant (Initialized (C));
+         pragma Loop_Invariant (Status (R) = Pending);
          if
             C.Responses (I).Header.Valid
             and then C.Responses (I).Header.Priv = R.Event.Header.Priv
@@ -132,6 +152,7 @@ is
       use type Blk.Count;
       use type Blk.Event_Type;
       use type Blk.Client_Response_Channel.Result_Type;
+      use type Standard.Interfaces.Unsigned_64;
       pragma Unreferenced (Cap);
       pragma Unreferenced (Buffer_Size);
       Name       : Blk.Session_Name := Blk.Null_Name;
@@ -147,8 +168,11 @@ is
                                             Priv  => 0),
                                  Data  => (others => 0));
       Reader     : Blk.Client_Response_Channel.Reader_Type := Blk.Client_Response_Channel.Null_Reader;
-      Res        : Blk.Client_Response_Channel.Result_Type := Blk.Client_Response_Channel.Inactive;
+      Res        : Blk.Client_Response_Channel.Result_Type;
    begin
+      if not Musinfo.Instance.Is_Valid then
+         return;
+      end if;
       if Path'Length <= Blk.Session_Name'Length then
          for I in Reg.Registry'Range loop
             if Reg.Registry (I).Kind = CIM.None then
@@ -170,6 +194,7 @@ is
             and then Req_Mem.Flags.Writable
             and then not Res_Mem.Flags.Writable
          then
+            pragma Assert (Blk.Client_Request_Channel.Channel.Channel_Type'Size < Req_Mem.Size);
             Blk.Client_Request_Channel.Activate (Req_Mem, Blk.Client_Request_Channel.Channel.Header_Field_Type
                                                       (Musinfo.Instance.TSC_Schedule_Start));
             Blk.Client_Request_Channel.Write (Req_Mem, Size_Event);

@@ -143,8 +143,8 @@ is
    procedure Read (C : in out Client_Session;
                    R :        Client_Request) with
       Pre  => Initialized (C)
-              and then Kind (R)   = Read
-              and then Status (R) = Ok,
+              and then Status (R) = Ok
+              and then Kind (R)   = Read,
       Post => Initialized (C)
               and Writable (C)'Old    = Writable (C)
               and Block_Count (C)'Old = Block_Count (C)
