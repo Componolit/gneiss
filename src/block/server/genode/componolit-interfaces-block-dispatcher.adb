@@ -54,7 +54,7 @@ is
                           Label,
                           Byte_Length (Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance)));
       end if;
-      if not Serv.Initialized (Instance (I)) then
+      if not Serv.Ready (Instance (I)) then
          return;
       end if;
       Cxx.Block.Server.Initialize (I.Instance,
@@ -89,5 +89,12 @@ is
          Cxx.Block.Server.Finalize (I.Instance);
       end if;
    end Session_Cleanup;
+
+   procedure Lemma_Dispatch (D : Dispatcher_Instance;
+                             C : Dispatcher_Capability)
+   is
+   begin
+      Dispatch (D, C);
+   end Lemma_Dispatch;
 
 end Componolit.Interfaces.Block.Dispatcher;
