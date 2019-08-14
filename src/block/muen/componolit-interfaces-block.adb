@@ -2,6 +2,7 @@ with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
 with Musinfo;
+with Musinfo.Instance;
 
 package body Componolit.Interfaces.Block with
    SPARK_Mode
@@ -91,10 +92,10 @@ is
    ----------------
 
    function Initialized (D : Dispatcher_Session) return Boolean is
-      (D.Registry_Index /= CIM.Invalid_Index);
+      (Musinfo.Instance.Is_Valid and then D.Registry_Index /= CIM.Invalid_Index);
 
    function Initialized (D : Dispatcher_Instance) return Boolean is
-      (CIM.Session_Index (D) /= CIM.Invalid_Index);
+      (Musinfo.Instance.Is_Valid and then CIM.Session_Index (D) /= CIM.Invalid_Index);
 
    function Create return Dispatcher_Session is
       (Dispatcher_Session'(Registry_Index => Componolit.Interfaces.Muen.Invalid_Index));
