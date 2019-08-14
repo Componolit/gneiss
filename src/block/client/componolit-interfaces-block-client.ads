@@ -169,4 +169,40 @@ is
               and Block_Size (C)'Old  = Block_Size (C)
               and Status (R)          = Raw;
 
+private
+
+   --  Called when a read has been triggered and data is available
+   --
+   --  The length of Data always corresponds to the request length in bytes (block size * block count)
+   --
+   --  @param C       Client session instance identifier
+   --  @param Req     Request identifier of request to write
+   --  @param Data    Read data
+   procedure Lemma_Read (C      : Client_Instance;
+                         Req    : Request_Id;
+                         Data   : Buffer) with
+      Ghost,
+      Pre => Initialized (C);
+
+   pragma Annotate (GNATprove, False_Positive,
+                    "ghost procedure ""Lemma_Read"" cannot have non-ghost global output*",
+                    "This procedure is only used to enforce the precondition of Dispatch");
+
+   --  Write procedure called when the platform required data to write
+   --
+   --  The length of Data always corresponds to the request length in bytes (block size * block count)
+   --
+   --  @param C       Client session instance identifier
+   --  @param Req     Request identifier of request to write
+   --  @param Data    Data that will be written
+   procedure Lemma_Write (C      :     Client_Instance;
+                          Req    :     Request_Id;
+                          Data   : out Buffer) with
+      Ghost,
+      Pre => Initialized (C);
+
+   pragma Annotate (GNATprove, False_Positive,
+                    "ghost procedure ""Lemma_Write"" cannot have non-ghost global output*",
+                    "This procedure is only used to enforce the precondition of Dispatch");
+
 end Componolit.Interfaces.Block.Client;

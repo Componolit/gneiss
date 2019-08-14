@@ -218,6 +218,16 @@ is
    --
    --  @param C  Client session instance
    function Initialized (C : Client_Session) return Boolean with
+      Annotate => (GNATprove, Terminating),
+      Post => Initialized'Result = Initialized (Instance (C));
+
+   --  Check if the client session of C is initialized
+   --
+   --  @param C  Client instance
+   --  @return   True if the session that belongs to C is initialized
+   function Initialized (C : Client_Instance) return Boolean with
+      Ghost,
+      Import,
       Annotate => (GNATprove, Terminating);
 
    --  Create uninitialized client session
@@ -231,8 +241,7 @@ is
    --
    --  @param C  Client session instance
    function Instance (C : Client_Session) return Client_Instance with
-      Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
+      Annotate => (GNATprove, Terminating);
 
    --  Check if the block device is writable
    --
@@ -291,7 +300,16 @@ is
    --  Check if S is initialized
    --
    --  @param S  Server session instance
-   function Initialized (S : Server_Session) return Boolean;
+   function Initialized (S : Server_Session) return Boolean with
+      Post => Initialized'Result = Initialized (Instance (S));
+
+   --  Check if the Server session of S is initialized
+   --
+   --  @param S  Server instance
+   --  @return   True if the session that belongs to S is initialized
+   function Initialized (S : Server_Instance) return Boolean with
+      Ghost,
+      Import;
 
    --  Create new server session
    --
@@ -302,8 +320,7 @@ is
    --  Get the instance ID of S
    --
    --  @param S  Server session instance
-   function Instance (S : Server_Session) return Server_Instance with
-      Pre => Initialized (S);
+   function Instance (S : Server_Session) return Server_Instance;
 
    --  Checks if D is initialized
    --
@@ -330,8 +347,7 @@ is
    --
    --  @param D  Dispatcher session instance
    --  @return   Instance identifier of D
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance with
-      Post => Initialized (Instance'Result) = Initialized (Instance'Result);
+   function Instance (D : Dispatcher_Session) return Dispatcher_Instance;
 
 private
 
