@@ -186,4 +186,20 @@ is
       R.Status := Componolit.Interfaces.Internal.Block.Raw;
    end Release;
 
+   procedure Lemma_Read (C      : Client_Instance;
+                         Req    : Request_Id;
+                         Data   : Buffer)
+   is
+   begin
+      Read (C, Req, Data);
+   end Lemma_Read;
+
+   procedure Lemma_Write (C      :     Client_Instance;
+                          Req    :     Request_Id;
+                          Data   : out Buffer)
+   is
+   begin
+      Write (C, Req, Data);
+   end Lemma_Write;
+
 end Componolit.Interfaces.Block.Client;
