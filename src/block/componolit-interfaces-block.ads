@@ -227,15 +227,13 @@ is
    --  @return   True if the session that belongs to C is initialized
    function Initialized (C : Client_Instance) return Boolean with
       Ghost,
-      Import,
       Annotate => (GNATprove, Terminating);
 
    --  Create uninitialized client session
    --
    --  @return Uninitialized client session
    function Create return Client_Session with
-      Annotate => (GNATprove, Terminating),
-      Post => not Initialized (Create'Result);
+      Annotate => (GNATprove, Terminating);
 
    --  Get the instance ID of C
    --
