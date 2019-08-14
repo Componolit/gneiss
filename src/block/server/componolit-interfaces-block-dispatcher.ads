@@ -71,7 +71,7 @@ is
                                  I : in out Server_Session) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
-              and then not Serv.Initialized (Instance (I))
+              and then not Serv.Ready (Instance (I))
               and then not Initialized (I),
       Post => Initialized (D)
       and then Valid_Session_Request (D, C);
@@ -86,9 +86,11 @@ is
                              I : in out Server_Session) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
-              and then Serv.Initialized (Instance (I))
+              and then Serv.Ready (Instance (I))
               and then Initialized (I),
       Post => Initialized (D)
+      and then Serv.Ready (Instance (I))
+      and then Initialized (I)
       and then not Valid_Session_Request (D, C);
 
    --  Garbage collects disconnected sessions
@@ -106,9 +108,7 @@ is
       Pre  => Initialized (D),
       Post => Initialized (D);
 
-   pragma Annotate (GNATprove, False_Positive,
-                    "ghost procedure ""Lemma_Dispatch"" cannot have non-ghost global output *",
-                    "This procedure is only used to enforce the precondition of Dispatch");
+private
 
    --  Enforces the precondition of Dispatch
    --
@@ -121,5 +121,9 @@ is
                              C : Dispatcher_Capability) with
       Ghost,
       Pre => Initialized (D);
+
+   pragma Annotate (GNATprove, False_Positive,
+                    "ghost procedure ""Lemma_Dispatch"" cannot have non-ghost global output*",
+                    "This procedure is only used to enforce the precondition of Dispatch");
 
 end Componolit.Interfaces.Block.Dispatcher;
