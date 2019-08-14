@@ -64,9 +64,18 @@ package body Component is
                     I :     Request_Index;
                     D : out Buffer)
    is
-      pragma Unreferenced (C);
+      use type Block.Client_Instance;
+      --  pragma Unreferenced (C);
    begin
-      Block_Server.Write (Server, Cache (I).S, D);
+      pragma Assert (if Block.Instance (Client) = C then Block.Initialized (Client));
+      if
+         Block.Status (Cache (I).S) = Block.Pending
+         and then Block.Kind (Cache (I).S) = Block.Write
+      then
+         Block_Server.Write (Server, Cache (I).S, D);
+      else
+         Cache (I).A := True;
+      end if;
    end Write;
 
    procedure Read (C : Block.Client_Instance;
@@ -75,7 +84,14 @@ package body Component is
    is
       pragma Unreferenced (C);
    begin
-      Block_Server.Read (Server, Cache (I).S, D);
+      if
+         Block.Status (Cache (I).S) = Block.Pending
+         and then Block.Kind (Cache (I).S) = Block.Read
+      then
+         Block_Server.Read (Server, Cache (I).S, D);
+      else
+         Cache (I).A := True;
+      end if;
    end Read;
 
    procedure Event
@@ -138,13 +154,18 @@ package body Component is
       end if;
    end Event;
 
-   procedure Dispatch (C : Block.Dispatcher_Capability)
+   procedure Dispatch (I : Block.Dispatcher_Instance;
+                       C : Block.Dispatcher_Capability)
    is
+      use type Block.Dispatcher_Instance;
    begin
-      if Block.Initialized (Dispatcher) then
-         if Block_Dispatcher.Valid_Session_Request (Dispatcher, C) and not Block.Initialized (Server) then
+      if Block.Instance (Dispatcher) = I then
+         if Block_Dispatcher.Valid_Session_Request (Dispatcher, C)
+            and then not Initialized (Block.Instance (Server))
+            and then not Block.Initialized (Server)
+         then
             Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
-            if Block.Initialized (Server) then
+            if Initialized (Block.Instance (Server)) and then Block.Initialized (Server) then
                Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
             end if;
          end if;
@@ -156,58 +177,38 @@ package body Component is
    is
       pragma Unreferenced (S);
    begin
-      if not Block.Initialized (Client) then
-         Block_Client.Initialize (Client, Capability, L, B);
-      end if;
+      Block_Client.Initialize (Client, Capability, L, B);
    end Initialize_Server;
 
    procedure Finalize_Server (S : Block.Server_Instance)
    is
       pragma Unreferenced (S);
    begin
-      if Block.Initialized (Client) then
-         Block_Client.Finalize (Client);
-      end if;
+      Block_Client.Finalize (Client);
    end Finalize_Server;
 
    function Block_Count (S : Block.Server_Instance) return Block.Count
    is
       pragma Unreferenced (S);
    begin
-      if Block.Initialized (Client) then
-         return Block.Block_Count (Client);
-      else
-         return 0;
-      end if;
+      return Block.Block_Count (Client);
    end Block_Count;
 
    function Block_Size (S : Block.Server_Instance) return Block.Size
    is
       pragma Unreferenced (S);
    begin
-      if Block.Initialized (Client) then
-         return Block.Block_Size (Client);
-      else
-         return 0;
-      end if;
+      return Block.Block_Size (Client);
    end Block_Size;
 
    function Writable (S : Block.Server_Instance) return Boolean
    is
       pragma Unreferenced (S);
    begin
-      if Block.Initialized (Client) then
-         return Block.Writable (Client);
-      else
-         return False;
-      end if;
+      return Block.Writable (Client);
    end Writable;
 
-   function Initialized (S : Block.Server_Instance) return Boolean
-   is
-      pragma Unreferenced (S);
-   begin
-      return Block.Initialized (Client);
-   end Initialized;
+   function Initialized (S : Block.Server_Instance) return Boolean is
+      (Block.Initialized (Client));
 
 end Component;
