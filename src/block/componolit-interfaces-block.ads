@@ -345,14 +345,18 @@ is
    --  Create new dispatcher session
    --
    --  @return Uninitialized dispatcher session
-   function Create return Dispatcher_Session with
-      Post => not Initialized (Create'Result);
+   function Create return Dispatcher_Session;
 
    --  Return the instance ID of D
    --
    --  @param D  Dispatcher session instance
    --  @return   Instance identifier of D
    function Instance (D : Dispatcher_Session) return Dispatcher_Instance;
+
+   function Accepted (D : Dispatcher_Instance) return Boolean with
+      Ghost,
+      Import,
+      Pre => Initialized (D);
 
 private
 

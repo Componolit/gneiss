@@ -72,9 +72,10 @@ is
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
               and then not Serv.Ready (Instance (I))
-              and then not Initialized (I),
+              and then not Initialized (I)
+              and then not Accepted (Instance (D)),
       Post => Initialized (D)
-      and then Valid_Session_Request (D, C);
+              and then not Accepted (Instance (D));
 
    --  Accept session request
    --
@@ -86,12 +87,12 @@ is
                              I : in out Server_Session) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
+              and then not Accepted (Instance (D))
               and then Serv.Ready (Instance (I))
               and then Initialized (I),
       Post => Initialized (D)
-      and then Serv.Ready (Instance (I))
-      and then Initialized (I)
-      and then not Valid_Session_Request (D, C);
+              and then Serv.Ready (Instance (I))
+              and then Initialized (I);
 
    --  Garbage collects disconnected sessions
    --
@@ -120,7 +121,7 @@ private
    procedure Lemma_Dispatch (D : Dispatcher_Instance;
                              C : Dispatcher_Capability) with
       Ghost,
-      Pre => Initialized (D);
+      Pre => Initialized (D) and then not Accepted (D);
 
    pragma Annotate (GNATprove, False_Positive,
                     "ghost procedure ""Lemma_Dispatch"" cannot have non-ghost global output*",
