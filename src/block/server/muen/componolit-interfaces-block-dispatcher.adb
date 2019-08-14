@@ -14,26 +14,12 @@ is
    package Blk renames Componolit.Interfaces.Muen_Block;
    package Reg renames Componolit.Interfaces.Muen_Registry;
 
-   procedure Check_Channels;
+   procedure Check_Channels (D : Dispatcher_Instance);
+   function Serv_Event return System.Address;
 
-   function Initialized (D : Dispatcher_Session) return Boolean
-   is
-      use type CIM.Session_Index;
-   begin
-      return D.Registry_Index /= CIM.Invalid_Index;
-   end Initialized;
-
-   function Create return Dispatcher_Session
-   is
-   begin
-      return Dispatcher_Session'(Registry_Index => Componolit.Interfaces.Muen.Invalid_Index);
-   end Create;
-
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance
-   is
-   begin
-      return Dispatcher_Instance (D.Registry_Index);
-   end Instance;
+   function Serv_Event return System.Address is
+      (Serv.Event'Address) with
+      SPARK_Mode => Off;
 
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Componolit.Interfaces.Types.Capability)
@@ -113,11 +99,11 @@ is
       I.Response_Memory    := Resp_Mem;
       I.Read_Select        := (others => Blk.Null_Event_Header);
       Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Server,
-                                                 Block_Server_Event => Serv.Event'Address);
-      Serv.Initialize (Serv.Instance (I),
+                                                 Block_Server_Event => Serv_Event);
+      Serv.Initialize (Instance (I),
                        CIM.Str_Cut (String (C.Name)),
                        Byte_Length (I.Response_Memory.Size));
-      if not Serv.Initialized (Serv.Instance (I)) then
+      if not Serv.Ready (Instance (I)) then
          Reg.Registry (I.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
          I.Name                          := Blk.Null_Name;
          I.Registry_Index                := CIM.Invalid_Index;
@@ -148,13 +134,13 @@ is
       use type Blk.Connection_Status;
       Req_Active  : Boolean;
       Resp_Active : Boolean;
-      Status      : Blk.Connection_Status;
+      Stat        : Blk.Connection_Status;
    begin
       Blk.Server_Request_Channel.Is_Active (I.Request_Memory, Req_Active);
       Blk.Server_Response_Channel.Is_Active (I.Response_Memory, Resp_Active);
-      Status := Blk.Connection_Matrix (Req_Active, Resp_Active);
-      if Status = Blk.Client_Disconnect then
-         Serv.Finalize (Serv.Instance (I));
+      Stat := Blk.Connection_Matrix (Req_Active, Resp_Active);
+      if Stat = Blk.Client_Disconnect then
+         Serv.Finalize (Instance (I));
          Blk.Server_Response_Channel.Deactivate (I.Response_Memory);
          Reg.Registry (I.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
          I.Name                          := Blk.Null_Name;
@@ -166,7 +152,7 @@ is
       end if;
    end Session_Cleanup;
 
-   procedure Check_Channels
+   procedure Check_Channels (D : Dispatcher_Instance)
    is
       use type Blk.Session_Name;
       use type Blk.Connection_Status;
@@ -180,7 +166,7 @@ is
       Name        : Blk.Session_Name := Blk.Null_Name;
       Req_Active  : Boolean;
       Resp_Active : Boolean;
-      Status      : Blk.Connection_Status;
+      Stat        : Blk.Connection_Status;
    begin
       while Musinfo.Instance.Has_Element (Iter) loop
          Res := Musinfo.Instance.Element (Iter);
@@ -209,14 +195,21 @@ is
          then
             Blk.Server_Request_Channel.Is_Active (Req_Mem, Req_Active);
             Blk.Server_Response_Channel.Is_Active (Resp_Mem, Resp_Active);
-            Status := Blk.Connection_Matrix (Req_Active, Resp_Active);
-            if Status = Blk.Client_Connect or Status = Blk.Client_Disconnect then
-               Dispatch (Dispatcher_Capability'(Name   => Name,
-                                                Status => Status));
+            Stat := Blk.Connection_Matrix (Req_Active, Resp_Active);
+            if Stat = Blk.Client_Connect or Stat = Blk.Client_Disconnect then
+               Dispatch (D, Dispatcher_Capability'(Name   => Name,
+                                                   Status => Stat));
             end if;
          end if;
          Musinfo.Instance.Next (Iter);
       end loop;
    end Check_Channels;
+
+   procedure Lemma_Dispatch (D : Dispatcher_Instance;
+                             C : Dispatcher_Capability)
+   is
+   begin
+      Dispatch (D, C);
+   end Lemma_Dispatch;
 
 end Componolit.Interfaces.Block.Dispatcher;
