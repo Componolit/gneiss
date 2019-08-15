@@ -152,10 +152,22 @@ is
       (Count (R.Length));  --  PROOF steps: 400
 
    function Initialized (S : Server_Session) return Boolean is
-      (S.Name /= Blk.Null_Name
+      (Musinfo.Instance.Is_Valid
+       and then S.Name /= Blk.Null_Name
        and then S.Registry_Index /= CIM.Invalid_Index
        and then S.Request_Memory /= Musinfo.Null_Memregion
-       and then S.Response_Memory /= Musinfo.Null_Memregion);
+       and then S.Response_Memory /= Musinfo.Null_Memregion
+       and then S.Request_Memory.Size = Blk.Channel_Size
+       and then S.Response_Memory.Size = Blk.Channel_Size);
+
+   function Initialized (S : Server_Instance) return Boolean is
+      (Musinfo.Instance.Is_Valid
+       and then S.Name /= Blk.Null_Name
+       and then S.Req /= Musinfo.Null_Memregion
+       and then S.Resp /= Musinfo.Null_Memregion
+       and then S.Req.Size = Blk.Channel_Size
+       and then S.Resp.Size = Blk.Channel_Size
+       and then S.Idx /= CIM.Invalid_Index);
 
    function Create return Server_Session is
       (Server_Session'(Name            => Blk.Null_Name,
@@ -167,6 +179,9 @@ is
                        Read_Data       => (others => (others => 0))));
 
    function Instance (S : Server_Session) return Server_Instance is
-      (Server_Instance (S.Name));
+      (Server_Instance'(Name => S.Name,
+                        Req  => S.Request_Memory,
+                        Resp => S.Response_Memory,
+                        Idx  => S.Registry_Index));
 
 end Componolit.Interfaces.Block;

@@ -63,6 +63,8 @@ package Componolit.Interfaces.Block.Server with
    SPARK_Mode
 is
 
+   pragma Unevaluated_Use_Of_Old (Allow);
+
    --  Process an incoming request
    --
    --  A raw request can be used to process an incoming request. If the request is Pending after this procedure
@@ -72,10 +74,12 @@ is
    --  @param R  Raw request slot
    procedure Process (S : in out Server_Session;
                       R : in out Server_Request) with
-      Pre  => Initialized (S)
+      Pre  => Ready (Instance (S))
+              and then Initialized (S)
               and then Status (R) = Raw,
-      Post => Initialized (S)
-              and then Status (R) in Raw | Pending;
+      Post => Ready (Instance (S))
+              and then Initialized (S)
+              and then Status (R) in Raw | Pending | Error;
 
    --  Provide the requested data for a read request
    --
@@ -85,11 +89,13 @@ is
    procedure Read (S : in out Server_Session;
                    R :        Server_Request;
                    B :        Buffer) with
-      Pre  => Initialized (S)
+      Pre  => Ready (Instance (S))
+              and then Initialized (S)
               and then Status (R) = Pending
               and then Kind (R) = Read
               and then B'Length = Length (R) * Block_Size (Instance (S)),
-      Post => Initialized (S);
+      Post => Ready (Instance (S))
+              and then Initialized (S);
 
    --  Get the data of a write request that shall be written
    --
@@ -99,11 +105,13 @@ is
    procedure Write (S : in out Server_Session;
                     R :        Server_Request;
                     B :    out Buffer) with
-      Pre  => Initialized (S)
+      Pre  => Ready (Instance (S))
+              and then Initialized (S)
               and then Status (R) = Pending
               and then Kind (R) = Write
               and then B'Length = Length (R) * Block_Size (Instance (S)),
-      Post => Initialized (S);
+      Post => Ready (Instance (S))
+              and then Initialized (S);
 
    --  Acknowledge a handled request
    --
@@ -115,11 +123,13 @@ is
    procedure Acknowledge (S   : in out Server_Session;
                           R   : in out Server_Request;
                           Res :        Request_Status) with
-      Pre  => Initialized (S)
-              and then Status (R) = Pending
-              and then Res in Ok | Error,
-      Post => Initialized (S)
-              and then Status (R) in Raw | Pending;
+      Pre  => Ready (Instance (S))
+              and then Initialized (S)
+              and then ((Status (R) = Pending and then Res in Ok | Error)
+                        or else (Status (R) = Error and then Res = Error)),
+      Post => Ready (Instance (S))
+              and then Initialized (S)
+              and then Status (R) in Raw | Pending | Error;
 
    --  Signal client to wake up
    --
@@ -129,7 +139,8 @@ is
    --  @param S  Server session instance
    procedure Unblock_Client (S : in out Server_Session) with
       Pre  => Initialized (S),
-      Post => Initialized (S);
+      Post => Initialized (S)
+              and then Ready (Instance (S)) = Ready (Instance (S)'Old);
 
 private
 
