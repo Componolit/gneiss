@@ -70,10 +70,6 @@ is
    procedure Update_Response_Cache (C : in out Client_Session)
    is
       use type Blk.Client_Response_Channel.Result_Type;
-      use type Blk.Session_Name;
-      use type Blk.Count;
-      use type CIM.Session_Index;
-      use type Musinfo.Memregion_Type;
       Res : Blk.Client_Response_Channel.Result_Type;
    begin
       for I in C.Responses'Range loop
@@ -189,12 +185,13 @@ is
             Index /= CIM.Invalid_Index
             and then Req_Mem /= Musinfo.Null_Memregion
             and then Res_Mem /= Musinfo.Null_Memregion
+            and then Req_Mem.Size = Blk.Channel_Size
+            and then Res_Mem.Size = Blk.Channel_Size
             and then Req_Mem.Flags.Channel
             and then Res_Mem.Flags.Channel
             and then Req_Mem.Flags.Writable
             and then not Res_Mem.Flags.Writable
          then
-            pragma Assert (Blk.Client_Request_Channel.Channel.Channel_Type'Size < Req_Mem.Size);
             Blk.Client_Request_Channel.Activate (Req_Mem, Blk.Client_Request_Channel.Channel.Header_Field_Type
                                                       (Musinfo.Instance.TSC_Schedule_Start));
             Blk.Client_Request_Channel.Write (Req_Mem, Size_Event);

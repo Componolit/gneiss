@@ -14,7 +14,6 @@ is
    use type Standard.Interfaces.Unsigned_64;
    use type Blk.Count;
    use type Blk.Session_Name;
-   use type Blk.Client_Response_Channel.Reader_Type;
    use type CIM.Session_Index;
    use type Musinfo.Memregion_Type;
    use type Blk.Event_Header;
@@ -63,6 +62,8 @@ is
        and then C.Count > 0
        and then C.Request_Memory /= Musinfo.Null_Memregion
        and then C.Response_Memory /= Musinfo.Null_Memregion
+       and then C.Request_Memory.Size = Blk.Channel_Size
+       and then C.Response_Memory.Size = Blk.Channel_Size
        and then C.Registry_Index /= CIM.Invalid_Index);
 
    function Initialized (C : Client_Instance) return Boolean is
@@ -71,6 +72,8 @@ is
        and then C.Cnt > 0
        and then C.Req /= Musinfo.Null_Memregion
        and then C.Resp /= Musinfo.Null_Memregion
+       and then C.Req.Size = Blk.Channel_Size
+       and then C.Resp.Size = Blk.Channel_Size
        and then C.Idx /= CIM.Invalid_Index);
 
    function Create return Client_Session is
