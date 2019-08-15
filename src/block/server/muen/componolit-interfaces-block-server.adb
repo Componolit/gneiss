@@ -25,9 +25,14 @@ is
       use type Blk.Sector;
       use type Blk.Server_Request_Channel.Result_Type;
       Res   : Blk.Server_Request_Channel.Result_Type;
-      Index : Positive       := S.Read_Select'First;
+      Index : Positive := S.Read_Select'First;
    begin
+      pragma Assert (Index = S.Read_Select'First);
+      pragma Assert (S.Read_Select'First in S.Read_Select'Range);
+      pragma Assert (Index in S.Read_Select'Range);
       loop
+         pragma Loop_Invariant (Initialized (S));
+         pragma Loop_Invariant (Index in S.Read_Select'Range);
          if S.Read_Select (Index) = Blk.Null_Event_Header then
             Blk.Server_Request_Channel.Read (S.Request_Memory,
                                              S.Request_Reader,

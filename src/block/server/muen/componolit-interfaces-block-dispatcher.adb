@@ -131,9 +131,6 @@ is
       pragma Unreferenced (C);
       use type Standard.Interfaces.Unsigned_64;
    begin
-      pragma Assert (Initialized (I));
-      pragma Assert (if Initialized (I) then I.Response_Memory.Size = Blk.Channel_Size);
-      pragma Assert (I.Response_Memory.Size = Blk.Channel_Size);
       Blk.Server_Response_Channel.Activate (I.Response_Memory,
                                             Blk.Server_Response_Channel.Channel.Header_Field_Type
                                                (Musinfo.Instance.TSC_Schedule_Start));

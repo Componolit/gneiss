@@ -312,14 +312,12 @@ is
    --  @param S  Server instance
    --  @return   True if the session that belongs to S is initialized
    function Initialized (S : Server_Instance) return Boolean with
-      Ghost,
-      Import;
+      Ghost;
 
    --  Create new server session
    --
    --  @return Uninitialized server session
-   function Create return Server_Session with
-      Post => not Initialized (Create'Result);
+   function Create return Server_Session;
 
    --  Get the instance ID of S
    --

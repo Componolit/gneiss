@@ -61,7 +61,13 @@ is
    end record;
 
    type Dispatcher_Instance is new Componolit.Interfaces.Muen.Session_Index;
-   type Server_Instance is new Componolit.Interfaces.Muen_Block.Session_Name;
+
+   type Server_Instance is record
+      Name : Componolit.Interfaces.Muen_Block.Session_Name;
+      Req  : Musinfo.Memregion_Type;
+      Resp : Musinfo.Memregion_Type;
+      Idx  : Componolit.Interfaces.Muen.Session_Index;
+   end record;
 
    type Dispatcher_Capability is limited record
       Name   : Componolit.Interfaces.Muen_Block.Session_Name;
