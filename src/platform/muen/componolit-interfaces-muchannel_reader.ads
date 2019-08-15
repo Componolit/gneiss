@@ -9,10 +9,12 @@ generic
    Elements     : Positive;
    Null_Element : Element_Type;
    Protocol     : Standard.Interfaces.Unsigned_64;
+   Channel_Size : Standard.Interfaces.Unsigned_64;
 package Componolit.Interfaces.Muchannel_Reader with
    SPARK_Mode
 is
    use type Musinfo.Memregion_Type;
+   use type Standard.Interfaces.Unsigned_64;
 
    type Result_Type is (Inactive,
                         Incompatible_Interface,
@@ -26,23 +28,29 @@ is
                                      Null_Element,
                                      Protocol);
 
+   pragma Compile_Time_Error (Channel.Channel_Type'Size <= Channel_Size,
+                              "Channel_Type must be smaller or equal to channel size");
+
    type Reader_Type is private;
    Null_Reader : constant Reader_Type;
 
    procedure Pending (Mem    :     Musinfo.Memregion_Type;
                       Reader :     Reader_Type;
                       Result : out Boolean) with
-      Pre => Mem /= Musinfo.Null_Memregion;
+      Pre => Mem /= Musinfo.Null_Memregion
+             and then Mem.Size = Channel_Size;
 
    procedure Read (Mem     :        Musinfo.Memregion_Type;
                    Reader  : in out Reader_Type;
                    Element :    out Element_Type;
                    Result  :    out Result_Type) with
-      Pre => Mem /= Musinfo.Null_Memregion;
+      Pre => Mem /= Musinfo.Null_Memregion
+             and then Mem.Size = Channel_Size;
 
    procedure Drain (Mem    :        Musinfo.Memregion_Type;
                     Reader : in out Reader_Type) with
-      Pre => Mem /= Musinfo.Null_Memregion;
+      Pre => Mem /= Musinfo.Null_Memregion
+             and then Mem.Size = Channel_Size;
 
    procedure Is_Active (Mem    :     Musinfo.Memregion_Type;
                         Result : out Boolean) with

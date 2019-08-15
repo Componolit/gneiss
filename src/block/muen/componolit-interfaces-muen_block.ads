@@ -3,6 +3,7 @@ with Ada.Unchecked_Conversion;
 with Interfaces;
 with Componolit.Interfaces.Muchannel_Writer;
 with Componolit.Interfaces.Muchannel_Reader;
+with Muchannel_Constants;
 
 package Componolit.Interfaces.Muen_Block with
    SPARK_Mode
@@ -82,31 +83,37 @@ is
    Null_Event : constant Event := (Header => Null_Event_Header,
                                    Data   => (others => 0));
 
-   Element_Count : constant Positive := 16#0010_0000# / (Event'Size / 8);
+   Channel_Size : constant := 16#0010_0000#;
+
+   Element_Count : constant Positive := (Channel_Size - 8 * Muchannel_Constants.Header_Size) / (Event'Size / 8);
 
    package Client_Request_Channel is new Componolit.Interfaces.Muchannel_Writer
       (Element_Type => Event,
        Elements     => Element_Count,
        Null_Element => Null_Event,
-       Protocol     => 16#9570_208d_ca77_db19#);
+       Protocol     => 16#9570_208d_ca77_db19#,
+       Channel_Size => Channel_Size);
 
    package Client_Response_Channel is new Componolit.Interfaces.Muchannel_Reader
       (Element_Type => Event,
        Elements     => Element_Count,
        Null_Element => Null_Event,
-       Protocol     => 16#9851_be32_82fe_f0dc#);
+       Protocol     => 16#9851_be32_82fe_f0dc#,
+       Channel_Size => Channel_Size);
 
    package Server_Request_Channel is new Componolit.Interfaces.Muchannel_Reader
       (Element_Type => Event,
        Elements     => Element_Count,
        Null_Element => Null_Event,
-       Protocol     => 16#9570_208d_ca77_db19#);
+       Protocol     => 16#9570_208d_ca77_db19#,
+       Channel_Size => Channel_Size);
 
    package Server_Response_Channel is new Componolit.Interfaces.Muchannel_Writer
       (Element_Type => Event,
        Elements     => Element_Count,
        Null_Element => Null_Event,
-       Protocol     => 16#9851_be32_82fe_f0dc#);
+       Protocol     => 16#9851_be32_82fe_f0dc#,
+       Channel_Size => Channel_Size);
 
    type Connection_Status is (Inactive, Active, Client_Connect, Client_Disconnect);
 
