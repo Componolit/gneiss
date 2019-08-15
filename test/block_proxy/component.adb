@@ -4,10 +4,9 @@ with Componolit.Interfaces.Log.Client;
 
 package body Component is
 
-   use all type Block.Request_Kind;
-   use all type Block.Request_Status;
+   use type Block.Request_Kind;
+   use type Block.Request_Status;
 
-   Client     : Block.Client_Session     := Block.Create;
    Dispatcher : Block.Dispatcher_Session := Block.Create;
    Server     : Block.Server_Session     := Block.Create;
 
@@ -102,29 +101,45 @@ package body Component is
          Block.Initialized (Client)
          and Block.Initialized (Server)
       then
+         pragma Assert (Block.Initialized (Server));
          for I in Cache'Range loop
             pragma Loop_Invariant (Block.Initialized (Client));
             pragma Loop_Invariant (Block.Initialized (Server));
+            pragma Loop_Invariant (Initialized (Block.Instance (Server)));
             if Block.Status (Cache (I).S) = Block.Raw then
+               pragma Assert (Block.Initialized (Server));
                if Block.Status (Cache (I).C) in Block.Ok | Block.Error then
                   Block_Client.Release (Client, Cache (I).C);
                   Cache (I).A := False;
                end if;
                if Block.Status (Cache (I).C) = Block.Raw then
+                  pragma Assert (Block.Initialized (Server));
                   Block_Server.Process (Server, Cache (I).S);
                end if;
             end if;
+            if Block.Status (Cache (I).S) = Block.Error then
+               pragma Assert (Block.Initialized (Server));
+               pragma Assert (Block.Status (Cache (I).S) = Block.Error);
+               Block_Server.Acknowledge (Server, Cache (I).S, Block.Error);
+            end if;
             if Block.Status (Cache (I).S) = Block.Pending then
+               pragma Assert (Block.Initialized (Server));
                if Block.Status (Cache (I).C) = Block.Pending then
                   Block_Client.Update_Request (Client, Cache (I).C);
                end if;
+               pragma Assert (Block.Status (Cache (I).S) = Block.Pending);
                if Block.Status (Cache (I).C) in Block.Ok | Block.Error then
+                  pragma Assert (Block.Status (Cache (I).C) in Block.Ok | Block.Error);
                   if
                      Block.Status (Cache (I).C) = Block.Ok
                      and then Block.Kind (Cache (I).C) = Block.Read
                   then
                      Block_Client.Read (Client, Cache (I).C);
+                     null;
                   end if;
+                  pragma Assert (Block.Initialized (Server));
+                  pragma Assert (Block.Status (Cache (I).S) = Block.Pending);
+                  pragma Assert (Block.Status (Cache (I).C) in Block.Ok | Block.Error);
                   Block_Server.Acknowledge (Server, Cache (I).S, Block.Status (Cache (I).C));
                end if;
                if Block.Status (Cache (I).C) = Block.Raw then
@@ -138,6 +153,7 @@ package body Component is
                   case Re is
                      when Block.Success =>
                         Block_Client.Enqueue (Client, Cache (I).C);
+                        null;
                      when Block.Retry =>
                         null;
                      when others =>
@@ -146,10 +162,13 @@ package body Component is
                end if;
                if Block.Status (Cache (I).C) = Block.Allocated then
                   Block_Client.Enqueue (Client, Cache (I).C);
+                  null;
                end if;
             end if;
+            --  pragma Assert (Block.Initialized (Server));
          end loop;
          Block_Client.Submit (Client);
+         pragma Assert (Block.Initialized (Server));
          Block_Server.Unblock_Client (Server);
       end if;
    end Event;
@@ -175,9 +194,14 @@ package body Component is
 
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
    is
-      pragma Unreferenced (S);
+      use type Block.Server_Instance;
    begin
-      Block_Client.Initialize (Client, Capability, L, B);
+      if S = Block.Instance (Server) and then not Block.Initialized (Client) then
+         Block_Client.Initialize (Client, Capability, L, B);
+         if Block.Initialized (Client) and then not Initialized (S) then
+            Block_Client.Finalize (Client);
+         end if;
+      end if;
    end Initialize_Server;
 
    procedure Finalize_Server (S : Block.Server_Instance)
@@ -209,6 +233,9 @@ package body Component is
    end Writable;
 
    function Initialized (S : Block.Server_Instance) return Boolean is
-      (Block.Initialized (Client));
+      (Block.Initialized (Client)
+       and then Block.Block_Size (Client) in 512 | 1024 | 2048 | 4096
+       and then Block.Block_Count (Client) > 0
+       and then Block.Block_Count (Client) < Block.Count'Last / (Block.Count (Block.Block_Size (Client)) / 512));
 
 end Component;

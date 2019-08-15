@@ -20,21 +20,9 @@ package Component is
 
    package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Request_Index);
 
+   use type Block.Count;
+
    procedure Event;
-   procedure Dispatch (I : Block.Dispatcher_Instance;
-                       C : Block.Dispatcher_Capability) with
-      Pre => Block.Initialized (I);
-   function Initialized (S : Block.Server_Instance) return Boolean;
-   procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length) with
-      Pre => not Initialized (S);
-   procedure Finalize_Server (S : Block.Server_Instance) with
-      Pre => Initialized (S);
-   function Block_Count (S : Block.Server_Instance) return Block.Count with
-      Pre => Initialized (S);
-   function Block_Size (S : Block.Server_Instance) return Block.Size with
-      Pre => Initialized (S);
-   function Writable (S : Block.Server_Instance) return Boolean with
-      Pre => Initialized (S);
 
    procedure Write (C :     Block.Client_Instance;
                     I :     Request_Index;
@@ -47,6 +35,27 @@ package Component is
       Pre => Block.Initialized (C);
 
    package Block_Client is new Block.Client (Event, Read, Write);
+
+   Client : Block.Client_Session := Block.Create;
+
+   procedure Dispatch (I : Block.Dispatcher_Instance;
+                       C : Block.Dispatcher_Capability) with
+      Pre => Block.Initialized (I) and then not Block.Accepted (I);
+   function Initialized (S : Block.Server_Instance) return Boolean;
+   procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length) with
+      Pre => not Initialized (S);
+   procedure Finalize_Server (S : Block.Server_Instance) with
+      Pre => Initialized (S);
+   function Block_Count (S : Block.Server_Instance) return Block.Count with
+      Pre => Initialized (S),
+      Post => Block_Count'Result > 0
+      and then Block_Count'Result < Block.Count'Last / (Block.Count (Block.Block_Size (Client)) / 512);
+   function Block_Size (S : Block.Server_Instance) return Block.Size with
+      Pre => Initialized (S),
+      Post => Block_Size'Result in 512 | 1024 | 2048 | 4096;
+   function Writable (S : Block.Server_Instance) return Boolean with
+      Pre => Initialized (S);
+
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
                                              Block_Size,
