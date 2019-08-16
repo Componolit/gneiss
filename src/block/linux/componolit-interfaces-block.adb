@@ -1,10 +1,14 @@
 
 with System;
+with C;
 
 package body Componolit.Interfaces.Block with
    SPARK_Mode
 is
    use type System.Address;
+   use type C.Uint32_T;
+   use type C.Uint64_T;
+   use type Componolit.Interfaces.Internal.Block.Request_Status;
 
    ------------
    -- Client --
@@ -30,12 +34,24 @@ is
 
    function Status (R : Client_Request) return Request_Status
    is
-      (case R.Status is
-         when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
-         when Componolit.Interfaces.Internal.Block.Pending   => Pending,
-         when Componolit.Interfaces.Internal.Block.Ok        => Ok,
-         when Componolit.Interfaces.Internal.Block.Error     => Error,
-         when others                                         => Raw);
+      (if
+          R.Status = Componolit.Interfaces.Internal.Block.Raw
+       then
+          Raw
+       else
+          (if
+              R.Length <= C.Uint64_T (Count'Last)
+              and then Request_Id'Pos (Request_Id'First) <= R.Tag
+              and then Request_Id'Pos (Request_Id'Last) >= R.Tag
+           then
+              (case R.Status is
+                  when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
+                  when Componolit.Interfaces.Internal.Block.Pending   => Pending,
+                  when Componolit.Interfaces.Internal.Block.Ok        => Ok,
+                  when Componolit.Interfaces.Internal.Block.Error     => Error,
+                  when others                                         => Raw)
+           else
+              Error));
 
    function Start (R : Client_Request) return Id
    is
@@ -50,58 +66,52 @@ is
       (Request_Id'Val (R.Tag));
 
    function Create return Client_Session is
-   begin
-      return Client_Session'(Instance => System.Null_Address);
-   end Create;
+      (Client_Session'(Instance => System.Null_Address));
 
    function Instance (C : Client_Session) return Client_Instance is
-      function C_Get_Instance (T : System.Address) return Client_Instance with
-         Import,
-         Convention    => CPP,
-         External_Name => "block_client_get_instance",
-         Global        => null;
-   begin
-      return C_Get_Instance (C.Instance);
-   end Instance;
+      (Client_Instance (C.Instance));
 
    function Initialized (C : Client_Session) return Boolean is
       (C.Instance /= System.Null_Address);
 
+   function Initialized (C : Client_Instance) return Boolean is
+      (C /= Client_Instance (System.Null_Address));
+
+   function C_Writable (T : System.Address) return Integer with
+      Import,
+      Convention    => C,
+      External_Name => "block_client_writable",
+      Global        => null;
+
    function Writable (C : Client_Session) return Boolean is
-      function C_Writable (T : System.Address) return Integer with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_writable",
-         Global        => null;
-   begin
-      return C_Writable (C.Instance) = 1;
-   end Writable;
+      (C_Writable (C.Instance) = 1);
+
+   function C_Block_Count (T : System.Address) return Count with
+      Import,
+      Convention    => C,
+      External_Name => "block_client_block_count",
+      Global        => null;
 
    function Block_Count (C : Client_Session) return Count is
-      function C_Block_Count (T : System.Address) return Count with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_block_count",
-         Global        => null;
-   begin
-      return C_Block_Count (C.Instance);
-   end Block_Count;
+      (C_Block_Count (C.Instance));
+
+   function C_Block_Size (T : System.Address) return Size with
+      Import,
+      Convention    => C,
+      External_Name => "block_client_block_size",
+      Global        => null;
 
    function Block_Size (C : Client_Session) return Size is
-      function C_Block_Size (T : System.Address) return Size with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_block_size",
-         Global        => null;
-   begin
-      return C_Block_Size (C.Instance);
-   end Block_Size;
+      (C_Block_Size (C.Instance));
 
    ----------------
    -- Dispatcher --
    ----------------
 
    function Initialized (D : Dispatcher_Session) return Boolean is
+      (False);
+
+   function Initialized (D : Dispatcher_Instance) return Boolean is
       (False);
 
    function Create return Dispatcher_Session is
@@ -130,6 +140,9 @@ is
       (0);
 
    function Initialized (S : Server_Session) return Boolean is
+      (False);
+
+   function Initialized (S : Server_Instance) return Boolean is
       (False);
 
    function Create return Server_Session is

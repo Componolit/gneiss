@@ -61,11 +61,6 @@ void block_client_update_request(block_client_t *client, request_t *request)
     }
 }
 
-const block_client_t *block_client_get_instance(const block_client_t *client)
-{
-    return client;
-}
-
 void block_client_initialize(block_client_t **client,
                              const char *path,
                              uint64_t buffer_size,
