@@ -2,11 +2,13 @@
 with C;
 with System;
 
-use all type System.Address;
-
 package body Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
+   --  pragma Assertion_Policy (Pre => Ignore, Post => Check);
+
+   type Address is new System.Address;
+   Null_Address : constant Address := Address (System.Null_Address);
 
    ----------------------
    -- Allocate_Request --
@@ -20,13 +22,14 @@ is
                                I :        Request_Id;
                                E :    out Result)
    is
-      procedure C_Allocate_Request (Inst :        System.Address;
+      procedure C_Allocate_Request (Inst :        Address;
                                     Req  : in out Client_Request;
                                     Ret  :    out Integer) with
          Import,
          Convention    => C,
          External_Name => "block_client_allocate_request",
-         Global        => null;
+         Global        => null,
+         Post          => Status (Req) in Raw | Allocated;
       Retr : Integer;
    begin
       case K is
@@ -40,10 +43,11 @@ is
       R.Start  := Standard.C.Uint64_T (S);
       R.Length := Standard.C.Uint64_T (L);
       R.Tag    := Request_Id'Pos (I);
-      C_Allocate_Request (C.Instance, R, Retr);
+      C_Allocate_Request (Address (C.Instance), R, Retr);
       if Status (R) = Allocated then
          E := Success;
       else
+         R.Status := Componolit.Interfaces.Internal.Block.Raw;
          case Retr is
             when 1 => E := Retry;
             when 2 => E := Out_Of_Memory;
@@ -59,14 +63,15 @@ is
    procedure Update_Request (C : in out Client_Session;
                              R : in out Client_Request)
    is
-      procedure C_Update_Request (Inst   :        System.Address;
+      procedure C_Update_Request (Inst   :        Address;
                                   Req    : in out Client_Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_update_request",
-         Global        => null;
+         Global        => null,
+         Post          => Status (Req) in Pending | Ok | Error;
    begin
-      C_Update_Request (C.Instance, R);
+      C_Update_Request (Address (C.Instance), R);
    end Update_Request;
 
    ----------------
@@ -122,16 +127,16 @@ is
    -- Finalize --
    --------------
 
-   procedure Finalize (C : in out Client_Session) is
-      procedure C_Finalize (T : in out System.Address) with
+   procedure Finalize (C : in out Client_Session)
+   is
+      procedure C_Finalize (T : in out Address) with
          Import,
          Convention    => C,
          External_Name => "block_client_finalize",
-         Global        => null;
-      --  FIXME: procedure has platform state
+         Global        => null,
+         Post          => T = Null_Address;
    begin
-      C_Finalize (C.Instance);
-      C.Instance := System.Null_Address;
+      C_Finalize (Address (C.Instance));
    end Finalize;
 
    -------------
@@ -139,17 +144,18 @@ is
    -------------
 
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Client_Request) with
-      SPARK_Mode => Off
+                      R : in out Client_Request)
    is
-      procedure C_Enqueue (T   :        System.Address;
+      procedure C_Enqueue (T   :        Address;
                            Req : in out Client_Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_enqueue",
-         Global        => null;
+         Global        => null,
+         Pre           => Status (Req) = Allocated,
+         Post          => Status (Req) in Allocated | Pending;
    begin
-      C_Enqueue (C.Instance, R);
+      C_Enqueue (Address (C.Instance), R);
    end Enqueue;
 
    ------------
@@ -171,8 +177,7 @@ is
    ----------
 
    procedure Read (C : in out Client_Session;
-                   R :        Client_Request) with
-      SPARK_Mode => Off
+                   R :        Client_Request)
    is
       procedure C_Read (T   : System.Address;
                         Req : Client_Request) with
@@ -189,17 +194,33 @@ is
    -------------
 
    procedure Release (C : in out Client_Session;
-                      R : in out Client_Request) with
-      SPARK_Mode => Off
+                      R : in out Client_Request)
    is
-      procedure C_Release (T   :        System.Address;
+      procedure C_Release (T   :        Address;
                            Req : in out Client_Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_release",
-         Global        => null;
+         Global        => null,
+         Post          => Status (Req) = Raw;
    begin
-      C_Release (C.Instance, R);
+      C_Release (Address (C.Instance), R);
    end Release;
+
+   procedure Lemma_Read (C      : Client_Instance;
+                         Req    : Request_Id;
+                         Data   : Buffer)
+   is
+   begin
+      Read (C, Req, Data);
+   end Lemma_Read;
+
+   procedure Lemma_Write (C      :     Client_Instance;
+                          Req    :     Request_Id;
+                          Data   : out Buffer)
+   is
+   begin
+      Write (C, Req, Data);
+   end Lemma_Write;
 
 end Componolit.Interfaces.Block.Client;
