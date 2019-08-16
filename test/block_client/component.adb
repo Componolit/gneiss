@@ -15,11 +15,13 @@ is
 
    procedure Write (C :     Block.Client_Instance;
                     R :     Request_Id;
-                    D : out String);
+                    D : out String) with
+      Pre => Block.Initialized (C);
 
    procedure Read (C : Block.Client_Instance;
                    R : Request_Id;
-                   D : String);
+                   D : String) with
+      Pre => Block.Initialized (C);
 
    function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Block.Count);
    function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Block.Size);
@@ -69,7 +71,14 @@ is
       pragma Unreferenced (C);
       use type Block.Id;
    begin
-      D := (others => Character'Val (33 + Integer (Block.Start (Request_Cache (R)) mod 93)));
+      if Block.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
+         D := (others => Character'Val (33 + Integer (Block.Start (Request_Cache (R)) mod 93)));
+      else
+         if Componolit.Interfaces.Log.Client.Initialized (Log) then
+            Componolit.Interfaces.Log.Client.Warning (Log, "Failed to calculate content");
+         end if;
+         D := (others => Character'First);
+      end if;
    end Write;
 
    procedure Single (S         : in out State;
@@ -146,12 +155,14 @@ is
       pragma Unreferenced (C);
       pragma Unreferenced (R);
    begin
-      Componolit.Interfaces.Log.Client.Info (Log, "Read succeeded:");
-      if D'Length >= Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) then
-         Componolit.Interfaces.Log.Client.Info
-            (Log, D (D'First .. D'First + Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) - 1));
-      else
-         Componolit.Interfaces.Log.Client.Info (Log, D);
+      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         Componolit.Interfaces.Log.Client.Info (Log, "Read succeeded:");
+         if D'Length >= Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) then
+            Componolit.Interfaces.Log.Client.Info
+               (Log, D (D'First .. D'First + (Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) - 1)));
+         else
+            Componolit.Interfaces.Log.Client.Info (Log, D);
+         end if;
       end if;
    end Read;
 
