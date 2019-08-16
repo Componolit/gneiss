@@ -23,10 +23,10 @@ Cai::Block::Block_session_component::Block_session_component(
         Genode::Signal_context_capability sigh,
         Cai::Block::Server &server) :
     Request_stream(rm, ds, ep, sigh, ::Block::Session::Info{
-                Get_attr_64(server._block_size, server.get_instance()),
-                Get_attr_64(server._block_size, server.get_instance()),
+                Get_attr_64(server._block_size, (void *)&server),
+                Get_attr_64(server._block_size, (void *)&server),
                 0,
-                server.writable()
+                ((bool (*)(Cai::Block::Server *))server._writable)(&server)
             }),
     _ep(ep),
     _server(server)
@@ -42,10 +42,10 @@ Cai::Block::Block_session_component::~Block_session_component()
 ::Block::Session::Info Cai::Block::Block_session_component::info() const
 {
     return ::Block::Session::Info {
-        Get_attr_64(_server._block_size, _server.get_instance()),
-        Get_attr_64(_server._block_count, _server.get_instance()),
+        Get_attr_64(_server._block_size, &_server),
+        Get_attr_64(_server._block_count, &_server),
         0,
-        _server.writable()
+        ((bool (*)(Cai::Block::Server *))_server._writable)(&_server)
     };
 }
 
@@ -80,11 +80,6 @@ Cai::Block::Server::Server() :
     _writable(nullptr)
 { }
 
-void *Cai::Block::Server::get_instance()
-{
-    return reinterpret_cast<void *>(this);
-}
-
 void Cai::Block::Server::initialize(
         void *env,
         Genode::uint64_t size,
@@ -112,15 +107,6 @@ void Cai::Block::Server::finalize()
     _block_count = nullptr;
     _block_size = nullptr;
     _writable = nullptr;
-}
-
-bool Cai::Block::Server::initialized()
-{
-    return _session
-        && _callback
-        && _block_count
-        && _block_size
-        && _writable;
 }
 
 static Cai::Block::Block_session_component &blk(void *session)

@@ -4,8 +4,6 @@
 
 #include <base/fixed_stdint.h>
 
-#define Ada __attribute__((annotate("ada")))
-
 namespace Block
 {
     struct Request;
@@ -25,7 +23,6 @@ namespace Block
 
         public:
             Server();
-            void *get_instance();
             void initialize(
                     void *env,
                     Genode::uint64_t size,
@@ -34,12 +31,10 @@ namespace Block
                     void *block_size,
                     void *writable);
             void finalize();
-            Ada bool writable();
             void process_request(void *request, int *success);
             void read(void *request, void *buffer);
             void write(void *request, void *buffer);
             void acknowledge(void *request, int *success);
-            bool initialized();
             void unblock_client();
     };
 }

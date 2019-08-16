@@ -104,14 +104,14 @@ is
       end loop;
    end Update_Request;
 
-   procedure Crw (C : Client_Instance;
+   procedure Crw (C : Client_Session;
                   O : Integer;
                   B : Size;
                   T : Cxx.Unsigned_Long;
                   L : Count;
                   D : System.Address);
 
-   procedure Crw (C : Client_Instance;
+   procedure Crw (C : Client_Session;
                   O : Integer;
                   B : Size;
                   T : Cxx.Unsigned_Long;
@@ -123,9 +123,9 @@ is
    begin
       case O is
          when 1 =>
-            Write (C, Request_Id'Val (T), Data);
+            Write (Instance (C), Request_Id'Val (T), Data);
          when 0 =>
-            Read (C, Request_Id'Val (T), Data);
+            Read (Instance (C), Request_Id'Val (T), Data);
          when others =>
             null;
       end case;

@@ -51,12 +51,6 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Server8finalizeEv";
 
-   function Writable (This : Class) return Cxx.Bool with
-      Global        => null,
-      Export,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server8writableEv";
-
    procedure Process_Request (This :        Class;
                               Req  : in out Request;
                               Suc  :    out Integer) with

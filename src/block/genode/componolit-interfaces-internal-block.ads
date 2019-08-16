@@ -31,9 +31,24 @@ package Componolit.Interfaces.Internal.Block is
    type Server_Session is limited record
       Instance : Cxx.Block.Server.Class;
    end record;
-   type Client_Instance is new System.Address;
-   type Dispatcher_Instance is new System.Address;
-   type Server_Instance is new System.Address;
+
+   type Client_Instance is record
+      Device   : System.Address;
+      Callback : System.Address;
+      Rw       : System.Address;
+      Env      : System.Address;
+   end record;
+   type Dispatcher_Instance is record
+      Root    : System.Address;
+      Handler : System.Address;
+   end record;
+   type Server_Instance is record
+      Session     : System.Address;
+      Callback    : System.Address;
+      Block_Count : System.Address;
+      Block_Size  : System.Address;
+      Writable    : System.Address;
+   end record;
 
    type Dispatcher_Capability is limited record
       Instance : Cxx.Block.Dispatcher.Dispatcher_Capability;

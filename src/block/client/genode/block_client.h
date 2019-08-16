@@ -23,7 +23,6 @@ namespace Block
 
             Client();
             void *get_instance();
-            bool initialized();
             void initialize(
                     void *env,
                     const char *device = nullptr,
