@@ -226,7 +226,7 @@ is
    --  @param C  Client instance
    --  @return   True if the session that belongs to C is initialized
    function Initialized (C : Client_Instance) return Boolean with
-      Ghost,
+      --  Ghost, --  Componolit/Workarounds#3
       Annotate => (GNATprove, Terminating);
 
    --  Create uninitialized client session
@@ -312,7 +312,9 @@ is
    --  @param S  Server instance
    --  @return   True if the session that belongs to S is initialized
    function Initialized (S : Server_Instance) return Boolean with
-      Ghost;
+      --  Ghost, --  Componolit/Workarounds#3
+      Inline_Always,
+      Annotate => (GNATprove, Terminating);
 
    --  Create new server session
    --
@@ -336,7 +338,8 @@ is
    --  @param D  Dispatcher instance
    --  @return   True if the session that belongs to D is initialized
    function Initialized (D : Dispatcher_Instance) return Boolean with
-      Ghost;
+      --  Ghost, --  Componolit/Workarounds#3
+      Annotate => (GNATprove, Terminating);
 
    --  Create new dispatcher session
    --
