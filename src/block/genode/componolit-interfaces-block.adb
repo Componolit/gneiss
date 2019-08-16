@@ -1,4 +1,5 @@
 
+with System;
 with Cxx;
 with Cxx.Block;
 with Cxx.Block.Client;
@@ -9,6 +10,7 @@ package body Componolit.Interfaces.Block with
    SPARK_Mode
 is
    use type Cxx.Bool;
+   use type System.Address;
 
    ------------
    -- Client --
@@ -52,10 +54,22 @@ is
       (Client_Session'(Instance => Cxx.Block.Client.Constructor));
 
    function Instance (C : Client_Session) return Client_Instance is
-      (Client_Instance (Cxx.Block.Client.Get_Instance (C.Instance)));
+      (Client_Instance'(Device   => C.Instance.Private_X_Device,
+                        Callback => C.Instance.Private_X_Callback,
+                        Rw       => C.Instance.Private_X_Write,
+                        Env      => C.Instance.Private_X_Env));
 
    function Initialized (C : Client_Session) return Boolean is
-      (Cxx.Block.Client.Initialized (C.Instance) = Cxx.Bool'Val (1));
+      (C.Instance.Private_X_Device /= System.Null_Address
+       and then C.Instance.Private_X_Callback /= System.Null_Address
+       and then C.Instance.Private_X_Write /= System.Null_Address
+       and then C.Instance.Private_X_Env /= System.Null_Address);
+
+   function Initialized (C : Client_Instance) return Boolean is
+      (C.Device /= System.Null_Address
+       and then C.Callback /= System.Null_Address
+       and then C.Rw /= System.Null_Address
+       and then C.Env /= System.Null_Address);
 
    function Writable (C : Client_Session) return Boolean is
       (Cxx.Block.Client.Writable (C.Instance) /= Cxx.Bool'Val (0));
@@ -74,10 +88,16 @@ is
       (Dispatcher_Session'(Instance => Cxx.Block.Dispatcher.Constructor));
 
    function Initialized (D : Dispatcher_Session) return Boolean is
-      (Cxx.Block.Dispatcher.Initialized (D.Instance) = Cxx.Bool'Val (1));
+      (D.Instance.Root /= System.Null_Address
+       and then D.Instance.Handler /= System.Null_Address);
+
+   function Initialized (D : Dispatcher_Instance) return Boolean is
+      (D.Root /= System.Null_Address
+       and then D.Handler /= System.Null_Address);
 
    function Instance (D : Dispatcher_Session) return Dispatcher_Instance is
-      (Dispatcher_Instance (Cxx.Block.Dispatcher.Get_Instance (D.Instance)));
+      (Dispatcher_Instance'(Root    => D.Instance.Root,
+                            Handler => D.Instance.Handler));
 
    ------------
    -- Server --
@@ -118,9 +138,24 @@ is
       (Server_Session'(Instance => Cxx.Block.Server.Constructor));
 
    function Initialized (S : Server_Session) return Boolean is
-      (Cxx.Block.Server.Initialized (S.Instance) = Cxx.Bool'Val (1));
+      (S.Instance.Session /= System.Null_Address
+       and then S.Instance.Callback /= System.Null_Address
+       and then S.Instance.Block_Count /= System.Null_Address
+       and then S.Instance.Block_Size /= System.Null_Address
+       and then S.Instance.Writable /= System.Null_Address);
+
+   function Initialized (S : Server_Instance) return Boolean is
+      (S.Session /= System.Null_Address
+       and then S.Callback /= System.Null_Address
+       and then S.Block_Count /= System.Null_Address
+       and then S.Block_Size /= System.Null_Address
+       and then S.Writable /= System.Null_Address);
 
    function Instance (S : Server_Session) return Server_Instance is
-      (Server_Instance (Cxx.Block.Server.Get_Instance (S.Instance)));
+      (Server_Instance'(Session     => S.Instance.Session,
+                        Callback    => S.Instance.Callback,
+                        Block_Count => S.Instance.Block_Count,
+                        Block_Size  => S.Instance.Block_Size,
+                        Writable    => S.Instance.Writable));
 
 end Componolit.Interfaces.Block;

@@ -69,16 +69,6 @@ Cai::Block::Client::Client() :
     _env(nullptr)
 { }
 
-void *Cai::Block::Client::get_instance()
-{
-    return reinterpret_cast<void *>(this);
-}
-
-bool Cai::Block::Client::initialized()
-{
-    return _device && _callback;
-}
-
 void Cai::Block::Client::initialize(
         void *env,
         const char *device,
@@ -157,7 +147,7 @@ void Cai::Block::Client::enqueue(void *request)
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
         ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
-                get_instance(),
+                (void *)this,
                 static_cast<int>(packet->operation()),
                 block_size(),
                 packet->tag().value,
@@ -174,7 +164,7 @@ void Cai::Block::Client::read(void *request)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
-            get_instance(),
+            (void *)this,
             static_cast<int>(packet->operation()),
             block_size(),
             packet->tag().value,

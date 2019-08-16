@@ -23,10 +23,10 @@ is
    limited record
       Private_X_Block_Count : Private_Uint64_T;
       Private_X_Block_Size  : Private_Uint64_T;
-      Private_X_Device      : Private_Void;
-      Private_X_Callback    : Private_Void;
-      Private_X_Write       : Private_Void;
-      Private_X_Env         : Private_Void;
+      Private_X_Device      : Cxx.Void_Address;
+      Private_X_Callback    : Cxx.Void_Address;
+      Private_X_Write       : Cxx.Void_Address;
+      Private_X_Env         : Cxx.Void_Address;
    end record
    with Import, Convention => CPP;
 
@@ -37,12 +37,6 @@ is
    function Constructor return Class with
       Global => null;
    pragma Cpp_Constructor (Constructor, "_ZN3Cai5Block6ClientC1Ev");
-
-   function Get_Instance (This : Class) return Cxx.Void_Address with
-      Global        => null,
-      Import,
-      Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client12get_instanceEv";
 
    function Initialized (This : Class) return Cxx.Bool with
       Global        => null,

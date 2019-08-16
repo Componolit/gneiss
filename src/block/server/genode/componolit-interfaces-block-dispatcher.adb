@@ -35,6 +35,15 @@ is
       return Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance) /= System.Null_Address;
    end Valid_Session_Request;
 
+   function Internal_Block_Count (S : Server_Session) return Count is
+      (Serv.Block_Count (Instance (S)));
+
+   function Internal_Block_Size (S : Server_Session) return Size is
+      (Serv.Block_Size (Instance (S)));
+
+   function Internal_Writable (S : Server_Session) return Cxx.Bool is
+      (if Serv.Writable (Instance (S)) then Cxx.Bool'Val (1) else Cxx.Bool'Val (0));
+
    procedure Session_Initialize (D : in out Dispatcher_Session;
                                  C :        Dispatcher_Capability;
                                  I : in out Server_Session) with
@@ -61,10 +70,10 @@ is
                                    Cxx.Block.Dispatcher.Get_Capability (D.Instance),
                                    Cxx.Block.Dispatcher.Session_Size (D.Instance, C.Instance),
                                    Serv.Event'Address,
-                                   Serv.Block_Count'Address,
-                                   Serv.Block_Size'Address,
-                                   Serv.Writable'Address);
-      if Cxx.Block.Server.Initialized (I.Instance) /= Cxx.Bool'Val (1) then
+                                   Internal_Block_Count'Address,
+                                   Internal_Block_Size'Address,
+                                   Internal_Writable'Address);
+      if not Initialized (I) then
          Serv.Finalize (Instance (I));
       end if;
    end Session_Initialize;
