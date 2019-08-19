@@ -21,7 +21,8 @@ is
                        Start  => 0,
                        Length => 0,
                        Status => 0,
-                       Aiocb  => System.Null_Address));
+                       Aiocb  => System.Null_Address,
+                       Inst   => System.Null_Address));
 
    function Kind (R : Client_Request) return Request_Kind
    is
@@ -70,6 +71,9 @@ is
 
    function Instance (C : Client_Session) return Client_Instance is
       (Client_Instance (C.Instance));
+
+   function Instance (R : Client_Request) return Client_Instance is
+      (Client_Instance (R.Inst));
 
    function Initialized (C : Client_Session) return Boolean is
       (C.Instance /= System.Null_Address);
