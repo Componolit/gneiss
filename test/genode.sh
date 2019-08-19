@@ -22,7 +22,7 @@ git fetch jklmnn
 git checkout b0d01103e20981d64a81b8494359c9606017e4bf
 git clone https://github.com/Componolit/ada-components.git /genode/repos/ada-components
 cd /genode/repos/ada-components
-git checkout 562d37b10d1fbdc9bd870ebdb05f05bdf3dea649
+git checkout 4763f55770dcc777b713a33a7e16c414ced29af8
 rm -r /genode/repos/ada-components/libs/ada-interface
 ln -fs /ada-interfaces /genode/repos/ada-components/libs/ada-interface
 /genode/tool/create_builddir x86_64

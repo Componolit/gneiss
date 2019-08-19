@@ -5,19 +5,6 @@ with Cxx.Timer.Client;
 package body Componolit.Interfaces.Timer.Client
 is
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Instance => Cxx.Timer.Client.Constructor);
-   end Create;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-      use type Cxx.Bool;
-   begin
-      return Cxx.Timer.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
-   end Initialized;
-
    procedure Initialize (C   : in out Client_Session;
                          Cap :        Componolit.Interfaces.Types.Capability) with
       SPARK_Mode => Off

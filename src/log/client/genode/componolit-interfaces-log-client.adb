@@ -6,18 +6,6 @@ use all type Cxx.Bool;
 package body Componolit.Interfaces.Log.Client
 is
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Instance => Cxx.Log.Client.Constructor);
-   end Create;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-   begin
-      return Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
-   end Initialized;
-
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Componolit.Interfaces.Types.Capability;
                          Label          :        String) with
@@ -35,12 +23,6 @@ is
    begin
       Cxx.Log.Client.Finalize (C.Instance);
    end Finalize;
-
-   function Maximum_Message_Length (C : Client_Session) return Integer
-   is
-   begin
-      return Integer (Cxx.Log.Client.Maximum_Message_Length (C.Instance));
-   end Maximum_Message_Length;
 
    Blue       : constant String    := Character'Val (8#33#) & "[34m";
    Red        : constant String    := Character'Val (8#33#) & "[31m";
