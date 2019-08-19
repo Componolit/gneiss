@@ -43,9 +43,11 @@ is
       R.Start  := Standard.C.Uint64_T (S);
       R.Length := Standard.C.Uint64_T (L);
       R.Tag    := Request_Id'Pos (I);
+      R.Inst   := System.Null_Address;
       C_Allocate_Request (Address (C.Instance), R, Retr);
       if Status (R) = Allocated then
-         E := Success;
+         E      := Success;
+         R.Inst := System.Address (Instance (C));
       else
          R.Status := Componolit.Interfaces.Internal.Block.Raw;
          case Retr is
@@ -63,13 +65,15 @@ is
    procedure Update_Request (C : in out Client_Session;
                              R : in out Client_Request)
    is
+      pragma Unevaluated_Use_Of_Old (Allow);
       procedure C_Update_Request (Inst   :        Address;
                                   Req    : in out Client_Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_update_request",
          Global        => null,
-         Post          => Status (Req) in Pending | Ok | Error;
+         Post          => Status (Req) in Pending | Ok | Error
+                          and then Instance (Req)'Old = Instance (Req);
    begin
       C_Update_Request (Address (C.Instance), R);
    end Update_Request;
@@ -153,7 +157,8 @@ is
          External_Name => "block_client_enqueue",
          Global        => null,
          Pre           => Status (Req) = Allocated,
-         Post          => Status (Req) in Allocated | Pending;
+         Post          => Status (Req) in Allocated | Pending
+                          and Instance (Req)'Old = Instance (Req);
    begin
       C_Enqueue (Address (C.Instance), R);
    end Enqueue;

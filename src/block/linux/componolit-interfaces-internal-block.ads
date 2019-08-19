@@ -39,6 +39,7 @@ package Componolit.Interfaces.Internal.Block is
       Length : C.Uint64_T;
       Status : Request_Status;
       Aiocb  : System.Address;
+      Inst   : System.Address;
    end record;
 
    type Server_Request is null record;
