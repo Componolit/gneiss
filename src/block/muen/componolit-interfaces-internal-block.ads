@@ -28,16 +28,6 @@ is
 
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
-   type Client_Request is limited record
-      Status : Request_Status;
-      Event  : Componolit.Interfaces.Muen_Block.Event;
-   end record;
-
-   type Server_Request is limited record
-      Length : Standard.Interfaces.Unsigned_64;
-      Event  : Componolit.Interfaces.Muen_Block.Event;
-   end record;
-
    type Dispatcher_Session is record
       Registry_Index : Componolit.Interfaces.Muen.Session_Index;
    end record;
@@ -67,6 +57,18 @@ is
       Req  : Musinfo.Memregion_Type;
       Resp : Musinfo.Memregion_Type;
       Idx  : Componolit.Interfaces.Muen.Session_Index;
+   end record;
+
+   type Client_Request is limited record
+      Status   : Request_Status;
+      Instance : Client_Instance;
+      Event    : Componolit.Interfaces.Muen_Block.Event;
+   end record;
+
+   type Server_Request is limited record
+      Length   : Standard.Interfaces.Unsigned_64;
+      Instance : Server_Instance;
+      Event    : Componolit.Interfaces.Muen_Block.Event;
    end record;
 
    type Dispatcher_Capability is limited record
