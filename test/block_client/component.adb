@@ -84,15 +84,16 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind)
    is
+      use type Block.Client_Instance;
       Block_Size : constant Block.Size := Block.Block_Size (Client);
       Result     : Block.Result;
    begin
       if Block_Size <= 4096 and Block_Size >= 256 then
          for I in Request_Cache'Range loop
-
             if
                S.Acked < Request_Count
                and then Block.Status (Request_Cache (I)) = Block.Pending
+               and then Block.Instance (Request_Cache (I)) = Block.Instance (Client)
             then
                Block_Client.Update_Request (Client, Request_Cache (I));
                if Block.Status (Request_Cache (I)) = Block.Ok then
