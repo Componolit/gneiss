@@ -5,24 +5,6 @@ use all type System.Address;
 package body Componolit.Interfaces.Log.Client
 is
 
-   ------------
-   -- Create --
-   ------------
-
-   function Create return Client_Session is
-   begin
-      return Client_Session'(Label          => System.Null_Address,
-                             Length         => 0,
-                             Prev_Nl        => True);
-   end Create;
-
-   -----------------
-   -- Initialized --
-   -----------------
-
-   function Initialized (C : Client_Session) return Boolean is
-      (C.Label /= System.Null_Address);
-
    ----------------
    -- Initialize --
    ----------------
@@ -62,14 +44,6 @@ is
       C.Label  := System.Null_Address;
       C.Length := 0;
    end Finalize;
-
-   ----------------------------
-   -- Maximum_Message_Length --
-   ----------------------------
-
-   function Maximum_Message_Length (C : Client_Session) return Integer
-   is
-      (4095);
 
    procedure Print (Msg : System.Address) with
       Import,
