@@ -23,8 +23,13 @@ is
    ------------
 
    function Null_Request return Client_Request is
-      (Client_Request'(Status => Componolit.Interfaces.Internal.Block.Raw,
-                       Event  => Blk.Null_Event));
+      (Client_Request'(Status   => Componolit.Interfaces.Internal.Block.Raw,
+                       Instance => (Name => Blk.Null_Name,
+                                    Req  => Musinfo.Null_Memregion,
+                                    Resp => Musinfo.Null_Memregion,
+                                    Idx  => CIM.Invalid_Index,
+                                    Cnt  => 0),
+                       Event    => Blk.Null_Event));
 
    function Kind (R : Client_Request) return Request_Kind is
       (case R.Event.Header.Kind is
@@ -93,6 +98,9 @@ is
                         Idx  => C.Registry_Index,
                         Cnt  => C.Count));
 
+   function Instance (R : Client_Request) return Client_Instance is
+      (Client_Instance (R.Instance));
+
    function Writable (C : Client_Session) return Boolean is
       (True);
 
@@ -123,8 +131,12 @@ is
    ------------
 
    function Null_Request return Server_Request is
-      (Server_Request'(Event  => Blk.Null_Event,
-                       Length => 0));
+      (Server_Request'(Event    => Blk.Null_Event,
+                       Instance => (Name => Blk.Null_Name,
+                                    Req  => Musinfo.Null_Memregion,
+                                    Resp => Musinfo.Null_Memregion,
+                                    Idx  => CIM.Invalid_Index),
+                       Length   => 0));
 
    function Kind (R : Server_Request) return Request_Kind is
       (case R.Event.Header.Kind is
@@ -183,5 +195,8 @@ is
                         Req  => S.Request_Memory,
                         Resp => S.Response_Memory,
                         Idx  => S.Registry_Index));
+
+   function Instance (R : Server_Request) return Server_Instance is
+      (Server_Instance (R.Instance));
 
 end Componolit.Interfaces.Block;

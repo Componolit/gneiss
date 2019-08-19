@@ -129,7 +129,6 @@ is
    is
       pragma Unreferenced (D);
       pragma Unreferenced (C);
-      use type Standard.Interfaces.Unsigned_64;
    begin
       Blk.Server_Response_Channel.Activate (I.Response_Memory,
                                             Blk.Server_Response_Channel.Channel.Header_Field_Type
