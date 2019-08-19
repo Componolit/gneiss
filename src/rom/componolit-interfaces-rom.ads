@@ -7,6 +7,10 @@ is
 
    type Client_Session is limited private;
 
+   function Create return Client_Session;
+
+   function Initialized (C : Client_Session) return Boolean;
+
 private
 
    type Client_Session is new Componolit.Interfaces.Internal.Rom.Client_Session;

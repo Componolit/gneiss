@@ -11,10 +11,6 @@ package Componolit.Interfaces.Rom.Client with
 is
    pragma Warnings (Off, "procedure ""Parse"" is not referenced");
 
-   function Create return Client_Session;
-
-   function Initialized (C : Client_Session) return Boolean;
-
    procedure Initialize (C    : in out Client_Session;
                          Cap  :        Componolit.Interfaces.Types.Capability;
                          Name :        String := "") with

@@ -8,7 +8,7 @@ is
    use type Block.Request_Status;
    use type Block.Request_Kind;
 
-   Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
+   Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
    Dispatcher  : Block.Dispatcher_Session                 := Block.Create;
    Server      : Block.Server_Session                     := Block.Create;
 
@@ -31,10 +31,10 @@ is
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
-      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if not Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
       end if;
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap);
          end if;
@@ -53,7 +53,7 @@ is
    procedure Destruct
    is
    begin
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then
@@ -194,15 +194,15 @@ is
       pragma Unreferenced (B);
       Max : Natural;
    begin
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
-         Max := Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log);
+      if Componolit.Interfaces.Log.Initialized (Log) then
+         Max := Componolit.Interfaces.Log.Maximum_Message_Length (Log);
          Componolit.Interfaces.Log.Client.Info (Log, "Server initialize with label: ");
          if L'Length <= Max then
             Componolit.Interfaces.Log.Client.Info (Log, L);
          else
             for I in Natural range 0 .. Natural'Last / Max - L'First - 1 loop
-               pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
-               pragma Loop_Invariant (Max = Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log));
+               pragma Loop_Invariant (Componolit.Interfaces.Log.Initialized (Log));
+               pragma Loop_Invariant (Max = Componolit.Interfaces.Log.Maximum_Message_Length (Log));
                if L'First + (I + 1) * Max <= L'Last then
                   Componolit.Interfaces.Log.Client.Info (Log, L (L'First + I * Max .. L'First + (I + 1) * Max - 1));
                else

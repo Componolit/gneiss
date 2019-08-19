@@ -6,17 +6,6 @@ package Componolit.Interfaces.Timer.Client with
    SPARK_Mode
 is
 
-   --  Returns new session object
-   --
-   --  @return  Timer client session object
-   function Create return Client_Session;
-
-   --  Checks if session is initialized
-   --
-   --  @param C  Timer client session object
-   --  @return   True if session is initialized else False
-   function Initialized (C : Client_Session) return Boolean;
-
    --  Initialized timer session
    --
    --  @param C    Timer client session object

@@ -12,18 +12,18 @@ is
 
    package Config is new Componolit.Interfaces.Rom.Client (Character, Positive, String, Parse);
 
-   Cfg : Componolit.Interfaces.Rom.Client_Session := Config.Create;
-   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
+   Cfg : Componolit.Interfaces.Rom.Client_Session := Componolit.Interfaces.Rom.Create;
+   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
    C : Componolit.Interfaces.Types.Capability;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
-      if not Config.Initialized (Cfg) then
+      if not Componolit.Interfaces.Rom.Initialized (Cfg) then
          Config.Initialize (Cfg, Cap);
       end if;
       C := Cap;
-      if Config.Initialized (Cfg) then
+      if Componolit.Interfaces.Rom.Initialized (Cfg) then
          Config.Load (Cfg);
       else
          Main.Vacate (Cap, Main.Failure);
@@ -34,7 +34,7 @@ is
    is
       Last : Positive := Data'Last;
    begin
-      if not Componolit.Interfaces.Log.Client.Initialized (Log) and then Data'Length > 1 then
+      if not Componolit.Interfaces.Log.Initialized (Log) and then Data'Length > 1 then
          for I in Data'Range loop
             if Data (I) = ASCII.LF then
                Last := I - 1;
@@ -42,7 +42,7 @@ is
             end if;
          end loop;
          Componolit.Interfaces.Log.Client.Initialize (Log, C, Data (Data'First .. Last));
-         if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         if Componolit.Interfaces.Log.Initialized (Log) then
             Componolit.Interfaces.Log.Client.Info (Log, "Log session configured with label: "
                                                         & Data (Data'First .. Last));
          else
@@ -57,10 +57,10 @@ is
    procedure Destruct
    is
    begin
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
-      if Config.Initialized (Cfg) then
+      if Componolit.Interfaces.Rom.Initialized (Cfg) then
          Config.Finalize (Cfg);
       end if;
    end Destruct;
