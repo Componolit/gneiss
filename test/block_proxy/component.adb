@@ -8,9 +8,6 @@ package body Component is
    use type Block.Request_Status;
 
    Dispatcher : Block.Dispatcher_Session := Block.Create;
-   Server     : Block.Server_Session     := Block.Create;
-
-   Capability : Componolit.Interfaces.Types.Capability;
 
    Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
 

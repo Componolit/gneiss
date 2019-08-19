@@ -37,13 +37,18 @@ package Component is
    package Block_Client is new Block.Client (Event, Read, Write);
 
    Client : Block.Client_Session := Block.Create;
+   Server     : Block.Server_Session     := Block.Create;
+
+   Capability : Componolit.Interfaces.Types.Capability;
 
    procedure Dispatch (I : Block.Dispatcher_Instance;
                        C : Block.Dispatcher_Capability) with
       Pre => Block.Initialized (I) and then not Block.Accepted (I);
    function Initialized (S : Block.Server_Instance) return Boolean;
    procedure Initialize_Server (S : Block.Server_Instance; L : String; B : Block.Byte_Length) with
-      Pre => not Initialized (S);
+      Pre => not Initialized (S),
+      Global => (Input => (Server, Capability),
+                 In_Out => Client);
    procedure Finalize_Server (S : Block.Server_Instance) with
       Pre => Initialized (S);
    function Block_Count (S : Block.Server_Instance) return Block.Count with
