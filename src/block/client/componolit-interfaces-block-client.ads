@@ -43,6 +43,7 @@ generic
 package Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    --  Allocate request
    --
@@ -68,10 +69,11 @@ is
       Pre  => Initialized (C)
               and Status (R) = Raw,
       Post => Initialized (C)
-              and Writable (C)'Old    = Writable (C)
-              and Block_Count (C)'Old = Block_Count (C)
-              and Block_Size (C)'Old  = Block_Size (C)
-              and (if E = Success then Status (R) = Allocated else Status (R) = Raw);
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C)
+              and then (if E = Success then Status (R) = Allocated else Status (R) = Raw)
+              and then (if Status (R) = Allocated then Instance (R) = Instance (C));
 
    --  Checks if a request has been changed by the platform
    --
@@ -80,12 +82,15 @@ is
    procedure Update_Request (C : in out Client_Session;
                              R : in out Client_Request) with
       Pre  => Initialized (C)
-              and Status (R) = Pending,
+              and then Status (R) = Pending
+              and then Instance (R) = Instance (C),
       Post => Initialized (C)
-              and Status (R) in Pending | Ok | Error
-              and Writable (C)'Old    = Writable (C)
-              and Block_Count (C)'Old = Block_Count (C)
-              and Block_Size (C)'Old  = Block_Size (C);
+              and then Status (R) in Pending | Ok | Error
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C)
+              and then Instance (C)'Old    = Instance (C)
+              and then Instance (R)'Old    = Instance (R);
 
    --  Initialize client instance
    --
@@ -119,12 +124,15 @@ is
    procedure Enqueue (C : in out Client_Session;
                       R : in out Client_Request) with
       Pre  => Initialized (C)
-              and then Status (R) = Allocated,
+              and then Status (R) = Allocated
+              and then Instance (R) = Instance (C),
       Post => Initialized (C)
-              and Writable (C)'Old    = Writable (C)
-              and Block_Count (C)'Old = Block_Count (C)
-              and Block_Size (C)'Old  = Block_Size (C)
-              and Status (R) in Allocated | Pending;
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C)
+              and then Instance (C)'Old    = Instance (C)
+              and then Instance (R)'Old    = Instance (R)
+              and then Status (R) in Allocated | Pending;
 
    --  Submit all enqueued requests for processing
    --
@@ -132,9 +140,10 @@ is
    procedure Submit (C : in out Client_Session) with
       Pre  => Initialized (C),
       Post => Initialized (C)
-              and Writable (C)'Old    = Writable (C)
-              and Block_Count (C)'Old = Block_Count (C)
-              and Block_Size (C)'Old  = Block_Size (C);
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C)
+              and then Instance (C)'Old    = Instance (C);
 
    --  Read the returned data from a successfully acknowledged read request
    --
@@ -143,12 +152,15 @@ is
    procedure Read (C : in out Client_Session;
                    R :        Client_Request) with
       Pre  => Initialized (C)
-              and then Status (R) = Ok
-              and then Kind (R)   = Read,
+              and then Status (R)   = Ok
+              and then Kind (R)     = Read
+              and then Instance (R) = Instance (C),
       Post => Initialized (C)
-              and Writable (C)'Old    = Writable (C)
-              and Block_Count (C)'Old = Block_Count (C)
-              and Block_Size (C)'Old  = Block_Size (C);
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C)
+              and then Instance (C)'Old    = Instance (C)
+              and then Instance (R)'Old    = Instance (R);
 
    --  Release a request
    --
@@ -162,12 +174,14 @@ is
    procedure Release (C : in out Client_Session;
                       R : in out Client_Request) with
       Pre  => Initialized (C)
-              and then Status (R) /= Raw,
+              and then Status (R)  /= Raw
+              and then Instance (R) = Instance (C),
       Post => Initialized (C)
-              and Writable (C)'Old    = Writable (C)
-              and Block_Count (C)'Old = Block_Count (C)
-              and Block_Size (C)'Old  = Block_Size (C)
-              and Status (R)          = Raw;
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C)
+              and then Instance (C)'Old    = Instance (C)
+              and then Status (R)          = Raw;
 
 private
 
