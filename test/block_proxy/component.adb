@@ -9,16 +9,16 @@ package body Component is
 
    Dispatcher : Block.Dispatcher_Session := Block.Create;
 
-   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Client.Create;
+   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
       Capability := Cap;
-      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if not Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
       end if;
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap);
          end if;
@@ -36,7 +36,7 @@ package body Component is
    procedure Destruct
    is
    begin
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then

@@ -15,19 +15,6 @@ is
 
    procedure Check_Event (I : CIM.Session_Index);
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Index => CIM.Invalid_Index);
-   end Create;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-      use type CIM.Session_Index;
-   begin
-      return C.Index /= CIM.Invalid_Index;
-   end Initialized;
-
    function Event_Address return System.Address;
 
    function Event_Address return System.Address with
