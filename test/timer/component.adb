@@ -13,23 +13,23 @@ is
 
    package Timer_Client is new Componolit.Interfaces.Timer.Client (Event);
 
-   Log        : Componolit.Interfaces.Log.Client_Session   := Componolit.Interfaces.Log.Client.Create;
-   Timer      : Componolit.Interfaces.Timer.Client_Session := Timer_Client.Create;
+   Log        : Componolit.Interfaces.Log.Client_Session   := Componolit.Interfaces.Log.Create;
+   Timer      : Componolit.Interfaces.Timer.Client_Session := Componolit.Interfaces.Timer.Create;
    Capability : Componolit.Interfaces.Types.Capability;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is
    begin
       Capability := Cap;
-      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if not Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Timer");
       end if;
-      if not Timer_Client.Initialized (Timer) then
+      if not Componolit.Interfaces.Timer.Initialized (Timer) then
          Timer_Client.Initialize (Timer, Cap);
       end if;
       if
-         Componolit.Interfaces.Log.Client.Initialized (Log)
-         and Timer_Client.Initialized (Timer)
+         Componolit.Interfaces.Log.Initialized (Log)
+         and Componolit.Interfaces.Timer.Initialized (Timer)
       then
          Timer_Client.Set_Timeout (Timer, 60.0);
          Timer_Client.Set_Timeout (Timer, 1.5);
@@ -44,8 +44,8 @@ is
    is
    begin
       if
-         Componolit.Interfaces.Log.Client.Initialized (Log)
-         and Timer_Client.Initialized (Timer)
+         Componolit.Interfaces.Log.Initialized (Log)
+         and Componolit.Interfaces.Timer.Initialized (Timer)
       then
          Componolit.Interfaces.Log.Client.Info
             (Log, "Time: " & Componolit.Interfaces.Strings.Image (Duration (Timer_Client.Clock (Timer))));
@@ -58,10 +58,10 @@ is
    procedure Destruct
    is
    begin
-      if Timer_Client.Initialized (Timer) then
+      if Componolit.Interfaces.Timer.Initialized (Timer) then
          Timer_Client.Finalize (Timer);
       end if;
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
    end Destruct;

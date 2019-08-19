@@ -44,8 +44,8 @@ is
       Acked : Invalid_Id := -1;
    end record;
 
-   Client : Block.Client_Session;
-   Log    : Componolit.Interfaces.Log.Client_Session;
+   Client : Block.Client_Session := Block.Create;
+   Log    : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
    P_Cap  : Componolit.Interfaces.Types.Capability;
 
    Request_Count : constant Integer := 32;
@@ -59,10 +59,10 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
       Pre  => Block.Initialized (Client)
-              and then Componolit.Interfaces.Log.Client.Initialized (Log)
+              and then Componolit.Interfaces.Log.Initialized (Log)
               and then Operation in Block.Read .. Block.Write,
       Post => Block.Initialized (Client)
-              and then Componolit.Interfaces.Log.Client.Initialized (Log);
+              and then Componolit.Interfaces.Log.Initialized (Log);
 
    procedure Write (C :     Block.Client_Instance;
                     R :     Request_Id;
@@ -74,7 +74,7 @@ is
       if Block.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
          D := (others => Character'Val (33 + Integer (Block.Start (Request_Cache (R)) mod 93)));
       else
-         if Componolit.Interfaces.Log.Client.Initialized (Log) then
+         if Componolit.Interfaces.Log.Initialized (Log) then
             Componolit.Interfaces.Log.Client.Warning (Log, "Failed to calculate content");
          end if;
          D := (others => Character'First);
@@ -141,7 +141,7 @@ is
             end if;
 
             pragma Loop_Invariant (Block.Initialized (Client));
-            pragma Loop_Invariant (Componolit.Interfaces.Log.Client.Initialized (Log));
+            pragma Loop_Invariant (Componolit.Interfaces.Log.Initialized (Log));
          end loop;
          Block_Client.Submit (Client);
       else
@@ -156,11 +156,11 @@ is
       pragma Unreferenced (C);
       pragma Unreferenced (R);
    begin
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Info (Log, "Read succeeded:");
-         if D'Length >= Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) then
+         if D'Length >= Componolit.Interfaces.Log.Maximum_Message_Length (Log) then
             Componolit.Interfaces.Log.Client.Info
-               (Log, D (D'First .. D'First + (Componolit.Interfaces.Log.Client.Maximum_Message_Length (Log) - 1)));
+               (Log, D (D'First .. D'First + (Componolit.Interfaces.Log.Maximum_Message_Length (Log) - 1)));
          else
             Componolit.Interfaces.Log.Client.Info (Log, D);
          end if;
@@ -171,16 +171,16 @@ is
    is
    begin
       P_Cap := Cap;
-      if not Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if not Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada block test");
       end if;
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Info (Log, "Ada block test");
          if not Block.Initialized (Client) then
             Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
          end if;
          if Block.Initialized (Client) then
-            if Componolit.Interfaces.Log.Client.Initialized (Log) then
+            if Componolit.Interfaces.Log.Initialized (Log) then
                --  FIXME: Calls of Image with explicit default parameters
                --  Componolit/Workarounds#2
                Componolit.Interfaces.Log.Client.Info (Log, "Block device with "
@@ -206,7 +206,7 @@ is
    procedure Run is
    begin
       if
-         Componolit.Interfaces.Log.Client.Initialized (Log)
+         Componolit.Interfaces.Log.Initialized (Log)
          and Block.Initialized (Client)
       then
          if not State_Finished (Write_State) then
@@ -236,7 +236,7 @@ is
       if Block.Initialized (Client) then
          Block_Client.Finalize (Client);
       end if;
-      if Componolit.Interfaces.Log.Client.Initialized (Log) then
+      if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Finalize (Log);
       end if;
    end Destruct;

@@ -14,18 +14,6 @@ package Componolit.Interfaces.Log.Client with
    SPARK_Mode
 is
 
-   --  Checks if C is initialized
-   --
-   --  @param C  Client session instance
-   --  @return True if C is initialized
-   function Initialized (C : Client_Session) return Boolean;
-
-   --  Create new Client_Session
-   --
-   --  @return Uninitialized client session
-   function Create return Client_Session with
-      Post => not Initialized (Create'Result);
-
    --  Intialize client
    --
    --  @param C               Client session instance
@@ -42,18 +30,6 @@ is
    procedure Finalize (C : in out Client_Session) with
       Pre  => Initialized (C),
       Post => not Initialized (C);
-
-   --  Minimum message length, guaranteed by all platforms
-   Minimum_Message_Length : constant Positive := 78 with Ghost;
-
-   --  Maximum message length the platform can handle in a single message
-   --
-   --  @param C  Client session instance
-   --  @return Maximum message length for Info, Warning and Error
-   function Maximum_Message_Length (C : Client_Session) return Integer with
-     Annotate => (GNATprove, Terminating),
-      Pre  => Initialized (C),
-      Post => Maximum_Message_Length'Result > Minimum_Message_Length;
 
    --  Print info message
    --

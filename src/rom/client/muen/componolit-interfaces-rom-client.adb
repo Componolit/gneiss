@@ -10,19 +10,6 @@ package body Componolit.Interfaces.Rom.Client with
 is
    package CIM renames Componolit.Interfaces.Muen;
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Mem => Musinfo.Null_Memregion);
-   end Create;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-      use type Musinfo.Memregion_Type;
-   begin
-      return C.Mem /= Musinfo.Null_Memregion;
-   end Initialized;
-
    procedure Initialize (C    : in out Client_Session;
                          Cap  :        Componolit.Interfaces.Types.Capability;
                          Name :        String := "")

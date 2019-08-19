@@ -15,23 +15,6 @@ is
 
    package CIM renames Componolit.Interfaces.Muen;
 
-   function Initialized (C : Client_Session) return Boolean
-   is
-      use type Musinfo.Name_Type;
-      use type Musinfo.Memregion_Type;
-   begin
-      return C.Name /= Musinfo.Null_Name and C.Mem /= Musinfo.Null_Memregion;
-   end Initialized;
-
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Name   => Musinfo.Null_Name,
-                             Mem    => Musinfo.Null_Memregion,
-                             Index  => Debuglog.Types.Message_Index'First,
-                             Buffer => Debuglog.Types.Null_Data);
-   end Create;
-
    procedure Activate_Channel (Mem : Musinfo.Memregion_Type) with
       Pre => Debuglog.Stream.Channel_Type'Size <= Mem.Size;
 
@@ -131,13 +114,6 @@ is
       C.Index  := Debuglog.Types.Message_Index'First;
       C.Buffer := Debuglog.Types.Null_Data;
    end Finalize;
-
-   function Maximum_Message_Length (C : Client_Session) return Integer
-   is
-      pragma Unreferenced (C);
-   begin
-      return 200;
-   end Maximum_Message_Length;
 
    function Get_Label (C : Client_Session) return String;
 

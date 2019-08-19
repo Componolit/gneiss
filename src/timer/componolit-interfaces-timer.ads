@@ -31,6 +31,17 @@ is
    --  Timer client session object
    type Client_Session is limited private;
 
+   --  Returns new session object
+   --
+   --  @return  Timer client session object
+   function Create return Client_Session;
+
+   --  Checks if session is initialized
+   --
+   --  @param C  Timer client session object
+   --  @return   True if session is initialized else False
+   function Initialized (C : Client_Session) return Boolean;
+
 private
 
    type Client_Session is new Componolit.Interfaces.Internal.Timer.Client_Session;
