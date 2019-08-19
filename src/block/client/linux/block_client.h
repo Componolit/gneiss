@@ -31,6 +31,7 @@ struct request
     uint64_t length;
     uint32_t status;
     struct aiocb *aio_cb;
+    void *instance;
 };
 
 struct block_client
