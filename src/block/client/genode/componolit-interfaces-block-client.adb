@@ -7,7 +7,8 @@ with Cxx.Block.Client;
 with Cxx.Genode;
 use all type Cxx.Bool;
 
-package body Componolit.Interfaces.Block.Client
+package body Componolit.Interfaces.Block.Client with
+   SPARK_Mode
 is
 
    type Request_Handle is record
@@ -46,8 +47,9 @@ is
                                          Cxx.Unsigned_Long (Request_Id'Pos (I)),
                                          Res);
       if R.Packet.Block_Count > 0 and Res = 0 then
-         R.Status := Componolit.Interfaces.Internal.Block.Allocated;
-         E        := Success;
+         R.Status   := Componolit.Interfaces.Internal.Block.Allocated;
+         R.Instance := Componolit.Interfaces.Internal.Block.Client_Instance (Instance (C));
+         E          := Success;
       else
          if Res = 1 then
             E := Out_Of_Memory;
@@ -116,7 +118,8 @@ is
                   B : Size;
                   T : Cxx.Unsigned_Long;
                   L : Count;
-                  D : System.Address)
+                  D : System.Address) with
+      SPARK_Mode => Off
    is
       Data : Buffer (1 .. B * L) with
          Address => D;

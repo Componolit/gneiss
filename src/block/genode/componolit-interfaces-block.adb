@@ -17,13 +17,14 @@ is
    ------------
 
    function Null_Request return Client_Request is
-      (Client_Request'(Packet => Cxx.Block.Client.Packet_Descriptor'(Offset       => 0,
-                                                                     Bytes        => 0,
-                                                                     Opcode       => -1,
-                                                                     Tag          => 0,
-                                                                     Block_Number => 0,
-                                                                     Block_Count  => 0),
-                       Status => Componolit.Interfaces.Internal.Block.Raw));
+      (Client_Request'(Packet   => Cxx.Block.Client.Packet_Descriptor'(Offset       => 0,
+                                                                       Bytes        => 0,
+                                                                       Opcode       => -1,
+                                                                       Tag          => 0,
+                                                                       Block_Number => 0,
+                                                                       Block_Count  => 0),
+                       Status   => Componolit.Interfaces.Internal.Block.Raw,
+                       Instance => (others => System.Null_Address)));
 
    function Kind (R : Client_Request) return Request_Kind is
       (case R.Packet.Opcode is
@@ -58,6 +59,9 @@ is
                         Callback => C.Instance.Private_X_Callback,
                         Rw       => C.Instance.Private_X_Write,
                         Env      => C.Instance.Private_X_Env));
+
+   function Instance (R : Client_Request) return Client_Instance is
+      (Client_Instance (R.Instance));
 
    function Initialized (C : Client_Session) return Boolean is
       (C.Instance.Private_X_Device /= System.Null_Address

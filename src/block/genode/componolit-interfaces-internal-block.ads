@@ -12,16 +12,6 @@ package Componolit.Interfaces.Internal.Block is
 
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
-   type Client_Request is limited record
-      Packet : Cxx.Block.Client.Packet_Descriptor;
-      Status : Request_Status;
-   end record;
-
-   type Server_Request is limited record
-      Request : Cxx.Block.Server.Request;
-      Status  : Request_Status;
-   end record;
-
    type Client_Session is limited record
       Instance : Cxx.Block.Client.Class;
    end record;
@@ -48,6 +38,17 @@ package Componolit.Interfaces.Internal.Block is
       Block_Count : System.Address;
       Block_Size  : System.Address;
       Writable    : System.Address;
+   end record;
+
+   type Client_Request is limited record
+      Packet   : Cxx.Block.Client.Packet_Descriptor;
+      Status   : Request_Status;
+      Instance : Client_Instance;
+   end record;
+
+   type Server_Request is limited record
+      Request : Cxx.Block.Server.Request;
+      Status  : Request_Status;
    end record;
 
    type Dispatcher_Capability is limited record
