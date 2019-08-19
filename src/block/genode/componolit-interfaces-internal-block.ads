@@ -47,8 +47,9 @@ package Componolit.Interfaces.Internal.Block is
    end record;
 
    type Server_Request is limited record
-      Request : Cxx.Block.Server.Request;
-      Status  : Request_Status;
+      Request  : Cxx.Block.Server.Request;
+      Status   : Request_Status;
+      Instance : Server_Instance;
    end record;
 
    type Dispatcher_Capability is limited record
