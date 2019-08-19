@@ -7,12 +7,6 @@ with Cxx.Configuration.Client;
 package body Componolit.Interfaces.Rom.Client
 is
 
-   function Create return Client_Session
-   is
-   begin
-      return Client_Session'(Instance => Cxx.Configuration.Client.Constructor);
-   end Create;
-
    procedure C_Parse (Ptr : System.Address;
                       Len : Cxx.Genode.Uint64_T);
 
@@ -25,13 +19,6 @@ is
    begin
       Cxx.Configuration.Client.Initialize (C.Instance, Cap, C_Parse'Address, C_Name'Address);
    end Initialize;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-      use type Cxx.Bool;
-   begin
-      return Cxx.Configuration.Client.Initialized (C.Instance) = Cxx.Bool'Val (1);
-   end Initialized;
 
    procedure Load (C : in out Client_Session)
    is
