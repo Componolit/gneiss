@@ -108,13 +108,14 @@ is
    ------------
 
    function Null_Request return Server_Request is
-      (Server_Request'(Request => Cxx.Block.Server.Request'(Kind         => -1,
-                                                            Block_Number => 0,
-                                                            Block_Count  => 0,
-                                                            Success      => 0,
-                                                            Offset       => 0,
-                                                            Tag          => 0),
-                       Status  => Componolit.Interfaces.Internal.Block.Raw));
+      (Server_Request'(Request  => Cxx.Block.Server.Request'(Kind         => -1,
+                                                             Block_Number => 0,
+                                                             Block_Count  => 0,
+                                                             Success      => 0,
+                                                             Offset       => 0,
+                                                             Tag          => 0),
+                       Status   => Componolit.Interfaces.Internal.Block.Raw,
+                       Instance => (others => System.Null_Address)));
 
    function Kind (R : Server_Request) return Request_Kind is
       (case R.Request.Kind is
@@ -161,5 +162,8 @@ is
                         Block_Count => S.Instance.Block_Count,
                         Block_Size  => S.Instance.Block_Size,
                         Writable    => S.Instance.Writable));
+
+   function Instance (R : Server_Request) return Server_Instance is
+      (Server_Instance (R.Instance));
 
 end Componolit.Interfaces.Block;
