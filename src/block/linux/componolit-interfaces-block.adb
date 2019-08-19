@@ -155,4 +155,7 @@ is
    function Instance (S : Server_Session) return Server_Instance is
       (Server_Instance (System.Null_Address));
 
+   function Instance (R : Server_Request) return Server_Instance is
+      (Server_Instance (System.Null_Address));
+
 end Componolit.Interfaces.Block;
