@@ -4,18 +4,6 @@ with System;
 package body Componolit.Interfaces.Timer.Client
 is
 
-   use type System.Address;
-
-   function Create return Client_Session
-   is
-   begin
-      return (Instance => System.Null_Address);
-   end Create;
-
-   function Initialized (C : Client_Session) return Boolean
-   is
-      (C.Instance /= System.Null_Address);
-
    procedure Initialize (C   : in out Client_Session;
                          Cap :        Componolit.Interfaces.Types.Capability) with
       SPARK_Mode => Off
