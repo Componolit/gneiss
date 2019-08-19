@@ -79,7 +79,9 @@ is
               and then Status (R) = Raw,
       Post => Ready (Instance (S))
               and then Initialized (S)
-              and then Status (R) in Raw | Pending | Error;
+              and then Instance (S)'Old = Instance (S)
+              and then Status (R) in Raw | Pending | Error
+              and then (if Status (R) in Pending | Error then Instance (R) = Instance (S));
 
    --  Provide the requested data for a read request
    --
@@ -93,9 +95,12 @@ is
               and then Initialized (S)
               and then Status (R) = Pending
               and then Kind (R) = Read
+              and then Instance (R) = Instance (S)
               and then B'Length = Length (R) * Block_Size (Instance (S)),
       Post => Ready (Instance (S))
-              and then Initialized (S);
+              and then Initialized (S)
+              and then Instance (S)'Old = Instance (S)
+              and then Instance (R) = Instance (S);
 
    --  Get the data of a write request that shall be written
    --
@@ -109,9 +114,12 @@ is
               and then Initialized (S)
               and then Status (R) = Pending
               and then Kind (R) = Write
+              and then Instance (R) = Instance (S)
               and then B'Length = Length (R) * Block_Size (Instance (S)),
       Post => Ready (Instance (S))
-              and then Initialized (S);
+              and then Initialized (S)
+              and then Instance (S)'Old = Instance (S)
+              and then Instance (R) = Instance (S);
 
    --  Acknowledge a handled request
    --
@@ -126,10 +134,13 @@ is
       Pre  => Ready (Instance (S))
               and then Initialized (S)
               and then ((Status (R) = Pending and then Res in Ok | Error)
-                        or else (Status (R) = Error and then Res = Error)),
+                        or else (Status (R) = Error and then Res = Error))
+              and then Instance (R) = Instance (S),
       Post => Ready (Instance (S))
               and then Initialized (S)
-              and then Status (R) in Raw | Pending | Error;
+              and then Instance (S)'Old = Instance (S)
+              and then Status (R) in Raw | Pending | Error
+              and then (if Status (R) in Pending | Error then Instance (R) = Instance (S));
 
    --  Signal client to wake up
    --
@@ -140,6 +151,7 @@ is
    procedure Unblock_Client (S : in out Server_Session) with
       Pre  => Initialized (S),
       Post => Initialized (S)
+              and then Instance (S)'Old = Instance (S)
               and then Ready (Instance (S)) = Ready (Instance (S)'Old);
 
 private

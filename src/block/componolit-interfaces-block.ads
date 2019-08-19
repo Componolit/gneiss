@@ -241,12 +241,17 @@ is
    function Instance (C : Client_Session) return Client_Instance with
       Annotate => (GNATprove, Terminating);
 
+   --  Get the instance ID of the client the request is bound to
+   --
+   --  @param R  Client request
+   --  @return   Client instance the request is bound to
    function Instance (R : Client_Request) return Client_Instance with
       Pre => Status (R) /= Raw;
 
    --  Check if the block device is writable
    --
    --  @param C  Client session instance
+   --  @return   True if the block client is writable
    function Writable (C : Client_Session) return Boolean with
       Annotate => (GNATprove, Terminating),
       Pre => Initialized (C);
@@ -254,6 +259,7 @@ is
    --  Get the total number of blocks of the device
    --
    --  @param C  Client session instance
+   --  @return   Number of blocks on the device
    function Block_Count (C : Client_Session) return Count with
       Annotate => (GNATprove, Terminating),
       Pre => Initialized (C);
@@ -261,6 +267,7 @@ is
    --  Get the block size in bytes
    --
    --  @param C  Client session instance
+   --  @return   Size of a single block in size
    function Block_Size (C : Client_Session) return Size with
       Annotate => (GNATprove, Terminating),
       Pre => Initialized (C);
@@ -306,6 +313,7 @@ is
    --  Check if S is initialized
    --
    --  @param S  Server session instance
+   --  @return   True if the server session is initialized
    function Initialized (S : Server_Session) return Boolean with
       Annotate => (GNATprove, Terminating),
       Post => Initialized'Result = Initialized (Instance (S));
@@ -327,7 +335,15 @@ is
    --  Get the instance ID of S
    --
    --  @param S  Server session instance
+   --  @return   Instance ID of S
    function Instance (S : Server_Session) return Server_Instance;
+
+   --  Get the instance ID of the server session the request is bound to
+   --
+   --  @param R  Server request
+   --  @return   ID of the server session
+   function Instance (R : Server_Request) return Server_Instance with
+      Pre => Status (R) /= Raw;
 
    --  Checks if D is initialized
    --
