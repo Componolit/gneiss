@@ -241,6 +241,9 @@ is
    function Instance (C : Client_Session) return Client_Instance with
       Annotate => (GNATprove, Terminating);
 
+   function Instance (R : Client_Request) return Client_Instance with
+      Pre => Status (R) /= Raw;
+
    --  Check if the block device is writable
    --
    --  @param C  Client session instance
