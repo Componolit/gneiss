@@ -21,6 +21,14 @@ is
 
    package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Request_Index);
 
+   use type Block.Server_Instance;
+
+   type Container is record
+      Object    : Block.Server_Session;
+      Reference : Block.Server_Instance;
+   end record with
+      Dynamic_Predicate => Container.Reference = Block.Instance (Container.Object);
+
    use type Block.Count;
    use type Block.Size;
 
@@ -34,7 +42,8 @@ is
       Post => Block_Size'Result = Disk_Block_Size,
       Annotate => (GNATprove, Terminating);
    function Writable (S : Block.Server_Instance) return Boolean;
-   function Initialized (S : Block.Server_Instance) return Boolean;
+   function Initialized (S : Block.Server_Instance) return Boolean with
+      Pre => Block.Initialized (S);
    procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
    procedure Finalize (S : Block.Server_Instance);
 
