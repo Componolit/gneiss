@@ -113,7 +113,7 @@ private
 
    --  Enforces the precondition of Dispatch
    --
-   --  The only valid precondition for Dispatch is Initialized (D). This enforced by this
+   --  The only valid precondition for Dispatch is Initialized (D). This is enforced by this
    --  ghost procedure that calls Dispatch but is never called.
    --
    --  @param D  Dispatcher instance
