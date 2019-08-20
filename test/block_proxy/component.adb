@@ -61,7 +61,6 @@ package body Component is
                     D : out Buffer)
    is
       use type Block.Client_Instance;
-      --  pragma Unreferenced (C);
    begin
       pragma Assert (if Block.Instance (Client) = C then Block.Initialized (Client));
       if
@@ -162,7 +161,6 @@ package body Component is
                   null;
                end if;
             end if;
-            --  pragma Assert (Block.Initialized (Server));
          end loop;
          Block_Client.Submit (Client);
          pragma Assert (Block.Initialized (Server));
