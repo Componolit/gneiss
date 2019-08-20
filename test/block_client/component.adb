@@ -73,6 +73,7 @@ is
    begin
       if Block.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
          D := (others => Character'Val (33 + Integer (Block.Start (Request_Cache (R)) mod 93)));
+         --  PROOF: steps: 800, level: 2
       else
          if Componolit.Interfaces.Log.Initialized (Log) then
             Componolit.Interfaces.Log.Client.Warning (Log, "Failed to calculate content");
