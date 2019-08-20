@@ -32,25 +32,34 @@ is
 
    procedure Parse (Data : String)
    is
-      Last : Positive := Data'Last;
+      Last : Positive;
    begin
+      if Data'Last not in Positive'Range then
+         return;
+      end if;
+      Last := Data'Last;
       if not Componolit.Interfaces.Log.Initialized (Log) and then Data'Length > 1 then
          for I in Data'Range loop
-            if Data (I) = ASCII.LF then
+            if Data (I) = ASCII.LF and I > 1 then
                Last := I - 1;
                exit;
             end if;
          end loop;
          Componolit.Interfaces.Log.Client.Initialize (Log, C, Data (Data'First .. Last));
          if Componolit.Interfaces.Log.Initialized (Log) then
-            Componolit.Interfaces.Log.Client.Info (Log, "Log session configured with label: "
-                                                        & Data (Data'First .. Last));
+            if Last - Data'First > Componolit.Interfaces.Log.Maximum_Message_Length (Log) then
+               Last := Data'First + Componolit.Interfaces.Log.Maximum_Message_Length (Log) - 1;
+            end if;
+            Componolit.Interfaces.Log.Client.Info (Log, "Log session configured with label: ");
+            Componolit.Interfaces.Log.Client.Info (Log, Data (Data'First .. Last - 1));
          else
             Main.Vacate (C, Main.Failure);
          end if;
-      else
+      elsif Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Info (Log, "Rom changed, exiting...");
          Main.Vacate (C, Main.Success);
+      else
+         Main.Vacate (C, Main.Failure);
       end if;
    end Parse;
 
