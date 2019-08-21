@@ -11,16 +11,16 @@ is
 
    type Request_Id is mod 8;
 
-   package Block is new Componolit.Interfaces.Block (Character, Positive, String, Request_Id);
+   package Block is new Componolit.Interfaces.Block (Character, Positive, String, Integer, Request_Id);
 
-   procedure Write (C :     Block.Client_Instance;
-                    R :     Request_Id;
-                    D : out String) with
+   procedure Write (C : in out Block.Client_Session;
+                    R :        Request_Id;
+                    D :    out String) with
       Pre => Block.Initialized (C);
 
-   procedure Read (C : Block.Client_Instance;
-                   R : Request_Id;
-                   D : String) with
+   procedure Read (C : in out Block.Client_Session;
+                   R :        Request_Id;
+                   D :        String) with
       Pre => Block.Initialized (C);
 
    function Image is new Componolit.Interfaces.Strings_Generic.Image_Ranged (Block.Count);
@@ -30,7 +30,7 @@ is
 
    type Request_Cache_Type is array (Request_Id'Range) of Block.Client_Request;
 
-   Request_Cache : Request_Cache_Type := (others => Block.Null_Request);
+   Request_Cache : Request_Cache_Type;
 
    use all type Block.Count;
    use all type Block.Size;
@@ -44,7 +44,7 @@ is
       Acked : Invalid_Id := -1;
    end record;
 
-   Client : Block.Client_Session := Block.Create;
+   Client : Block.Client_Session;
    Log    : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
    P_Cap  : Componolit.Interfaces.Types.Capability;
 
@@ -64,9 +64,9 @@ is
       Post => Block.Initialized (Client)
               and then Componolit.Interfaces.Log.Initialized (Log);
 
-   procedure Write (C :     Block.Client_Instance;
-                    R :     Request_Id;
-                    D : out String)
+   procedure Write (C : in out Block.Client_Session;
+                    R :        Request_Id;
+                    D :    out String)
    is
       pragma Unreferenced (C);
       use type Block.Id;
@@ -84,7 +84,6 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind)
    is
-      use type Block.Client_Instance;
       Block_Size : constant Block.Size := Block.Block_Size (Client);
       Result     : Block.Result;
    begin
@@ -93,7 +92,7 @@ is
             if
                S.Acked < Request_Count
                and then Block.Status (Request_Cache (I)) = Block.Pending
-               and then Block.Instance (Request_Cache (I)) = Block.Instance (Client)
+               and then Block.Assigned (Client, Request_Cache (I))
             then
                Block_Client.Update_Request (Client, Request_Cache (I));
                if Block.Status (Request_Cache (I)) = Block.Ok then
@@ -149,9 +148,9 @@ is
       end if;
    end Single;
 
-   procedure Read (C : Block.Client_Instance;
-                   R : Request_Id;
-                   D : String)
+   procedure Read (C : in out Block.Client_Session;
+                   R :        Request_Id;
+                   D :        String)
    is
       pragma Unreferenced (C);
       pragma Unreferenced (R);
@@ -177,7 +176,7 @@ is
       if Componolit.Interfaces.Log.Initialized (Log) then
          Componolit.Interfaces.Log.Client.Info (Log, "Ada block test");
          if not Block.Initialized (Client) then
-            Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img");
+            Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img", 42);
          end if;
          if Block.Initialized (Client) then
             if Componolit.Interfaces.Log.Initialized (Log) then
