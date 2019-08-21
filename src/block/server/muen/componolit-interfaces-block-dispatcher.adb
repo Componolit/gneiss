@@ -17,7 +17,7 @@ is
 
    use type Blk.Connection_Status;
 
-   procedure Check_Channels (D : Dispatcher_Instance) with
+   procedure Check_Channels (D : in out Dispatcher_Session) with
       Pre => Initialized (D) and then not Accepted (D);
 
    function Serv_Event return System.Address;
@@ -26,8 +26,13 @@ is
       (Serv.Event'Address) with
       SPARK_Mode => Off;
 
+   function Session_Address (D : Dispatcher_Session) return System.Address is
+      (D'Address) with
+      SPARK_Mode => Off;
+
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability)
+                         Cap :        Componolit.Interfaces.Types.Capability;
+                         Tag :        Session_Id)
    is
       pragma Unreferenced (Cap);
       use type CIM.Async_Session_Type;
@@ -36,7 +41,11 @@ is
          if Reg.Registry (I).Kind = CIM.None then
             D.Registry_Index := I;
             Reg.Registry (I) := Reg.Session_Entry'(Kind                 => CIM.Block_Dispatcher,
-                                                   Block_Dispatch_Event => System.Null_Address);
+                                                   Block_Dispatch_Event => System.Null_Address,
+                                                   Tag                  => Standard.Interfaces.Unsigned_32'Val
+                                                                              (Session_Id'Pos (Tag)
+                                                                               - Session_Id'Pos (Session_Id'Last)),
+                                                   Session              => Session_Address (D));
             exit;
          end if;
       end loop;
@@ -67,7 +76,8 @@ is
 
    procedure Session_Initialize (D : in out Dispatcher_Session;
                                  C :        Dispatcher_Capability;
-                                 I : in out Server_Session)
+                                 S : in out Server_Session;
+                                 I :        Session_Id)
    is
       pragma Unreferenced (D);
       use type CIM.Async_Session_Type;
@@ -84,9 +94,9 @@ is
       Resp_Name := CIM.String_To_Name ("blk:rsp:" & Str (C));
       Req_Mem   := Musinfo.Instance.Memory_By_Name (Req_Name);
       Resp_Mem  := Musinfo.Instance.Memory_By_Name (Resp_Name);
-      for I in Reg.Registry'Range loop
-         if Reg.Registry (I).Kind = CIM.None then
-            Index := I;
+      for J in Reg.Registry'Range loop
+         if Reg.Registry (J).Kind = CIM.None then
+            Index := J;
             exit;
          end if;
       end loop;
@@ -97,27 +107,29 @@ is
       then
          return;
       end if;
-      I.Name               := C.Name;
-      I.Registry_Index     := Index;
-      I.Request_Memory     := Req_Mem;
-      I.Response_Memory    := Resp_Mem;
-      I.Read_Select        := (others => Blk.Null_Event_Header);
+      S.Name               := C.Name;
+      S.Registry_Index     := Index;
+      S.Request_Memory     := Req_Mem;
+      S.Response_Memory    := Resp_Mem;
+      S.Read_Select        := (others => Blk.Null_Event_Header);
       Reg.Registry (Index) := Reg.Session_Entry'(Kind               => CIM.Block_Server,
                                                  Block_Server_Event => Serv_Event);
-      Serv.Initialize (Instance (I),
+      S.Tag                := Standard.Interfaces.Unsigned_32'Val (Session_Id'Pos (I)
+                                                                   - Session_Id'Pos (Session_Id'First));
+      Serv.Initialize (S,
                        CIM.Str_Cut (String (C.Name)),
                        (if
-                           I.Response_Memory.Size <= Standard.Interfaces.Unsigned_64 (Byte_Length'Last)
+                           S.Response_Memory.Size <= Standard.Interfaces.Unsigned_64 (Byte_Length'Last)
                         then
-                           Byte_Length (I.Response_Memory.Size) --  PROOF steps: 800
+                           Byte_Length (S.Response_Memory.Size) --  PROOF steps: 800
                         else
                            Byte_Length'Last));
-      if not Serv.Ready (Instance (I)) then
-         Reg.Registry (I.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
-         I.Name                          := Blk.Null_Name;
-         I.Registry_Index                := CIM.Invalid_Index;
-         I.Request_Memory                := Musinfo.Null_Memregion;
-         I.Response_Memory               := Musinfo.Null_Memregion;
+      if not Serv.Ready (S) then
+         Reg.Registry (S.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
+         S.Name                          := Blk.Null_Name;
+         S.Registry_Index                := CIM.Invalid_Index;
+         S.Request_Memory                := Musinfo.Null_Memregion;
+         S.Response_Memory               := Musinfo.Null_Memregion;
          return;
       end if;
    end Session_Initialize;
@@ -125,12 +137,12 @@ is
    pragma Warnings (Off, """I"" is not modified, could be IN");
    procedure Session_Accept (D : in out Dispatcher_Session;
                              C :        Dispatcher_Capability;
-                             I : in out Server_Session)
+                             S : in out Server_Session)
    is
       pragma Unreferenced (D);
       pragma Unreferenced (C);
    begin
-      Blk.Server_Response_Channel.Activate (I.Response_Memory,
+      Blk.Server_Response_Channel.Activate (S.Response_Memory,
                                             Blk.Server_Response_Channel.Channel.Header_Field_Type
                                                (Musinfo.Instance.TSC_Schedule_Start));
    end Session_Accept;
@@ -138,7 +150,7 @@ is
 
    procedure Session_Cleanup (D : in out Dispatcher_Session;
                               C :        Dispatcher_Capability;
-                              I : in out Server_Session)
+                              S : in out Server_Session)
    is
       pragma Unreferenced (D);
       pragma Unreferenced (C);
@@ -146,25 +158,25 @@ is
       Resp_Active : Boolean;
       Stat        : Blk.Connection_Status;
    begin
-      if Serv.Ready (Instance (I)) and then Initialized (I) then
-         Blk.Server_Request_Channel.Is_Active (I.Request_Memory, Req_Active);
-         Blk.Server_Response_Channel.Is_Active (I.Response_Memory, Resp_Active);
+      if Serv.Ready (S) and then Initialized (S) then
+         Blk.Server_Request_Channel.Is_Active (S.Request_Memory, Req_Active);
+         Blk.Server_Response_Channel.Is_Active (S.Response_Memory, Resp_Active);
          Stat := Blk.Connection_Matrix (Req_Active, Resp_Active);
          if Stat = Blk.Client_Disconnect then
-            Serv.Finalize (Instance (I));
-            Blk.Server_Response_Channel.Deactivate (I.Response_Memory);
-            Reg.Registry (I.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
-            I.Name                          := Blk.Null_Name;
-            I.Registry_Index                := CIM.Invalid_Index;
-            I.Request_Memory                := Musinfo.Null_Memregion;
-            I.Response_Memory               := Musinfo.Null_Memregion;
-            I.Read_Select                   := (others => Blk.Null_Event_Header);
-            I.Read_Data                     := (others => (others => 0));
+            Serv.Finalize (S);
+            Blk.Server_Response_Channel.Deactivate (S.Response_Memory);
+            Reg.Registry (S.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
+            S.Name                          := Blk.Null_Name;
+            S.Registry_Index                := CIM.Invalid_Index;
+            S.Request_Memory                := Musinfo.Null_Memregion;
+            S.Response_Memory               := Musinfo.Null_Memregion;
+            S.Read_Select                   := (others => Blk.Null_Event_Header);
+            S.Read_Data                     := (others => (others => 0));
          end if;
       end if;
    end Session_Cleanup;
 
-   procedure Check_Channels (D : Dispatcher_Instance)
+   procedure Check_Channels (D : in out Dispatcher_Session)
    is
       use type Blk.Session_Name;
       use type Musinfo.Resource_Kind;
@@ -217,8 +229,8 @@ is
       end loop;
    end Check_Channels;
 
-   procedure Lemma_Dispatch (D : Dispatcher_Instance;
-                             C : Dispatcher_Capability)
+   procedure Lemma_Dispatch (D : in out Dispatcher_Session;
+                             C :        Dispatcher_Capability)
    is
    begin
       Dispatch (D, C);

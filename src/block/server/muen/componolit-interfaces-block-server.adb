@@ -46,7 +46,7 @@ is
                R.Event.Header.Kind = Blk.Command
                and then R.Event.Header.Id = Blk.Size
             then
-               Size_Data.Value := Blk.Count (Block_Count (Instance (S)) * (Count (Block_Size (Instance (S))) / 512));
+               Size_Data.Value := Blk.Count (Block_Count (S) * (Count (Block_Size (S)) / 512));
                R.Event.Data := Blk.Set_Size_Command_Data (Size_Data);
                Blk.Server_Response_Channel.Write (S.Response_Memory, R.Event);
                R.Event.Header := Blk.Null_Event_Header;
@@ -54,7 +54,7 @@ is
                if R.Event.Header.Kind = Blk.Read then
                   S.Read_Select (Index) := R.Event.Header;
                end if;
-               R.Length := Standard.Interfaces.Unsigned_64 (4096 / Block_Size (Instance (S)));
+               R.Length := Standard.Interfaces.Unsigned_64 (4096 / Block_Size (S));
                return;
             end if;
          else
@@ -113,15 +113,15 @@ is
       null;
    end Unblock_Client;
 
-   procedure Lemma_Initialize (S : Server_Instance;
-                               L : String;
-                               B : Byte_Length)
+   procedure Lemma_Initialize (S : in out Server_Session;
+                               L :        String;
+                               B :        Byte_Length)
    is
    begin
       Initialize (S, L, B);
    end Lemma_Initialize;
 
-   procedure Lemma_Finalize (S : Server_Instance)
+   procedure Lemma_Finalize (S : in out Server_Session)
    is
    begin
       Finalize (S);
