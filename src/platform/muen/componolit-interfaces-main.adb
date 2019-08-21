@@ -31,7 +31,7 @@ is
                when CIM.Timer_Client =>
                   Reg.Call_Timer_Event (Reg.Registry (I), I);
                when CIM.Block_Dispatcher =>
-                  Reg.Call_Block_Dispatcher_Event (Reg.Registry (I), I);
+                  Reg.Call_Block_Dispatcher_Event (Reg.Registry (I));
                when CIM.Block_Server =>
                   Reg.Call_Block_Server_Event (Reg.Registry (I));
                when others =>

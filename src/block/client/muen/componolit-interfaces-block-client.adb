@@ -37,7 +37,6 @@ is
    is
       use type Componolit.Interfaces.Internal.Block.Request_Status;
       use type Standard.Interfaces.Unsigned_32;
-      pragma Unreferenced (C);
       Ev_Type : Blk.Event_Type;
    begin
       if L /= 1 then
@@ -57,6 +56,7 @@ is
       end case;
       E                    := Success;
       R.Status             := Componolit.Interfaces.Internal.Block.Allocated;
+      R.Session            := C.Tag;
       R.Event.Header.Kind  := Ev_Type;
       R.Event.Header.Id    := Blk.Sector (S);
       R.Event.Header.Priv  := Request_Id'Pos (I);
@@ -140,6 +140,7 @@ is
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Componolit.Interfaces.Types.Capability;
                          Path        :        String;
+                         Tag         :        Session_Id;
                          Buffer_Size :        Byte_Length := 0)
    is
       use type CIM.Async_Session_Type;
@@ -213,6 +214,8 @@ is
                C.Response_Reader    := Reader;
                C.Count              := Blk.Get_Size_Command_Data (Size_Event.Data).Value / 8;
                C.Responses          := (others => Blk.Null_Event);
+               C.Tag                := Standard.Interfaces.Unsigned_32'Val
+                                          (Session_Id'Pos (Tag) - Session_Id'Pos (Session_Id'First));
             end if;
          end if;
       end if;
@@ -237,7 +240,7 @@ is
       end if;
       Enqueue_Buffer := (others => Byte'First);
       if R.Event.Header.Kind = Blk.Write then
-         Write (Instance (C),
+         Write (C,
                 Request_Id'Val (R.Event.Header.Priv),
                 Enqueue_Buffer);
          R.Event.Data := Convert_Buffer (Enqueue_Buffer);
@@ -258,7 +261,7 @@ is
                    R :        Client_Request)
    is
    begin
-      Read (Instance (C),
+      Read (C,
             Request_Id'Val (R.Event.Header.Priv),
             Convert_Buffer (R.Event.Data));
    end Read;
@@ -282,17 +285,17 @@ is
       R.Event.Header := Blk.Null_Event_Header;
    end Release;
 
-   procedure Lemma_Read (C      : Client_Instance;
-                         Req    : Request_Id;
-                         Data   : Buffer)
+   procedure Lemma_Read (C      : in out Client_Session;
+                         Req    :        Request_Id;
+                         Data   :        Buffer)
    is
    begin
       Read (C, Req, Data);
    end Lemma_Read;
 
-   procedure Lemma_Write (C      :     Client_Instance;
-                          Req    :     Request_Id;
-                          Data   : out Buffer)
+   procedure Lemma_Write (C      : in out Client_Session;
+                          Req    :        Request_Id;
+                          Data   :    out Buffer)
    is
    begin
       Write (C, Req, Data);

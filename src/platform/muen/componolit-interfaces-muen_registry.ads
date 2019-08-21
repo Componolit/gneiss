@@ -24,6 +24,8 @@ is
             Block_Client_Event   : System.Address;
          when CIM.Block_Dispatcher =>
             Block_Dispatch_Event : System.Address;
+            Tag                  : Standard.Interfaces.Unsigned_32;
+            Session              : System.Address;
          when CIM.Block_Server =>
             Block_Server_Event   : System.Address;
       end case;
@@ -35,8 +37,7 @@ is
    procedure Call_Block_Client_Event (S : Session_Entry) with
       Pre => S.Kind = CIM.Block_Client;
 
-   procedure Call_Block_Dispatcher_Event (S : Session_Entry;
-                                          I : CIM.Session_Index) with
+   procedure Call_Block_Dispatcher_Event (S : Session_Entry) with
       Pre => S.Kind = CIM.Block_Dispatcher;
 
    procedure Call_Block_Server_Event (S : Session_Entry) with
