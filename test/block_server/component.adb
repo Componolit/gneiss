@@ -9,8 +9,8 @@ is
    use type Block.Request_Kind;
 
    Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
-   Dispatcher  : Block.Dispatcher_Session                 := Block.Create;
-   Server      : Block.Server_Session                     := Block.Create;
+   Dispatcher  : Block.Dispatcher_Session;
+   Server      : Block.Server_Session;
 
    subtype Disk is Buffer (0 .. 524287); --  Disk_Block_Size * Disk_Block_Count - 1
 
@@ -18,13 +18,11 @@ is
 
    type Cache_Element is limited record
       Req     : Block.Server_Request;
-      Handled : Boolean;
-      Success : Boolean;
+      Handled : Boolean := False;
+      Success : Boolean := False;
    end record;
    type Request_Cache_Type is array (Request_Index'Range) of Cache_Element;
-   Request_Cache : Request_Cache_Type := (others => (Req     => Block.Null_Request,
-                                                     Handled => False,
-                                                     Success => False));
+   Request_Cache : Request_Cache_Type;
 
    Ready : Boolean := False;
 
@@ -36,7 +34,7 @@ is
       end if;
       if Componolit.Interfaces.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
-            Block_Dispatcher.Initialize (Dispatcher, Cap);
+            Block_Dispatcher.Initialize (Dispatcher, Cap, 42);
          end if;
          if Block.Initialized (Dispatcher) then
             Block_Dispatcher.Register (Dispatcher);
@@ -62,12 +60,14 @@ is
    end Destruct;
 
    procedure Read (R : in out Cache_Element) with
-      Pre  => Block.Initialized (Server)
+      Pre  => Initialized (Server)
+              and then Block.Initialized (Server)
               and then Block.Status (R.Req) = Block.Pending
               and then Block.Kind (R.Req) = Block.Read
-              and then Block.Start (R.Req) < Block.Id (Ram_Disk'Length / Disk_Block_Size)
+              and then Block.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
               and then Block.Length (R.Req) > 0
-              and then Block.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size),
+              and then Block.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size)
+              and then Block.Assigned (Server, R.Req),
       Post => Block.Initialized (Server);
 
    procedure Read (R : in out Cache_Element)
@@ -75,11 +75,8 @@ is
       Start  : constant Block.Count := Block.Count (Block.Start (R.Req));
       Length : constant Block.Count := Block.Length (R.Req);
    begin
-      pragma Assert (Start < 1024);
-      pragma Assert (Unsigned_Long (Block.Size (Start) * Disk_Block_Size) in Ram_Disk'Range);
-      pragma Assert (Start * Disk_Block_Size in Ram_Disk'Range);
       if
-         Unsigned_Long (Block.Size (Start) * Disk_Block_Size) in Ram_Disk'Range
+         Start * Disk_Block_Size in Ram_Disk'Range
          and then (Start + Length) * Disk_Block_Size - 1 in Ram_Disk'Range
       then
          Block_Server.Read
@@ -93,12 +90,14 @@ is
    end Read;
 
    procedure Write (R : in out Cache_Element) with
-      Pre  => Block.Initialized (Server)
+      Pre  => Initialized (Server)
+              and then Block.Initialized (Server)
               and then Block.Status (R.Req) = Block.Pending
               and then Block.Kind (R.Req) = Block.Write
               and then Block.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
               and then Block.Length (R.Req) > 0
-              and then Block.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size),
+              and then Block.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size)
+              and then Block.Assigned (Server, R.Req),
       Post => Block.Initialized (Server);
 
    procedure Write (R : in out Cache_Element)
@@ -123,8 +122,13 @@ is
    procedure Event
    is
    begin
-      if Block.Initialized (Server) then
+      if
+         Initialized (Server)
+         and then Block.Initialized (Server)
+      then
          for I in Request_Cache'Range loop
+            pragma Loop_Invariant (Initialized (Server));
+            pragma Loop_Invariant (Block.Initialized (Server));
             if Block.Status (Request_Cache (I).Req) = Block.Raw then
                Request_Cache (I).Success := False;
                Request_Cache (I).Handled := False;
@@ -132,6 +136,7 @@ is
             end if;
             if
                Block.Status (Request_Cache (I).Req) = Block.Pending
+               and then Block.Assigned (Server, Request_Cache (I).Req)
                and then not Request_Cache (I).Handled
             then
                Request_Cache (I).Handled := True;
@@ -154,6 +159,7 @@ is
             end if;
             if
                Block.Status (Request_Cache (I).Req) = Block.Pending
+               and then Block.Assigned (Server, Request_Cache (I).Req)
                and then Request_Cache (I).Handled
             then
                Block_Server.Acknowledge (Server, Request_Cache (I).Req,
@@ -164,31 +170,33 @@ is
       end if;
    end Event;
 
-   function Block_Count (S : Block.Server_Instance) return Block.Count
+   function Block_Count (S : Block.Server_Session) return Block.Count
    is
       pragma Unreferenced (S);
    begin
       return Disk_Block_Count;
    end Block_Count;
 
-   function Block_Size (S : Block.Server_Instance) return Block.Size
+   function Block_Size (S : Block.Server_Session) return Block.Size
    is
       pragma Unreferenced (S);
    begin
       return Disk_Block_Size;
    end Block_Size;
 
-   function Writable (S : Block.Server_Instance) return Boolean
+   function Writable (S : Block.Server_Session) return Boolean
    is
       pragma Unreferenced (S);
    begin
       return True;
    end Writable;
 
-   function Initialized (S : Block.Server_Instance) return Boolean is
+   function Initialized (S : Block.Server_Session) return Boolean is
       (Ready);
 
-   procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length)
+   procedure Initialize (S : in out Block.Server_Session;
+                         L :        String;
+                         B :        Block.Byte_Length)
    is
       pragma Unreferenced (S);
       pragma Unreferenced (B);
@@ -217,31 +225,28 @@ is
       Ram_Disk := (others => 0);
    end Initialize;
 
-   procedure Finalize (S : Block.Server_Instance)
+   procedure Finalize (S : in out Block.Server_Session)
    is
       pragma Unreferenced (S);
    begin
       Ready := False;
    end Finalize;
 
-   procedure Request (I : Block.Dispatcher_Instance;
-                      C : Block.Dispatcher_Capability)
+   procedure Request (I : in out Block.Dispatcher_Session;
+                      C :        Block.Dispatcher_Capability)
    is
-      use type Block.Dispatcher_Instance;
    begin
-      if Block.Instance (Dispatcher) = I then
-         if
-            Block_Dispatcher.Valid_Session_Request (Dispatcher, C)
-            and then not Ready
-            and then not Block.Initialized (Server)
-         then
-            Block_Dispatcher.Session_Initialize (Dispatcher, C, Server);
-            if Ready and then Block.Initialized (Server) then
-               Block_Dispatcher.Session_Accept (Dispatcher, C, Server);
-            end if;
+      if
+         Block_Dispatcher.Valid_Session_Request (I, C)
+         and then not Ready
+         and then not Block.Initialized (Server)
+      then
+         Block_Dispatcher.Session_Initialize (I, C, Server, 42);
+         if Ready and then Block.Initialized (Server) then
+            Block_Dispatcher.Session_Accept (I, C, Server);
          end if;
-         Block_Dispatcher.Session_Cleanup (Dispatcher, C, Server);
       end if;
+      Block_Dispatcher.Session_Cleanup (I, C, Server);
    end Request;
 
 end Component;
