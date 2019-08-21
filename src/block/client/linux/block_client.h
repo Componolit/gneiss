@@ -31,33 +31,33 @@ struct request
     uint64_t length;
     uint32_t status;
     struct aiocb *aio_cb;
-    void *instance;
+    uint32_t session;
 };
 
 struct block_client
 {
     void (*event)(void);
     void (*rw)(block_client_t *client,
-               uint64_t size,
                request_t const *request,
                void *data);
     int fd;
     int writable;
     uint64_t block_size;
     uint64_t block_count;
+    uint32_t tag;
 };
 
 void block_client_allocate_request(block_client_t *client, request_t *request, int *retry);
 
 void block_client_update_request(block_client_t *client, request_t *request);
 
-void block_client_initialize(block_client_t **client,
+void block_client_initialize(block_client_t *client,
                              const char *path,
                              uint64_t buffer_size,
                              void (*event)(void),
-                             void (*rw)(block_client_t *, uint64_t, request_t const *, void*));
+                             void (*rw)(block_client_t *, request_t const *, void*));
 
-void block_client_finalize(block_client_t **client);
+void block_client_finalize(block_client_t *client);
 
 void block_client_enqueue(block_client_t *client, request_t *request);
 

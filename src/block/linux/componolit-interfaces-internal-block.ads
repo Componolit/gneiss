@@ -5,17 +5,22 @@ with System;
 package Componolit.Interfaces.Internal.Block is
 
    type Client_Session is limited record
-      Instance : System.Address;
+      Event       : System.Address;
+      Rw          : System.Address;
+      Fd          : Integer;
+      Writable    : Integer;
+      Block_Size  : C.Uint64_T;
+      Block_Count : C.Uint64_T;
+      Tag         : C.Uint32_T;
    end record;
+
    type Dispatcher_Session is limited record
-      Instance : System.Address;
+      Instance : System.Address := System.Null_Address;
    end record;
+
    type Server_Session is limited record
-      Instance : System.Address;
+      Instance : System.Address := System.Null_Address;
    end record;
-   type Client_Instance is new System.Address;
-   type Dispatcher_Instance is new System.Address;
-   type Server_Instance is new System.Address;
 
    type Request_Kind is new C.Uint32_T;
    type Request_Status is new C.Uint32_T;
@@ -33,13 +38,13 @@ package Componolit.Interfaces.Internal.Block is
    Error        : constant Request_Status := 4;
 
    type Client_Request is record
-      Kind   : Request_Kind;
-      Tag    : C.Uint32_T;
-      Start  : C.Uint64_T;
-      Length : C.Uint64_T;
-      Status : Request_Status;
-      Aiocb  : System.Address;
-      Inst   : System.Address;
+      Kind    : Request_Kind;
+      Tag     : C.Uint32_T;
+      Start   : C.Uint64_T;
+      Length  : C.Uint64_T;
+      Status  : Request_Status;
+      Aiocb   : System.Address;
+      Session : C.Uint32_T;
    end record;
 
    type Server_Request is null record;
