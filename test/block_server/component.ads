@@ -19,7 +19,7 @@ is
    type Buffer is array (Unsigned_Long range <>) of Byte;
    type Request_Index is mod 8;
 
-   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Request_Index);
+   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Integer, Request_Index);
 
    use type Block.Count;
    use type Block.Size;
@@ -28,19 +28,21 @@ is
    Disk_Block_Count : constant Block.Count := 1024;
 
    procedure Event;
-   function Block_Count (S : Block.Server_Instance) return Block.Count with
+   function Block_Count (S : Block.Server_Session) return Block.Count with
       Post => Block_Count'Result = Disk_Block_Count;
-   function Block_Size (S : Block.Server_Instance) return Block.Size with
+   function Block_Size (S : Block.Server_Session) return Block.Size with
       Post => Block_Size'Result = Disk_Block_Size,
       Annotate => (GNATprove, Terminating);
-   function Writable (S : Block.Server_Instance) return Boolean;
-   function Initialized (S : Block.Server_Instance) return Boolean;
-   procedure Initialize (S : Block.Server_Instance; L : String; B : Block.Byte_Length);
-   procedure Finalize (S : Block.Server_Instance);
+   function Writable (S : Block.Server_Session) return Boolean;
+   function Initialized (S : Block.Server_Session) return Boolean;
+   procedure Initialize (S : in out Block.Server_Session;
+                         L :        String;
+                         B :        Block.Byte_Length);
+   procedure Finalize (S : in out Block.Server_Session);
 
-   procedure Request (I : Block.Dispatcher_Instance;
-                      C : Block.Dispatcher_Capability) with
-      Pre => Block.Initialized (I);
+   procedure Request (I : in out Block.Dispatcher_Session;
+                      C :        Block.Dispatcher_Capability) with
+      Pre => Block.Initialized (I) and then not Block.Accepted (I);
 
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
