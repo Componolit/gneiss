@@ -20,8 +20,8 @@ generic
    with package Serv is new Componolit.Interfaces.Block.Server (<>);
 
    --  Called when a client connects or disconnects
-   with procedure Dispatch (I : Dispatcher_Instance;
-                            C : Dispatcher_Capability);
+   with procedure Dispatch (I : in out Dispatcher_Session;
+                            C :        Dispatcher_Capability);
 
    pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block.Dispatcher with
@@ -33,7 +33,8 @@ is
    --  @param D    Dispatcher session instance
    --  @param Cap  System capability
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Componolit.Interfaces.Types.Capability) with
+                         Cap :        Componolit.Interfaces.Types.Capability;
+                         Tag :        Session_Id) with
       Pre => not Initialized (D);
 
    --  Register the server implementation Serv on the platform
@@ -66,16 +67,19 @@ is
    --  @param D  Dispatcher session instance
    --  @param C  Unique capability for this session request
    --  @param I  Server session instance to be initialized
+   --  @param T  Session Id to be given to server
    procedure Session_Initialize (D : in out Dispatcher_Session;
                                  C :        Dispatcher_Capability;
-                                 I : in out Server_Session) with
+                                 S : in out Server_Session;
+                                 I :        Session_Id) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
-              and then not Serv.Ready (Instance (I))
-              and then not Initialized (I)
-              and then not Accepted (Instance (D)),
+              and then not Serv.Ready (S)
+              and then not Initialized (S)
+              and then not Accepted (D),
       Post => Initialized (D)
-              and then not Accepted (Instance (D));
+              and then Valid_Session_Request (D, C)
+              and then not Accepted (D);
 
    --  Accept session request
    --
@@ -84,15 +88,15 @@ is
    --  @param I  Server session instance to handle client connection with
    procedure Session_Accept (D : in out Dispatcher_Session;
                              C :        Dispatcher_Capability;
-                             I : in out Server_Session) with
+                             S : in out Server_Session) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
-              and then not Accepted (Instance (D))
-              and then Serv.Ready (Instance (I))
-              and then Initialized (I),
+              and then not Accepted (D)
+              and then Serv.Ready (S)
+              and then Initialized (S),
       Post => Initialized (D)
-              and then Serv.Ready (Instance (I))
-              and then Initialized (I);
+              and then Serv.Ready (S)
+              and then Initialized (S);
 
    --  Garbage collects disconnected sessions
    --
@@ -105,7 +109,7 @@ is
    --  @param I  Server session instance to check for removal
    procedure Session_Cleanup (D : in out Dispatcher_Session;
                               C :        Dispatcher_Capability;
-                              I : in out Server_Session) with
+                              S : in out Server_Session) with
       Pre  => Initialized (D),
       Post => Initialized (D);
 
@@ -118,8 +122,8 @@ private
    --
    --  @param D  Dispatcher instance
    --  @param C  Dispatcher capability
-   procedure Lemma_Dispatch (D : Dispatcher_Instance;
-                             C : Dispatcher_Capability) with
+   procedure Lemma_Dispatch (D : in out Dispatcher_Session;
+                             C :        Dispatcher_Capability) with
       Ghost,
       Pre => Initialized (D) and then not Accepted (D);
 

@@ -23,7 +23,10 @@ generic
    --  Buffer type to be used with all operations of this instance
    type Buffer is array (Buffer_Index range <>) of Byte;
 
-   --  max 32bit request identifier
+   --  Max 32bit session identifier
+   type Session_Id is (<>);
+
+   --  Max 32bit request identifier
    type Request_Id is (<>);
 
    pragma Warnings (On, "* is not referenced");
@@ -160,20 +163,8 @@ is
    type Dispatcher_Session is limited private;
    type Server_Session is limited private;
 
-   --  Session instances, represent unique identifiers of session objects
-   type Client_Instance is private;
-   type Dispatcher_Instance is private;
-   type Server_Instance is private;
-
    --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
-
-   --  Create empty request
-   --
-   --  @return  empty, uninitialized request
-   function Null_Request return Client_Request with
-      Annotate => (GNATprove, Terminating),
-      Post => Status (Null_Request'Result) = Raw;
 
    --  Get request type
    --
@@ -214,39 +205,34 @@ is
       Annotate => (GNATprove, Terminating),
       Pre => Status (R) not in Raw | Error;
 
+   --  Check if a request is assigned to this session
+   --
+   --  When a request is allocated it gets assigned to the session that is used for allocation.
+   --  It can then only be used by this session.
+   --
+   --  @param C  Client session instance
+   --  @param R  Request to check
+   --  @return   True if the R is assigned to C
+   function Assigned (C : Client_Session;
+                      R : Client_Request) return Boolean with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C)
+             and then Status (R) /= Raw;
+
    --  Return True if C is initialized
    --
    --  @param C  Client session instance
+   --  @return   True if initialized
    function Initialized (C : Client_Session) return Boolean with
-      Annotate => (GNATprove, Terminating),
-      Post => Initialized'Result = Initialized (Instance (C));
-
-   --  Check if the client session of C is initialized
-   --
-   --  @param C  Client instance
-   --  @return   True if the session that belongs to C is initialized
-   function Initialized (C : Client_Instance) return Boolean with
-      --  Ghost, --  Componolit/Workarounds#3
       Annotate => (GNATprove, Terminating);
 
-   --  Create uninitialized client session
-   --
-   --  @return Uninitialized client session
-   function Create return Client_Session with
-      Annotate => (GNATprove, Terminating);
-
-   --  Get the instance ID of C
+   --  Return session identifier
    --
    --  @param C  Client session instance
-   function Instance (C : Client_Session) return Client_Instance with
-      Annotate => (GNATprove, Terminating);
-
-   --  Get the instance ID of the client the request is bound to
-   --
-   --  @param R  Client request
-   --  @return   Client instance the request is bound to
-   function Instance (R : Client_Request) return Client_Instance with
-      Pre => Status (R) /= Raw;
+   --  @return   Identifier passed on initialization
+   function Identifier (C : Client_Session) return Session_Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C);
 
    --  Check if the block device is writable
    --
@@ -271,13 +257,6 @@ is
    function Block_Size (C : Client_Session) return Size with
       Annotate => (GNATprove, Terminating),
       Pre => Initialized (C);
-
-   --  Create empty request
-   --
-   --  @return  empty, uninitialized request
-   function Null_Request return Server_Request with
-      Annotate => (GNATprove, Terminating),
-      Post => Status (Null_Request'Result) = Raw;
 
    --  Get request type
    --
@@ -310,68 +289,62 @@ is
       Annotate => (GNATprove, Terminating),
       Pre => Status (R) = Pending;
 
+   --  Helper function to check if the assigned session Id is valid
+   --
+   --  This property is also inherited by Initialized. Yet some callback procedures are called
+   --  before Initialized is true but still require a valid session Id. This property is necessary
+   --  but not sufficient for Initialized.
+   --
+   --  @param S  Server Session Instance
+   --  @return   True if the internal representation of the session id yields a valid Session_Id
+   function Valid (S : Server_Session) return Boolean with
+      Annotate => (GNATprove, Terminating);
+
+   --  Check if a request is assigned to this session
+   --
+   --  When a request is allocated it gets assigned to the session that is used for allocation.
+   --  It can then only be used by this session.
+   --
+   --  @param S  Server session instance
+   --  @param R  Request to check
+   --  @return   True if the R is assigned to S
+   function Assigned (S : Server_Session;
+                      R : Server_Request) return Boolean with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (S)
+             and then Status (R) /= Raw;
+
    --  Check if S is initialized
    --
    --  @param S  Server session instance
    --  @return   True if the server session is initialized
    function Initialized (S : Server_Session) return Boolean with
-      Annotate => (GNATprove, Terminating),
-      Post => Initialized'Result = Initialized (Instance (S));
-
-   --  Check if the Server session of S is initialized
-   --
-   --  @param S  Server instance
-   --  @return   True if the session that belongs to S is initialized
-   function Initialized (S : Server_Instance) return Boolean with
-      --  Ghost, --  Componolit/Workarounds#3
-      Inline_Always,
       Annotate => (GNATprove, Terminating);
 
-   --  Create new server session
-   --
-   --  @return Uninitialized server session
-   function Create return Server_Session;
-
-   --  Get the instance ID of S
+   --  Return session identifier
    --
    --  @param S  Server session instance
-   --  @return   Instance ID of S
-   function Instance (S : Server_Session) return Server_Instance;
-
-   --  Get the instance ID of the server session the request is bound to
-   --
-   --  @param R  Server request
-   --  @return   ID of the server session
-   function Instance (R : Server_Request) return Server_Instance with
-      Pre => Status (R) /= Raw;
+   --  @return   Identifier passed on initialization
+   function Identifier (S : Server_Session) return Session_Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Valid (S);
 
    --  Checks if D is initialized
    --
    --  @param D  Dispatcher session instance
    --  @return   True if D is initialized
    function Initialized (D : Dispatcher_Session) return Boolean with
-      Post => Initialized'Result = Initialized (Instance (D));
-
-   --  Check if the Dispatcher session of D is initialized
-   --
-   --  @param D  Dispatcher instance
-   --  @return   True if the session that belongs to D is initialized
-   function Initialized (D : Dispatcher_Instance) return Boolean with
-      --  Ghost, --  Componolit/Workarounds#3
       Annotate => (GNATprove, Terminating);
 
-   --  Create new dispatcher session
-   --
-   --  @return Uninitialized dispatcher session
-   function Create return Dispatcher_Session;
-
-   --  Return the instance ID of D
+   --  Return session identifier
    --
    --  @param D  Dispatcher session instance
-   --  @return   Instance identifier of D
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance;
+   --  @return   Identifier passed on initialization
+   function Identifier (D : Dispatcher_Session) return Session_Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (D);
 
-   function Accepted (D : Dispatcher_Instance) return Boolean with
+   function Accepted (D : Dispatcher_Session) return Boolean with
       Ghost,
       Import,
       Pre => Initialized (D);
@@ -381,9 +354,6 @@ private
    type Client_Session is new Componolit.Interfaces.Internal.Block.Client_Session;
    type Dispatcher_Session is new Componolit.Interfaces.Internal.Block.Dispatcher_Session;
    type Server_Session is new Componolit.Interfaces.Internal.Block.Server_Session;
-   type Client_Instance is new Componolit.Interfaces.Internal.Block.Client_Instance;
-   type Dispatcher_Instance is new Componolit.Interfaces.Internal.Block.Dispatcher_Instance;
-   type Server_Instance is new Componolit.Interfaces.Internal.Block.Server_Instance;
    type Dispatcher_Capability is new Componolit.Interfaces.Internal.Block.Dispatcher_Capability;
 
    type Client_Request is new Componolit.Interfaces.Internal.Block.Client_Request;
