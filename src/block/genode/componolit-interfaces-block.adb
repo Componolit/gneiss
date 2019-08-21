@@ -3,28 +3,18 @@ with System;
 with Cxx;
 with Cxx.Block;
 with Cxx.Block.Client;
-with Cxx.Block.Dispatcher;
-with Cxx.Block.Server;
+with Cxx.Genode;
 
 package body Componolit.Interfaces.Block with
    SPARK_Mode
 is
    use type Cxx.Bool;
+   use type Cxx.Genode.Uint32_T;
    use type System.Address;
 
    ------------
    -- Client --
    ------------
-
-   function Null_Request return Client_Request is
-      (Client_Request'(Packet   => Cxx.Block.Client.Packet_Descriptor'(Offset       => 0,
-                                                                       Bytes        => 0,
-                                                                       Opcode       => -1,
-                                                                       Tag          => 0,
-                                                                       Block_Number => 0,
-                                                                       Block_Count  => 0),
-                       Status   => Componolit.Interfaces.Internal.Block.Raw,
-                       Instance => (others => System.Null_Address)));
 
    function Kind (R : Client_Request) return Request_Kind is
       (case R.Packet.Opcode is
@@ -51,29 +41,18 @@ is
    function Identifier (R : Client_Request) return Request_Id is
       (Request_Id'Val (R.Packet.Tag));
 
-   function Create return Client_Session is
-      (Client_Session'(Instance => Cxx.Block.Client.Constructor));
-
-   function Instance (C : Client_Session) return Client_Instance is
-      (Client_Instance'(Device   => C.Instance.Private_X_Device,
-                        Callback => C.Instance.Private_X_Callback,
-                        Rw       => C.Instance.Private_X_Write,
-                        Env      => C.Instance.Private_X_Env));
-
-   function Instance (R : Client_Request) return Client_Instance is
-      (Client_Instance (R.Instance));
+   function Assigned (C : Client_Session;
+                      R : Client_Request) return Boolean is
+      (C.Instance.Tag = R.Session);
 
    function Initialized (C : Client_Session) return Boolean is
-      (C.Instance.Private_X_Device /= System.Null_Address
-       and then C.Instance.Private_X_Callback /= System.Null_Address
-       and then C.Instance.Private_X_Write /= System.Null_Address
-       and then C.Instance.Private_X_Env /= System.Null_Address);
+      (C.Instance.Device /= System.Null_Address
+       and then C.Instance.Callback /= System.Null_Address
+       and then C.Instance.Write /= System.Null_Address
+       and then C.Instance.Env /= System.Null_Address);
 
-   function Initialized (C : Client_Instance) return Boolean is
-      (C.Device /= System.Null_Address
-       and then C.Callback /= System.Null_Address
-       and then C.Rw /= System.Null_Address
-       and then C.Env /= System.Null_Address);
+   function Identifier (C : Client_Session) return Session_Id is
+      (Session_Id'Val (C.Instance.Tag));
 
    function Writable (C : Client_Session) return Boolean is
       (Cxx.Block.Client.Writable (C.Instance) /= Cxx.Bool'Val (0));
@@ -88,34 +67,16 @@ is
    -- Dispatcher --
    ----------------
 
-   function Create return Dispatcher_Session is
-      (Dispatcher_Session'(Instance => Cxx.Block.Dispatcher.Constructor));
-
    function Initialized (D : Dispatcher_Session) return Boolean is
       (D.Instance.Root /= System.Null_Address
        and then D.Instance.Handler /= System.Null_Address);
 
-   function Initialized (D : Dispatcher_Instance) return Boolean is
-      (D.Root /= System.Null_Address
-       and then D.Handler /= System.Null_Address);
-
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance is
-      (Dispatcher_Instance'(Root    => D.Instance.Root,
-                            Handler => D.Instance.Handler));
+   function Identifier (D : Dispatcher_Session) return Session_Id is
+      (Session_Id'Val (D.Instance.Tag));
 
    ------------
    -- Server --
    ------------
-
-   function Null_Request return Server_Request is
-      (Server_Request'(Request  => Cxx.Block.Server.Request'(Kind         => -1,
-                                                             Block_Number => 0,
-                                                             Block_Count  => 0,
-                                                             Success      => 0,
-                                                             Offset       => 0,
-                                                             Tag          => 0),
-                       Status   => Componolit.Interfaces.Internal.Block.Raw,
-                       Instance => (others => System.Null_Address)));
 
    function Kind (R : Server_Request) return Request_Kind is
       (case R.Request.Kind is
@@ -139,8 +100,9 @@ is
    function Length (R : Server_Request) return Count is
       (Count (R.Request.Block_Count));
 
-   function Create return Server_Session is
-      (Server_Session'(Instance => Cxx.Block.Server.Constructor));
+   function Assigned (S : Server_Session;
+                      R : Server_Request) return Boolean is
+      (S.Instance.Tag = R.Session);
 
    function Initialized (S : Server_Session) return Boolean is
       (S.Instance.Session /= System.Null_Address
@@ -149,21 +111,11 @@ is
        and then S.Instance.Block_Size /= System.Null_Address
        and then S.Instance.Writable /= System.Null_Address);
 
-   function Initialized (S : Server_Instance) return Boolean is
-      (S.Session /= System.Null_Address
-       and then S.Callback /= System.Null_Address
-       and then S.Block_Count /= System.Null_Address
-       and then S.Block_Size /= System.Null_Address
-       and then S.Writable /= System.Null_Address);
+   function Valid (S : Server_Session) return Boolean is
+      (Cxx.Genode.Uint32_T'Pos (S.Instance.Tag) + Session_Id'Pos (Session_Id'First) in
+             Session_Id'Pos (Session_Id'First) .. Session_Id'Pos (Session_Id'Last));
 
-   function Instance (S : Server_Session) return Server_Instance is
-      (Server_Instance'(Session     => S.Instance.Session,
-                        Callback    => S.Instance.Callback,
-                        Block_Count => S.Instance.Block_Count,
-                        Block_Size  => S.Instance.Block_Size,
-                        Writable    => S.Instance.Writable));
-
-   function Instance (R : Server_Request) return Server_Instance is
-      (Server_Instance (R.Instance));
+   function Identifier (S : Server_Session) return Session_Id is
+      (Session_Id'Val (Cxx.Genode.Uint32_T'Pos (S.Instance.Tag) + Session_Id'Pos (Session_Id'First)));
 
 end Componolit.Interfaces.Block;

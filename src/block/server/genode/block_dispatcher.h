@@ -12,6 +12,7 @@ namespace Block
         private:
             void *_root; //Cai::Block::Root in block_dispatcher.cc
             void *_handler; //procedure Event(S : Instance);
+            Genode::uint32_t _tag;
 
         public:
             Dispatcher();
