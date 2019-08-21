@@ -20,6 +20,7 @@ namespace Block
              void *_block_count; //function Block_Count (S : Instance) return Cai.Block.Count;
              void *_block_size; //function Block_Size (S : Instance) return Cai.Block.Size;
              void *_writable; //function Writable (S : Instance) return Boolean
+             Genode::uint32_t _tag;
 
         public:
             Server();

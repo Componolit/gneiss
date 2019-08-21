@@ -41,6 +41,7 @@ is
          when others => Opcode := -1;
       end case;
       R.Packet.Block_Count := 0;
+      R.Session := C.Instance.Tag;
       Cxx.Block.Client.Allocate_Request (C.Instance, R.Packet, Opcode,
                                          Cxx.Genode.Uint64_T (S),
                                          Cxx.Unsigned_Long (L),
@@ -48,7 +49,6 @@ is
                                          Res);
       if R.Packet.Block_Count > 0 and Res = 0 then
          R.Status   := Componolit.Interfaces.Internal.Block.Allocated;
-         R.Instance := Componolit.Interfaces.Internal.Block.Client_Instance (Instance (C));
          E          := Success;
       else
          if Res = 1 then
@@ -106,39 +106,54 @@ is
       end loop;
    end Update_Request;
 
-   procedure Crw (C : Client_Session;
-                  O : Integer;
-                  B : Size;
-                  T : Cxx.Unsigned_Long;
-                  L : Count;
-                  D : System.Address);
+   procedure Crw (C : in out Client_Session;
+                  O :        Integer;
+                  T :        Cxx.Unsigned_Long;
+                  L :        Count;
+                  D :        System.Address);
 
-   procedure Crw (C : Client_Session;
-                  O : Integer;
-                  B : Size;
-                  T : Cxx.Unsigned_Long;
-                  L : Count;
-                  D : System.Address) with
+   procedure Crw (C : in out Client_Session;
+                  O :        Integer;
+                  T :        Cxx.Unsigned_Long;
+                  L :        Count;
+                  D :        System.Address) with
       SPARK_Mode => Off
    is
-      Data : Buffer (1 .. B * L) with
+      Data : Buffer (1 .. Block_Size (C) * L) with
          Address => D;
    begin
       case O is
          when 1 =>
-            Write (Instance (C), Request_Id'Val (T), Data);
+            Write (C, Request_Id'Val (T), Data);
          when 0 =>
-            Read (Instance (C), Request_Id'Val (T), Data);
+            Read (C, Request_Id'Val (T), Data);
          when others =>
             null;
       end case;
    end Crw;
 
+   function Event_Address return System.Address;
+   function Crw_Address return System.Address;
+
+   function Event_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Event'Address;
+   end Event_Address;
+
+   function Crw_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Crw'Address;
+   end Crw_Address;
+
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Componolit.Interfaces.Types.Capability;
                          Path        :        String;
-                         Buffer_Size :        Byte_Length := 0) with
-      SPARK_Mode => Off
+                         Tag         :        Session_Id;
+                         Buffer_Size :        Byte_Length := 0)
    is
       C_Path : constant String := Path & Character'Val (0);
       subtype C_Path_String is String (1 .. C_Path'Length);
@@ -149,9 +164,12 @@ is
       Cxx.Block.Client.Initialize (C.Instance,
                                    Cap,
                                    To_C_String (C_Path),
-                                   Event'Address,
-                                   Crw'Address,
+                                   Event_Address,
+                                   Crw_Address,
                                    Cxx.Genode.Uint64_T (Buffer_Size));
+      if Initialized (C) then
+         C.Instance.Tag := Session_Id'Pos (Tag);
+      end if;
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
@@ -189,17 +207,17 @@ is
       R.Status := Componolit.Interfaces.Internal.Block.Raw;
    end Release;
 
-   procedure Lemma_Read (C      : Client_Instance;
-                         Req    : Request_Id;
-                         Data   : Buffer)
+   procedure Lemma_Read (C      : in out Client_Session;
+                         Req    :        Request_Id;
+                         Data   :        Buffer)
    is
    begin
       Read (C, Req, Data);
    end Lemma_Read;
 
-   procedure Lemma_Write (C      :     Client_Instance;
-                          Req    :     Request_Id;
-                          Data   : out Buffer)
+   procedure Lemma_Write (C      : in out Client_Session;
+                          Req    :        Request_Id;
+                          Data   :    out Buffer)
    is
    begin
       Write (C, Req, Data);
