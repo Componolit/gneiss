@@ -20,25 +20,25 @@ generic
    --
    --  @param S  Server session instance identifier
    --  @return   Number of blocks on the device
-   with function Block_Count (S : Server_Instance) return Count;
+   with function Block_Count (S : Server_Session) return Count;
 
    --  Return the block size of session S in bytes
    --
    --  @param S  Server session instance identifier
    --  @return   Size of a block
-   with function Block_Size (S : Server_Instance) return Size;
+   with function Block_Size (S : Server_Session) return Size;
 
    --  Return if session S is writable
    --
    --  @param S  Server session instance identifier
    --  @return   True if the device can be written
-   with function Writable (S : Server_Instance) return Boolean;
+   with function Writable (S : Server_Session) return Boolean;
 
    --  Checks if the server implementation is ready
    --
    --  @param S  Server session instance identifier
    --  @return   True if the server implementation is ready
-   with function Ready (S : Server_Instance) return Boolean;
+   with function Ready (S : Server_Session) return Boolean;
 
    --  Custom initialization for the server,
    --  automatically called by Componolit.Interfaces.Block.Dispatcher.Session_Accept
@@ -46,9 +46,9 @@ generic
    --  @param S  Server session instance identifier
    --  @param L  Label passed by the client
    --  @param B  Internal buffer size as provided by the platform
-   with procedure Initialize (S : Server_Instance;
-                              L : String;
-                              B : Byte_Length);
+   with procedure Initialize (S : in out Server_Session;
+                              L :        String;
+                              B :        Byte_Length);
 
    --  Custom finalization for the server
    --
@@ -56,7 +56,7 @@ generic
    --  when the connected client disconnects.
    --
    --  @param S  Server session instance identifier
-   with procedure Finalize (S : Server_Instance);
+   with procedure Finalize (S : in out Server_Session);
 
    pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block.Server with
@@ -74,14 +74,13 @@ is
    --  @param R  Raw request slot
    procedure Process (S : in out Server_Session;
                       R : in out Server_Request) with
-      Pre  => Ready (Instance (S))
+      Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Raw,
-      Post => Ready (Instance (S))
+      Post => Ready (S)
               and then Initialized (S)
-              and then Instance (S)'Old = Instance (S)
               and then Status (R) in Raw | Pending | Error
-              and then (if Status (R) in Pending | Error then Instance (R) = Instance (S));
+              and then (if Status (R) in Pending | Error then Assigned (S, R));
 
    --  Provide the requested data for a read request
    --
@@ -91,16 +90,15 @@ is
    procedure Read (S : in out Server_Session;
                    R :        Server_Request;
                    B :        Buffer) with
-      Pre  => Ready (Instance (S))
+      Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
-              and then Kind (R) = Read
-              and then Instance (R) = Instance (S)
-              and then B'Length = Length (R) * Block_Size (Instance (S)),
-      Post => Ready (Instance (S))
+              and then Kind (R)   = Read
+              and then B'Length   = Length (R) * Block_Size (S)
+              and then Assigned (S, R),
+      Post => Ready (S)
               and then Initialized (S)
-              and then Instance (S)'Old = Instance (S)
-              and then Instance (R) = Instance (S);
+              and then Assigned (S, R);
 
    --  Get the data of a write request that shall be written
    --
@@ -110,16 +108,15 @@ is
    procedure Write (S : in out Server_Session;
                     R :        Server_Request;
                     B :    out Buffer) with
-      Pre  => Ready (Instance (S))
+      Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
-              and then Kind (R) = Write
-              and then Instance (R) = Instance (S)
-              and then B'Length = Length (R) * Block_Size (Instance (S)),
-      Post => Ready (Instance (S))
+              and then Kind (R)   = Write
+              and then B'Length   = Length (R) * Block_Size (S)
+              and then Assigned (S, R),
+      Post => Ready (S)
               and then Initialized (S)
-              and then Instance (S)'Old = Instance (S)
-              and then Instance (R) = Instance (S);
+              and then Assigned (S, R);
 
    --  Acknowledge a handled request
    --
@@ -131,16 +128,15 @@ is
    procedure Acknowledge (S   : in out Server_Session;
                           R   : in out Server_Request;
                           Res :        Request_Status) with
-      Pre  => Ready (Instance (S))
+      Pre  => Ready (S)
               and then Initialized (S)
               and then ((Status (R) = Pending and then Res in Ok | Error)
                         or else (Status (R) = Error and then Res = Error))
-              and then Instance (R) = Instance (S),
-      Post => Ready (Instance (S))
+              and then Assigned (S, R),
+      Post => Ready (S)
               and then Initialized (S)
-              and then Instance (S)'Old = Instance (S)
               and then Status (R) in Raw | Pending | Error
-              and then (if Status (R) in Pending | Error then Instance (R) = Instance (S));
+              and then (if Status (R) in Pending | Error then Assigned (S, R));
 
    --  Signal client to wake up
    --
@@ -151,16 +147,19 @@ is
    procedure Unblock_Client (S : in out Server_Session) with
       Pre  => Initialized (S),
       Post => Initialized (S)
-              and then Instance (S)'Old = Instance (S)
-              and then Ready (Instance (S)) = Ready (Instance (S)'Old);
+              and then Ready (S)'Old = Ready (S);
 
 private
+
+   function Lemma_Ready (S : Server_Session) return Boolean is
+      (Ready (S)) with
+      Pre => Valid (S);
 
    --  Return the block count of session S
    --
    --  @param S  Server session instance identifier
    --  @return   Number of blocks on the device
-   function Lemma_Block_Count (S : Server_Instance) return Count is
+   function Lemma_Block_Count (S : Server_Session) return Count is
       (Block_Count (S)) with
          Ghost,
          Pre => Ready (S);
@@ -169,7 +168,7 @@ private
    --
    --  @param S  Server session instance identifier
    --  @return   Size of a block
-   function Lemma_Block_Size (S : Server_Instance) return Size is
+   function Lemma_Block_Size (S : Server_Session) return Size is
       (Block_Size (S)) with
          Ghost,
          Pre => Ready (S);
@@ -178,7 +177,7 @@ private
    --
    --  @param S  Server session instance identifier
    --  @return   True if the device can be written
-   function Lemma_Writable (S : Server_Instance) return Boolean is
+   function Lemma_Writable (S : Server_Session) return Boolean is
       (Writable (S)) with
          Ghost,
          Pre => Ready (S);
@@ -189,11 +188,12 @@ private
    --  @param S  Server session instance identifier
    --  @param L  Label passed by the client
    --  @param B  Internal buffer size as provided by the platform
-   procedure Lemma_Initialize (S : Server_Instance;
-                               L : String;
-                               B : Byte_Length) with
+   procedure Lemma_Initialize (S : in out Server_Session;
+                               L :        String;
+                               B :        Byte_Length) with
       Ghost,
-      Pre => not Ready (S);
+      Pre => Valid (S)
+             and then not Ready (S);
 
    pragma Annotate (GNATprove, False_Positive,
                     "ghost procedure ""Lemma_Initialize"" cannot have non-ghost global output *",
@@ -205,7 +205,7 @@ private
    --  when the connected client disconnects.
    --
    --  @param S  Server session instance identifier
-   procedure Lemma_Finalize (S : Server_Instance) with
+   procedure Lemma_Finalize (S : in out Server_Session) with
       Ghost,
       Pre => Ready (S);
 

@@ -22,23 +22,23 @@ generic
    --
    --  The length of Data always corresponds to the request length in bytes (block size * block count)
    --
-   --  @param C       Client session instance identifier
+   --  @param C       Client session instance
    --  @param Req     Request identifier of request to write
    --  @param Data    Read data
-   with procedure Read (C      : Client_Instance;
-                        Req    : Request_Id;
-                        Data   : Buffer);
+   with procedure Read (C      : in out Client_Session;
+                        Req    :        Request_Id;
+                        Data   :        Buffer);
 
    --  Write procedure called when the platform required data to write
    --
    --  The length of Data always corresponds to the request length in bytes (block size * block count)
    --
-   --  @param C       Client session instance identifier
+   --  @param C       Client session instance
    --  @param Req     Request identifier of request to write
    --  @param Data    Data that will be written
-   with procedure Write (C      :     Client_Instance;
-                         Req    :     Request_Id;
-                         Data   : out Buffer);
+   with procedure Write (C      : in out Client_Session;
+                         Req    :        Request_Id;
+                         Data   :    out Buffer);
    pragma Warnings (On, "* is not referenced");
 package Componolit.Interfaces.Block.Client with
    SPARK_Mode
@@ -73,7 +73,7 @@ is
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C)
               and then (if E = Success then Status (R) = Allocated else Status (R) = Raw)
-              and then (if Status (R) = Allocated then Instance (R) = Instance (C));
+              and then (if Status (R) = Allocated then Assigned (C, R));
 
    --  Checks if a request has been changed by the platform
    --
@@ -83,14 +83,13 @@ is
                              R : in out Client_Request) with
       Pre  => Initialized (C)
               and then Status (R) = Pending
-              and then Instance (R) = Instance (C),
+              and then Assigned (C, R),
       Post => Initialized (C)
               and then Status (R) in Pending | Ok | Error
+              and then Assigned (C, R)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
-              and then Block_Size (C)'Old  = Block_Size (C)
-              and then Instance (C)'Old    = Instance (C)
-              and then Instance (R)'Old    = Instance (R);
+              and then Block_Size (C)'Old  = Block_Size (C);
 
    --  Initialize client instance
    --
@@ -104,6 +103,7 @@ is
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Componolit.Interfaces.Types.Capability;
                          Path        :        String;
+                         Tag         :        Session_Id;
                          Buffer_Size :        Byte_Length := 0) with
      Pre => not Initialized (C);
 
@@ -125,14 +125,13 @@ is
                       R : in out Client_Request) with
       Pre  => Initialized (C)
               and then Status (R) = Allocated
-              and then Instance (R) = Instance (C),
+              and then Assigned (C, R),
       Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C)
-              and then Instance (C)'Old    = Instance (C)
-              and then Instance (R)'Old    = Instance (R)
-              and then Status (R) in Allocated | Pending;
+              and then Status (R) in Allocated | Pending
+              and then Assigned (C, R);
 
    --  Submit all enqueued requests for processing
    --
@@ -142,8 +141,7 @@ is
       Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
-              and then Block_Size (C)'Old  = Block_Size (C)
-              and then Instance (C)'Old    = Instance (C);
+              and then Block_Size (C)'Old  = Block_Size (C);
 
    --  Read the returned data from a successfully acknowledged read request
    --
@@ -154,13 +152,12 @@ is
       Pre  => Initialized (C)
               and then Status (R)   = Ok
               and then Kind (R)     = Read
-              and then Instance (R) = Instance (C),
+              and then Assigned (C, R),
       Post => Initialized (C)
+              and then Assigned (C, R)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
-              and then Block_Size (C)'Old  = Block_Size (C)
-              and then Instance (C)'Old    = Instance (C)
-              and then Instance (R)'Old    = Instance (R);
+              and then Block_Size (C)'Old  = Block_Size (C);
 
    --  Release a request
    --
@@ -175,12 +172,11 @@ is
                       R : in out Client_Request) with
       Pre  => Initialized (C)
               and then Status (R)  /= Raw
-              and then Instance (R) = Instance (C),
+              and then Assigned (C, R),
       Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C)
-              and then Instance (C)'Old    = Instance (C)
               and then Status (R)          = Raw;
 
 private
@@ -189,12 +185,12 @@ private
    --
    --  The length of Data always corresponds to the request length in bytes (block size * block count)
    --
-   --  @param C       Client session instance identifier
+   --  @param C       Client session instance
    --  @param Req     Request identifier of request to write
    --  @param Data    Read data
-   procedure Lemma_Read (C      : Client_Instance;
-                         Req    : Request_Id;
-                         Data   : Buffer) with
+   procedure Lemma_Read (C      : in out Client_Session;
+                         Req    :        Request_Id;
+                         Data   :        Buffer) with
       Ghost,
       Pre => Initialized (C);
 
@@ -206,12 +202,12 @@ private
    --
    --  The length of Data always corresponds to the request length in bytes (block size * block count)
    --
-   --  @param C       Client session instance identifier
+   --  @param C       Client session instance
    --  @param Req     Request identifier of request to write
    --  @param Data    Data that will be written
-   procedure Lemma_Write (C      :     Client_Instance;
-                          Req    :     Request_Id;
-                          Data   : out Buffer) with
+   procedure Lemma_Write (C      : in out Client_Session;
+                          Req    :        Request_Id;
+                          Data   :    out Buffer) with
       Ghost,
       Pre => Initialized (C);
 
