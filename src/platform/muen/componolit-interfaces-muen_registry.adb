@@ -1,3 +1,6 @@
+
+with Componolit.Interfaces.Internal.Block;
+
 package body Componolit.Interfaces.Muen_Registry with
    SPARK_Mode
 is
@@ -11,14 +14,16 @@ is
       Event;
    end Call_Block_Client_Event;
 
-   procedure Call_Block_Dispatcher_Event (S : Session_Entry;
-                                          I : CIM.Session_Index)
+   procedure Call_Block_Dispatcher_Event (S : Session_Entry)
    is
-      procedure Event (D : CIM.Session_Index) with
+      Session : Componolit.Interfaces.Internal.Block.Dispatcher_Session with
+         Import,
+         Address => S.Session;
+      procedure Event (D : Componolit.Interfaces.Internal.Block.Dispatcher_Session) with
          Import,
          Address => S.Block_Dispatch_Event;
    begin
-      Event (I);
+      Event (Session);
    end Call_Block_Dispatcher_Event;
 
    procedure Call_Block_Server_Event (S : Session_Entry)

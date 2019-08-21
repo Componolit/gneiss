@@ -1,6 +1,7 @@
 with Interfaces;
 with Componolit.Interfaces.Muen;
 with Componolit.Interfaces.Muen_Block;
+with Componolit.Interfaces.Muen_Registry;
 with Musinfo;
 with Musinfo.Instance;
 
@@ -9,6 +10,7 @@ package body Componolit.Interfaces.Block with
 is
    package CIM renames Componolit.Interfaces.Muen;
    package Blk renames Componolit.Interfaces.Muen_Block;
+   package Reg renames Componolit.Interfaces.Muen_Registry;
 
    use type Standard.Interfaces.Unsigned_32;
    use type Standard.Interfaces.Unsigned_64;
@@ -17,19 +19,11 @@ is
    use type CIM.Session_Index;
    use type Musinfo.Memregion_Type;
    use type Blk.Event_Header;
+   use type CIM.Async_Session_Type;
 
    ------------
    -- Client --
    ------------
-
-   function Null_Request return Client_Request is
-      (Client_Request'(Status   => Componolit.Interfaces.Internal.Block.Raw,
-                       Instance => (Name => Blk.Null_Name,
-                                    Req  => Musinfo.Null_Memregion,
-                                    Resp => Musinfo.Null_Memregion,
-                                    Idx  => CIM.Invalid_Index,
-                                    Cnt  => 0),
-                       Event    => Blk.Null_Event));
 
    function Kind (R : Client_Request) return Request_Kind is
       (case R.Event.Header.Kind is
@@ -50,16 +44,18 @@ is
        else
           Error);
 
-   function Start (R : Client_Request) return Id
-   is
+   function Start (R : Client_Request) return Id is
       (Id (R.Event.Header.Id));
 
    function Length (R : Client_Request) return Count is
       (1);
 
-   function Identifier (R : Client_Request) return Request_Id
-   is
+   function Identifier (R : Client_Request) return Request_Id is
       (Request_Id'Val (R.Event.Header.Priv));
+
+   function Assigned (C : Client_Session;
+                      R : Client_Request) return Boolean is
+      (C.Tag = R.Session);
 
    function Initialized (C : Client_Session) return Boolean is
       (Musinfo.Instance.Is_Valid
@@ -71,35 +67,8 @@ is
        and then C.Response_Memory.Size = Blk.Channel_Size
        and then C.Registry_Index /= CIM.Invalid_Index);
 
-   function Initialized (C : Client_Instance) return Boolean is
-      (Musinfo.Instance.Is_Valid
-       and then C.Name /= Componolit.Interfaces.Muen_Block.Null_Name
-       and then C.Cnt > 0
-       and then C.Req /= Musinfo.Null_Memregion
-       and then C.Resp /= Musinfo.Null_Memregion
-       and then C.Req.Size = Blk.Channel_Size
-       and then C.Resp.Size = Blk.Channel_Size
-       and then C.Idx /= CIM.Invalid_Index);
-
-   function Create return Client_Session is
-      (Client_Session'(Name            => Blk.Null_Name,
-                       Count           => 0,
-                       Request_Memory  => Musinfo.Null_Memregion,
-                       Response_Memory => Musinfo.Null_Memregion,
-                       Response_Reader => Blk.Client_Response_Channel.Null_Reader,
-                       Registry_Index  => CIM.Invalid_Index,
-                       Queued          => 0,
-                       Responses       => (others => Blk.Null_Event)));
-
-   function Instance (C : Client_Session) return Client_Instance is
-      (Client_Instance'(Name => C.Name,
-                        Req  => C.Request_Memory,
-                        Resp => C.Response_Memory,
-                        Idx  => C.Registry_Index,
-                        Cnt  => C.Count));
-
-   function Instance (R : Client_Request) return Client_Instance is
-      (Client_Instance (R.Instance));
+   function Identifier (C : Client_Session) return Session_Id is
+      (Session_Id'Val (Standard.Interfaces.Unsigned_32'Pos (C.Tag) + Session_Id'Pos (Session_Id'First)));
 
    function Writable (C : Client_Session) return Boolean is
       (True);
@@ -115,28 +84,17 @@ is
    ----------------
 
    function Initialized (D : Dispatcher_Session) return Boolean is
-      (Musinfo.Instance.Is_Valid and then D.Registry_Index /= CIM.Invalid_Index);
+      (Musinfo.Instance.Is_Valid
+       and then D.Registry_Index /= CIM.Invalid_Index
+       and then Reg.Registry (D.Registry_Index).Kind = CIM.Block_Dispatcher);
 
-   function Initialized (D : Dispatcher_Instance) return Boolean is
-      (Musinfo.Instance.Is_Valid and then CIM.Session_Index (D) /= CIM.Invalid_Index);
-
-   function Create return Dispatcher_Session is
-      (Dispatcher_Session'(Registry_Index => Componolit.Interfaces.Muen.Invalid_Index));
-
-   function Instance (D : Dispatcher_Session) return Dispatcher_Instance is
-      (Dispatcher_Instance (D.Registry_Index));
+   function Identifier (D : Dispatcher_Session) return Session_Id is
+      (Session_Id'Val (Standard.Interfaces.Unsigned_32'Pos (Reg.Registry (D.Registry_Index).Tag)
+                       + Session_Id'Pos (Session_Id'First)));
 
    ------------
    -- Server --
    ------------
-
-   function Null_Request return Server_Request is
-      (Server_Request'(Event    => Blk.Null_Event,
-                       Instance => (Name => Blk.Null_Name,
-                                    Req  => Musinfo.Null_Memregion,
-                                    Resp => Musinfo.Null_Memregion,
-                                    Idx  => CIM.Invalid_Index),
-                       Length   => 0));
 
    function Kind (R : Server_Request) return Request_Kind is
       (case R.Event.Header.Kind is
@@ -172,31 +130,14 @@ is
        and then S.Request_Memory.Size = Blk.Channel_Size
        and then S.Response_Memory.Size = Blk.Channel_Size);
 
-   function Initialized (S : Server_Instance) return Boolean is
-      (Musinfo.Instance.Is_Valid
-       and then S.Name /= Blk.Null_Name
-       and then S.Req /= Musinfo.Null_Memregion
-       and then S.Resp /= Musinfo.Null_Memregion
-       and then S.Req.Size = Blk.Channel_Size
-       and then S.Resp.Size = Blk.Channel_Size
-       and then S.Idx /= CIM.Invalid_Index);
+   function Valid (S : Server_Session) return Boolean is
+      (True); --  TODO: Range check for Session_Id
 
-   function Create return Server_Session is
-      (Server_Session'(Name            => Blk.Null_Name,
-                       Registry_Index  => CIM.Invalid_Index,
-                       Request_Memory  => Musinfo.Null_Memregion,
-                       Request_Reader  => Blk.Server_Request_Channel.Null_Reader,
-                       Response_Memory => Musinfo.Null_Memregion,
-                       Read_Select     => (others => Blk.Null_Event_Header),
-                       Read_Data       => (others => (others => 0))));
+   function Identifier (S : Server_Session) return Session_Id is
+      (Session_Id'Val (Standard.Interfaces.Unsigned_32'Pos (S.Tag) + Session_Id'Pos (Session_Id'Last)));
 
-   function Instance (S : Server_Session) return Server_Instance is
-      (Server_Instance'(Name => S.Name,
-                        Req  => S.Request_Memory,
-                        Resp => S.Response_Memory,
-                        Idx  => S.Registry_Index));
-
-   function Instance (R : Server_Request) return Server_Instance is
-      (Server_Instance (R.Instance));
+   function Assigned (S : Server_Session;
+                      R : Server_Request) return Boolean is
+      (S.Tag = R.Session);
 
 end Componolit.Interfaces.Block;

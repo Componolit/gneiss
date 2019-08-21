@@ -7,73 +7,59 @@ with Musinfo;
 package Componolit.Interfaces.Internal.Block with
    SPARK_Mode
 is
+   package CI renames Componolit.Interfaces;
 
-   type Read_Select_List is array (Positive range 1 .. Componolit.Interfaces.Muen_Block.Element_Count) of
-      Componolit.Interfaces.Muen_Block.Event_Header;
-   type Read_Data_List is array (Read_Select_List'Range) of Componolit.Interfaces.Muen_Block.Raw_Data_Type;
+   type Read_Select_List is array (Positive range 1 .. CI.Muen_Block.Element_Count) of CI.Muen_Block.Event_Header;
+   type Read_Data_List is array (Read_Select_List'Range) of CI.Muen_Block.Raw_Data_Type;
 
-   type Response_Cache is array (1 .. Componolit.Interfaces.Muen_Block.Element_Count * 2) of
-      Componolit.Interfaces.Muen_Block.Event;
+   type Response_Cache is array (1 .. CI.Muen_Block.Element_Count * 2) of CI.Muen_Block.Event;
 
    type Client_Session is limited record
-      Name            : Componolit.Interfaces.Muen_Block.Session_Name;
-      Count           : Componolit.Interfaces.Muen_Block.Count;
-      Request_Memory  : Musinfo.Memregion_Type;
-      Response_Memory : Musinfo.Memregion_Type;
-      Response_Reader : Componolit.Interfaces.Muen_Block.Client_Response_Channel.Reader_Type;
-      Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
-      Queued          : Natural;
-      Responses       : Response_Cache;
+      Name            : CI.Muen_Block.Session_Name := CI.Muen_Block.Null_Name;
+      Count           : CI.Muen_Block.Count        := 0;
+      Request_Memory  : Musinfo.Memregion_Type     := Musinfo.Null_Memregion;
+      Response_Memory : Musinfo.Memregion_Type     := Musinfo.Null_Memregion;
+      Response_Reader : CI.Muen_Block.Client_Response_Channel.Reader_Type
+                           := CI.Muen_Block.Client_Response_Channel.Null_Reader;
+      Registry_Index  : CI.Muen.Session_Index           := CI.Muen.Invalid_Index;
+      Queued          : Natural                         := 0;
+      Responses       : Response_Cache                  := (others => CI.Muen_Block.Null_Event);
+      Tag             : Standard.Interfaces.Unsigned_32 := 0;
    end record;
 
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
-   type Dispatcher_Session is record
-      Registry_Index : Componolit.Interfaces.Muen.Session_Index;
+   type Dispatcher_Session is limited record
+      Registry_Index : CI.Muen.Session_Index := CI.Muen.Invalid_Index;
    end record;
 
    type Server_Session is limited record
-      Name            : Componolit.Interfaces.Muen_Block.Session_Name;
-      Registry_Index  : Componolit.Interfaces.Muen.Session_Index;
-      Request_Memory  : Musinfo.Memregion_Type;
-      Request_Reader  : Componolit.Interfaces.Muen_Block.Server_Request_Channel.Reader_Type;
-      Response_Memory : Musinfo.Memregion_Type;
-      Read_Select     : Read_Select_List;
-      Read_Data       : Read_Data_List;
-   end record;
-
-   type Client_Instance is record
-      Name : Componolit.Interfaces.Muen_Block.Session_Name;
-      Req  : Musinfo.Memregion_Type;
-      Resp : Musinfo.Memregion_Type;
-      Idx  : Componolit.Interfaces.Muen.Session_Index;
-      Cnt  : Componolit.Interfaces.Muen_Block.Count;
-   end record;
-
-   type Dispatcher_Instance is new Componolit.Interfaces.Muen.Session_Index;
-
-   type Server_Instance is record
-      Name : Componolit.Interfaces.Muen_Block.Session_Name;
-      Req  : Musinfo.Memregion_Type;
-      Resp : Musinfo.Memregion_Type;
-      Idx  : Componolit.Interfaces.Muen.Session_Index;
+      Name            : CI.Muen_Block.Session_Name := CI.Muen_Block.Null_Name;
+      Registry_Index  : CI.Muen.Session_Index      := CI.Muen.Invalid_Index;
+      Request_Memory  : Musinfo.Memregion_Type     := Musinfo.Null_Memregion;
+      Request_Reader  : CI.Muen_Block.Server_Request_Channel.Reader_Type
+                           := CI.Muen_Block.Server_Request_Channel.Null_Reader;
+      Response_Memory : Musinfo.Memregion_Type          := Musinfo.Null_Memregion;
+      Read_Select     : Read_Select_List                := (others => CI.Muen_Block.Null_Event_Header);
+      Read_Data       : Read_Data_List                  := (others => (others => 0));
+      Tag             : Standard.Interfaces.Unsigned_32 := 0;
    end record;
 
    type Client_Request is limited record
-      Status   : Request_Status;
-      Instance : Client_Instance;
-      Event    : Componolit.Interfaces.Muen_Block.Event;
+      Status  : Request_Status                  := Raw;
+      Session : Standard.Interfaces.Unsigned_32 := 0;
+      Event   : CI.Muen_Block.Event             := CI.Muen_Block.Null_Event;
    end record;
 
    type Server_Request is limited record
-      Length   : Standard.Interfaces.Unsigned_64;
-      Instance : Server_Instance;
-      Event    : Componolit.Interfaces.Muen_Block.Event;
+      Length  : Standard.Interfaces.Unsigned_64 := 0;
+      Session : Standard.Interfaces.Unsigned_32 := 0;
+      Event   : CI.Muen_Block.Event             := CI.Muen_Block.Null_Event;
    end record;
 
    type Dispatcher_Capability is limited record
-      Name   : Componolit.Interfaces.Muen_Block.Session_Name;
-      Status : Componolit.Interfaces.Muen_Block.Connection_Status;
+      Name   : CI.Muen_Block.Session_Name;
+      Status : CI.Muen_Block.Connection_Status;
    end record;
 
 end Componolit.Interfaces.Internal.Block;
