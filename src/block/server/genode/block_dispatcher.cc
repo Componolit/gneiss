@@ -95,7 +95,8 @@ void Cai::Block::Root::dispatch(Dcap *cap)
 
 Cai::Block::Dispatcher::Dispatcher() :
     _root(nullptr),
-    _handler(nullptr)
+    _handler(nullptr),
+    _tag(0)
 { }
 
 void Cai::Block::Dispatcher::initialize(

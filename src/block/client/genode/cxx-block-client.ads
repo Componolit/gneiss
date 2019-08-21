@@ -4,12 +4,6 @@ with Cxx.Genode;
 package Cxx.Block.Client
    with SPARK_Mode => On
 is
-   type Private_Uint64_T is limited private;
-   type Private_Uint64_T_Address is limited private;
-   type Private_Uint64_T_Array is array (Natural range <>) of Private_Uint64_T;
-   type Private_Uint64_T_Address_Array is array (Natural range <>) of Private_Uint64_T_Address;
-   type Private_Void is limited private;
-
    type Packet_Descriptor is limited record
       Offset       : Cxx.Long;
       Bytes        : Cxx.Unsigned_Long;
@@ -21,18 +15,15 @@ is
 
    type Class is
    limited record
-      Private_X_Block_Count : Private_Uint64_T;
-      Private_X_Block_Size  : Private_Uint64_T;
-      Private_X_Device      : Cxx.Void_Address;
-      Private_X_Callback    : Cxx.Void_Address;
-      Private_X_Write       : Cxx.Void_Address;
-      Private_X_Env         : Cxx.Void_Address;
+      Block_Count : Cxx.Genode.Uint64_T;
+      Block_Size  : Cxx.Genode.Uint64_T;
+      Device      : Cxx.Void_Address;
+      Callback    : Cxx.Void_Address;
+      Write       : Cxx.Void_Address;
+      Env         : Cxx.Void_Address;
+      Tag         : Cxx.Genode.Uint32_T;
    end record
    with Import, Convention => CPP;
-
-   type Class_Address is private;
-   type Class_Array is array (Natural range <>) of Class;
-   type Class_Address_Array is array (Natural range <>) of Class_Address;
 
    function Constructor return Class with
       Global => null;
@@ -127,11 +118,4 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client10block_sizeEv";
 
-private
-   pragma SPARK_Mode (Off);
-
-   type Class_Address is access Class;
-   type Private_Uint64_T is new Cxx.Genode.Uint64_T;
-   type Private_Uint64_T_Address is access Private_Uint64_T;
-   type Private_Void is new Cxx.Void;
 end Cxx.Block.Client;

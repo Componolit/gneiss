@@ -77,7 +77,8 @@ Cai::Block::Server::Server() :
     _callback(nullptr),
     _block_count(nullptr),
     _block_size(nullptr),
-    _writable(nullptr)
+    _writable(nullptr),
+    _tag(0)
 { }
 
 void Cai::Block::Server::initialize(

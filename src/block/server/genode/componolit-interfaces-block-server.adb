@@ -15,6 +15,7 @@ is
       Cxx.Block.Server.Process_Request (S.Instance, R.Request, State);
       if State = 1 then
          R.Status := Componolit.Interfaces.Internal.Block.Pending;
+         R.Session := S.Instance.Tag;
       end if;
    end Process;
 
@@ -58,15 +59,15 @@ is
       Cxx.Block.Server.Unblock_Client (S.Instance);
    end Unblock_Client;
 
-   procedure Lemma_Initialize (S : Server_Instance;
-                               L : String;
-                               B : Byte_Length)
+   procedure Lemma_Initialize (S : in out Server_Session;
+                               L :        String;
+                               B :        Byte_Length)
    is
    begin
       Initialize (S, L, B);
    end Lemma_Initialize;
 
-   procedure Lemma_Finalize (S : Server_Instance)
+   procedure Lemma_Finalize (S : in out Server_Session)
    is
    begin
       Finalize (S);

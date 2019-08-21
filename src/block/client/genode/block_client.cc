@@ -66,7 +66,8 @@ Cai::Block::Client::Client() :
     _device(nullptr),
     _callback(nullptr),
     _rw(nullptr),
-    _env(nullptr)
+    _env(nullptr),
+    _tag(0)
 { }
 
 void Cai::Block::Client::initialize(
@@ -146,10 +147,9 @@ void Cai::Block::Client::enqueue(void *request)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
-        ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
+        ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *))(_rw))(
                 (void *)this,
                 static_cast<int>(packet->operation()),
-                block_size(),
                 packet->tag().value,
                 packet->block_count(),
                 blk(_device)->tx()->packet_content(*packet));
@@ -163,10 +163,9 @@ void Cai::Block::Client::submit()
 void Cai::Block::Client::read(void *request)
 {
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
-    ((void (*)(void *, int, Genode::uint64_t, unsigned long, Genode::uint64_t, void *))(_rw))(
+    ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *))(_rw))(
             (void *)this,
             static_cast<int>(packet->operation()),
-            block_size(),
             packet->tag().value,
             packet->block_count(),
             blk(_device)->tx()->packet_content(*packet));

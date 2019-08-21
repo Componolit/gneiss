@@ -13,8 +13,9 @@ namespace Block
             Genode::uint64_t _block_size;
             void *_device; //Block_session in block_client.cc
             void *_callback; //procedure Event;
-            void *_rw; //procedure Crw (Instance, Kind, Block_size, Start, Length, Data)
+            void *_rw; //procedure Crw (Session, Kind, Start, Length, Data)
             void *_env; //Cai::Env
+            Genode::uint32_t _tag;
 
         protected:
             void callback();
