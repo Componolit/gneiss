@@ -1,4 +1,4 @@
-with Componolit.Interfaces.Types;
+with Componolit.Gneiss.Types;
 with Cxx.Genode;
 
 package Cxx.Block.Server
@@ -35,7 +35,7 @@ is
       External_Name => "_ZN3Cai5Block6Server12get_instanceEv";
 
    procedure Initialize (This                  : Class;
-                         Cap                   : Componolit.Interfaces.Types.Capability;
+                         Cap                   : Componolit.Gneiss.Types.Capability;
                          Size                  : Cxx.Genode.Uint64_T;
                          Callback              : Cxx.Void_Address;
                          Block_Count           : Cxx.Void_Address;

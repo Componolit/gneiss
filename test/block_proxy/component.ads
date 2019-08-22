@@ -1,24 +1,24 @@
 
-with Componolit.Interfaces.Types;
-with Componolit.Interfaces.Component;
-with Componolit.Interfaces.Block;
-with Componolit.Interfaces.Block.Client;
-with Componolit.Interfaces.Block.Dispatcher;
-with Componolit.Interfaces.Block.Server;
+with Componolit.Gneiss.Types;
+with Componolit.Gneiss.Component;
+with Componolit.Gneiss.Block;
+with Componolit.Gneiss.Block.Client;
+with Componolit.Gneiss.Block.Dispatcher;
+with Componolit.Gneiss.Block.Server;
 
 package Component is
 
-   procedure Construct (Cap : Componolit.Interfaces.Types.Capability);
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability);
    procedure Destruct;
 
-   package Main is new Componolit.Interfaces.Component (Construct, Destruct);
+   package Main is new Componolit.Gneiss.Component (Construct, Destruct);
 
    type Byte is mod 2 ** 8;
    subtype Unsigned_Long is Long_Integer range 0 .. Long_Integer'Last;
    type Buffer is array (Unsigned_Long range <>) of Byte;
    type Request_Index is mod 8;
 
-   package Block is new Componolit.Interfaces.Block (Byte, Unsigned_Long, Buffer, Integer, Request_Index);
+   package Block is new Componolit.Gneiss.Block (Byte, Unsigned_Long, Buffer, Integer, Request_Index);
 
    use type Block.Count;
 
