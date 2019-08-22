@@ -13,8 +13,8 @@ is
 
    package Timer_Client is new Componolit.Interfaces.Timer.Client (Event);
 
-   Log        : Componolit.Interfaces.Log.Client_Session   := Componolit.Interfaces.Log.Create;
-   Timer      : Componolit.Interfaces.Timer.Client_Session := Componolit.Interfaces.Timer.Create;
+   Log        : Componolit.Interfaces.Log.Client_Session;
+   Timer      : Componolit.Interfaces.Timer.Client_Session;
    Capability : Componolit.Interfaces.Types.Capability;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)

@@ -6,11 +6,6 @@ package body Componolit.Interfaces.Log with
 is
    use type System.Address;
 
-   function Create return Client_Session is
-      (Client_Session'(Label          => System.Null_Address,
-                       Length         => 0,
-                       Prev_Nl        => True));
-
    function Initialized (C : Client_Session) return Boolean is
       (C.Label /= System.Null_Address);
 

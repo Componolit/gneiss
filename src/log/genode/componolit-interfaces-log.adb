@@ -7,9 +7,6 @@ package body Componolit.Interfaces.Log with
 is
    use type Cxx.Bool;
 
-   function Create return Client_Session is
-      (Client_Session'(Instance => Cxx.Log.Client.Constructor));
-
    function Initialized (C : Client_Session) return Boolean is
       (Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1));
 
