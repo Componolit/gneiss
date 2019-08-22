@@ -6,13 +6,56 @@ package body Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
    --  pragma Assertion_Policy (Pre => Ignore, Post => Check);
+   use type Componolit.Interfaces.Internal.Block.Request_Status;
+   use type C.Uint32_T;
+   use type C.Uint64_T;
+
+   function Kind (R : Request) return Request_Kind is
+      (case R.Kind is
+          when Componolit.Interfaces.Internal.Block.Read  => Read,
+          when Componolit.Interfaces.Internal.Block.Write => Write,
+          when Componolit.Interfaces.Internal.Block.Sync  => Sync,
+          when Componolit.Interfaces.Internal.Block.Trim  => Trim,
+          when others                                     => None);
+
+   function Status (R : Request) return Request_Status is
+      (if
+          R.Status = Componolit.Interfaces.Internal.Block.Raw
+       then
+          Raw
+       else
+          (if
+              R.Length <= C.Uint64_T (Count'Last)
+              and then Request_Id'Pos (Request_Id'First) <= R.Tag
+              and then Request_Id'Pos (Request_Id'Last) >= R.Tag
+           then
+              (case R.Status is
+                  when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
+                  when Componolit.Interfaces.Internal.Block.Pending   => Pending,
+                  when Componolit.Interfaces.Internal.Block.Ok        => Ok,
+                  when Componolit.Interfaces.Internal.Block.Error     => Error,
+                  when others                                         => Raw)
+           else
+              Error));
+
+   function Start (R : Request) return Id is
+      (Id (R.Start));
+
+   function Length (R : Request) return Count is
+      (Count (R.Length));
+
+   function Identifier (R : Request) return Request_Id is
+      (Request_Id'Val (R.Tag));
+
+   function Assigned (C : Client_Session; R : Request) return Boolean is
+      (R.Session = C.Tag);
 
    ----------------------
    -- Allocate_Request --
    ----------------------
 
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Client_Request;
+                               R : in out Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -20,7 +63,7 @@ is
                                E :    out Result)
    is
       procedure C_Allocate_Request (Inst : in out Client_Session;
-                                    Req  : in out Client_Request;
+                                    Req  : in out Request;
                                     Ret  :    out Integer) with
          Import,
          Convention    => C,
@@ -60,11 +103,11 @@ is
    --------------------
 
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Client_Request)
+                             R : in out Request)
    is
       pragma Unevaluated_Use_Of_Old (Allow);
       procedure C_Update_Request (Inst : in out Client_Session;
-                                  Req  : in out Client_Request) with
+                                  Req  : in out Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_update_request",
@@ -80,11 +123,11 @@ is
    ----------------
 
    procedure Crw (C : in out Client_Session;
-                  R :        Client_Request;
+                  R :        Request;
                   D :        System.Address);
 
    procedure Crw (C : in out Client_Session;
-                  R :        Client_Request;
+                  R :        Request;
                   D :        System.Address) with
       SPARK_Mode => Off
    is
@@ -145,10 +188,10 @@ is
    -------------
 
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Client_Request)
+                      R : in out Request)
    is
       procedure C_Enqueue (T   : in out Client_Session;
-                           Req : in out Client_Request) with
+                           Req : in out Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_enqueue",
@@ -180,10 +223,10 @@ is
    ----------
 
    procedure Read (C : in out Client_Session;
-                   R :        Client_Request)
+                   R :        Request)
    is
       procedure C_Read (T   : in out Client_Session;
-                        Req :        Client_Request) with
+                        Req :        Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_read",
@@ -197,10 +240,10 @@ is
    -------------
 
    procedure Release (C : in out Client_Session;
-                      R : in out Client_Request)
+                      R : in out Request)
    is
       procedure C_Release (T   : in out Client_Session;
-                           Req : in out Client_Request) with
+                           Req : in out Request) with
          Import,
          Convention    => C,
          External_Name => "block_client_release",

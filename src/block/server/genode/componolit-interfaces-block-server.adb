@@ -4,11 +4,39 @@ with Cxx.Block.Server;
 use all type Cxx.Bool;
 use all type Cxx.Genode.Uint64_T;
 
-package body Componolit.Interfaces.Block.Server
+package body Componolit.Interfaces.Block.Server with
+   SPARK_Mode
 is
+   use type Cxx.Genode.Uint32_T;
+
+   function Kind (R : Request) return Request_Kind is
+      (case R.Request.Kind is
+          when 1 => Read,
+          when 2 => Write,
+          when 3 => Sync,
+          when 4 => Trim,
+          when others => None);
+
+   function Status (R : Request) return Request_Status is
+      (case R.Status is
+          when Componolit.Interfaces.Internal.Block.Raw       => Raw,
+          when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
+          when Componolit.Interfaces.Internal.Block.Pending   => Pending,
+          when Componolit.Interfaces.Internal.Block.Ok        => Ok,
+          when Componolit.Interfaces.Internal.Block.Error     => Error);
+
+   function Start (R : Request) return Id is
+      (Id (R.Request.Block_Number));
+
+   function Length (R : Request) return Count is
+      (Count (R.Request.Block_Count));
+
+   function Assigned (S : Server_Session;
+                      R : Request) return Boolean is
+      (S.Instance.Tag = R.Session);
 
    procedure Process (S : in out Server_Session;
-                      R : in out Server_Request)
+                      R : in out Request)
    is
       State : Integer;
    begin
@@ -20,7 +48,7 @@ is
    end Process;
 
    procedure Read (S : in out Server_Session;
-                   R :        Server_Request;
+                   R :        Request;
                    B :        Buffer) with
       SPARK_Mode => Off
    is
@@ -31,7 +59,7 @@ is
    end Read;
 
    procedure Write (S : in out Server_Session;
-                    R :        Server_Request;
+                    R :        Request;
                     B :    out Buffer) with
       SPARK_Mode => Off
    is
@@ -42,7 +70,7 @@ is
    end Write;
 
    procedure Acknowledge (S   : in out Server_Session;
-                          R   : in out Server_Request;
+                          R   : in out Request;
                           Res :        Request_Status)
    is
       Succ : Integer := (if Res = Ok then 1 else 0);

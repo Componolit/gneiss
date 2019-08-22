@@ -9,6 +9,8 @@
 --  GNU Affero General Public License version 3.
 --
 
+private with Componolit.Interfaces.Internal.Block;
+
 generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs each subprogram
@@ -65,6 +67,54 @@ is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
+   --  Block server request
+   type Request is limited private;
+
+   --  Get request status
+   --
+   --  @param R  Request
+   --  @return   Request status
+   function Status (R : Request) return Request_Status with
+      Annotate => (GNATprove, Terminating);
+
+   --  Get request type
+   --
+   --  @param R  Request
+   --  @return   Request type
+   function Kind (R : Request) return Request_Kind with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) = Pending;
+
+   --  Get request start block
+   --
+   --  @param R  Request
+   --  @return   First block id to be handled by this request
+   function Start (R : Request) return Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) = Pending;
+
+   --  Get request length in blocks
+   --
+   --  @param R  Request
+   --  @return   Number of consecutive blocks handled by this request
+   function Length (R : Request) return Count with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) = Pending;
+
+   --  Check if a request is assigned to this session
+   --
+   --  When a request is allocated it gets assigned to the session that is used for allocation.
+   --  It can then only be used by this session.
+   --
+   --  @param S  Server session instance
+   --  @param R  Request to check
+   --  @return   True if the R is assigned to S
+   function Assigned (S : Server_Session;
+                      R : Request) return Boolean with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (S)
+             and then Status (R) /= Raw;
+
    --  Process an incoming request
    --
    --  A raw request can be used to process an incoming request. If the request is Pending after this procedure
@@ -73,7 +123,7 @@ is
    --  @param S  Server session instance
    --  @param R  Raw request slot
    procedure Process (S : in out Server_Session;
-                      R : in out Server_Request) with
+                      R : in out Request) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Raw,
@@ -88,7 +138,7 @@ is
    --  @param R  Request to handle
    --  @param B  Buffer with read data
    procedure Read (S : in out Server_Session;
-                   R :        Server_Request;
+                   R :        Request;
                    B :        Buffer) with
       Pre  => Ready (S)
               and then Initialized (S)
@@ -106,7 +156,7 @@ is
    --  @param R  Request to handle
    --  @param B  Buffer with data to be written after
    procedure Write (S : in out Server_Session;
-                    R :        Server_Request;
+                    R :        Request;
                     B :    out Buffer) with
       Pre  => Ready (S)
               and then Initialized (S)
@@ -126,7 +176,7 @@ is
    --  @param S  Server session instance
    --  @param R  Request to acknowledge
    procedure Acknowledge (S   : in out Server_Session;
-                          R   : in out Server_Request;
+                          R   : in out Request;
                           Res :        Request_Status) with
       Pre  => Ready (S)
               and then Initialized (S)
@@ -150,6 +200,8 @@ is
               and then Ready (S)'Old = Ready (S);
 
 private
+
+   type Request is new Componolit.Interfaces.Internal.Block.Server_Request;
 
    function Lemma_Ready (S : Server_Session) return Boolean is
       (Ready (S)) with

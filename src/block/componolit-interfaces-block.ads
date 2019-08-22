@@ -152,12 +152,6 @@ is
    --  @value Error         Failed request
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
-   --  Block client request
-   type Client_Request is limited private;
-
-   --  Block server request
-   type Server_Request is limited private;
-
    --  Session types, represent actual session objects
    type Client_Session is limited private;
    type Dispatcher_Session is limited private;
@@ -165,59 +159,6 @@ is
 
    --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
-
-   --  Get request type
-   --
-   --  @param R  Request
-   --  @return   Request type
-   function Kind (R : Client_Request) return Request_Kind with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) /= Raw;
-
-   --  Get request status
-   --
-   --  @param R  Request
-   --  @return   Request status
-   function Status (R : Client_Request) return Request_Status with
-      Annotate => (GNATprove, Terminating);
-
-   --  Get request start block
-   --
-   --  @param R  Request
-   --  @return   First block id to be handled by this request
-   function Start (R : Client_Request) return Id with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) not in Raw | Error;
-
-   --  Get request length
-   --
-   --  @param R  Request
-   --  @return   Number of consecutive blocks handled by this request
-   function Length (R : Client_Request) return Count with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) not in Raw | Error;
-
-   --  Get request identifier
-   --
-   --  @param R  Request
-   --  @return   Unique identifier of the request
-   function Identifier (R : Client_Request) return Request_Id with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) not in Raw | Error;
-
-   --  Check if a request is assigned to this session
-   --
-   --  When a request is allocated it gets assigned to the session that is used for allocation.
-   --  It can then only be used by this session.
-   --
-   --  @param C  Client session instance
-   --  @param R  Request to check
-   --  @return   True if the R is assigned to C
-   function Assigned (C : Client_Session;
-                      R : Client_Request) return Boolean with
-      Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C)
-             and then Status (R) /= Raw;
 
    --  Return True if C is initialized
    --
@@ -258,37 +199,6 @@ is
       Annotate => (GNATprove, Terminating),
       Pre => Initialized (C);
 
-   --  Get request type
-   --
-   --  @param R  Request
-   --  @return   Request type
-   function Kind (R : Server_Request) return Request_Kind with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) = Pending;
-
-   --  Get request status
-   --
-   --  @param R  Request
-   --  @return   Request status
-   function Status (R : Server_Request) return Request_Status with
-      Annotate => (GNATprove, Terminating);
-
-   --  Get request start block
-   --
-   --  @param R  Request
-   --  @return   First block id to be handled by this request
-   function Start (R : Server_Request) return Id with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) = Pending;
-
-   --  Get request length in blocks
-   --
-   --  @param R  Request
-   --  @return   Number of consecutive blocks handled by this request
-   function Length (R : Server_Request) return Count with
-      Annotate => (GNATprove, Terminating),
-      Pre => Status (R) = Pending;
-
    --  Helper function to check if the assigned session Id is valid
    --
    --  This property is also inherited by Initialized. Yet some callback procedures are called
@@ -299,20 +209,6 @@ is
    --  @return   True if the internal representation of the session id yields a valid Session_Id
    function Valid (S : Server_Session) return Boolean with
       Annotate => (GNATprove, Terminating);
-
-   --  Check if a request is assigned to this session
-   --
-   --  When a request is allocated it gets assigned to the session that is used for allocation.
-   --  It can then only be used by this session.
-   --
-   --  @param S  Server session instance
-   --  @param R  Request to check
-   --  @return   True if the R is assigned to S
-   function Assigned (S : Server_Session;
-                      R : Server_Request) return Boolean with
-      Annotate => (GNATprove, Terminating),
-      Pre => Initialized (S)
-             and then Status (R) /= Raw;
 
    --  Check if S is initialized
    --
@@ -355,8 +251,5 @@ private
    type Dispatcher_Session is new Componolit.Interfaces.Internal.Block.Dispatcher_Session;
    type Server_Session is new Componolit.Interfaces.Internal.Block.Server_Session;
    type Dispatcher_Capability is new Componolit.Interfaces.Internal.Block.Dispatcher_Capability;
-
-   type Client_Request is new Componolit.Interfaces.Internal.Block.Client_Request;
-   type Server_Request is new Componolit.Interfaces.Internal.Block.Server_Request;
 
 end Componolit.Interfaces.Block;
