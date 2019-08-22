@@ -1,6 +1,6 @@
 with "switches";
 
-project Ada_Interface is
+project Gneiss is
 
    type Platform_Type is ("linux", "genode");
 
@@ -126,4 +126,4 @@ project Ada_Interface is
          end case;
    end case;
 
-end Ada_Interface;
+end Gneiss;
