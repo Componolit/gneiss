@@ -28,7 +28,7 @@ is
 
    package Block_Client is new Block.Client (Run, Read, Write);
 
-   type Request_Cache_Type is array (Request_Id'Range) of Block.Client_Request;
+   type Request_Cache_Type is array (Request_Id'Range) of Block_Client.Request;
 
    Request_Cache : Request_Cache_Type;
 
@@ -71,8 +71,8 @@ is
       pragma Unreferenced (C);
       use type Block.Id;
    begin
-      if Block.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
-         D := (others => Character'Val (33 + Integer (Block.Start (Request_Cache (R)) mod 93)));
+      if Block_Client.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
+         D := (others => Character'Val (33 + Integer (Block_Client.Start (Request_Cache (R)) mod 93)));
       else
          if Componolit.Interfaces.Log.Initialized (Log) then
             Componolit.Interfaces.Log.Client.Warning (Log, "Failed to calculate content");
@@ -91,16 +91,16 @@ is
          for I in Request_Cache'Range loop
             if
                S.Acked < Request_Count
-               and then Block.Status (Request_Cache (I)) = Block.Pending
-               and then Block.Assigned (Client, Request_Cache (I))
+               and then Block_Client.Status (Request_Cache (I)) = Block.Pending
+               and then Block_Client.Assigned (Client, Request_Cache (I))
             then
                Block_Client.Update_Request (Client, Request_Cache (I));
-               if Block.Status (Request_Cache (I)) = Block.Ok then
-                  case Block.Kind (Request_Cache (I)) is
+               if Block_Client.Status (Request_Cache (I)) = Block.Ok then
+                  case Block_Client.Kind (Request_Cache (I)) is
                      when Block.Write =>
                         S.Acked := S.Acked + 1;
                      when Block.Read =>
-                        if Block.Length (Request_Cache (I)) = 1 then
+                        if Block_Client.Length (Request_Cache (I)) = 1 then
                            Block_Client.Read (Client, Request_Cache (I));
                         else
                            Componolit.Interfaces.Log.Client.Error (Log, "Read failed.");
@@ -110,7 +110,7 @@ is
                         null;
                   end case;
                   Block_Client.Release (Client, Request_Cache (I));
-               elsif Block.Status (Request_Cache (I)) = Block.Error then
+               elsif Block_Client.Status (Request_Cache (I)) = Block.Error then
                   Componolit.Interfaces.Log.Client.Error (Log, "Request failed");
                   Block_Client.Release (Client, Request_Cache (I));
                end if;
@@ -118,7 +118,7 @@ is
 
             if
                S.Sent < Request_Count
-               and then Block.Status (Request_Cache (I)) = Block.Raw
+               and then Block_Client.Status (Request_Cache (I)) = Block.Raw
             then
                Block_Client.Allocate_Request (Client,
                                               Request_Cache (I),

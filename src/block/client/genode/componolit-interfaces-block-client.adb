@@ -11,6 +11,37 @@ package body Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
 
+   use type Cxx.Genode.Uint32_T;
+
+   function Kind (R : Request) return Request_Kind is
+      (case R.Packet.Opcode is
+          when 0 => Read,
+          when 1 => Write,
+          when 2 => Sync,
+          when 3 => Trim,
+          when others => None);
+
+   function Status (R : Request) return Request_Status is
+      (case R.Status is
+          when Componolit.Interfaces.Internal.Block.Raw       => Raw,
+          when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
+          when Componolit.Interfaces.Internal.Block.Pending   => Pending,
+          when Componolit.Interfaces.Internal.Block.Ok        => Ok,
+          when Componolit.Interfaces.Internal.Block.Error     => Error);
+
+   function Start (R : Request) return Id is
+      (Id (R.Packet.Block_Number));
+
+   function Length (R : Request) return Count is
+      (Count (R.Packet.Block_Count));
+
+   function Identifier (R : Request) return Request_Id is
+      (Request_Id'Val (R.Packet.Tag));
+
+   function Assigned (C : Client_Session;
+                      R : Request) return Boolean is
+      (C.Instance.Tag = R.Session);
+
    type Request_Handle is record
       Valid   : Boolean;
       Tag     : Cxx.Unsigned_Long;
@@ -22,7 +53,7 @@ is
    H_Cache : Request_Handle_Cache := (others => (False, 0, False));
 
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Client_Request;
+                               R : in out Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -83,7 +114,7 @@ is
    pragma Warnings (On, "formal parameter ""C"" is not modified");
 
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Client_Request)
+                             R : in out Request)
    is
       use type Cxx.Unsigned_Long;
    begin
@@ -179,7 +210,7 @@ is
    end Finalize;
 
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Client_Request)
+                      R : in out Request)
    is
    begin
       Cxx.Block.Client.Enqueue (C.Instance, R.Packet);
@@ -193,14 +224,14 @@ is
    end Submit;
 
    procedure Read (C : in out Client_Session;
-                   R :        Client_Request)
+                   R :        Request)
    is
    begin
       Cxx.Block.Client.Read (C.Instance, R.Packet);
    end Read;
 
    procedure Release (C : in out Client_Session;
-                      R : in out Client_Request)
+                      R : in out Request)
    is
    begin
       Cxx.Block.Client.Release (C.Instance, R.Packet);

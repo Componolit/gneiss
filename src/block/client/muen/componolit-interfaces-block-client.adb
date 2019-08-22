@@ -11,14 +11,48 @@ with Musinfo.Instance;
 package body Componolit.Interfaces.Block.Client with
    SPARK_Mode
 is
-   use type Musinfo.Memregion_Type;
    package CIM renames Componolit.Interfaces.Muen;
    package Blk renames Componolit.Interfaces.Muen_Block;
    package Reg renames Componolit.Interfaces.Muen_Registry;
 
+   use type Musinfo.Memregion_Type;
+   use type Standard.Interfaces.Unsigned_32;
+
    subtype Block_Buffer is Buffer (1 .. 4096);
    function Convert_Buffer is new Ada.Unchecked_Conversion (Blk.Raw_Data_Type, Block_Buffer);
    function Convert_Buffer is new Ada.Unchecked_Conversion (Block_Buffer, Blk.Raw_Data_Type);
+
+   function Kind (R : Request) return Request_Kind is
+      (case R.Event.Header.Kind is
+          when Blk.Read  => Read,
+          when Blk.Write => Write,
+          when others    => None);
+
+   function Status (R : Request) return Request_Status is
+      (if
+          R.Event.Header.Priv <= Request_Id'Pos (Request_Id'Last)
+       then
+          (case R.Status is
+              when Componolit.Interfaces.Internal.Block.Raw       => Raw,
+              when Componolit.Interfaces.Internal.Block.Allocated => Allocated,
+              when Componolit.Interfaces.Internal.Block.Pending   => Pending,
+              when Componolit.Interfaces.Internal.Block.Ok        => Ok,
+              when Componolit.Interfaces.Internal.Block.Error     => Error)
+       else
+          Error);
+
+   function Start (R : Request) return Id is
+      (Id (R.Event.Header.Id));
+
+   function Length (R : Request) return Count is
+      (1);
+
+   function Identifier (R : Request) return Request_Id is
+      (Request_Id'Val (R.Event.Header.Priv));
+
+   function Assigned (C : Client_Session;
+                      R : Request) return Boolean is
+      (C.Tag = R.Session);
 
    procedure Update_Response_Cache (C : in out Client_Session) with
       Pre  => Initialized (C),
@@ -28,7 +62,7 @@ is
               and Block_Size (C)'Old  = Block_Size (C);
 
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Client_Request;
+                               R : in out Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -36,7 +70,6 @@ is
                                E :    out Result)
    is
       use type Componolit.Interfaces.Internal.Block.Request_Status;
-      use type Standard.Interfaces.Unsigned_32;
       Ev_Type : Blk.Event_Type;
    begin
       if L /= 1 then
@@ -84,10 +117,9 @@ is
    end Update_Response_Cache;
 
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Client_Request)
+                             R : in out Request)
    is
       use type Blk.Event_Type;
-      use type Standard.Interfaces.Unsigned_32;
    begin
       Update_Response_Cache (C);
       for I in C.Responses'Range loop
@@ -231,7 +263,7 @@ is
    Enqueue_Buffer : Block_Buffer;
 
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Client_Request)
+                      R : in out Request)
    is
       use type Blk.Event_Type;
    begin
@@ -258,7 +290,7 @@ is
 
    pragma Warnings (Off, "mode could be ""in"" instead of ""in out""");
    procedure Read (C : in out Client_Session;
-                   R :        Client_Request)
+                   R :        Request)
    is
    begin
       Read (C,
@@ -268,9 +300,8 @@ is
    pragma Warnings (On, "mode could be ""in"" instead of ""in out""");
 
    procedure Release (C : in out Client_Session;
-                      R : in out Client_Request)
+                      R : in out Request)
    is
-      use type Standard.Interfaces.Unsigned_32;
    begin
       for I in C.Responses'Range loop
          if
