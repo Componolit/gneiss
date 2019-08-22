@@ -45,7 +45,7 @@ is
    end record;
 
    Client : Block.Client_Session;
-   Log    : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
+   Log    : Componolit.Interfaces.Log.Client_Session;
    P_Cap  : Componolit.Interfaces.Types.Capability;
 
    Request_Count : constant Integer := 32;

@@ -24,12 +24,6 @@ is
    --  @return True if C is initialized
    function Initialized (C : Client_Session) return Boolean;
 
-   --  Create new Client_Session
-   --
-   --  @return Uninitialized client session
-   function Create return Client_Session with
-      Post => not Initialized (Create'Result);
-
    --  Minimum message length, guaranteed by all platforms
    Minimum_Message_Length : constant Positive := 78 with Ghost;
 
