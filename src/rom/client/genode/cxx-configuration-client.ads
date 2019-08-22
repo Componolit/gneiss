@@ -1,5 +1,5 @@
 
-with Componolit.Interfaces.Types;
+with Componolit.Gneiss.Types;
 
 package Cxx.Configuration.Client with
    SPARK_Mode
@@ -14,7 +14,7 @@ is
    pragma Cpp_Constructor (Constructor, "_ZN3Cai13Configuration6ClientC1Ev");
 
    procedure Initialize (This  : Class;
-                         Env   : Componolit.Interfaces.Types.Capability;
+                         Env   : Componolit.Gneiss.Types.Capability;
                          Parse : Cxx.Void_Address;
                          Name  : Cxx.Void_Address) with
       Global => null,

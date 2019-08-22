@@ -1,12 +1,12 @@
 
-with Componolit.Interfaces.Strings.Tests;
+with Componolit.Gneiss.Strings.Tests;
 
 package body Suite
 is
 
    Result : aliased Aunit.Test_Suites.Test_Suite;
 
-   Strings_Case : aliased Componolit.Interfaces.Strings.Tests.Test_Case;
+   Strings_Case : aliased Componolit.Gneiss.Strings.Tests.Test_Case;
 
    function Suite return Aunit.Test_Suites.Access_Test_Suite
    is

@@ -1,9 +1,9 @@
 
-with Componolit.Interfaces.Log;
-with Componolit.Interfaces.Log.Client;
-with Componolit.Interfaces.Timer;
-with Componolit.Interfaces.Timer.Client;
-with Componolit.Interfaces.Strings;
+with Componolit.Gneiss.Log;
+with Componolit.Gneiss.Log.Client;
+with Componolit.Gneiss.Timer;
+with Componolit.Gneiss.Timer.Client;
+with Componolit.Gneiss.Strings;
 
 package body Component with
    SPARK_Mode
@@ -11,30 +11,30 @@ is
 
    procedure Event;
 
-   package Timer_Client is new Componolit.Interfaces.Timer.Client (Event);
+   package Timer_Client is new Componolit.Gneiss.Timer.Client (Event);
 
-   Log        : Componolit.Interfaces.Log.Client_Session;
-   Timer      : Componolit.Interfaces.Timer.Client_Session;
-   Capability : Componolit.Interfaces.Types.Capability;
+   Log        : Componolit.Gneiss.Log.Client_Session;
+   Timer      : Componolit.Gneiss.Timer.Client_Session;
+   Capability : Componolit.Gneiss.Types.Capability;
 
-   procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is
    begin
       Capability := Cap;
-      if not Componolit.Interfaces.Log.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Timer");
+      if not Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Timer");
       end if;
-      if not Componolit.Interfaces.Timer.Initialized (Timer) then
+      if not Componolit.Gneiss.Timer.Initialized (Timer) then
          Timer_Client.Initialize (Timer, Cap);
       end if;
       if
-         Componolit.Interfaces.Log.Initialized (Log)
-         and Componolit.Interfaces.Timer.Initialized (Timer)
+         Componolit.Gneiss.Log.Initialized (Log)
+         and Componolit.Gneiss.Timer.Initialized (Timer)
       then
          Timer_Client.Set_Timeout (Timer, 60.0);
          Timer_Client.Set_Timeout (Timer, 1.5);
-         Componolit.Interfaces.Log.Client.Info
-            (Log, "Time: " & Componolit.Interfaces.Strings.Image (Duration (Timer_Client.Clock (Timer))));
+         Componolit.Gneiss.Log.Client.Info
+            (Log, "Time: " & Componolit.Gneiss.Strings.Image (Duration (Timer_Client.Clock (Timer))));
       else
          Main.Vacate (Cap, Main.Failure);
       end if;
@@ -44,11 +44,11 @@ is
    is
    begin
       if
-         Componolit.Interfaces.Log.Initialized (Log)
-         and Componolit.Interfaces.Timer.Initialized (Timer)
+         Componolit.Gneiss.Log.Initialized (Log)
+         and Componolit.Gneiss.Timer.Initialized (Timer)
       then
-         Componolit.Interfaces.Log.Client.Info
-            (Log, "Time: " & Componolit.Interfaces.Strings.Image (Duration (Timer_Client.Clock (Timer))));
+         Componolit.Gneiss.Log.Client.Info
+            (Log, "Time: " & Componolit.Gneiss.Strings.Image (Duration (Timer_Client.Clock (Timer))));
          Main.Vacate (Capability, Main.Success);
       else
          Main.Vacate (Capability, Main.Failure);
@@ -58,11 +58,11 @@ is
    procedure Destruct
    is
    begin
-      if Componolit.Interfaces.Timer.Initialized (Timer) then
+      if Componolit.Gneiss.Timer.Initialized (Timer) then
          Timer_Client.Finalize (Timer);
       end if;
-      if Componolit.Interfaces.Log.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Finalize (Log);
+      if Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Finalize (Log);
       end if;
    end Destruct;
 
