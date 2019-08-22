@@ -1,5 +1,5 @@
 
-with Componolit.Interfaces.Log.Client;
+with Componolit.Gneiss.Log.Client;
 
 package body Component with
    SPARK_Mode
@@ -8,7 +8,7 @@ is
    use type Block.Request_Status;
    use type Block.Request_Kind;
 
-   Log         : Componolit.Interfaces.Log.Client_Session;
+   Log         : Componolit.Gneiss.Log.Client_Session;
    Dispatcher  : Block.Dispatcher_Session;
    Server      : Block.Server_Session;
 
@@ -26,21 +26,21 @@ is
 
    Ready : Boolean := False;
 
-   procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is
    begin
-      if not Componolit.Interfaces.Log.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
+      if not Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
       end if;
-      if Componolit.Interfaces.Log.Initialized (Log) then
+      if Componolit.Gneiss.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap, 42);
          end if;
          if Block.Initialized (Dispatcher) then
             Block_Dispatcher.Register (Dispatcher);
-            Componolit.Interfaces.Log.Client.Info (Log, "Dispatcher initialized");
+            Componolit.Gneiss.Log.Client.Info (Log, "Dispatcher initialized");
          else
-            Componolit.Interfaces.Log.Client.Error (Log, "Failed to initialize dispatcher");
+            Componolit.Gneiss.Log.Client.Error (Log, "Failed to initialize dispatcher");
             Main.Vacate (Cap, Main.Failure);
          end if;
       else
@@ -51,8 +51,8 @@ is
    procedure Destruct
    is
    begin
-      if Componolit.Interfaces.Log.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Finalize (Log);
+      if Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
@@ -202,24 +202,24 @@ is
       pragma Unreferenced (B);
       Max : Natural;
    begin
-      if Componolit.Interfaces.Log.Initialized (Log) then
-         Max := Componolit.Interfaces.Log.Maximum_Message_Length (Log);
-         Componolit.Interfaces.Log.Client.Info (Log, "Server initialize with label: ");
+      if Componolit.Gneiss.Log.Initialized (Log) then
+         Max := Componolit.Gneiss.Log.Maximum_Message_Length (Log);
+         Componolit.Gneiss.Log.Client.Info (Log, "Server initialize with label: ");
          if L'Length <= Max then
-            Componolit.Interfaces.Log.Client.Info (Log, L);
+            Componolit.Gneiss.Log.Client.Info (Log, L);
          else
             for I in Natural range 0 .. Natural'Last / Max - L'First - 1 loop
-               pragma Loop_Invariant (Componolit.Interfaces.Log.Initialized (Log));
-               pragma Loop_Invariant (Max = Componolit.Interfaces.Log.Maximum_Message_Length (Log));
+               pragma Loop_Invariant (Componolit.Gneiss.Log.Initialized (Log));
+               pragma Loop_Invariant (Max = Componolit.Gneiss.Log.Maximum_Message_Length (Log));
                if L'First + (I + 1) * Max <= L'Last then
-                  Componolit.Interfaces.Log.Client.Info (Log, L (L'First + I * Max .. L'First + (I + 1) * Max - 1));
+                  Componolit.Gneiss.Log.Client.Info (Log, L (L'First + I * Max .. L'First + (I + 1) * Max - 1));
                else
-                  Componolit.Interfaces.Log.Client.Info (Log, L (L'First + I * Max .. L'Last));
+                  Componolit.Gneiss.Log.Client.Info (Log, L (L'First + I * Max .. L'Last));
                   exit;
                end if;
             end loop;
          end if;
-         Componolit.Interfaces.Log.Client.Info (Log, "Initialized");
+         Componolit.Gneiss.Log.Client.Info (Log, "Initialized");
          Ready := True;
       end if;
       Ram_Disk := (others => 0);

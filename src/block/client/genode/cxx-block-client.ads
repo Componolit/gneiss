@@ -1,4 +1,4 @@
-with Componolit.Interfaces.Types;
+with Componolit.Gneiss.Types;
 with Cxx.Genode;
 
 package Cxx.Block.Client
@@ -36,7 +36,7 @@ is
       External_Name => "_ZN3Cai5Block6Client11initializedEv";
 
    procedure Initialize (This        : Class;
-                         Cap         : Componolit.Interfaces.Types.Capability;
+                         Cap         : Componolit.Gneiss.Types.Capability;
                          Device      : Cxx.Char_Array;
                          Callback    : Cxx.Void_Address;
                          Rw          : Cxx.Void_Address;

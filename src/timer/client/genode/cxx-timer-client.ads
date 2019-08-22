@@ -1,6 +1,6 @@
 
 with System;
-with Componolit.Interfaces.Types;
+with Componolit.Gneiss.Types;
 
 package Cxx.Timer.Client is
 
@@ -20,7 +20,7 @@ package Cxx.Timer.Client is
       External_Name => "_ZN3Cai5Timer6Client11initializedEv";
 
    procedure Initialize (This : Class;
-                         Cap  : Componolit.Interfaces.Types.Capability;
+                         Cap  : Componolit.Gneiss.Types.Capability;
                          Ev   : System.Address) with
       Global        => null,
       Import,
