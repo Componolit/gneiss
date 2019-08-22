@@ -1,6 +1,6 @@
 
-with Componolit.Interfaces.Log;
-with Componolit.Interfaces.Log.Client;
+with Componolit.Gneiss.Log;
+with Componolit.Gneiss.Log.Client;
 
 package body Component is
 
@@ -11,25 +11,25 @@ package body Component is
    Client : Block.Client_Session;
    Server : Block.Server_Session;
 
-   Capability : Componolit.Interfaces.Types.Capability;
+   Capability : Componolit.Gneiss.Types.Capability;
 
-   Log : Componolit.Interfaces.Log.Client_Session;
+   Log : Componolit.Gneiss.Log.Client_Session;
 
-   procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is
    begin
       Capability := Cap;
-      if not Componolit.Interfaces.Log.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Initialize (Log, Cap, "Proxy");
+      if not Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Proxy");
       end if;
-      if Componolit.Interfaces.Log.Initialized (Log) then
+      if Componolit.Gneiss.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap, 42);
          end if;
          if Block.Initialized (Dispatcher) then
             Block_Dispatcher.Register (Dispatcher);
          else
-            Componolit.Interfaces.Log.Client.Error (Log, "Failed to initialize Dispatcher");
+            Componolit.Gneiss.Log.Client.Error (Log, "Failed to initialize Dispatcher");
             Main.Vacate (Capability, Main.Failure);
          end if;
       else
@@ -40,8 +40,8 @@ package body Component is
    procedure Destruct
    is
    begin
-      if Componolit.Interfaces.Log.Initialized (Log) then
-         Componolit.Interfaces.Log.Client.Finalize (Log);
+      if Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
