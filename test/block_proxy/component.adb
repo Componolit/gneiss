@@ -13,7 +13,7 @@ package body Component is
 
    Capability : Componolit.Interfaces.Types.Capability;
 
-   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
+   Log : Componolit.Interfaces.Log.Client_Session;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is

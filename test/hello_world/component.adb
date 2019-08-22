@@ -6,7 +6,7 @@ package body Component with
    SPARK_Mode
 is
 
-   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
+   Log : Componolit.Interfaces.Log.Client_Session;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)
    is

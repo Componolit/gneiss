@@ -6,7 +6,7 @@ package Componolit.Interfaces.Internal.Timer with
 is
 
    type Client_Session is limited record
-      Index : Componolit.Interfaces.Muen.Session_Index;
+      Index : Componolit.Interfaces.Muen.Session_Index := Componolit.Interfaces.Muen.Invalid_Index;
    end record;
 
 end Componolit.Interfaces.Internal.Timer;

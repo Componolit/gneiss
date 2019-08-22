@@ -12,8 +12,8 @@ is
 
    package Config is new Componolit.Interfaces.Rom.Client (Character, Positive, String, Parse);
 
-   Cfg : Componolit.Interfaces.Rom.Client_Session := Componolit.Interfaces.Rom.Create;
-   Log : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
+   Cfg : Componolit.Interfaces.Rom.Client_Session;
+   Log : Componolit.Interfaces.Log.Client_Session;
    C : Componolit.Interfaces.Types.Capability;
 
    procedure Construct (Cap : Componolit.Interfaces.Types.Capability)

@@ -7,8 +7,6 @@ is
 
    type Client_Session is limited private;
 
-   function Create return Client_Session;
-
    function Initialized (C : Client_Session) return Boolean;
 
 private

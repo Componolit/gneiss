@@ -8,7 +8,7 @@ is
    use type Block.Request_Status;
    use type Block.Request_Kind;
 
-   Log         : Componolit.Interfaces.Log.Client_Session := Componolit.Interfaces.Log.Create;
+   Log         : Componolit.Interfaces.Log.Client_Session;
    Dispatcher  : Block.Dispatcher_Session;
    Server      : Block.Server_Session;
 
