@@ -10,6 +10,8 @@ is
    package Blk renames Componolit.Interfaces.Muen_Block;
 
    use type Blk.Event_Header;
+   use type Standard.Interfaces.Unsigned_32;
+   use type Standard.Interfaces.Unsigned_64;
 
    subtype Block_Buffer is Buffer (1 .. 4096);
    function Convert_Buffer is new Ada.Unchecked_Conversion (Blk.Raw_Data_Type, Block_Buffer);
@@ -18,8 +20,37 @@ is
    Size_Data : Blk.Size_Command_Data_Type := (Value => 0,
                                               Pad   => (others => 0));
 
+   function Kind (R : Request) return Request_Kind is
+      (case R.Event.Header.Kind is
+         when Blk.Read  => Read,
+         when Blk.Write => Write,
+         when others    => None);
+
+   function Status (R : Request) return Request_Status is
+      (if
+          R.Event.Header /= Blk.Null_Event_Header
+       then
+          (if
+                 R.Length <= Standard.Interfaces.Unsigned_64 (Count'Last)
+           then
+              Pending
+           else
+              Error)
+       else
+          Raw);
+
+   function Start (R : Request) return Id is
+      (Id (R.Event.Header.Id));
+
+   function Length (R : Request) return Count is
+      (Count (R.Length));  --  PROOF steps: 400
+
+   function Assigned (S : Server_Session;
+                      R : Request) return Boolean is
+      (S.Tag = R.Session);
+
    procedure Process (S : in out Server_Session;
-                      R : in out Server_Request)
+                      R : in out Request)
    is
       use type Blk.Event_Type;
       use type Blk.Sector;
@@ -65,7 +96,7 @@ is
    end Process;
 
    procedure Read (S : in out Server_Session;
-                   R :        Server_Request;
+                   R :        Request;
                    B :        Buffer)
    is
    begin
@@ -78,7 +109,7 @@ is
    end Read;
 
    procedure Write (S : in out Server_Session;
-                    R :        Server_Request;
+                    R :        Request;
                     B :    out Buffer)
    is
       pragma Unreferenced (S);
@@ -87,7 +118,7 @@ is
    end Write;
 
    procedure Acknowledge (S   : in out Server_Session;
-                          R   : in out Server_Request;
+                          R   : in out Request;
                           Res :        Request_Status)
    is
       use type Blk.Event_Type;

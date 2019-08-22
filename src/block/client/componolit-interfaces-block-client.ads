@@ -10,6 +10,7 @@
 --
 
 with Componolit.Interfaces.Types;
+private with Componolit.Interfaces.Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -45,6 +46,62 @@ package Componolit.Interfaces.Block.Client with
 is
    pragma Unevaluated_Use_Of_Old (Allow);
 
+   --  Block client request
+   type Request is limited private;
+
+   --  Get request type
+   --
+   --  @param R  Request
+   --  @return   Request type
+   function Kind (R : Request) return Request_Kind with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) /= Raw;
+
+   --  Get request status
+   --
+   --  @param R  Request
+   --  @return   Request status
+   function Status (R : Request) return Request_Status with
+      Annotate => (GNATprove, Terminating);
+
+   --  Get request start block
+   --
+   --  @param R  Request
+   --  @return   First block id to be handled by this request
+   function Start (R : Request) return Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) not in Raw | Error;
+
+   --  Get request length
+   --
+   --  @param R  Request
+   --  @return   Number of consecutive blocks handled by this request
+   function Length (R : Request) return Count with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) not in Raw | Error;
+
+   --  Get request identifier
+   --
+   --  @param R  Request
+   --  @return   Unique identifier of the request
+   function Identifier (R : Request) return Request_Id with
+      Annotate => (GNATprove, Terminating),
+      Pre => Status (R) not in Raw | Error;
+
+   --  Check if a request is assigned to this session
+   --
+   --  When a request is allocated it gets assigned to the session that is used for allocation.
+   --  It can then only be used by this session.
+   --
+   --  @param C  Client session instance
+   --  @param R  Request to check
+   --  @return   True if the R is assigned to C
+   function Assigned (C : Client_Session;
+                      R : Request) return Boolean with
+      Annotate => (GNATprove, Terminating),
+      Pre => Initialized (C)
+             and then Status (R) /= Raw;
+
    --  Allocate request
    --
    --  This procedure allocates a request on the platform. This means setting the intended request range
@@ -60,7 +117,7 @@ is
    --  @param I  Unique identifier for this request, chosen by the application
    --  @param E  Result of the allocation
    procedure Allocate_Request (C : in out Client_Session;
-                               R : in out Client_Request;
+                               R : in out Request;
                                K :        Request_Kind;
                                S :        Id;
                                L :        Count;
@@ -80,7 +137,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request that shall be updated
    procedure Update_Request (C : in out Client_Session;
-                             R : in out Client_Request) with
+                             R : in out Request) with
       Pre  => Initialized (C)
               and then Status (R) = Pending
               and then Assigned (C, R),
@@ -122,7 +179,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request to enqueue
    procedure Enqueue (C : in out Client_Session;
-                      R : in out Client_Request) with
+                      R : in out Request) with
       Pre  => Initialized (C)
               and then Status (R) = Allocated
               and then Assigned (C, R),
@@ -148,7 +205,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request to read data from
    procedure Read (C : in out Client_Session;
-                   R :        Client_Request) with
+                   R :        Request) with
       Pre  => Initialized (C)
               and then Status (R)   = Ok
               and then Kind (R)     = Read
@@ -169,7 +226,7 @@ is
    --  @param C  Client session instance
    --  @param R  Request to release
    procedure Release (C : in out Client_Session;
-                      R : in out Client_Request) with
+                      R : in out Request) with
       Pre  => Initialized (C)
               and then Status (R)  /= Raw
               and then Assigned (C, R),
@@ -180,6 +237,8 @@ is
               and then Status (R)          = Raw;
 
 private
+
+   type Request is new Componolit.Interfaces.Internal.Block.Client_Request;
 
    --  Called when a read has been triggered and data is available
    --
