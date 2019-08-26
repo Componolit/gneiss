@@ -1,5 +1,6 @@
 
 with Componolit.Gneiss.Muen;
+with Musinfo.Instance;
 
 package body Componolit.Gneiss.Timer with
    SPARK_Mode
@@ -8,6 +9,6 @@ is
    use type CIM.Session_Index;
 
    function Initialized (C : Client_Session) return Boolean is
-      (C.Index /= CIM.Invalid_Index);
+      (Musinfo.Instance.Is_Valid and then C.Index /= CIM.Invalid_Index);
 
 end Componolit.Gneiss.Timer;
