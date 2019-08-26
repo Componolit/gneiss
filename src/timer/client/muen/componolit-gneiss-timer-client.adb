@@ -30,6 +30,9 @@ is
       pragma Unreferenced (Cap);
       use type CIM.Async_Session_Type;
    begin
+      if not Musinfo.Instance.Is_Valid then
+         return;
+      end if;
       for I in Reg.Registry'Range loop
          if Reg.Registry (I).Kind = CIM.None then
             Reg.Registry (I) := Reg.Session_Entry'(Kind          => CIM.Timer_Client,
@@ -47,8 +50,9 @@ is
       pragma Unreferenced (C);
       use type Standard.Interfaces.Unsigned_64;
       function To_Time is new Ada.Unchecked_Conversion (Standard.Interfaces.Unsigned_64, Time);
+      Start : constant Interfaces.Unsigned_64 := Musinfo.Instance.TSC_Schedule_Start;
    begin
-      return To_Time (Musinfo.Instance.TSC_Schedule_Start * 1000 / (Musinfo.Instance.TSC_Khz / 1000));
+      return To_Time (Start * 1000 / (Musinfo.Instance.TSC_Khz / 1000));
    end Clock;
 
    procedure Set_Timeout (C : in out Client_Session;
@@ -56,19 +60,20 @@ is
    is
       use type Standard.Interfaces.Unsigned_64;
       function To_Nanosecs is new Ada.Unchecked_Conversion (Duration, Standard.Interfaces.Unsigned_64);
+      Start : constant Interfaces.Unsigned_64 := Musinfo.Instance.TSC_Schedule_Start;
    begin
-      Reg.Registry (C.Index).Next_Timeout :=
-         Musinfo.Instance.TSC_Schedule_Start + (Musinfo.Instance.TSC_Khz / 1000) * (To_Nanosecs (D) / 1000);
+      Reg.Registry (C.Index).Next_Timeout := Start + (Musinfo.Instance.TSC_Khz / 1000) * (To_Nanosecs (D) / 1000);
       Reg.Registry (C.Index).Timeout_Set  := True;
    end Set_Timeout;
 
    procedure Check_Event (I : CIM.Session_Index)
    is
       use type Standard.Interfaces.Unsigned_64;
+      Start : constant Interfaces.Unsigned_64 := Musinfo.Instance.TSC_Schedule_Start;
    begin
       if
          Reg.Registry (I).Timeout_Set
-         and then Reg.Registry (I).Next_Timeout < Musinfo.Instance.TSC_Schedule_Start
+         and then Reg.Registry (I).Next_Timeout < Start
       then
          Reg.Registry (I).Timeout_Set := False;
          Event;
