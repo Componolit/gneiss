@@ -11,6 +11,6 @@ env:
     - TEST_SUITE=muen
 
 script:
-    - if [ "$TEST_SUITE" = "genode" ]; then docker run -v $PWD:/gneiss -t jklmnn/componolit-ci /gneiss/test/genode.sh; fi
-    - if [ "$TEST_SUITE" = "linux" ]; then docker run -v $PWD:/gneiss -t jklmnn/componolit-ci /gneiss/test/linux.sh; fi
-    - if [ "$TEST_SUITE" = "muen" ]; then travis_wait 60 docker run -v $PWD:/gneiss -t jklmnn/componolit-ci /gneiss/test/muen.sh; fi
+    - if [ "$TEST_SUITE" = "genode" ]; then docker run -v $PWD:/gneiss -t jklmnn/componolit-ci:latest-genode /gneiss/test/genode.sh; fi
+    - if [ "$TEST_SUITE" = "linux" ]; then docker run -v $PWD:/gneiss -t jklmnn/componolit-ci:latest-gnat /gneiss/test/linux.sh; fi
+    - if [ "$TEST_SUITE" = "muen" ]; then travis_wait 60 docker run -v $PWD:/gneiss -t jklmnn/componolit-ci:latest-muen /gneiss/test/muen.sh; fi
