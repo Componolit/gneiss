@@ -75,6 +75,6 @@ is
       (True); --  TODO: Range check for Session_Id
 
    function Identifier (S : Server_Session) return Session_Id is
-      (Session_Id'Val (Standard.Interfaces.Unsigned_32'Pos (S.Tag) + Session_Id'Pos (Session_Id'Last)));
+      (Session_Id'Val (Standard.Interfaces.Unsigned_32'Pos (S.Tag) + Session_Id'Pos (Session_Id'First)));
 
 end Componolit.Gneiss.Block;

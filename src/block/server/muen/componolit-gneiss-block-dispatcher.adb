@@ -26,9 +26,14 @@ is
       (Serv.Event'Address) with
       SPARK_Mode => Off;
 
-   function Session_Address (D : Dispatcher_Session) return System.Address is
-      (D'Address) with
-      SPARK_Mode => Off;
+   function Session_Address (D : Dispatcher_Session) return System.Address;
+
+   function Session_Address (D : Dispatcher_Session) return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return D'Address;
+   end Session_Address;
 
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Componolit.Gneiss.Types.Capability;
@@ -44,7 +49,7 @@ is
                                                    Block_Dispatch_Event => System.Null_Address,
                                                    Tag                  => Standard.Interfaces.Unsigned_32'Val
                                                                               (Session_Id'Pos (Tag)
-                                                                               - Session_Id'Pos (Session_Id'Last)),
+                                                                               - Session_Id'Pos (Session_Id'First)),
                                                    Session              => Session_Address (D));
             exit;
          end if;
