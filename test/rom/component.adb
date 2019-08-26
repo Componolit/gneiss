@@ -37,12 +37,19 @@ is
       if not Componolit.Gneiss.Log.Initialized (Log) and then Data'Length > 1 then
          for I in Data'Range loop
             if Data (I) = ASCII.LF then
-               Last := I - 1;
+               if I > Data'First then
+                  Last := I - 1;
+               else
+                  Last := Data'First;
+               end if;
                exit;
             end if;
          end loop;
          Componolit.Gneiss.Log.Client.Initialize (Log, C, Data (Data'First .. Last));
          if Componolit.Gneiss.Log.Initialized (Log) then
+            if Data (Data'First .. Last)'Length > Componolit.Gneiss.Log.Maximum_Message_Length (Log) - 35 then
+               Last := Data'First + (Componolit.Gneiss.Log.Maximum_Message_Length (Log) - 36);
+            end if;
             Componolit.Gneiss.Log.Client.Info (Log, "Log session configured with label: "
                                                         & Data (Data'First .. Last));
          else
