@@ -171,7 +171,7 @@ is
    begin
       P_Cap := Cap;
       if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Ada block test");
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_block_client");
       end if;
       if Componolit.Gneiss.Log.Initialized (Log) then
          Componolit.Gneiss.Log.Client.Info (Log, "Ada block test");

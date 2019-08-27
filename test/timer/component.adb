@@ -22,7 +22,7 @@ is
    begin
       Capability := Cap;
       if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Timer");
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_timer");
       end if;
       if not Componolit.Gneiss.Timer.Initialized (Timer) then
          Timer_Client.Initialize (Timer, Cap);
