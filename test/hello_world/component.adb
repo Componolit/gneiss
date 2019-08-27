@@ -14,7 +14,7 @@ is
    begin
       Main.Vacate (Cap, Main.Success);
       if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Hello_World");
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_hello_world");
       end if;
       if Componolit.Gneiss.Log.Initialized (Log) then
          Ml := Componolit.Gneiss.Log.Maximum_Message_Length (Log);
