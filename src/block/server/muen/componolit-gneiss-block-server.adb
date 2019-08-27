@@ -10,6 +10,7 @@ is
    package Blk renames Componolit.Gneiss.Muen_Block;
 
    use type Blk.Event_Header;
+   use type Blk.Sector;
    use type Standard.Interfaces.Unsigned_32;
    use type Standard.Interfaces.Unsigned_64;
 
@@ -22,9 +23,10 @@ is
 
    function Kind (R : Request) return Request_Kind is
       (case R.Event.Header.Kind is
-         when Blk.Read  => Read,
-         when Blk.Write => Write,
-         when others    => None);
+         when Blk.Read    => Read,
+         when Blk.Write   => Write,
+         when Blk.Command => (if R.Event.Header.Id = Blk.Sync then Sync else None),
+         when others      => None);
 
    function Status (R : Request) return Request_Status is
       (if
@@ -53,7 +55,6 @@ is
                       R : in out Request)
    is
       use type Blk.Event_Type;
-      use type Blk.Sector;
       use type Blk.Server_Request_Channel.Result_Type;
       Res   : Blk.Server_Request_Channel.Result_Type;
       Index : Positive := S.Read_Select'First;
@@ -86,6 +87,7 @@ is
                   S.Read_Select (Index) := R.Event.Header;
                end if;
                R.Length := Standard.Interfaces.Unsigned_64 (4096 / Block_Size (S));
+               R.Session := S.Tag;
                return;
             end if;
          else
