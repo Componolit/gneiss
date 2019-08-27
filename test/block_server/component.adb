@@ -30,7 +30,7 @@ is
    is
    begin
       if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Ada_Block_Server");
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_block_server");
       end if;
       if Componolit.Gneiss.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then

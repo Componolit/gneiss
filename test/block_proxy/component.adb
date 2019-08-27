@@ -1,8 +1,12 @@
 
 with Componolit.Gneiss.Log;
 with Componolit.Gneiss.Log.Client;
+with Componolit.Gneiss.Strings_Generic;
 
 package body Component is
+
+   --  Print the content of each Read and Write package seen
+   Print_Content : constant Boolean := False;
 
    use type Block.Request_Kind;
    use type Block.Request_Status;
@@ -15,12 +19,16 @@ package body Component is
 
    Log : Componolit.Gneiss.Log.Client_Session;
 
+   function Image is new Componolit.Gneiss.Strings_Generic.Image_Modular (Byte);
+   function Image is new Componolit.Gneiss.Strings_Generic.Image_Modular (Block.Id);
+   function Image is new Componolit.Gneiss.Strings_Generic.Image_Ranged (Unsigned_Long);
+
    procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is
    begin
       Capability := Cap;
       if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Proxy");
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_block_proxy");
       end if;
       if Componolit.Gneiss.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
@@ -58,6 +66,31 @@ package body Component is
 
    Cache : Registry;
 
+   procedure Print_Buffer (D : Buffer) with
+      Pre => Componolit.Gneiss.Log.Initialized (Log);
+
+   procedure Print_Buffer (D : Buffer)
+   is
+      I : Unsigned_Long := D'First;
+      function Pad (S : String) return String is
+         (if S'Length = 1 then '0' & S else S);
+   begin
+      while I < D'Last and then D'Last - I > 16 loop
+         Componolit.Gneiss.Log.Client.Info
+            (Log, Image (I - D'First, 16, False) & ": "
+                  & Pad (Image (D (I), 16, False))      & Pad (Image (D (I + 1), 16, False)) & " "
+                  & Pad (Image (D (I + 2), 16, False))  & Pad (Image (D (I + 3), 16, False)) & " "
+                  & Pad (Image (D (I + 4), 16, False))  & Pad (Image (D (I + 5), 16, False)) & " "
+                  & Pad (Image (D (I + 6), 16, False))  & Pad (Image (D (I + 7), 16, False)) & " "
+                  & Pad (Image (D (I + 8), 16, False))  & Pad (Image (D (I + 9), 16, False)) & " "
+                  & Pad (Image (D (I + 10), 16, False)) & Pad (Image (D (I + 11), 16, False)) & " "
+                  & Pad (Image (D (I + 12), 16, False)) & Pad (Image (D (I + 13), 16, False)) & " "
+                  & Pad (Image (D (I + 14), 16, False)) & Pad (Image (D (I + 15), 16, False)) & " "
+                  );
+         I := I + 16;
+      end loop;
+   end Print_Buffer;
+
    procedure Write (C : in out Block.Client_Session;
                     I :        Request_Index;
                     D :    out Buffer)
@@ -73,6 +106,20 @@ package body Component is
          and then D'Length = Block_Size (Server) * Block_Server.Length (Cache (I).S)
       then
          Block_Server.Write (Server, Cache (I).S, D);
+         pragma Warnings (Off, "*never be executed*");
+         pragma Warnings (Off, "if statement has no effect");
+         if Print_Content and then Componolit.Gneiss.Log.Initialized (Log) then
+            Componolit.Gneiss.Log.Client.Info (Log, "Write @ " & Image (Block_Server.Start (Cache (I).S)));
+            Print_Buffer (D);
+         end if;
+         if False then
+            --  This is a construct to allow dead code which appears when Print_Content is set to False.
+            --  In case it is set to True the first disabled Warning does not happen so dummy dead code
+            --  has been inserted to trigger it again.
+            null;
+         end if;
+         pragma Warnings (On, "if statement has no effect");
+         pragma Warnings (On, "*never be executed*");
       else
          Cache (I).A := True;
       end if;
@@ -92,6 +139,20 @@ package body Component is
          and then Block_Server.Assigned (Server, Cache (I).S)
          and then D'Length = Block_Size (Server) * Block_Server.Length (Cache (I).S)
       then
+         pragma Warnings (Off, "*never be executed*");
+         pragma Warnings (Off, "if statement has no effect");
+         if Print_Content and then Componolit.Gneiss.Log.Initialized (Log) then
+            Componolit.Gneiss.Log.Client.Info (Log, "Read @ " & Image (Block_Server.Start (Cache (I).S)));
+            Print_Buffer (D);
+         end if;
+         if False and then Print_Content then
+            --  This is a construct to allow dead code which appears when Print_Content is set to False.
+            --  In case it is set to True the first disabled Warning does not happen so dummy dead code
+            --  has been inserted to trigger it again.
+            null;
+         end if;
+         pragma Warnings (On, "if statement has no effect");
+         pragma Warnings (On, "*never be executed*");
          Block_Server.Read (Server, Cache (I).S, D);
       else
          Cache (I).A := True;
@@ -205,7 +266,11 @@ package body Component is
    is
    begin
       if not Block.Initialized (Client) then
-         Block_Client.Initialize (Client, Capability, L, 42, B);
+         if L = "blockdev2" then  --  Muen
+            Block_Client.Initialize (Client, Capability, "blockdev1", 42, B);
+         else  --  Genode
+            Block_Client.Initialize (Client, Capability, L, 42, B);
+         end if;
       end if;
       if Block.Initialized (Client) and then not Initialized (S) then
          Block_Client.Finalize (Client);
