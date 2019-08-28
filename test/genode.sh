@@ -7,7 +7,7 @@ git fetch jklmnn
 git checkout b0d01103e20981d64a81b8494359c9606017e4bf
 git clone https://github.com/Componolit/genode-componolit.git /genode/repos/componolit
 cd /genode/repos/componolit
-git checkout 08c98ffe48f6b4899e735d6af742f24543641ef0
+git checkout 04682264e565847a207f0a8e4944a6040c1ffe8c
 rm -rf /genode/repos/componolit/modules/gneiss
 ln -fs /gneiss /genode/repos/componolit/modules/gneiss
 /genode/tool/create_builddir x86_64
