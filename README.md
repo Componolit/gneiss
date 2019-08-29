@@ -32,47 +32,70 @@ This must only be done once per component.
 An empty component looks as follows:
 
 ```Ada
-with Cai.Types;
-with Cai.Component;
+with Componolit.Gneiss.Types;
+with Componolit.Gneiss.Component;
 
 package Component is
 
-   procedure Initialize (Cap : Cai.Types.Capability);
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability);
+   procedure Destruct;
    
-   package My_Component is new Cai.Component (Initialize);
+   package Main is new Componolit.Gneiss.Component (Construct, Destruct);
    
 end Component;
 ```
 
-The procedure `Initialize` is the first called procedure of the component (except of elaboration code) and receives a valid system capability. This capability is required to initialize clients or register servers.
+The procedure `Construct` is the first called procedure of the component (except of elaboration code) and receives a valid system capability. This capability is required to initialize clients or register servers.
+The procedure `Destruct` is called when the platform decides to stop the component and allows to finalize component state.
+As a convention the components main package is always called `Component` and it must contain an instance of `Componolit.Gneiss.Component` that is named `Main`.
 
-### Using a client
-
-Clients are used like regular libraries. The simples client is the `Log` client that provides standard logging facilities.
+The simplest interfaces are used like regular libraries. An example is the `Log` client that provides standard logging facilities.
 A hello world with the component described above looks as follows
 
 ```Ada
-with Cai.Log;
-with Cai.Log.Client;
+with Componolit.Gneiss.Log;
+with Componolit.Gneiss.Log.Client;
 
 package body Component is
 
-   procedure Initialize (Cap : Cai.Types.Capability)
+   Log : Componolit.Gneiss.Log.Client_Session;
+
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is
-      Log : Cai.Log.Client_Session;
    begin
-      Cai.Log.Client.Initialize (Log, Cap, "Hello_World");
-      Cai.Log.Client.Info (Log, "Hello World!");
-      Cai.Log.Client.Warning (Log, "Hello World!");
-      Cai.Log.Client.Error (Log, "Hello World!");
-      Cai.Log.Client.Finalize (Log);
-   end Initialize;
+      if not Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Hello_World");
+      end if;
+      if Componolit.Gneiss.Log.Initialized (Log) then 
+         Componolit.Gneiss.Log.Client.Info (Log, "Hello World!");
+         Componolit.Gneiss.Log.Client.Warning (Log, "Hello World!");
+         Componolit.Gneiss.Log.Client.Error (Log, "Hello World!");
+        Main.Vacate (Cap, Main.Success);
+      else
+        Main.Vacate (Cap, Main.Failure);
+      end if;
+   end Construct;
+
+   procedure Destruct
+   is
+   begin
+      if Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Finalize (Log);
+      end if;
+   end Destruct;
    
 end Component;
 ```
 
-This component opens a `Log` client session with its provided capability and then prints "Hello World!" as info, warning and error. Since there is only a initialize procedure that will only be called once the `Log` session is closed afterwards.
-This produces partially different outputs on different platforms:
+In `Construct` the component checks if the log session `Log` is already initialized and initialized it if that is not the case.
+Initializing a session that is already initialized could lead to double initialization and crashes or memory leaks on the platform.
+Since the initialization can fail it checks again if it succeeded.
+If this is the case it prints "Hello World!" as an info, warning and error message.
+The component then calls `Vacate` to tell the platform that it has finished its work and can be terminated.
+`Vacate` does not immediately kill the component but tell the platform that it can be stopped now. The current method will still return normally
+and there is no guarantee not to be called again.
+When the platform at some point decides to terminate the component it will call `Destruct`.
+This procedure only checks if the `Log` session has been initialized and finalizes it if this is the case.
 
 Posix:
 ```
@@ -87,187 +110,88 @@ Genode:
 [init -> test-hello_world -> Hello_World] Error: Hello World!
 ```
 
-A more complex example is the [`Block`](https://en.wikipedia.org/wiki/Block_(data_storage)). It provides client, server and dispatcher.
-Since this interface generates asynchronous events it requires an event handler:
+Since Gneiss is an asynchronous framework it often requires callbacks to be implemented.
+The `Timer` interface is a good example and easy to show.
+It only requires a single callback procedure that is called after a previously specified time.
+The package spec is the same as in the previous example.
 
-```Ada
-with Cai.Block;
-with Cai.Block.Client;
-with Cai.Log;
-with Cai.Log.Client;
+```
+with Componolit.Gneiss.Log;
+with Componolit.Gneiss.Log.Client;
+with Componolit.Gneiss.Timer;
+with Componolit.Gneiss.Timer.Client;
 
 package body Component is
 
-   procedure Event;
-   
-   package Block is new Cai.Block (Character, Positive, String);
-   package Block_Client is new Block.Client (Event);
-   
-   Log : Cai.Log.Client_Session;
-   Client : Block.Client_Session;
-   
-   procedure Initialize (Cap : Cai.Types.Capability)
-   is
-      Block_Request : Block_Client.Request (Kind => Block.Read,
-                                            Start => 0,
-                                            Length => 1,
-                                            Status => Block.Raw);
-   begin
-      Cai.Log.Initialize (Log, Cap, "Block");
-      Block_Client.Initialize (Client, Cap, "device id");
-      if Block_Client.Ready (Client, Block_Request) then
-         Block_Client.Enqueue (Client, Block_Request);
-      end if;
-      Block_Client.Submit (Client);
-   end Initialize;
-   
-   procedure Event
-   is
-      Data : String (1 .. Block_Client.Block_Size (Client));
-      Request : Block_Client.Request := Block_Client.Next (Client);
-   begin
-      if Request.Kind = Block.Read and then Request.Status = Block.Ok then
-         Block_Client.Read (Client, Request, Data);
-         Cai.Log.Client.Info (Log, Data);
-      end if;
-      Block_Client.Release (Client, Request);
-   end Event;
-   
-end Component;
-```
-
-The whole `Block` session is generic. Since this session requires buffers to work on it would be inconvenient to always convert between different buffer types.
-So it is instantiated at first with an element type, an index type and the resulting array type. In this case the standard Ada string is used.
-Then the block client package is instantiated with the event handler procedure.
-Since we need to keep state over multiple subprogram calls the session objects stay in the package state.
-
-When the initializer is called first the sessions are initialized.
-To create a possible event a request needs to be sent first.
-In this case it is a `READ` request for block `0` with the length of one block.
-If the platform is ready this (or more) request can be enqueued and then all enqueued requests are submitted.
-The component now returns from this function and will stay inactive until an event happens.
-
-Once the request has been handled by the platform the event handler is called.
-A buffer of the size of one block is allocated and the next pending request is taken from the queue.
-If this is a `READ` request and its has been handled correctly by the platform the the buffer can be filled via the `Read` procedure.
-Before the `Event` procedure returns it releases the current request to make the next one availabel in the `Next` function.
-
-In a real world application there are some more checks and loops but for the sake of simplicity this example was shortened a little bit. More complex examples reside in the `test` directory.
-
-### Implementing a server
-
-Implementing a server is quite similar to using a client.
-It also consists of using a generic package and instantiating it with specific implementations of event handlers.
-The main difference are additional initialization and property functions and the registration via the dispatcher.
-For this example a simplified version of the block client will be used:
-
-```Ada
-generic
-   with procedure Event;
-   with function Block_Size (S : Server_Instance) return Size;
-   with procedure Initialize (S : Server_Instance; L : String);
-package Cai.Block.Server;
-```
-
-Another notable difference is that these subprograms receive a `Server_Instance` while called subprograms receive a `Server_Session`.
-The reason is that the `Server_Session` object is kept in the local state but the callee of the passed function should be available.
-To avoid aliasing that is forbidden in SPARK (two variable point to the same actual object) called subprograms only get an identifier passed which then can be associated with the actual object in the component state.
-An empty block server implementation would look as follows:
-
-```Ada
-with Cai.Log;
-with Cai.Log.Client;
-with Cai.Block;
-with Cai.Block.Dispatcher;
-with Cai.Block.Server;
-
-package body Component is
-
-   package Block is new Cai.Block (Character, Positive, String);
+   Log        : Componolit.Gneiss.Log.Client_Session;
+   Timer      : Componolit.Gneiss.Timer.Client_Session;
+   Capability : Componolit.Gneiss.Types.Capability;
 
    procedure Event;
-   procedure Dispatch;
-   function Block_Size (S : Block.Server_Instance) return Block.Size;
-   procedure Initialize_Server (S : Block.Server_Instance; L : String);
-   
-   package Block_Server is new Block.Server (Event, Block_Size, Initialize_Server);
-   package Block_Dispatcher is new Block.Dispatcher (Block_Server, Dispatch);
-   
-   Dispatcher : Block.Dispatcher_Session;
-   Server : Block.Server_Session;
-   Log : Cai.Log.Client_Session;
 
-   procedure Initialize (Cap : Cai.Types.Capability)
+   package Timer_Client is new Componolit.Gneiss.Timer.Client (Event);
+
+   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is
    begin
-      Block_Dispatcher.Initialize (Dispatcher, Cap);
-      Block_Dispatcher.Register (Dispatcher);
-      Cai.Log.Client.Initialize (Log, Cap);
-   end Initialize;
-   
-   procedure Dispatch
-   is
-      Label : String (1 .. 160);
-      Last : Natural;
-      Valid : Boolean;
-   begin
-      Block_Dispatcher.Session_Request (Dispatcher, Valid, Label, Last);
-      if Valid and not Block_Server.Initialized (Server) then
-         Cai.Log.Client.Info (Log, "Accepting block client with label " & Label (1 .. Last));
-         Block_Dispatcher.Session_Accept (Dispatcher, Server);
+      Capability := Cap;
+      if not Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Timer");
       end if;
-      Block_Dispatcher.Session_Cleanup (Dispatcher, Server);
-   end if;
+      if not Componolit.Gneiss.Timer.Initialized (Timer) then
+         Timer_Client.Initialize (Timer, Cap);
+      end if;
+      if
+         Componolit.Gneiss.Log.Initialized (Log)
+         and then Componolit.Timer.Initialized (Timer)
+      then
+         Componolit.Gneiss.Log.Client.Info (Log, "Start!");
+         Timer_Client.Set_Timeout (Timer, 60.0);
+      else
+         Main.Vacate (Cap, Main.Failure);
+      end if;
+   end Construct;
 
    procedure Event
    is
    begin
-      null;
-      --  Handle requests
+      if
+         Componolit.Gneiss.Log.Initialized (Log)
+         and then Componolit.Gneiss.Timer.Initialized (Timer)
+      then
+         Componolit.Gneiss.Log.Client.Info ("60s passed!");
+         Main.Vacate (Capability, Main.Success);
+      else
+         Main.Vacate (Capability, Main.Failure);
+      end if;
    end Event;
-   
-   function Block_Size (S : Block.Server_Instance) return Block.Size
+
+   procedure Destruct
    is
    begin
-      if Block_Server.Get_Instance (Server) = S then
-         return 4096;
+      if Componolit.Gneiss.Log.Initialized (Log) then
+         Componolit.Gneiss.Log.Client.Finalize (Log);
       end if;
-      return 0;
-   end Block_Size;
-   
-   procedure Initialize_Server (S : Block.Server_Instance; L : String)
-   is
-   begin
-      if Block_Server.Get_Instance (Server) = S then
-         Cai.Log.Client.Info ("Initializing server with label " & L);
+      if Componolit.Gneiss.Timer.Initialized (Timer) then
+         Timer_Client.Finalize (Timer);
       end if;
-   end Initialize_Server;
-   
+   end Destruct;
+
 end Component;
 ```
 
-Similar to the client the generic packages are instantiated consecutively.
-The dispatcher is then used like a regular client.
-With the register method it announces its readiness to receive session requests.
-When a clients want to open a session the `Dispatch` procedure is called.
-It gets the session information and checks if a valid request is available and if it has a free slot to handle this request.
-If this is the case it accepts the session.
+The usage of the log session here is equivalent to the first example.
+Also the initialization of the timer session is similar.
+The main difference is that the `Timer.Client` package is a generic that needs to be instantiated with a procedure.
+When `Set_Timeout` is called on this instance a timeout is set on the platform.
+The platform will then call the `Event` procedure when this timeout triggers.
+Since the `Event` procedure has no arguments and can be used in multiple contexts no preconditions can be set.
+This requires an initialization check of the timer session.
+Some more specialized callbacks can provide preconditions that provide certain guarantees about initialized arguments.
 
-When `Session_Accept` is called it will first initialize the server on the platform and then call the servers own `Initialize_Server` procedure.
-The server can then initialize its own backend, e.g. a hard drive controller it drives.
-Once this procedure returns the dispatcher will automatically announce the service on the platform.
-If `Session_Accept` is not called the dispatcher will tell the platform that the request cannot be handled.
-At last the `Session_Cleanup` procedure is called.
-This happens always in the `Dispatch` procedure and will clean all servers where the client has disconnected, similar to a garbage collector.
-
-The `Event` function is called once a request arrives.
-The server interface provides subprograms similar to the client interface to consume and answer these requests but this is omitted here.
-
-The `Block_Size` function is called when the client wants to know how large a single block is.
-It checks first if it is called from the correct instance and returns a static size in this case.
-If it has been called from another instance it will return `0`.
-This instance checking functionality is especially useful if several instances with different properties run simultaneously.
-The same accounts for the `Initialize_Server` procedure which in this case will only print the provided label.
+Furthermore the capability needs to be copied to be available in the Event for component termination.
+The capability is a special object that can be copied but not initialized.
+Only construct is called with a valid capability object which then must be kept somewhere to be used in other contexts.
 
 ## Implementing a new platform
 
@@ -275,93 +199,112 @@ The generic approach to implement a new platform is to create a new directory in
 Some of those specs have private parts that include `Internal` packages and rename their types.
 Those are platform specific types and there declaration together with the according `Internal` package spec need to be provided.
 Platform specific types can be anything, as they're private to all components.
-Their only limitation is that they must not be limited.
 
 The log client for example consists of two (in this example simplified) specs:
 
 ```Ada
-private with Cai.Internal.Log;
+private with Componolit.Gneiss.Internal.Log;
 
-package Cai.Log is
+package Componolit.Gneiss.Log is
 
-   type Client_Session is private;
-   
+   type Client_Session is limited private;
+
+   function Initialized (C : Client_Session) return Boolean;
+
 private
 
-   type Client_Session is new Cai.Internal.Log.Client_Session;
+   type Client_Session is new Componolit.Gneiss.Internal.Log.Client_Session;
 
-end Cai.Log;
+end Componolit.Gneiss.Log;
 ```
 ```Ada
-with Cai.Types;
+with Componolit.Gneiss.Types;
 
-package Cai.Log.Client is
+package Componolit.Gneiss.Log.Client is
 
-   procedure Initialize (C     : out Client_Session;
-                         Cap   :     Cai.Types.Capability;
-                         Label :     String);
+   procedure Initialize (C     : in out Client_Session;
+                         Cap   :        Componolit.Gneiss.Types.Capability;
+                         Label :        String) with
+      Pre => not Initialized (C);
    
-   procedure Info (C : Client_Session;
-                   M : String);
+   procedure Info (C : in out Client_Session;
+                   M :        String) with
+      Pre  => Initialized (C),
+      Post => Initialized (C);
 
-end Cai.Log.Client;
+end Componolit.Gneiss.Log.Client;
 ```
+
+The client session is a limited private type that can neither be assigned nor copied.
+Its state functions, such as the initialization in this case are provided by the `Log` package while all modifying
+procedures are provided by `Log.Client`.
+In case of a generic package this allows to use the state functions as function contracts for formal generic parameters.
 
 An exmplary Posix implementation consists of three parts: the internal type package, a client body and a C implementation.
 Since the label should be printed as a prefix infront of each message it needs to be saved in the `Client_Session` type.
-As it can have any length it only is a pointer to the actual string object:
+As it can have any length it only is a record containing a pointer to the actual string object:
 
 ```Ada
-with System.Address;
+with System;
 
-package Cai.Internal.Log is
+package Componolit.Gneiss.Internal.Log is
 
-   type Client_Session is new System.Address;
+   type Client_Session is limited record
+      Label : System.Address := System.Null_Address;
+   end record;
    
-end Cai.Internal.Log;
+end Componolit.Gneiss.Internal.Log;
 ```
 
+As the session type is limited and has no initialization operation it requires a default initializer.
+The default value should be a state that marks the session as not initialized.
 Before the package body can be implemented a C implementation must be present.
+Since the session type is limited Ada will always pass it by reference, so pointers have to be used in the language binding.
 This roughly represents the subprograms defined in the package spec:
+
 ```C
 #include <string.h>
 #include <stdlib.h>
 #include <stdio.h>
 
-void initialize(char **session, char *label)
+typedef struct session
 {
-    *session = malloc(strlen(label) + 1);
-    memcpy(*session, label, strlen(label) + 1);
+    char *label;
+} session_t;
+
+void initialize(session_t *session, char *label)
+{
+    session->label = malloc(strlen(label) + 1);
+    if(session->label){
+        memcpy(session->label, label, strlen(label) + 1);
+    }
 }
 
-void info(char *session, char *msg)
+void info(session_t *session, char *msg)
 {
     fputs("[", stderr);
-    fputs(session, stderr);
+    fputs(session->label, stderr);
     fputs("] ", stderr);
     fputs(msg, stderr);
     fputs("\n", stderr);
 }
 ```
 
-Since the `Initialize` procedure uses an `out` parameter the argument in C is a pointer on the session object which is a char pointer.
-The `in` parameter of the `Info` function is passed by value so the pointer can be used directly.
-These mechanics may be different for different languages and type implementations.
-Note that Posix doesn't require capabilities for this task so the C interfaces doesn't show them.
-
-Now everything is available to implement the body that simply will glue both parts together:
+The `struct session` is equal to the Ada record. A pointer in C is what a `System.Address` is in Ada.
+Also by using `in out` as passing mode or having a limited type Ada will use pointers so `session_t` will always be passed as a pointer.
+Procedures in Ada have no return type so they all are void functions in C.
 
 ```Ada
-with System.Address;
+with System;
 
-package body Cai.Log.Client is
+package body Componolit.Gneiss.Log.Client is
 
-   procedure Initialize (C     : out Client_Session;
-                         Cap   :     Cai.Types.Capability;
-                         Label :     String)
+   procedure Initialize (C     : in out Client_Session;
+                         Cap   :        Componolit.Gneiss.Types.Capability;
+                         Label :        String)
    is
-      procedure C_Initialize (C_Client : out Client_Session;
-                              C_Label  : System.Address) with
+      procedure C_Initialize (C_Client : in out Client_Session;
+                              C_Label  :        System.Address) with
          Import,
          Convention => C,
          External_Name => "initialize";
@@ -370,11 +313,11 @@ package body Cai.Log.Client is
       C_Initialize (C, C_String'Address);
    end Initialize;
    
-   procedure Info (C : Client_Session;
-                   M : String)
+   procedure Info (C : in out Client_Session;
+                   M :        String)
    is
-      procedure C_Info (C_Client  : Client_Session;
-                        C_Message : System.Address) with
+      procedure C_Info (C_Client  : in out Client_Session;
+                        C_Message :        System.Address) with
          Import,
          Convention => C,
          External_Name => "info";
@@ -383,9 +326,33 @@ package body Cai.Log.Client is
       C_Info (C, C_Msg'Address);
    end Info;
 
-end Cai.Log.Client;
+end Componolit.Gneiss.Log.Client;
 ```
 
-The body simply imports the C functions into each procedure and calls them with the session object.
-To provide a pointer to a null terminated string in C the label and message are put on the stack and appended by a null byte.
-Then the address of this object is passed to C.
+In the package body the C functions are imported.
+The `Client_Session` can be `in out` as it is passed as a pointer and might be modified by C.
+The message string is more complicated.
+While C expects a pointer with a null terminated string, Ada uses an array of characters and passes meta data about the length of the string.
+To convert an Ada string to a C string the string put on the stack and a NULL character is appended as termination.
+Then the address of the first string element is passed to C.
+
+The last part is the package body for `Log` which only needs to implement `Initialized`.
+Since this functions properties are likely required in the proof context it should not be implemented in C.
+Also since its contract is fixed it needs to be a expression function to get into the proof context:
+
+```Ada
+with System;
+
+package body Componolit.Gneiss.Log is
+
+   use type System.Address;
+
+   function Initialized (C : Client_Session) return Boolean is
+      (C.Label /= System.Null_Address);
+
+end Componolit.Gneiss.Log;
+```
+
+The initialization checks if `Label` is a valid address.
+This ensures that all procedures that have an `Initialized` precondition can safely use the label.
+It also makes sure that if `malloc` fails in C the session will not be initialized.
