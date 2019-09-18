@@ -102,6 +102,7 @@ is
       Aunit.Assertions.Assert (Image (Duration'(0.000123)), "0.000123",  "Invalid Duration Image");
       Aunit.Assertions.Assert (Image (Duration'(42.000123)), "42.000123",  "Invalid Duration Image");
       Aunit.Assertions.Assert (Image (Duration'(-42.000123)), "-42.000123",  "Invalid Duration Image");
+      Aunit.Assertions.Assert (Image (Duration'(-0.0042)), "-0.004200", "Invalid Duration Image");
    end Test_Image_Duration;
 
    procedure Register_Tests (T : in out Test_Case)
