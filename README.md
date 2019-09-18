@@ -1,6 +1,6 @@
-# ada-interface
+# Gneiss
 
-Ada-interface is a Ada/SPARK library to provide a collection of interfaces to Ada components platform independently.
+Gneiss is a Ada/SPARK library to provide a collection of interfaces to Ada components platform independently.
 It only requires a minimal runtime such as the [ada-runtime](https://github.com/Componolit/ada-runtime).
 Components built with this library are completely asynchronously.
 For this approach all interfaces provide callable subprograms and and receive event handlers.
@@ -45,9 +45,10 @@ package Component is
 end Component;
 ```
 
-The procedure `Construct` is the first called procedure of the component (except of elaboration code) and receives a valid system capability. This capability is required to initialize clients or register servers.
+The procedure `Construct` is the first called procedure of the component (except of elaboration code) and receives a valid system [capability](https://en.wikipedia.org/wiki/Capability-based_security).
+This capability is required to initialize clients or register servers.
 The procedure `Destruct` is called when the platform decides to stop the component and allows to finalize component state.
-As a convention the components main package is always called `Component` and it must contain an instance of `Componolit.Gneiss.Component` that is named `Main`.
+As a convention the components main package is always called `Component` and it must contain an instance of the generic package `Componolit.Gneiss.Component` that is named `Main`.
 
 The simplest interfaces are used like regular libraries. An example is the `Log` client that provides standard logging facilities.
 A hello world with the component described above looks as follows
@@ -64,7 +65,7 @@ package body Component is
    is
    begin
       if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Hello_World");
+         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "channel1");
       end if;
       if Componolit.Gneiss.Log.Initialized (Log) then 
          Componolit.Gneiss.Log.Client.Info (Log, "Hello World!");
@@ -87,15 +88,17 @@ package body Component is
 end Component;
 ```
 
-In `Construct` the component checks if the log session `Log` is already initialized and initialized it if that is not the case.
-Initializing a session that is already initialized could lead to double initialization and crashes or memory leaks on the platform.
+In `Construct` the component checks if the log session `Log` is already initialized and initializes it if that is not the case.
+Initializing a session that has already been set up could lead to crashes or memory leaks on the platform.
 Since the initialization can fail it checks again if it succeeded.
 If this is the case it prints "Hello World!" as an info, warning and error message.
 The component then calls `Vacate` to tell the platform that it has finished its work and can be terminated.
-`Vacate` does not immediately kill the component but tell the platform that it can be stopped now. The current method will still return normally
-and there is no guarantee not to be called again.
+`Vacate` does not immediately kill the component but tell the platform that it can safely be stopped now.
+The current method will still return normally.
+There is no guarantee that a subprogram that called `Vacate` is not called again.
 When the platform at some point decides to terminate the component it will call `Destruct`.
 This procedure only checks if the `Log` session has been initialized and finalizes it if this is the case.
+In more complex scenarios the `Destruct` procedure can be used to safely shut down hardware devices or write data to disk.
 
 Posix:
 ```
@@ -187,10 +190,11 @@ When `Set_Timeout` is called on this instance a timeout is set on the platform.
 The platform will then call the `Event` procedure when this timeout triggers.
 Since the `Event` procedure has no arguments and can be used in multiple contexts no preconditions can be set.
 This requires an initialization check of the timer session.
-Some more specialized callbacks can provide preconditions that provide certain guarantees about initialized arguments.
+Some interfaces need more than a simple event callback and require additional interface specific procedures or functions as generic arguments.
+These more specialized callbacks can provide preconditions that provide certain guarantees about initialized arguments.
 
 Furthermore the capability needs to be copied to be available in the Event for component termination.
-The capability is a special object that can be copied but not initialized.
+The capability is a special object that can be copied but not created from scratch.
 Only construct is called with a valid capability object which then must be kept somewhere to be used in other contexts.
 
 ## Implementing a new platform
