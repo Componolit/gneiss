@@ -254,6 +254,10 @@ package body Component is
    is
    begin
       if not Block.Initialized (Client) then
+         --  The client label of a proxy should be determined by a policy depending on the server label.
+         --  In this simple test the policy is hardcoded. If the server receives a connection request with
+         --  label "blockdev2" the client will use the label "blockdev1", otherwise it will use the label
+         --  provided by the server. This policy is to prevent the proxy to connect to itself on Muen.
          if L = "blockdev2" then  --  Muen
             Block_Client.Initialize (Client, Capability, "blockdev1", 42, B);
          else  --  Genode
