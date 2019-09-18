@@ -4,7 +4,7 @@ cd /gneiss
 git submodule update --init --recursive
 make -C ada-runtime && make -C ada-runtime platform
 
-gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-interfaces-log
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-gneiss-log
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component --clean
@@ -16,6 +16,9 @@ gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=rom -u component --clean
 
 set -e
+
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-gneiss-strings
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
 
 gprbuild -P gneiss.gpr -XPLATFORM=linux
 gprclean -P gneiss.gpr -XPLATFORM=linux
