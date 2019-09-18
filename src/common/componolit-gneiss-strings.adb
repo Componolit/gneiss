@@ -48,14 +48,16 @@ is
       declare
          F_Image : constant String          := Image (Long_Integer (Frac), 10, True);
          Pad     : constant String (1 .. 6) := (others => '0');
+         S_Image : constant String :=
+            (if Seconds = 0 then (if V2 < 0.0 then "-0" else "0") else Image (Seconds, 10, True));
       begin
          if Frac = -0.5 then
-            return Image (Seconds, 10, True) & "." & Pad;
+            return S_Image & "." & Pad;
          end if;
          if F_Image'Length >= 6 then
-            return Image (Seconds, 10, True) & "." & F_Image (1 .. 6);
+            return S_Image & "." & F_Image (1 .. 6);
          else --  F_Image'Length < 6
-            return Image (Seconds, 10, True) & "." & Pad (1 .. 6 - F_Image'Length) & F_Image;
+            return S_Image & "." & Pad (1 .. 6 - F_Image'Length) & F_Image;
          end if;
       end;
    end Image;
