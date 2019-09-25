@@ -118,7 +118,7 @@ The `Timer` interface is a good example and easy to show.
 It only requires a single callback procedure that is called after a previously specified time.
 The package spec is the same as in the previous example.
 
-```
+```Ada
 with Componolit.Gneiss.Log;
 with Componolit.Gneiss.Log.Client;
 with Componolit.Gneiss.Timer;
