@@ -89,8 +89,10 @@ void Cai::Block::Client::initialize(
             device ? device : default_device,
             this,
             &Client::callback);
-    _block_size = blk(_device)->info().block_size;
-    _block_count = blk(_device)->info().block_count;
+    if(_device){
+        _block_size = blk(_device)->info().block_size;
+        _block_count = blk(_device)->info().block_count;
+    }
 }
 
 void Cai::Block::Client::finalize()
