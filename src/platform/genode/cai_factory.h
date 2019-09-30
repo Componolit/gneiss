@@ -20,7 +20,11 @@ class Factory
         template <typename T, typename ... Args>
         void *create(Args &&... args)
         {
-            return reinterpret_cast<void *>(new (_heap) T(args ...));
+            try{
+                return reinterpret_cast<void *>(new (_heap) T(args ...));
+            }catch(...){
+                return nullptr;
+            }
         }
 
         template <typename T>
