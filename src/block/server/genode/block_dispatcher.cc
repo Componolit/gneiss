@@ -145,13 +145,15 @@ void Cai::Block::Dispatcher::session_accept(void *dcap, void *session)
 bool Cai::Block::Dispatcher::session_cleanup(void *dcap, void *session)
 {
     Genode::Capability<Genode::Session> *close_cap = reinterpret_cast<Dcap *>(dcap)->cap;
-    Genode::Capability<Genode::Session> cap =
-        reinterpret_cast<Cai::Block::Block_root *>(reinterpret_cast<Cai::Block::Server *>(session)->_session)->cap();
-    if(close_cap){
-        return cap == *close_cap;
-    }else{
-        return false;
+    if(reinterpret_cast<Cai::Block::Server *>(session)->_session){
+        Genode::Capability<Genode::Session> cap =
+            reinterpret_cast<Cai::Block::Block_root *>(reinterpret_cast<Cai::Block::Server *>(session)->_session)->cap();
+        Genode::log(cap);
+        if(close_cap){
+            return cap == *close_cap;
+        }
     }
+    return false;
 }
 
 void *Cai::Block::Dispatcher::get_capability()
