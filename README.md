@@ -1,10 +1,28 @@
 # Gneiss
 
-Gneiss is a Ada/SPARK library to provide a collection of interfaces to Ada components platform independently.
-It only requires a minimal runtime such as the [ada-runtime](https://github.com/Componolit/ada-runtime).
-Components built with this library are completely asynchronously.
-For this approach all interfaces provide callable subprograms and and receive event handlers.
-Its main design goals are portability, especially on for microkernel platforms, and complete SPARK compatibility.
+Many applications still follow a monolithic design pattern today. Often, their
+size and complexity precludes thorough verification and increases the
+likelihood of errors. The lack of isolation allows an errors in an uncritical
+part of a software to impact other security critical parts.
+
+A well-known solution to this problem are systems comprised of components which
+only interact through well-defined communication channels. In such systems
+functionality is split into complex untrusted components and simple trusted
+components. While untrusted parts realize sophisticated application logic,
+trusted components are typically small, implement mandatory policies, and
+enforce security properties. An open question is how to implement such trusted
+components correctly.
+
+Gneiss is a SPARK/Ada library providing a component-based systems abstraction
+for trusted components. Its main design goals are portability, performance and
+verifiability. Components build against the library can be compiled for the
+[Genode OS Framework](https://genode.org), the [Muen Separation Kernel](https://muen.sk)
+and Linux without modification. Only a minimal runtime such as our
+[ada-runtime](https://github.com/Componolit/ada-runtime) is required. To enable
+high-performance implementations, Gneiss imposes a fully asynchronous
+programming style where all work is done inside event handlers.  All language
+constructs used in Gneiss can be analyzed by the SPARK proof tools to
+facilitate formally verified components.
 
 ##  Architecture
 
