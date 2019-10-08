@@ -15,7 +15,7 @@ components correctly.
 
 Gneiss is a SPARK library providing a component-based systems abstraction for
 trusted components. Its main design goals are portability, performance and
-verifiability. Components build against the library can be compiled for the
+verifiability. Components built against the library can be compiled for the
 [Genode OS Framework](https://genode.org), the [Muen Separation Kernel](https://muen.sk)
 and Linux without modification. Only a minimal runtime such as our
 [ada-runtime](https://github.com/Componolit/ada-runtime) is required. To enable
