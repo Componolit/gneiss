@@ -19,6 +19,8 @@ set -e
 
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-gneiss-strings
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=fifo -u component
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=fifo -u component --clean
 
 gprbuild -P gneiss.gpr -XPLATFORM=linux
 gprclean -P gneiss.gpr -XPLATFORM=linux
