@@ -25,13 +25,17 @@ is
       end if;
       Fifo.Initialize (Queue, 0);
       for I in Integer range 7 .. 13 loop
-         Gns.Log.Client.Info (Log, "Putting " & Gns.Strings.Image (I));
+         --  Componolit/Workarounds#2
+         Gns.Log.Client.Info (Log, "Putting " & Gns.Strings.Image (I, 10, True));
          Fifo.Put (Queue, I);
          exit when not Fifo.Free (Queue);
       end loop;
       while Fifo.Avail (Queue) loop
+         pragma Loop_Invariant (Gns.Log.Initialized (Log));
+         pragma Loop_Invariant (Fifo.Valid (Queue));
          Fifo.Pop (Queue, J);
-         Gns.Log.Client.Info (Log, "Popped " & Gns.Strings.Image (J));
+         --  Componolit/Workarounds#2
+         Gns.Log.Client.Info (Log, "Popped " & Gns.Strings.Image (J, 10, True));
       end loop;
       Main.Vacate (Cap, Main.Success);
    end Construct;
