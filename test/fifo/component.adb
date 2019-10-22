@@ -28,11 +28,10 @@ is
          --  Componolit/Workarounds#2
          Gns.Log.Client.Info (Log, "Putting " & Gns.Strings.Image (I, 10, True));
          Fifo.Put (Queue, I);
-         exit when not Fifo.Free (Queue);
+         exit when Fifo.Count (Queue) >= Fifo.Size (Queue);
       end loop;
-      while Fifo.Avail (Queue) loop
-         pragma Loop_Invariant (Gns.Log.Initialized (Log));
-         pragma Loop_Invariant (Fifo.Valid (Queue));
+      pragma Assert (Fifo.Count (Queue) = 7);
+      for I in Integer range 1 .. 7 loop
          Fifo.Pop (Queue, J);
          --  Componolit/Workarounds#2
          Gns.Log.Client.Info (Log, "Popped " & Gns.Strings.Image (J, 10, True));
