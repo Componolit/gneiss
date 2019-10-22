@@ -10,33 +10,33 @@ is
    function Valid (Q : Queue) return Boolean with
       Ghost;
 
-   function Free (Q : Queue) return Boolean;
+   function Size (Q : Queue) return Positive with
+      Pre => Valid (Q);
 
-   function Avail (Q : Queue) return Boolean;
+   function Count (Q : Queue) return Natural with
+      Pre => Valid (Q);
 
    procedure Initialize (Q            : out Queue;
                          Null_Element :     T) with
-      Post => Valid (Q)
-      and then Free (Q)
-      and then not Avail (Q);
+      Post => Valid (Q) and then Count (Q) = 0;
 
    procedure Put (Q       : in out Queue;
                   Element :        T) with
-      Pre  => Valid (Q) and then Free (Q),
-      Post => Valid (Q) and then Avail (Q);
+      Pre  => Valid (Q) and then Count (Q) < Size (Q),
+      Post => Valid (Q) and then Count (Q) = Count (Q'Old) + 1;
 
    procedure Peek (Q       :     Queue;
                    Element : out T) with
-      Pre => Valid (Q) and then Avail (Q);
+      Pre => Valid (Q) and then Count (Q) > 0;
 
    procedure Drop (Q : in out Queue) with
-      Pre  => Valid (Q) and then Avail (Q),
-      Post => Valid (Q) and then Free (Q);
+      Pre  => Valid (Q) and then Count (Q) > 0,
+      Post => Valid (Q) and then Count (Q) = Count (Q'Old) - 1;
 
    procedure Pop (Q       : in out Queue;
                   Element :    out T) with
-      Pre  => Valid (Q) and then Avail (Q),
-      Post => Valid (Q) and then Free (Q);
+      Pre  => Valid (Q) and then Count (Q) > 0,
+      Post => Valid (Q) and then Count (Q) = Count (Q'Old) - 1;
 
 private
 

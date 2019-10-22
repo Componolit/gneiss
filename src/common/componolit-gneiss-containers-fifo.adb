@@ -10,11 +10,9 @@ is
        and then Long_Positive'Last - Long_Positive (Q.List'Length) >= Q.Index
        and then Q.Length <= Q.List'Length);
 
-   function Free (Q : Queue) return Boolean is
-      (Q.Length < Q.List'Length);
+   function Size (Q : Queue) return Positive is (Q.List'Length);
 
-   function Avail (Q : Queue) return Boolean is
-      (Q.Length > 0);
+   function Count (Q : Queue) return Natural is (Natural (Q.Length));
 
    procedure Initialize (Q            : out Queue;
                          Null_Element :     T)
