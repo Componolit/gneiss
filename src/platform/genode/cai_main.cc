@@ -3,6 +3,9 @@
 #include <base/signal.h>
 #include <cai_capability.h>
 
+//#define ENABLE_TRACE
+#include <trace.h>
+
 Genode::Env *__genode_env; // only required for ada-runtime
 
 extern "C" void adainit();
@@ -17,6 +20,7 @@ struct Main
 
     void exit_handler()
     {
+        TLOG();
         _cai_env.destruct();
         adafinal();
         _cai_env.env->parent().exit(_cai_env.status);
@@ -26,6 +30,7 @@ struct Main
         _env(env),
         _exit(env.ep(), *this, &Main::exit_handler)
     {
+        TLOG();
         adainit();
         componolit_interfaces_component_construct(&_cai_env);
     }

@@ -7,6 +7,9 @@
 #include <ada/exception.h>
 #include <cai_capability.h>
 
+//#define ENABLE_TRACE
+#include <trace.h>
+
 namespace Cai {
 #include <block_client.h>
 }
@@ -40,6 +43,7 @@ class Block_session
             _block(env, &_alloc, size, device),
             _event(env.ep(), *client, callback)
         {
+            TLOG("client=", client);
             _block.tx_channel()->sigh_ack_avail(_event);
             _block.tx_channel()->sigh_ready_to_submit(_event);
         }
@@ -68,7 +72,9 @@ Cai::Block::Client::Client() :
     _rw(nullptr),
     _env(nullptr),
     _tag(0)
-{ }
+{
+    TLOG();
+}
 
 void Cai::Block::Client::initialize(
         void *env,
@@ -77,6 +83,7 @@ void Cai::Block::Client::initialize(
         void *rw,
         Genode::uint64_t buffer_size)
 {
+    TLOG("env=", env, " device=", device, " callback=", callback, " rw=", rw, " buffer_size=", buffer_size);
     const char default_device[] = "";
     Genode::size_t const buf_size = buffer_size ? buffer_size : 128 * 1024;
     _callback = callback;
@@ -97,6 +104,7 @@ void Cai::Block::Client::initialize(
 
 void Cai::Block::Client::finalize()
 {
+    TLOG();
     _factory->destroy<Block_session>(_device);
     _block_count = 0;
     _block_size = 0;
@@ -113,6 +121,7 @@ void Cai::Block::Client::allocate_request (void *request,
                                            unsigned long tag,
                                            int *result)
 {
+    TLOG("request=", request, " opcode=", opcode, " start=", start, " length=", length, " tag=", tag, " result=", result);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     if(opcode == ::Block::Packet_descriptor::Opcode::READ
             || opcode == ::Block::Packet_descriptor::Opcode::WRITE){
@@ -135,6 +144,7 @@ void Cai::Block::Client::update_response_queue(int *status,
                                                unsigned long *tag,
                                                int *success)
 {
+    TLOG("status=", status, " tag=", tag, " success=", success);
     if(blk(_device)->tx()->ack_avail()){
         ::Block::Packet_descriptor packet = blk(_device)->tx()->get_acked_packet();
         *success = static_cast<int>(packet.succeeded());
@@ -147,6 +157,7 @@ void Cai::Block::Client::update_response_queue(int *status,
 
 void Cai::Block::Client::enqueue(void *request)
 {
+    TLOG("request=", request);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
         ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *))(_rw))(
@@ -160,10 +171,13 @@ void Cai::Block::Client::enqueue(void *request)
 }
 
 void Cai::Block::Client::submit()
-{ }
+{
+    TLOG();
+}
 
 void Cai::Block::Client::read(void *request)
 {
+    TLOG("request=", request);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *))(_rw))(
             (void *)this,
@@ -176,6 +190,7 @@ void Cai::Block::Client::read(void *request)
 
 void Cai::Block::Client::release(void *request)
 {
+    TLOG("request=", request);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
     if(packet->operation() == ::Block::Packet_descriptor::READ
             || packet->operation() == ::Block::Packet_descriptor::WRITE){
@@ -185,20 +200,24 @@ void Cai::Block::Client::release(void *request)
 
 bool Cai::Block::Client::writable()
 {
+    TLOG();
     return blk(_device)->info().writeable;
 }
 
 Genode::uint64_t Cai::Block::Client::block_count()
 {
+    TLOG();
     return _block_count;
 }
 
 Genode::uint64_t Cai::Block::Client::block_size()
 {
+    TLOG();
     return _block_size;
 }
 
 void Cai::Block::Client::callback()
 {
+    TLOG();
     Call(_callback);
 }

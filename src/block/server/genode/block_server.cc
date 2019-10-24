@@ -5,6 +5,9 @@
 #include <util/reconstructible.h>
 #include <cai_capability.h>
 
+//#define ENABLE_TRACE
+#include <trace.h>
+
 #include <block_root.h>
 namespace Cai {
 #include <block_server.h>
@@ -31,16 +34,19 @@ Cai::Block::Block_session_component::Block_session_component(
     _ep(ep),
     _server(server)
 {
+    TLOG("ds=", ds, " sigh=", sigh);
     _ep.manage(*this);
 }
 
 Cai::Block::Block_session_component::~Block_session_component()
 {
+    TLOG();
     _ep.dissolve(*this);
 }
 
 ::Block::Session::Info Cai::Block::Block_session_component::info() const
 {
+    TLOG();
     return ::Block::Session::Info {
         Get_attr_64(_server._block_size, &_server),
         Get_attr_64(_server._block_count, &_server),
@@ -51,6 +57,7 @@ Cai::Block::Block_session_component::~Block_session_component()
 
 Genode::Capability<::Block::Session::Tx> Cai::Block::Block_session_component::tx_cap()
 {
+    TLOG();
     return Request_stream::tx_cap();
 }
 
@@ -60,15 +67,19 @@ Cai::Block::Block_root::Block_root(Cai::Env *env, Cai::Block::Server &server, Ge
     _server(server),
     _ds(env->env->ram(), env->env->rm(), ds_size),
     _session(env->env->rm(), _ds.cap(), env->env->ep(), _sigh, server)
-{ }
+{
+    TLOG("env=", env, " ds_size=", ds_size);
+}
 
 void Cai::Block::Block_root::handler()
 {
+    TLOG();
     Call(_server._callback);
 }
 
 Genode::Capability<Genode::Session> Cai::Block::Block_root::cap()
 {
+    TLOG();
     return _session.cap();
 }
 
@@ -79,7 +90,9 @@ Cai::Block::Server::Server() :
     _block_size(nullptr),
     _writable(nullptr),
     _tag(0)
-{ }
+{
+    TLOG();
+}
 
 void Cai::Block::Server::initialize(
         void *env,
@@ -89,6 +102,8 @@ void Cai::Block::Server::initialize(
         void *block_size,
         void *writable)
 {
+    TLOG("env=", env, " size=", size, " callback=", callback,
+            " block_count=", block_count, " block_size=", block_size," writable=", writable);
     _callback = callback;
     _block_count = block_count;
     _block_size = block_size;
@@ -102,6 +117,7 @@ void Cai::Block::Server::initialize(
 
 void Cai::Block::Server::finalize()
 {
+    TLOG();
     _factory->destroy<Cai::Block::Block_root>(_session);
     _session = nullptr;
     _callback = nullptr;
@@ -117,6 +133,7 @@ static Cai::Block::Block_session_component &blk(void *session)
 
 void Cai::Block::Server::process_request(void *request, int *success)
 {
+    TLOG("request=", request, " success=", success);
     *success = 0;
     ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
     blk(_session).with_requests([&] (::Block::Request r) {
@@ -132,6 +149,7 @@ void Cai::Block::Server::process_request(void *request, int *success)
 
 void Cai::Block::Server::read(void *request, void *buffer)
 {
+    TLOG("request=", request, " buffer=", buffer);
     ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
     blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
         Genode::memcpy(ptr, buffer, size);
@@ -140,6 +158,7 @@ void Cai::Block::Server::read(void *request, void *buffer)
 
 void Cai::Block::Server::write(void *request, void *buffer)
 {
+    TLOG("request=", request, " buffer=", buffer);
     ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
     blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
         Genode::memcpy(buffer, ptr, size);
@@ -148,6 +167,7 @@ void Cai::Block::Server::write(void *request, void *buffer)
 
 void Cai::Block::Server::acknowledge(void *request, int *success)
 {
+    TLOG("request=", request, " success=", success);
     ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
     req->success = static_cast<bool>(*success);
     *success = 0;
@@ -161,5 +181,6 @@ void Cai::Block::Server::acknowledge(void *request, int *success)
 
 void Cai::Block::Server::unblock_client()
 {
+    TLOG();
     blk(_session).wakeup_client_if_needed();
 }
