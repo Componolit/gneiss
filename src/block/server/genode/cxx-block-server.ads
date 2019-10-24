@@ -76,6 +76,15 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Server5writeEPvS2_";
 
+   procedure Read_Write (This   : Class;
+                         Req    : Request;
+                         Id     : Cxx.Genode.Uint32_T;
+                         Buffer : Cxx.Void_Address) with
+      Global        => null,
+      Import,
+      Convention    => CPP,
+      External_Name => "_ZN3Cai5Block6Server10read_writeEPvjPFvS2_jS2_yE";
+
    procedure Acknowledge (This   :        Class;
                           Req    : in out Request;
                           Status : in out Integer) with
