@@ -6,6 +6,9 @@
 #include <factory.h>
 #include <cai_capability.h>
 
+//#define ENABLE_TRACE
+#include <trace.h>
+
 class Timer_Session
 {
     private:
@@ -25,7 +28,9 @@ Timer_Session::Timer_Session(Genode::Env &env, void (*callback)()) :
     _timer(env),
     _timeout(_timer, *this, &Timer_Session::handle_event),
     _callback(callback)
-{ }
+{
+    TLOG("callback=", callback);
+}
 
 Timer::Connection &Timer_Session::timer()
 {
@@ -34,11 +39,13 @@ Timer::Connection &Timer_Session::timer()
 
 void Timer_Session::handle_event(Genode::Duration)
 {
+    TLOG();
     _callback();
 }
 
 void Timer_Session::update_timeout(Genode::Microseconds d)
 {
+    TLOG("d=", d);
     if(_timeout.scheduled()){
         _timeout.discard();
     }
@@ -47,15 +54,19 @@ void Timer_Session::update_timeout(Genode::Microseconds d)
 
 Cai::Timer::Client::Client() :
     _session(nullptr)
-{ }
+{
+    TLOG();
+}
 
 bool Cai::Timer::Client::initialized()
 {
+    TLOG();
     return (bool)_session;
 }
 
 void Cai::Timer::Client::initialize(void *capability, void *callback)
 {
+    TLOG("capability=", capability, "callback=", callback);
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(capability)->env);
     _session = _factory->create<Timer_Session>(*reinterpret_cast<Cai::Env *>(capability)->env,
                                                reinterpret_cast<void (*)()>(callback));
@@ -63,16 +74,19 @@ void Cai::Timer::Client::initialize(void *capability, void *callback)
 
 Genode::uint64_t Cai::Timer::Client::clock()
 {
+    TLOG();
     return reinterpret_cast<Timer_Session *>(_session)->timer().elapsed_us() * 1000;
 }
 
 void Cai::Timer::Client::set_timeout(Genode::uint64_t duration)
 {
+    TLOG("duration=", duration);
     reinterpret_cast<Timer_Session *>(_session)->update_timeout(Genode::Microseconds(duration / 1000));
 }
 
 void Cai::Timer::Client::finalize()
 {
+    TLOG();
     _factory->destroy<Timer_Session>(_session);
     _session = nullptr;
 }
