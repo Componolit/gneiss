@@ -59,63 +59,47 @@ is
       end if;
    end Destruct;
 
-   procedure Read (R : in out Cache_Element) with
-      Pre  => Initialized (Server)
-              and then Block.Initialized (Server)
-              and then Block_Server.Status (R.Req) = Block.Pending
-              and then Block_Server.Kind (R.Req) = Block.Read
-              and then Block_Server.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
-              and then Block_Server.Length (R.Req) > 0
-              and then Block_Server.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size)
-              and then Block_Server.Assigned (Server, R.Req),
-      Post => Block.Initialized (Server);
-
-   procedure Read (R : in out Cache_Element)
+   procedure Read (S : in out Block.Server_Session;
+                   R :        Request_Index;
+                   B :    out Buffer)
    is
-      Start  : constant Block.Count := Block.Count (Block_Server.Start (R.Req));
-      Length : constant Block.Count := Block_Server.Length (R.Req);
+      pragma Unreferenced (S);
+      Start  : constant Block.Count :=
+         Block.Count (Block_Server.Start (Request_Cache (R).Req));
+      Length : constant Block.Count :=
+         Block_Server.Length (Request_Cache (R).Req);
    begin
       if
          Start * Disk_Block_Size in Ram_Disk'Range
          and then (Start + Length) * Disk_Block_Size - 1 in Ram_Disk'Range
+         and then B'Length = Length * Disk_Block_Size
       then
-         Block_Server.Read
-            (Server,
-             R.Req,
-             Ram_Disk (Start * Disk_Block_Size .. (Start + Length) * Disk_Block_Size - 1));
-         R.Success := True;
+         B := Ram_Disk (Start * Disk_Block_Size .. (Start + Length) * Disk_Block_Size - 1);
+         Request_Cache (R).Success := True;
       else
-         R.Success := False;
+         Request_Cache (R).Success := False;
       end if;
    end Read;
 
-   procedure Write (R : in out Cache_Element) with
-      Pre  => Initialized (Server)
-              and then Block.Initialized (Server)
-              and then Block_Server.Status (R.Req) = Block.Pending
-              and then Block_Server.Kind (R.Req) = Block.Write
-              and then Block_Server.Start (R.Req) <= Block.Id (Ram_Disk'Length / Disk_Block_Size)
-              and then Block_Server.Length (R.Req) > 0
-              and then Block_Server.Length (R.Req) <= Block.Count (Ram_Disk'Length / Disk_Block_Size)
-              and then Block_Server.Assigned (Server, R.Req),
-      Post => Block.Initialized (Server);
-
-   procedure Write (R : in out Cache_Element)
+   procedure Write (S : in out Block.Server_Session;
+                    R :        Request_Index;
+                    B :        Buffer)
    is
-      Start  : constant Block.Count := Block.Count (Block_Server.Start (R.Req));
-      Length : constant Block.Count := Block_Server.Length (R.Req);
+      pragma Unreferenced (S);
+      Start  : constant Block.Count :=
+         Block.Count (Block_Server.Start (Request_Cache (R).Req));
+      Length : constant Block.Count :=
+         Block_Server.Length (Request_Cache (R).Req);
    begin
       if
          Start * Disk_Block_Size in Ram_Disk'Range
          and then (Start + Length) * Disk_Block_Size - 1 in Ram_Disk'Range
+         and then B'Length = Length * Disk_Block_Size
       then
-         Block_Server.Write
-            (Server,
-             R.Req,
-             Ram_Disk (Start * Disk_Block_Size .. (Start + Length) * Disk_Block_Size - 1));
-         R.Success := True;
+         Ram_Disk (Start * Disk_Block_Size .. (Start + Length) * Disk_Block_Size - 1) := B;
+         Request_Cache (R).Success := True;
       else
-         R.Success := False;
+         Request_Cache (R).Success := False;
       end if;
    end Write;
 
@@ -151,9 +135,9 @@ is
                   then
                      case Block_Server.Kind (Request_Cache (I).Req) is
                         when Block.Read =>
-                           Read (Request_Cache (I));
+                           Block_Server.Read (Server, Request_Cache (I).Req, I);
                         when Block.Write =>
-                           Write (Request_Cache (I));
+                           Block_Server.Write (Server, Request_Cache (I).Req, I);
                         when others => null;
                      end case;
                   else

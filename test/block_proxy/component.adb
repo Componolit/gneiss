@@ -303,4 +303,25 @@ package body Component is
        and then Block.Block_Count (Client) > 0
        and then Block.Block_Count (Client) < Block.Count'Last / (Block.Count (Block.Block_Size (Client)) / 512));
 
+   procedure Write (S : in out Block.Server_Session;
+                    I :        Request_Index;
+                    D :        Buffer)
+   is
+      pragma Unreferenced (S);
+      pragma Unreferenced (I);
+      pragma Unreferenced (D);
+   begin
+      null;
+   end Write;
+
+   procedure Read (S : in out Block.Server_Session;
+                   I :        Request_Index;
+                   D :    out Buffer)
+   is
+      pragma Unreferenced (S);
+      pragma Unreferenced (I);
+   begin
+      D := (others => 0);
+   end Read;
+
 end Component;
