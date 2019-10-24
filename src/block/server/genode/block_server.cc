@@ -165,6 +165,16 @@ void Cai::Block::Server::write(void *request, void *buffer)
     });
 }
 
+void Cai::Block::Server::read_write(void *request, Genode::uint32_t id,
+                                    void (*rw)(void *, Genode::uint32_t, void *, Genode::uint64_t))
+{
+    TLOG("request=", request, "id=", id);
+    ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
+    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
+        rw((void *)this, id, ptr, size);
+    });
+}
+
 void Cai::Block::Server::acknowledge(void *request, int *success)
 {
     TLOG("request=", request, " success=", success);

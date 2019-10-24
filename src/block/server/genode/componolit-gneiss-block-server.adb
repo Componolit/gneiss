@@ -1,4 +1,5 @@
 
+with System;
 with Cxx.Genode;
 with Cxx.Block.Server;
 use all type Cxx.Bool;
@@ -67,6 +68,64 @@ is
       Cxx.Block.Server.Write (S.Instance,
                               R.Request,
                               B'Address);
+   end Write;
+
+   procedure Async_Read (S : in out Server_Session;
+                         R :        Request_Id;
+                         D :        System.Address;
+                         L :        Buffer_Index);
+
+   procedure Async_Read (S : in out Server_Session;
+                         R :        Request_Id;
+                         D :        System.Address;
+                         L :        Buffer_Index)
+   is
+      B : Buffer (1 .. L) with
+         Import,
+         Address => D;
+   begin
+      Read (S, R, B);
+   end Async_Read;
+
+   procedure Async_Write (S : in out Server_Session;
+                          R :        Request_Id;
+                          D :        System.Address;
+                          L :        Buffer_Index);
+
+   procedure Async_Write (S : in out Server_Session;
+                          R :        Request_Id;
+                          D :        System.Address;
+                          L :        Buffer_Index)
+   is
+      B : Buffer (1 .. L) with
+         Import,
+         Address => D;
+   begin
+      Write (S, R, B);
+   end Async_Write;
+
+   procedure Read (S : in out Server_Session;
+                   R :        Request;
+                   I :        Request_Id) with
+      SPARK_Mode => Off
+   is
+   begin
+      Cxx.Block.Server.Read_Write (S.Instance,
+                                   R.Request,
+                                   Cxx.Genode.Uint32_T (Request_Id'Pos (I)), --  FIXME: correct conversion
+                                   Async_Read'Address);
+   end Read;
+
+   procedure Write (S : in out Server_Session;
+                    R :        Request;
+                    I :        Request_Id) with
+      SPARK_Mode => Off
+   is
+   begin
+      Cxx.Block.Server.Read_Write (S.Instance,
+                                   R.Request,
+                                   Cxx.Genode.Uint32_T (Request_Id'Pos (I)), --  FIXME: correct conversion
+                                   Async_Write'Address);
    end Write;
 
    procedure Acknowledge (S   : in out Server_Session;
