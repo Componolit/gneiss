@@ -60,6 +60,27 @@ generic
    --  @param S  Server session instance identifier
    with procedure Finalize (S : in out Server_Session);
 
+   --  Called when a read has been triggered and data to read is needed
+   --
+   --  The length of Data always corresponds to the request length in bytes (block size * block count)
+   --
+   --  @param S       Server session instance
+   --  @param Req     Request identifier of request to write
+   --  @param Data    Data to read
+   with procedure Read (S    : in out Server_Session;
+                        Req  :        Request_Id;
+                        Data :    out Buffer);
+
+   --  Called when a write has been triggered and data to write is available
+   --
+   --  The length of Data always corresponds to the request length in bytes (block size * block count)
+   --
+   --  @param S       Server session instance
+   --  @param Req     Request identifier of request to write
+   --  @param Data    Data to write
+   with procedure Write (S    : in out Server_Session;
+                         Req  :        Request_Id;
+                         Data :        Buffer);
    pragma Warnings (On, "* is not referenced");
 package Componolit.Gneiss.Block.Server with
    SPARK_Mode
@@ -150,6 +171,21 @@ is
               and then Initialized (S)
               and then Assigned (S, R);
 
+   --  Call Read callback to provide data to read
+   --
+   --  @param S  Server session instance
+   --  @param R  Request to handle
+   procedure Read (S : in out Server_Session;
+                   R :        Request) with
+      Pre  => Ready (S)
+              and then Initialized (S)
+              and then Status (R) = Pending
+              and then Kind (R)   = Read
+              and then Assigned (S, R),
+      Post => Ready (S)
+              and then Initialized (S)
+              and then Assigned (S, R);
+
    --  Get the data of a write request that shall be written
    --
    --  @param S  Server session instance
@@ -163,6 +199,21 @@ is
               and then Status (R) = Pending
               and then Kind (R)   = Write
               and then B'Length   = Length (R) * Block_Size (S)
+              and then Assigned (S, R),
+      Post => Ready (S)
+              and then Initialized (S)
+              and then Assigned (S, R);
+
+   --  Call Write callback to provide data to write
+   --
+   --  @param S  Server session instance
+   --  @param R  Request to handle
+   procedure Write (S : in out Server_Session;
+                    R :        Request) with
+      Pre  => Ready (S)
+              and then Initialized (S)
+              and then Status (R) = Pending
+              and then Kind (R)   = Write
               and then Assigned (S, R),
       Post => Ready (S)
               and then Initialized (S)
