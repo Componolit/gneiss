@@ -35,6 +35,8 @@ namespace Block
             void process_request(void *request, int *success);
             void read(void *request, void *buffer);
             void write(void *request, void *buffer);
+            void read_write(void *request, Genode::uint32_t id,
+                            void (*rw)(void *, Genode::uint32_t, void *, Genode::uint64_t));
             void acknowledge(void *request, int *success);
             void unblock_client();
     };
