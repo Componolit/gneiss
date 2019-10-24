@@ -1,5 +1,4 @@
 
-with Ada.Unchecked_Conversion;
 with Interfaces;
 with Componolit.Gneiss.Muen_Block;
 
@@ -15,8 +14,6 @@ is
    use type Standard.Interfaces.Unsigned_64;
 
    subtype Block_Buffer is Buffer (1 .. 4096);
-   function Convert_Buffer is new Ada.Unchecked_Conversion (Blk.Raw_Data_Type, Block_Buffer);
-   function Convert_Buffer is new Ada.Unchecked_Conversion (Block_Buffer, Blk.Raw_Data_Type);
 
    Size_Data : Blk.Size_Command_Data_Type := (Value => 0,
                                               Pad   => (others => 0));
@@ -104,7 +101,13 @@ is
    begin
       for I in S.Read_Select'Range loop
          if S.Read_Select (I) = R.Event.Header then
-            S.Read_Data (I) := Convert_Buffer (B);
+            declare
+               Buf : Block_Buffer with
+                  Import,
+                  Address => S.Read_Data (I)'Address;
+            begin
+               Buf := B;
+            end;
             return;
          end if;
       end loop;
@@ -115,8 +118,41 @@ is
                     B :    out Buffer)
    is
       pragma Unreferenced (S);
+      Buf : Block_Buffer with
+         Import,
+         Address => R.Event.Data'Address;
    begin
-      B := Convert_Buffer (R.Event.Data);
+      B := Buf;
+   end Write;
+
+   procedure Read (S : in out Server_Session;
+                   R :        Request;
+                   I :        Request_Id)
+   is
+   begin
+      for J in S.Read_Select'Range loop
+         if S.Read_Select (J) = R.Event.Header then
+            declare
+               B : Block_Buffer with
+                  Import,
+                  Address => S.Read_Data (J)'Address;
+            begin
+               Read (S, I, B);
+            end;
+            return;
+         end if;
+      end loop;
+   end Read;
+
+   procedure Write (S : in out Server_Session;
+                    R :        Request;
+                    I :        Request_Id)
+   is
+      B : Block_Buffer with
+         Import,
+         Address => R.Event.Data'Address;
+   begin
+      Write (S, I, B);
    end Write;
 
    procedure Acknowledge (S   : in out Server_Session;
