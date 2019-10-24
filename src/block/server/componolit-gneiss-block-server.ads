@@ -175,8 +175,10 @@ is
    --
    --  @param S  Server session instance
    --  @param R  Request to handle
+   --  @param I  Application defined identifier of the request
    procedure Read (S : in out Server_Session;
-                   R :        Request) with
+                   R :        Request;
+                   I :        Request_Id) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
@@ -208,8 +210,10 @@ is
    --
    --  @param S  Server session instance
    --  @param R  Request to handle
+   --  @param I  Application defined identifier of the request
    procedure Write (S : in out Server_Session;
-                    R :        Request) with
+                    R :        Request;
+                    I :        Request_Id) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
