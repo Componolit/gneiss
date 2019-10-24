@@ -44,13 +44,23 @@ is
                       C :        Block.Dispatcher_Capability) with
       Pre => Block.Initialized (I) and then not Block.Accepted (I);
 
+   procedure Read (S : in out Block.Server_Session;
+                   R :        Request_Index;
+                   B :    out Buffer);
+
+   procedure Write (S : in out Block.Server_Session;
+                    R :        Request_Index;
+                    B :        Buffer);
+
    package Block_Server is new Block.Server (Event,
                                              Block_Count,
                                              Block_Size,
                                              Writable,
                                              Initialized,
                                              Initialize,
-                                             Finalize);
+                                             Finalize,
+                                             Read,
+                                             Write);
    package Block_Dispatcher is new Block.Dispatcher (Block_Server, Request);
 
 end Component;
