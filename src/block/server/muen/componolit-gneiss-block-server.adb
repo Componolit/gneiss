@@ -196,5 +196,21 @@ is
       Finalize (S);
    end Lemma_Finalize;
 
+   procedure Lemma_Read (S : in out Server_Session;
+                         R :        Request_Id;
+                         D :    out Buffer)
+   is
+   begin
+      Read (S, R, D);
+   end Lemma_Read;
+
+   procedure Lemma_Write (S : in out Server_Session;
+                          R :        Request_Id;
+                          D :        Buffer)
+   is
+   begin
+      Write (S, R, D);
+   end Lemma_Write;
+
    pragma Warnings (On);
 end Componolit.Gneiss.Block.Server;
