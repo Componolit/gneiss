@@ -112,7 +112,7 @@ is
    begin
       Cxx.Block.Server.Read_Write (S.Instance,
                                    R.Request,
-                                   Cxx.Genode.Uint32_T (Request_Id'Pos (I)), --  FIXME: correct conversion
+                                   Request_Id'Pos (I),
                                    Async_Read'Address);
    end Read;
 
@@ -124,7 +124,7 @@ is
    begin
       Cxx.Block.Server.Read_Write (S.Instance,
                                    R.Request,
-                                   Cxx.Genode.Uint32_T (Request_Id'Pos (I)), --  FIXME: correct conversion
+                                   Request_Id'Pos (I),
                                    Async_Write'Address);
    end Write;
 
