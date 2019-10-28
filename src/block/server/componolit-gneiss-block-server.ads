@@ -320,4 +320,34 @@ private
                     "ghost procedure ""Lemma_Finalize"" cannot have non-ghost global output *",
                     "This procedure is only used to enforce the precondition of Dispatch");
 
+   --  Lemma for Read to check function contracts of generic parameter
+   --
+   --  @param S  Server session instance
+   --  @param R  Request identifier of request to write
+   --  @param D  Data to read
+   procedure Lemma_Read (S : in out Server_Session;
+                         R :        Request_Id;
+                         D :    out Buffer) with
+      Ghost,
+      Pre => Ready (S);
+
+   pragma Annotate (GNATprove, False_Positive,
+                    "ghost procedure ""Lemma_Read"" cannot have non-ghost global output *",
+                    "This procedure is only used to enforce the precondition of Dispatch");
+
+   --  Lemma for Write to check function contracts of generic parameter
+   --
+   --  @param S  Server session instance
+   --  @param R  Request identifier of request to write
+   --  @param D  Data to write
+   procedure Lemma_Write (S : in out Server_Session;
+                          R :        Request_Id;
+                          D :        Buffer) with
+      Ghost,
+      Pre => Ready (S);
+
+   pragma Annotate (GNATprove, False_Positive,
+                    "ghost procedure ""Lemma_Write"" cannot have non-ghost global output *",
+                    "This procedure is only used to enforce the precondition of Dispatch");
+
 end Componolit.Gneiss.Block.Server;
