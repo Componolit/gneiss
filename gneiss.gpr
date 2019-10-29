@@ -67,22 +67,7 @@ project Gneiss is
 
    package Builder is
       for Global_Configuration_Pragmas use "spark.adc";
-      case Test is
-         when "" =>
-            null;
-         when others =>
-            case Platform is
-               when "linux" =>
-                  for Executable ("main.c") use Test;
-               when others =>
-                  null;
-            end case;
-      end case;
    end Builder;
-
-   package Binder is
-      for Switches ("Ada") use ("-static");
-   end Binder;
 
    package Compiler is
       for Default_Switches ("Ada") use Switches.Compiler_Switches;
@@ -119,7 +104,10 @@ project Gneiss is
             when "linux" =>
                for Source_Dirs use Linux_Source & ("test/" & Test);
                for Languages use ("Ada", "C");
-               for Main use ("main.c");
+               for Library_Name use "component_" & Test;
+               for Library_Dir use "components";
+               for Library_Kind use "dynamic";
+               for Library_Options use ("-nostdlib", "-nostdinc", "-lgnat");
             when "genode" =>
                for Source_Dirs use Genode_Source & ("test/" & Test);
                for Languages use ("Ada");
