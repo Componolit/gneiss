@@ -83,7 +83,8 @@ void vacate(int status)
     capability.status = status;
 }
 
-int main(int argc, char *argv[])
+static void __attribute__((constructor)) component_init(void)
+//int main_loop(int argc, char *argv[])
 {
     sigset_t signal_set;
     memset(&capability, 0, sizeof(capability));
@@ -93,12 +94,12 @@ int main(int argc, char *argv[])
     capability.enlist = &enlist;
     capability.withdraw = &withdraw;
 
-    if(argc == 2){
-        capability.config_file = malloc(strlen(argv[1]) + 1);
-        if(capability.config_file){
-            strcpy(capability.config_file, argv[1]);
-        }
-    }
+    //  if(argc == 2){
+    //      capability.config_file = malloc(strlen(argv[1]) + 1);
+    //      if(capability.config_file){
+    //          strcpy(capability.config_file, argv[1]);
+    //      }
+    //  }
     sigemptyset(&signal_set);
     sigaddset(&signal_set, SIGINT);
     sigaddset(&signal_set, SIGUSR1);
@@ -111,5 +112,5 @@ int main(int argc, char *argv[])
     componolit_interfaces_component_destruct();
     adafinal();
     list_delete(signal_registry);
-    return capability.status;
+    //  return capability.status;
 }
