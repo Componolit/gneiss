@@ -63,7 +63,8 @@ project Gneiss is
                      Source_Rom_Client & "/genode");
 
    for Create_Missing_Dirs use "True";
-   for Object_Dir use "build";
+
+   Build_Dir := "build";
 
    package Builder is
       for Global_Configuration_Pragmas use "spark.adc";
@@ -73,14 +74,15 @@ project Gneiss is
       for Default_Switches ("Ada") use Switches.Compiler_Switches;
    end Compiler;
 
-   package Linker is
-      case Custom_Runtime is
-         when "componolit" =>
-            for Required_Switches use ("-L../ada-runtime/obj/lib", "-lposix_rts", "-lpthread", "-lrt");
-         when others =>
-            for Required_Switches use ("-lrt");
-      end case;
-   end Linker;
+   Runtime_Switches := ();
+   Linux_Switches := ();
+
+   case Custom_Runtime is
+      when "componolit" =>
+         Runtime_Switches := ("-L../../ada-runtime/obj/lib", "-lposix_rts", "-lpthread", "-lrt");
+      when others =>
+         Runtime_Switches := ("-lrt");
+   end case;
 
    case Custom_Runtime is
       when "componolit" =>
@@ -94,24 +96,50 @@ project Gneiss is
          case Platform is
             when "linux" =>
                for Source_Dirs use Linux_Source;
-               for Languages use ("Ada", "C");
+               for Languages use ("Ada");
+               Build_Dir := "build/linux";
             when "genode" =>
                for Source_Dirs use Genode_Source;
                for Languages use ("Ada");
+               Build_Dir := "build/genode";
+         end case;
+      when "init" =>
+         case Platform is
+            when "linux" =>
+               for Source_Dirs use (Source_Platform & "/linux",
+                                    "/usr/include/libxml2");
+               for Excluded_Source_Files use ("entrypoint.c",
+                                              "entry.c");
+               for Languages use ("C");
+               Linux_Switches := ("-lxml2", "-ldl");
+               Build_Dir := "build/init";
+               for Main use ("init.c");
+            when others =>
+               null;
          end case;
       when others =>
          case Platform is
             when "linux" =>
                for Source_Dirs use Linux_Source & ("test/" & Test);
-               for Languages use ("Ada", "C");
+               for Languages use ("Ada");
                for Library_Name use "component_" & Test;
-               for Library_Dir use "components";
+               for Library_Dir use "build/libcomponents";
                for Library_Kind use "dynamic";
                for Library_Options use ("-nostdlib", "-nostdinc", "-lgnat");
+               for Library_Standalone use "encapsulated";
+               for Library_Interface use ("component");
+               Build_Dir := "build/linux";
             when "genode" =>
                for Source_Dirs use Genode_Source & ("test/" & Test);
                for Languages use ("Ada");
+               Build_Dir := "build/genode";
          end case;
    end case;
+
+   package Linker is
+      for Required_Switches use Runtime_Switches & Linux_Switches;
+   end Linker;
+
+   for Object_Dir use Build_Dir;
 
 end Gneiss;
