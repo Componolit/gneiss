@@ -79,7 +79,7 @@ project Gneiss is
 
    case Custom_Runtime is
       when "componolit" =>
-         Runtime_Switches := ("-L../../ada-runtime/obj/lib", "-lposix_rts", "-lpthread", "-lrt");
+         Runtime_Switches := ("-lpthread", "-lrt");
       when others =>
          Runtime_Switches := ("-lrt");
    end case;
@@ -125,7 +125,10 @@ project Gneiss is
                for Library_Name use "component_" & Test;
                for Library_Dir use "build/libcomponents";
                for Library_Kind use "dynamic";
-               for Library_Options use ("-nostdlib", "-nostdinc", "-lgnat");
+               for Library_Options use ("-L../../ada-runtime/obj/adalib",
+                                        "-nostdlib",
+                                        "-nostdinc",
+                                        "-lgnat");
                for Library_Standalone use "encapsulated";
                for Library_Interface use ("component");
                Build_Dir := "build/linux";
