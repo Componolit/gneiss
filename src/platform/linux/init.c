@@ -9,13 +9,19 @@
 #include <list.h>
 #include <component.h>
 
+#define ENABLE_TRACE
+#include <trace.h>
+
 static list_t component_registry;
+static component_t component;
 
 static void parse_config(const char *file)
 {
     xmlDoc *document;
     xmlNode *root;
-    component_t component;
+    component_t local_component;
+
+    memset(&local_component, 0, sizeof(local_component));
 
     document = xmlReadFile(file, 0, 0);
     root = xmlDocGetRootElement(document);
@@ -24,29 +30,34 @@ static void parse_config(const char *file)
         if(strcmp(node->name, "component")){
             continue;
         }
-        component.name = xmlGetProp(node, "name");
+        local_component.name = xmlGetProp(node, "name");
         for(xmlNode *comp = node->children; comp; comp = comp->next){
             if(!strcmp(comp->name, "file")){
-                component.file = xmlGetProp(comp, "name");
+                local_component.file = xmlGetProp(comp, "name");
             }
         }
-        list_append(component_registry, (void *)&component, sizeof(component));
+        list_append(component_registry, (void *)&local_component, sizeof(component_t));
     }
 }
 
 static int start_component(list_t *item, unsigned size, void *arg)
 {
-    component_t *c = (component_t *)((*item)->content);
     void *handle;
+    memcpy(&component, (*item)->content, sizeof(component_t));
     pid_t pid = fork();
     switch(pid){
         case 0:
-            fprintf(stderr, "loading %s from %s into %i\n", c->name, c->file, getpid());
-            handle = dlopen(c->file, RTLD_LAZY);
+            fprintf(stderr, "loading %s from %s into %i\n", component.name, component.file, getpid());
+            handle = dlopen(component.file, RTLD_LAZY);
             if(!handle){
                 fprintf(stderr, "dlopen: %s\n", dlerror());
+                exit(1);
             }
-            return 1;
+            component.status = -1;
+            TRACE("%p %p\n", dlsym(handle, "component__construct"), dlsym(handle, "component__destruct"));
+            *(void **) &(component.construct) = dlsym(handle, "component__construct");
+            *(void **) &(component.destruct) = dlsym(handle, "component__destruct");
+            exit(component_main(&component));
         case -1:
             perror("fork failed");
             break;
