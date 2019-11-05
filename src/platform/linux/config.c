@@ -92,6 +92,7 @@ int parse_components(xmlNode *root, list_t components)
             }
             TRACE("add resource desc %s %s %s %s\n", resd.type, resd.name, resd.label, mode);
             resd.fd = -1;
+            resd.event = 0;
             list_append(comp.resources, (void *)&resd, sizeof(resd));
         }
         list_append(components, (void *)&comp, sizeof(comp));
