@@ -4,41 +4,18 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <unistd.h>
-#include <libxml/parser.h>
 
 #include <list.h>
 #include <component.h>
+#include <config.h>
 
 #define ENABLE_TRACE
 #include <trace.h>
 
+static xmlNode *config;
 static list_t component_registry;
+static list_t resource_registry;
 static component_t component;
-
-static void parse_config(const char *file)
-{
-    xmlDoc *document;
-    xmlNode *root;
-    component_t local_component;
-
-    memset(&local_component, 0, sizeof(local_component));
-
-    document = xmlReadFile(file, 0, 0);
-    root = xmlDocGetRootElement(document);
-
-    for(xmlNode *node = root->children; node; node = node->next){
-        if(strcmp(node->name, "component")){
-            continue;
-        }
-        local_component.name = xmlGetProp(node, "name");
-        for(xmlNode *comp = node->children; comp; comp = comp->next){
-            if(!strcmp(comp->name, "file")){
-                local_component.file = xmlGetProp(comp, "name");
-            }
-        }
-        list_append(component_registry, (void *)&local_component, sizeof(component_t));
-    }
-}
 
 static int start_component(list_t *item, unsigned size, void *arg)
 {
@@ -69,13 +46,24 @@ static int start_component(list_t *item, unsigned size, void *arg)
 
 int main(int argc, char *argv[])
 {
+    int status;
     if(argc != 2){
         fprintf(stderr, "Usage: %s config\n", argv[0]);
         return 1;
     }
 
     component_registry = list_new();
-    parse_config(argv[1]);
+    config = read_config(argv[1]);
+    status = parse_resources(config, resource_registry);
+    if(status){
+        fprintf(stderr, "failed to parse resources\n");
+        return status;
+    }
+    status = parse_components(config, component_registry);
+    if(status){
+        fprintf(stderr, "failed to parse components\n");
+        return status;
+    }
     list_foreach(component_registry, &start_component, 0);
 
     return 0;

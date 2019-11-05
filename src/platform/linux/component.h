@@ -2,12 +2,31 @@
 #ifndef _GNEISS_COMPONENT_H_
 #define _GNEISS_COMPONENT_H_
 
+#include <list.h>
+
 #define COMPONENT_RUNNING -1
 #define COMPONENT_SUCCESS 0
 #define COMPONENT_ERROR 1
 
 typedef struct component component_t;
 typedef struct capability capability_t;
+typedef struct resource resource_t;
+typedef struct resource_descriptor resource_descriptor_t;
+
+struct resource {
+    char *type;
+    char *name;
+    int read;
+    int write;
+    int read_write;
+    int fd;
+};
+
+struct resource_descriptor {
+    char *type;
+    char *label;
+    int fd;
+};
 
 struct capability {
     component_t *component;
@@ -21,6 +40,7 @@ struct component {
     char *file;
     void (*construct)(capability_t *);
     void (*destruct)(void);
+    list_t resources;
 };
 
 int component_main(component_t *component);
