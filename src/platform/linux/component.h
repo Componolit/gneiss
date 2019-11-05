@@ -31,11 +31,13 @@ struct resource_descriptor {
     char *label;
     int mode;
     int fd;
+    void (*event)(void);
 };
 
 struct capability {
     component_t *component;
     void (*set_status)(capability_t *, int);
+    void (*find_resource)(capability_t *, char *, char *, int, void (*)(void), int *);
 };
 
 struct component {
