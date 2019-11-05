@@ -8,6 +8,10 @@
 #define COMPONENT_SUCCESS 0
 #define COMPONENT_ERROR 1
 
+#define RESOURCE_READ 1
+#define RESOURCE_WRITE 2
+#define RESOURCE_READ_WRITE 3
+
 typedef struct component component_t;
 typedef struct capability capability_t;
 typedef struct resource resource_t;
@@ -19,12 +23,13 @@ struct resource {
     int read;
     int write;
     int read_write;
-    int fd;
 };
 
 struct resource_descriptor {
     char *type;
+    char *name;
     char *label;
+    int mode;
     int fd;
 };
 
