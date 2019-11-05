@@ -19,9 +19,6 @@ is
          Import,
          Address => Convert (C).Set_Status;
    begin
-      if Convert (C).Set_Status = System.Null_Address then
-         Componolit.Runtime.Debug.Log_Error ("Null Pointer!");
-      end if;
       Set (C, S);
    end Set_Status;
 
