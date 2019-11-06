@@ -9,4 +9,8 @@ is
       Resource : Componolit.Gneiss.Platform.Resource_Descriptor;
    end record;
 
+   type Reader_Session is limited record
+      Resource : Componolit.Gneiss.Platform.Resource_Descriptor;
+   end record;
+
 end Componolit.Gneiss.Internal.Message;
