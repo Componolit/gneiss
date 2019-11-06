@@ -20,8 +20,27 @@ is
                          C :        Componolit.Gneiss.Types.Capability;
                          L :        String)
    is
+      use type Gns.Platform.Access_Mode;
+      Res     : Gns.Platform.Resource_Descriptor := Gns.Platform.Get_Resource_Descriptor (C);
+      Success : Boolean;
    begin
-      Gns.Platform.Find_Resource (C, "Message", L, 1, Event_Address, R.Resource);
+      if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
+         return;
+      end if;
+      while Gns.Platform.Valid_Resource_Descriptor (Res) loop
+         if
+            Gns.Platform.Resource_Type (Res) = "Message"
+            and then Gns.Platform.Resource_Label (Res) = L
+            and then Gns.Platform.Resource_Mode (Res) = Gns.Platform.Read
+         then
+            Gns.Platform.Resource_Set_Event (Res, Event_Address, Success);
+            if Success then
+               R.Resource := Res;
+            end if;
+            return;
+         end if;
+         Res := Gns.Platform.Next_Resource_Descriptor (Res);
+      end loop;
    end Initialize;
 
    function Available (R : Reader_Session) return Boolean
@@ -49,9 +68,12 @@ is
 
    procedure Finalize (R : in out Reader_Session)
    is
+      Success : Boolean;
    begin
-      R.Resource.Fd := -1;
-      --  FIXME: Set event to 0
+      if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
+         Gns.Platform.Resource_Delete_Event (R.Resource, Event_Address, Success);
+      end if;
+      R.Resource := Gns.Platform.Invalid_Resource;
    end Finalize;
 
 end Componolit.Gneiss.Message.Reader;
