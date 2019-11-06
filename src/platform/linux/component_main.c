@@ -86,7 +86,7 @@ int component_main(component_t *component)
         max_fd = 0;
         list_foreach(component->resources, &initialize_fds, &max_fd);
         select(max_fd + 1, &read_fds, &write_fds, 0, 0);
-        list_foreach(component->resources, &initialize_fds, 0);
+        list_foreach(component->resources, &execute_events, 0);
     }
     component->destruct();
     return component->status;
