@@ -5,12 +5,12 @@ package Componolit.Gneiss.Message with
    SPARK_Mode
 is
 
-   type Client_Session is limited private;
+   type Writer_Session is limited private;
 
-   function Initialized (C : Client_Session) return Boolean;
+   function Initialized (W : Writer_Session) return Boolean;
 
 private
 
-   type Client_Session is new Componolit.Gneiss.Internal.Message.Client_Session;
+   type Writer_Session is new Componolit.Gneiss.Internal.Message.Writer_Session;
 
 end Componolit.Gneiss.Message;
