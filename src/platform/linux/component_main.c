@@ -1,4 +1,5 @@
 
+#include <string.h>
 #include <component.h>
 #include <list.h>
 
@@ -18,35 +19,39 @@ static int search_resource(list_t *item, unsigned size, void *arg)
 {
     resource_descriptor_t *res = (resource_descriptor_t *)((*item)->content);
     resource_descriptor_t *check = (resource_descriptor_t *)arg;
-    return res->type == check->type
-        && res->name == check->name
+    TRACE("%s = %s, %s = %s, %d = %d, %d\n",
+            res->type, check->type, res->label, check->label, res->mode, check->mode, res->fd);
+    return !strcmp(res->type, check->type)
+        && !strcmp(res->label, check->label)
         && res->mode == check->mode
         && res->fd >= 0;
 }
 
-static void find_resource(capability_t *capability, char *type, char *name, int mode, void (*event)(void), int *success)
+static void find_resource(capability_t *capability, char *type, char *name, int mode, void (*event)(void), resource_descriptor_t *resource)
 {
     resource_descriptor_t res;
     list_t item;
-    res.name = name;
+    res.label = name;
     res.type = type;
     res.mode = mode;
     item = list_foreach(capability->component->resources, &search_resource, &res);
+    TRACE("%s %s %d %p %p\n", type, name, mode, event, item);
     if(item){
         ((resource_descriptor_t *)(item->content))->event = event;
-        *success = 1;
+        memcpy(resource, item->content, sizeof(resource_descriptor_t));
     }else{
-        *success = 0;
+        memset(resource, 0, sizeof(resource_descriptor_t));
+        resource->fd = -1;
     }
 }
 
 static int initialize_fds(list_t *item, unsigned size, void *max)
 {
     resource_descriptor_t *res = ((resource_descriptor_t *)((*item)->content));
-    if(res->mode == RESOURCE_READ || res->mode == RESOURCE_READ_WRITE){
+    if((res->mode == RESOURCE_READ || res->mode == RESOURCE_READ_WRITE) && res->event){
         FD_SET(res->fd, &read_fds);
     }
-    if(res->mode == RESOURCE_WRITE || res->mode == RESOURCE_READ_WRITE){
+    if((res->mode == RESOURCE_WRITE || res->mode == RESOURCE_READ_WRITE) && res->event){
         FD_SET(res->fd, &write_fds);
     }
     if(res->fd > *(int *)max){

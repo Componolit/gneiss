@@ -37,7 +37,7 @@ struct resource_descriptor {
 struct capability {
     component_t *component;
     void (*set_status)(capability_t *, int);
-    void (*find_resource)(capability_t *, char *, char *, int, void (*)(void), int *);
+    void (*find_resource)(capability_t *, char *, char *, int, void (*)(void), resource_descriptor_t *);
 };
 
 struct component {
