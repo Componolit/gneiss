@@ -34,18 +34,11 @@ struct resource_descriptor {
     void (*event)(void);
 };
 
-struct capability {
-    component_t *component;
-    void (*set_status)(capability_t *, int);
-    void (*find_resource)(capability_t *, char *, char *, int, void (*)(void), resource_descriptor_t *);
-};
-
 struct component {
-    capability_t capability;
     int status;
     char *name;
     char *file;
-    void (*construct)(capability_t *);
+    void (*construct)(component_t *);
     void (*destruct)(void);
     list_t resources;
 };
