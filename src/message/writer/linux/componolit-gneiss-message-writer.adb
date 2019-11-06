@@ -12,8 +12,20 @@ is
                          C :        Componolit.Gneiss.Types.Capability;
                          L :        String)
    is
+      use type Gns.Platform.Access_Mode;
+      Res : Gns.Platform.Resource_Descriptor := Gns.Platform.Get_Resource_Descriptor (C);
    begin
-      Gns.Platform.Find_Resource (C, "Message", L, 2, System.Null_Address, W.Resource);
+      while Gns.Platform.Valid_Resource_Descriptor (Res) loop
+         if
+            Gns.Platform.Resource_Type (Res) = "Message"
+            and then Gns.Platform.Resource_Label (Res) = L
+            and then Gns.Platform.Resource_Mode (Res) = Gns.Platform.Write
+         then
+            W.Resource := Res;
+            return;
+         end if;
+         Res := Gns.Platform.Next_Resource_Descriptor (Res);
+      end loop;
    end Initialize;
 
    procedure Write (W : in out Writer_Session;
@@ -32,8 +44,7 @@ is
    procedure Finalize (W : in out Writer_Session)
    is
    begin
-      W.Resource.Fd := -1;
-      --  FIXME: Set event to 0
+      W.Resource := Gns.Platform.Invalid_Resource;
    end Finalize;
 
 end Componolit.Gneiss.Message.Writer;
