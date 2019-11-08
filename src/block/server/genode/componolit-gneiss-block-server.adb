@@ -50,24 +50,30 @@ is
 
    procedure Read (S : in out Server_Session;
                    R :        Request;
-                   B :        Buffer) with
+                   B :        Buffer;
+                   O :        Byte_Length) with
       SPARK_Mode => Off
    is
    begin
       Cxx.Block.Server.Read (S.Instance,
                              R.Request,
-                             B'Address);
+                             B'Address,
+                             Cxx.Genode.Uint64_T (O),
+                             Cxx.Genode.Uint64_T (B'Length));
    end Read;
 
    procedure Write (S : in out Server_Session;
                     R :        Request;
-                    B :    out Buffer) with
+                    B :    out Buffer;
+                    O :        Byte_Length) with
       SPARK_Mode => Off
    is
    begin
       Cxx.Block.Server.Write (S.Instance,
                               R.Request,
-                              B'Address);
+                              B'Address,
+                              Cxx.Genode.Uint64_T (O),
+                              Cxx.Genode.Uint64_T (B'Length));
    end Write;
 
    procedure Async_Read (S : in out Server_Session;

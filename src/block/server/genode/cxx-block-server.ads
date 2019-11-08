@@ -62,19 +62,23 @@ is
 
    procedure Read (This   : Class;
                    Req    : Request;
-                   Buffer : Cxx.Void_Address) with
+                   Buffer : Cxx.Void_Address;
+                   Offset : Cxx.Genode.Uint64_T;
+                   Size   : Cxx.Genode.Uint64_T) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server4readEPvS2_";
+      External_Name => "_ZN3Cai5Block6Server4readEPvS2_yy";
 
    procedure Write (This   : Class;
                     Req    : Request;
-                    Buffer : Cxx.Void_Address) with
+                    Buffer : Cxx.Void_Address;
+                    Offset : Cxx.Genode.Uint64_T;
+                    Size   : Cxx.Genode.Uint64_T) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server5writeEPvS2_";
+      External_Name => "_ZN3Cai5Block6Server5writeEPvS2_yy";
 
    procedure Read_Write (This   : Class;
                          Req    : Request;

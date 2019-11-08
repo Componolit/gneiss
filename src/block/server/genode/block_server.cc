@@ -147,21 +147,21 @@ void Cai::Block::Server::process_request(void *request, int *success)
     });
 }
 
-void Cai::Block::Server::read(void *request, void *buffer)
+void Cai::Block::Server::read(void *request, void *buffer, Genode::uint64_t offset, Genode::uint64_t size)
 {
     TLOG("request=", request, " buffer=", buffer);
     ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
-    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
-        Genode::memcpy(ptr, buffer, size);
+    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t){
+        Genode::memcpy(&((Genode::uint8_t *)ptr)[offset], buffer, size);
     });
 }
 
-void Cai::Block::Server::write(void *request, void *buffer)
+void Cai::Block::Server::write(void *request, void *buffer, Genode::uint64_t offset, Genode::uint64_t size)
 {
     TLOG("request=", request, " buffer=", buffer);
     ::Block::Request *req = reinterpret_cast<::Block::Request *>(request);
-    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t size){
-        Genode::memcpy(buffer, ptr, size);
+    blk(_session).with_content(*req, [&] (void *ptr, Genode::size_t){
+        Genode::memcpy(buffer, &((Genode::uint8_t *)ptr)[offset], size);
     });
 }
 

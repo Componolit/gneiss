@@ -158,14 +158,17 @@ is
    --  @param S  Server session instance
    --  @param R  Request to handle
    --  @param B  Buffer with read data
+   --  @param O  Offset to write to in the request buffer
    procedure Read (S : in out Server_Session;
                    R :        Request;
-                   B :        Buffer) with
+                   B :        Buffer;
+                   O :        Byte_Length) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
               and then Kind (R)   = Read
-              and then B'Length   = Length (R) * Block_Size (S)
+              and then O < Length (R) * Block_Size (S)
+              and then B'Length <= Length (R) * Block_Size (S) - O
               and then Assigned (S, R),
       Post => Ready (S)
               and then Initialized (S)
@@ -193,14 +196,17 @@ is
    --  @param S  Server session instance
    --  @param R  Request to handle
    --  @param B  Buffer with data to be written after
+   --  @param O  Offset to write to in the request buffer
    procedure Write (S : in out Server_Session;
                     R :        Request;
-                    B :    out Buffer) with
+                    B :    out Buffer;
+                    O :        Byte_Length) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
               and then Kind (R)   = Write
-              and then B'Length   = Length (R) * Block_Size (S)
+              and then O < Length (R) * Block_Size (S)
+              and then B'Length <= Length (R) * Block_Size (S) - O
               and then Assigned (S, R),
       Post => Ready (S)
               and then Initialized (S)
