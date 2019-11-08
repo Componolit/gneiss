@@ -210,6 +210,9 @@ package body Component is
                                                  Re);
                   case Re is
                      when Block.Success =>
+                        if Block_Client.Kind (Cache (I).C) = Block.Write then
+                           Block_Client.Write (Client, Cache (I).C);
+                        end if;
                         Block_Client.Enqueue (Client, Cache (I).C);
                         null;
                      when Block.Retry =>

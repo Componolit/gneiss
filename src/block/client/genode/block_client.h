@@ -42,7 +42,7 @@ namespace Block
                                         int *success);
             void enqueue(void *request);
             void submit();
-            void read(void *request);
+            void read_write(void *request);
             void release(void *request);
             bool writable();
             Genode::uint64_t block_count();

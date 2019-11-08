@@ -218,6 +218,13 @@ is
       C_Submit (C);
    end Submit;
 
+   procedure C_Read_Write (C : in out Client_Session;
+                           R :        Request) with
+      Import,
+      Convention    => C,
+      External_Name => "block_client_read_write",
+      Global        => null;
+
    ----------
    -- Read --
    ----------
@@ -225,15 +232,16 @@ is
    procedure Read (C : in out Client_Session;
                    R :        Request)
    is
-      procedure C_Read (T   : in out Client_Session;
-                        Req :        Request) with
-         Import,
-         Convention    => C,
-         External_Name => "block_client_read",
-         Global        => null;
    begin
-      C_Read (C, R);
+      C_Read_Write (C, R);
    end Read;
+
+   procedure Write (C : in out Client_Session;
+                    R :        Request)
+   is
+   begin
+      C_Read_Write (C, R);
+   end Write;
 
    -------------
    -- Release --
