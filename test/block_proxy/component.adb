@@ -119,7 +119,10 @@ package body Component is
          and then Block_Server.Assigned (Server, Cache (I).S)
          and then D'Length = Block_Size (Server) * Block_Server.Length (Cache (I).S)
       then
-         Block_Server.Write (Server, Cache (I).S, D);
+         for J in D'Range loop
+            --  Fill buffer byte wise to test granularity
+            Block_Server.Write (Server, Cache (I).S, D (J .. J), Block.Byte_Length (J - D'First));
+         end loop;
          Print_Buffer (I, D, Print_Content);
       else
          Cache (I).A := True;
@@ -141,7 +144,10 @@ package body Component is
          and then D'Length = Block_Size (Server) * Block_Server.Length (Cache (I).S)
       then
          Print_Buffer (I, D, Print_Content);
-         Block_Server.Read (Server, Cache (I).S, D);
+         for J in D'Range loop
+            --  Fill buffer byte wise to test granularity
+            Block_Server.Read (Server, Cache (I).S, D (J .. J), Block.Byte_Length (J - D'First));
+         end loop;
       else
          Cache (I).A := True;
       end if;
