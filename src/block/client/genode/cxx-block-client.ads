@@ -86,12 +86,12 @@ is
       Convention    => CPP,
       External_Name => "_ZN3Cai5Block6Client6submitEv";
 
-   procedure Read (This :        Class;
-                   Req  :        Packet_Descriptor) with
+   procedure Read_Write (This :        Class;
+                         Req  :        Packet_Descriptor) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client4readEPv";
+      External_Name => "_ZN3Cai5Block6Client10read_writeEPv";
 
    procedure Release (This : Class;
                       Req  : in out Packet_Descriptor) with

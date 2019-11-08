@@ -19,8 +19,6 @@ is
    use type Standard.Interfaces.Unsigned_32;
 
    subtype Block_Buffer is Buffer (1 .. 4096);
-   function Convert_Buffer is new Ada.Unchecked_Conversion (Blk.Raw_Data_Type, Block_Buffer);
-   function Convert_Buffer is new Ada.Unchecked_Conversion (Block_Buffer, Blk.Raw_Data_Type);
 
    function Kind (R : Request) return Request_Kind is
       (case R.Event.Header.Kind is
@@ -260,22 +258,12 @@ is
       Set_Null (C);
    end Finalize;
 
-   Enqueue_Buffer : Block_Buffer;
-
    procedure Enqueue (C : in out Client_Session;
                       R : in out Request)
    is
-      use type Blk.Event_Type;
    begin
       if C.Queued >= Blk.Element_Count then
          return;
-      end if;
-      Enqueue_Buffer := (others => Byte'First);
-      if R.Event.Header.Kind = Blk.Write then
-         Write (C,
-                Request_Id'Val (R.Event.Header.Priv),
-                Enqueue_Buffer);
-         R.Event.Data := Convert_Buffer (Enqueue_Buffer);
       end if;
       Blk.Client_Request_Channel.Write (C.Request_Memory, R.Event);
       R.Status := Componolit.Gneiss.Internal.Block.Pending;
@@ -289,15 +277,33 @@ is
    end Submit;
 
    pragma Warnings (Off, "mode could be ""in"" instead of ""in out""");
+   pragma Warnings (Off, "constant ""R"" may be modified via address clause");
+   --  This is aliasing caused by the missing separation between meta data and payload
    procedure Read (C : in out Client_Session;
                    R :        Request)
    is
+      Read_Buffer : Block_Buffer with
+         Import,
+         Address => R.Event.Data'Address;
    begin
       Read (C,
             Request_Id'Val (R.Event.Header.Priv),
-            Convert_Buffer (R.Event.Data));
+            Read_Buffer);
    end Read;
+
+   procedure Write (C : in out Client_Session;
+                    R :        Request)
+   is
+      Write_Buffer : Block_Buffer with
+         Import,
+         Address => R.Event.Data'Address;
+   begin
+      Write (C,
+             Request_Id'Val (R.Event.Header.Priv),
+             Write_Buffer);
+   end Write;
    pragma Warnings (On, "mode could be ""in"" instead of ""in out""");
+   pragma Warnings (On, "constant ""R"" may be modified via address clause");
 
    procedure Release (C : in out Client_Session;
                       R : in out Request)

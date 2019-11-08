@@ -207,8 +207,24 @@ is
    procedure Read (C : in out Client_Session;
                    R :        Request) with
       Pre  => Initialized (C)
-              and then Status (R)   = Ok
-              and then Kind (R)     = Read
+              and then Status (R) = Ok
+              and then Kind (R)   = Read
+              and then Assigned (C, R),
+      Post => Initialized (C)
+              and then Assigned (C, R)
+              and then Writable (C)'Old    = Writable (C)
+              and then Block_Count (C)'Old = Block_Count (C)
+              and then Block_Size (C)'Old  = Block_Size (C);
+
+   --  Write the required data to a successfully allocated write request
+   --
+   --  @param C  Client session instance
+   --  @param R  Request to write data to
+   procedure Write (C : in out Client_Session;
+                    R :        Request) with
+      Pre  => Initialized (C)
+              and then Status (R) = Allocated
+              and then Kind (R)   = Write
               and then Assigned (C, R),
       Post => Initialized (C)
               and then Assigned (C, R)
