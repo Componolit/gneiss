@@ -227,8 +227,15 @@ is
                    R :        Request)
    is
    begin
-      Cxx.Block.Client.Read (C.Instance, R.Packet);
+      Cxx.Block.Client.Read_Write (C.Instance, R.Packet);
    end Read;
+
+   procedure Write (C : in out Client_Session;
+                    R :        Request)
+   is
+   begin
+      Cxx.Block.Client.Read_Write (C.Instance, R.Packet);
+   end Write;
 
    procedure Release (C : in out Client_Session;
                       R : in out Request)

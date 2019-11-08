@@ -159,14 +159,6 @@ void Cai::Block::Client::enqueue(void *request)
 {
     TLOG("request=", request);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
-    if(packet->operation() == ::Block::Packet_descriptor::Opcode::WRITE){
-        ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *))(_rw))(
-                (void *)this,
-                static_cast<int>(packet->operation()),
-                packet->tag().value,
-                packet->block_count(),
-                blk(_device)->tx()->packet_content(*packet));
-    }
     blk(_device)->tx()->submit_packet(*packet);
 }
 
@@ -175,7 +167,7 @@ void Cai::Block::Client::submit()
     TLOG();
 }
 
-void Cai::Block::Client::read(void *request)
+void Cai::Block::Client::read_write(void *request)
 {
     TLOG("request=", request);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
@@ -186,7 +178,6 @@ void Cai::Block::Client::read(void *request)
             packet->block_count(),
             blk(_device)->tx()->packet_content(*packet));
 }
-
 
 void Cai::Block::Client::release(void *request)
 {

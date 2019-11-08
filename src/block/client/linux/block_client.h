@@ -63,7 +63,7 @@ void block_client_enqueue(block_client_t *client, request_t *request);
 
 void block_client_submit(block_client_t *client);
 
-void block_client_read(block_client_t *client, const request_t *request);
+void block_client_read_write(block_client_t *client, const request_t *request);
 
 void block_client_release(block_client_t *client, request_t *request);
 

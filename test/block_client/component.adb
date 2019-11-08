@@ -130,6 +130,9 @@ is
                case Result is
                   when Block.Success =>
                      S.Sent := S.Sent + 1;
+                     if Block_Client.Kind (Request_Cache (I)) = Block.Write then
+                        Block_Client.Write (Client, Request_Cache (I));
+                     end if;
                      Block_Client.Enqueue (Client, Request_Cache (I));
                   when Block.Retry | Block.Out_Of_Memory =>
                      null;
