@@ -96,7 +96,8 @@ is
 
    procedure Read (S : in out Server_Session;
                    R :        Request;
-                   B :        Buffer)
+                   B :        Buffer;
+                   O :        Byte_Length)
    is
    begin
       for I in S.Read_Select'Range loop
@@ -105,8 +106,10 @@ is
                Buf : Block_Buffer with
                   Import,
                   Address => S.Read_Data (I)'Address;
+               First : constant Buffer_Index := Buf'First + Buffer_Index (O);
+               Last  : constant Buffer_Index := Buf'First + Buffer_Index (O) + B'Length - 1;
             begin
-               Buf := B;
+               Buf (First .. Last) := B;
             end;
             return;
          end if;
@@ -115,14 +118,17 @@ is
 
    procedure Write (S : in out Server_Session;
                     R :        Request;
-                    B :    out Buffer)
+                    B :    out Buffer;
+                    O :        Byte_Length)
    is
       pragma Unreferenced (S);
       Buf : Block_Buffer with
          Import,
          Address => R.Event.Data'Address;
+      First : constant Buffer_Index := Buf'First + Buffer_Index (O);
+      Last  : constant Buffer_Index := Buf'First + Buffer_Index (O) + B'Length - 1;
    begin
-      B := Buf;
+      B := Buf (First .. Last);
    end Write;
 
    procedure Read (S : in out Server_Session;
