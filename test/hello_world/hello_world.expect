@@ -1,0 +1,6 @@
+
+set timeout 10
+spawn ./build/init/init test/hello_world/hello_world.xml
+expect "terminated with 0"
+expect "terminated with 0"
+expect "terminated with 0"
