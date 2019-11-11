@@ -1,9 +1,14 @@
 
-with System;
-use all type System.Address;
+with Componolit.Gneiss.Message.Writer;
 
 package body Componolit.Gneiss.Log.Client
 is
+
+   package Writer is new Componolit.Gneiss.Message.Writer
+      (Internal.Log.Unsigned_Character,
+       Positive,
+       Internal.Log.Message_String,
+       Internal.Log.Message_Size);
 
    ----------------
    -- Initialize --
@@ -11,21 +16,10 @@ is
 
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Componolit.Gneiss.Types.Capability;
-                         Label          :        String) with
-      SPARK_Mode => Off
+                         Label          :        String)
    is
-      pragma Unreferenced (Cap);
-      procedure C_Initialize (Str :     System.Address;
-                              Lbl : out System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "initialize",
-         Global        => null;
-
-      C_Str : String := Label & Character'Val (0);
    begin
-      C_Initialize (C_Str'Address, C.Label);
-      C.Length := Label'Length;
+      Writer.Initialize (C.Session, Cap, Label);
    end Initialize;
 
    --------------
@@ -34,58 +28,25 @@ is
 
    procedure Finalize (C : in out Client_Session)
    is
-      procedure C_Finalize (Label : System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "finalize",
-         Global        => null;
    begin
-      C_Finalize (C.Label);
-      C.Label  := System.Null_Address;
-      C.Length := 0;
+      Writer.Finalize (C.Session);
    end Finalize;
 
-   procedure Print (Msg : System.Address) with
-      Import,
-      Convention    => C,
-      External_Name => "print",
-      Global        => null;
+   procedure Cat (C : in out Client_Session;
+                  S :        String);
 
-   procedure Print_With_Null_Term (S : String);
-
-   procedure Print_With_Null_Term (S : String) with
-      SPARK_Mode => Off
-   is
-      C_Str : String := S & Character'First;
-   begin
-      Print (C_Str'Address);
-   end Print_With_Null_Term;
-
-   procedure Print_String (Label   : System.Address;
-                           Use_L   : Boolean;
-                           Prefix  : String;
-                           Message : String;
-                           Newline : Boolean) with
-      Pre => Label /= System.Null_Address;
-
-   procedure Print_String (Label   : System.Address;
-                           Use_L   : Boolean;
-                           Prefix  : String;
-                           Message : String;
-                           Newline : Boolean)
+   procedure Cat (C : in out Client_Session;
+                  S :        String)
    is
    begin
-      if Use_L then
-         Print_With_Null_Term ("[");
-         Print (Label);
-         Print_With_Null_Term ("] ");
-         Print_With_Null_Term (Prefix);
-      end if;
-      Print_With_Null_Term (Message);
-      if Newline then
-         Print_With_Null_Term ((1 => Character'Val (10)));
-      end if;
-   end Print_String;
+      for O of S loop
+         if C.Cursor = C.Buffer'Last then
+            Flush (C);
+         end if;
+         C.Buffer (C.Cursor) := Internal.Log.Unsigned_Character (Character'Pos (O));
+         C.Cursor            := C.Cursor + 1;
+      end loop;
+   end Cat;
 
    ----------
    -- Info --
@@ -96,8 +57,10 @@ is
                    Newline :        Boolean := True)
    is
    begin
-      C.Prev_Nl := Newline;
-      Print_String (C.Label, C.Prev_Nl, "Info: ", Msg, Newline);
+      Cat (C, "Info: " & Msg);
+      if Newline then
+         Flush (C);
+      end if;
    end Info;
 
    -------------
@@ -109,8 +72,10 @@ is
                       Newline :        Boolean := True)
    is
    begin
-      C.Prev_Nl := Newline;
-      Print_String (C.Label, C.Prev_Nl, "Warning: ", Msg, Newline);
+      Cat (C, "Warning: " & Msg);
+      if Newline then
+         Flush (C);
+      end if;
    end Warning;
 
    -----------
@@ -122,22 +87,22 @@ is
                     Newline :        Boolean := True)
    is
    begin
-      C.Prev_Nl := Newline;
-      Print_String (C.Label, C.Prev_Nl, "Warning: ", Msg, Newline);
+      Cat (C, "Error: " & Msg);
+      if Newline then
+         Flush (C);
+      end if;
    end Error;
 
    -----------
    -- Flush --
    -----------
 
-   procedure Flush (C : in out Client_Session) with
-      SPARK_Mode => Off
+   procedure Flush (C : in out Client_Session)
    is
-      M : String := Character'Val (10) & Character'Val (0);
    begin
-      if not C.Prev_Nl then
-         Print (M'Address);
-      end if;
+      Writer.Write (C.Session, C.Buffer);
+      C.Cursor := C.Buffer'First;
+      C.Buffer := (others => 0);
    end Flush;
 
 end Componolit.Gneiss.Log.Client;
