@@ -86,6 +86,9 @@ int setup_resource(resource_t *resource, resource_descriptor_t *resource_descrip
 {
     if(!strcmp(resource->type, "Message")){
         resource_descriptor->fd = open_message_queue(resource, resource_descriptor->mode);
+        if(resource_descriptor->fd < 0){
+            perror("open_message_queue");
+        }
         return 0;
     }else{
         fprintf(stderr, "cannot setup unknown resource %s\n", resource->name);
