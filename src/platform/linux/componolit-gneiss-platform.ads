@@ -3,7 +3,7 @@ with System;
 with Componolit.Gneiss.Types;
 
 package Componolit.Gneiss.Platform with
-   SPARK_Mode => Off
+   SPARK_Mode
 is
    package Gns renames Componolit.Gneiss;
 
