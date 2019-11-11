@@ -1,7 +1,7 @@
 #!/bin/sh
 
 apt update
-apt install -y expect
+apt install -y expect libxml2-dev
 
 cd /gneiss
 git submodule update --init --recursive
