@@ -2,7 +2,7 @@
 #include <component.h>
 #include <list.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 void set_status(component_t *component, int status)

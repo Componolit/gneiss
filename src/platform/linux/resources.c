@@ -9,7 +9,7 @@
 
 #include <resources.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 static int allocate_message_queue(resource_t *resource)

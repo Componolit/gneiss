@@ -11,7 +11,7 @@
 #include <config.h>
 #include <resources.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 static xmlNode *config;
