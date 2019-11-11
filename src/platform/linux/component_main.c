@@ -3,7 +3,7 @@
 #include <component.h>
 #include <list.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 static fd_set write_fds;

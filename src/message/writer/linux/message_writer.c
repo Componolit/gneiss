@@ -4,7 +4,7 @@
 #include <component.h>
 #include <list.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 void message_writer_write(list_t *item, void *buffer, long long size)
