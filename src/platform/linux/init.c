@@ -31,13 +31,17 @@ static int find_resources(list_t *item, unsigned size, void *arg)
     resource_descriptor_t *resd = (resource_descriptor_t *)arg;
     if(!strcmp(res->type, resd->type) && !strcmp(res->name, resd->name)){
         setup_resource(res, resd);
+        TRACE("%s %s %i\n", res->type, res->name, resd->fd);
     }
+    return 0;
 }
 
 static int setup_resources(list_t *item, unsigned size, void *arg)
 {
     resource_descriptor_t *res = (resource_descriptor_t *)((*item)->content);
+    TRACE("%s %s %s\n", res->type, res->name, res->label);
     list_foreach(resource_registry, &find_resources, res);
+    return 0;
 }
 
 static int start_component(list_t *item, unsigned size, void *arg)
@@ -104,6 +108,7 @@ int main(int argc, char *argv[])
         chpid = waitpid(-1, &status, 0);
         if(chpid < 0){
             perror("waitpid");
+            return 1;
         }else{
             if(WIFEXITED(status)){
                 fprintf(stderr, "Child %u terminated with %d\n",
