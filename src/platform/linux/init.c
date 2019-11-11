@@ -4,6 +4,7 @@
 #include <dlfcn.h>
 #include <sys/types.h>
 #include <unistd.h>
+#include <sys/wait.h>
 
 #include <list.h>
 #include <component.h>
@@ -70,6 +71,7 @@ static int start_component(list_t *item, unsigned size, void *arg)
 int main(int argc, char *argv[])
 {
     int status;
+    pid_t chpid;
     if(argc != 2){
         fprintf(stderr, "Usage: %s config\n", argv[0]);
         return 1;
@@ -97,5 +99,22 @@ int main(int argc, char *argv[])
     }
     TRACE("start_component %u\n", list_length(component_registry));
     list_foreach(component_registry, &start_component, 0);
+
+    while(1){
+        chpid = waitpid(-1, &status, 0);
+        if(chpid < 0){
+            perror("waitpid");
+        }else{
+            if(WIFEXITED(status)){
+                fprintf(stderr, "Child %u terminated with %d\n",
+                        chpid, WEXITSTATUS(status));
+            }else if(WIFSIGNALED(status)){
+                fprintf(stderr, "Child %u was terminated by signal %d\n",
+                        chpid, WTERMSIG(status));
+            }else{
+                fprintf(stderr, "Child %u was terminated for unknown reasons\n");
+            }
+        }
+    }
     return 0;
 }
