@@ -7,7 +7,7 @@
 #include <config.h>
 #include <component.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 int parse_resources(xmlNode *root, list_t resources)
