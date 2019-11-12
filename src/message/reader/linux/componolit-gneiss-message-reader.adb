@@ -24,7 +24,10 @@ is
       Res     : Gns.Platform.Resource_Descriptor := Gns.Platform.Get_Resource_Descriptor (C);
       Success : Boolean;
    begin
-      if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
+      if
+         Initialized (R)
+         or else Gns.Platform.Valid_Resource_Descriptor (R.Resource)
+      then
          return;
       end if;
       while Gns.Platform.Valid_Resource_Descriptor (Res) loop
@@ -70,10 +73,12 @@ is
    is
       Success : Boolean;
    begin
-      if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
-         Gns.Platform.Resource_Delete_Event (R.Resource, Event_Address, Success);
+      if Initialized (R) then
+         if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
+            Gns.Platform.Resource_Delete_Event (R.Resource, Event_Address, Success);
+         end if;
+         R.Resource := Gns.Platform.Invalid_Resource;
       end if;
-      R.Resource := Gns.Platform.Invalid_Resource;
    end Finalize;
 
 end Componolit.Gneiss.Message.Reader;

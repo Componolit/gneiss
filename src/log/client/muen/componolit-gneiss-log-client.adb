@@ -97,6 +97,9 @@ is
       Name   : constant Musinfo.Name_Type := CIM.String_To_Name (Label);
       Memory : Musinfo.Memregion_Type;
    begin
+      if Initialized (C) then
+         return;
+      end if;
       Memory := Musinfo.Instance.Memory_By_Name (Name);
       if Name /= Musinfo.Null_Name and Memory /= Musinfo.Null_Memregion then
          C.Name := Name;
@@ -108,11 +111,13 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      Deactivate_Channel (C.Mem);
-      C.Name   := Musinfo.Null_Name;
-      C.Mem    := Musinfo.Null_Memregion;
-      C.Index  := Debuglog.Types.Message_Index'First;
-      C.Buffer := Debuglog.Types.Null_Data;
+      if Initialized (C) then
+         Deactivate_Channel (C.Mem);
+         C.Name   := Musinfo.Null_Name;
+         C.Mem    := Musinfo.Null_Memregion;
+         C.Index  := Debuglog.Types.Message_Index'First;
+         C.Buffer := Debuglog.Types.Null_Data;
+      end if;
    end Finalize;
 
    function Get_Label (C : Client_Session) return String;
