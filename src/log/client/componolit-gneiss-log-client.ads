@@ -21,14 +21,12 @@ is
    --  @param Label           Session label
    procedure Initialize (C              : in out Client_Session;
                          Cap            :        Componolit.Gneiss.Types.Capability;
-                         Label          :        String) with
-     Pre => not Initialized (C);
+                         Label          :        String);
 
    --  Finalize client session
    --
    --  @param C  Client session instance
    procedure Finalize (C : in out Client_Session) with
-      Pre  => Initialized (C),
       Post => not Initialized (C);
 
    --  Print info message

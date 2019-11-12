@@ -24,6 +24,9 @@ is
                          Tag :        Session_Id)
    is
    begin
+      if Initialized (D) then
+         return;
+      end if;
       Cxx.Block.Dispatcher.Initialize (D.Instance, Cap, Dispatch_Address);
       if Initialized (D) then
          D.Instance.Tag := Session_Id'Pos (Tag);
@@ -33,7 +36,9 @@ is
    procedure Finalize (D : in out Dispatcher_Session)
    is
    begin
-      Cxx.Block.Dispatcher.Finalize (D.Instance);
+      if Initialized (D) then
+         Cxx.Block.Dispatcher.Finalize (D.Instance);
+      end if;
    end Finalize;
 
    procedure Register (D : in out Dispatcher_Session)

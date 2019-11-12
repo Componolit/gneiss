@@ -34,8 +34,7 @@ is
    --  @param Cap  System capability
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Componolit.Gneiss.Types.Capability;
-                         Tag :        Session_Id) with
-      Pre => not Initialized (D);
+                         Tag :        Session_Id);
 
    --  Register the server implementation Serv on the platform
    --
@@ -48,7 +47,6 @@ is
    --
    --  @param D  Dispatcher session instance
    procedure Finalize (D : in out Dispatcher_Session) with
-      Pre  => Initialized (D),
       Post => not Initialized (D);
 
    --  Check if the passed dispatcher capability contains a valid session request

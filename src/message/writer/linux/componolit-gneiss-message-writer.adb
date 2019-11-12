@@ -15,6 +15,9 @@ is
       use type Gns.Platform.Access_Mode;
       Res : Gns.Platform.Resource_Descriptor := Gns.Platform.Get_Resource_Descriptor (C);
    begin
+      if Initialized (W) then
+         return;
+      end if;
       while Gns.Platform.Valid_Resource_Descriptor (Res) loop
          if
             Gns.Platform.Resource_Type (Res) = "Message"
@@ -44,7 +47,9 @@ is
    procedure Finalize (W : in out Writer_Session)
    is
    begin
-      W.Resource := Gns.Platform.Invalid_Resource;
+      if Initialized (W) then
+         W.Resource := Gns.Platform.Invalid_Resource;
+      end if;
    end Finalize;
 
 end Componolit.Gneiss.Message.Writer;

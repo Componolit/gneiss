@@ -161,14 +161,12 @@ is
                          Cap         :        Componolit.Gneiss.Types.Capability;
                          Path        :        String;
                          Tag         :        Session_Id;
-                         Buffer_Size :        Byte_Length := 0) with
-     Pre => not Initialized (C);
+                         Buffer_Size :        Byte_Length := 0);
 
    --  Finalize client
    --
    --  @param C  client instance
    procedure Finalize (C : in out Client_Session) with
-      Pre  => Initialized (C),
       Post => not Initialized (C);
 
    --  Enqueue request

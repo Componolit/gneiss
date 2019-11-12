@@ -13,15 +13,13 @@ is
 
    procedure Initialize (C    : in out Client_Session;
                          Cap  :        Componolit.Gneiss.Types.Capability;
-                         Name :        String := "") with
-     Pre => not Initialized (C);
+                         Name :        String := "");
 
    procedure Load (C : in out Client_Session) with
       Pre  => Initialized (C),
       Post => Initialized (C);
 
    procedure Finalize (C : in out Client_Session) with
-      Pre  => Initialized (C),
       Post => not Initialized (C);
 
    pragma Warnings (On, "procedure ""Parse"" is not referenced");
