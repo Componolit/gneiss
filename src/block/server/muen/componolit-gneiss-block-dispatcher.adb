@@ -42,6 +42,9 @@ is
       pragma Unreferenced (Cap);
       use type CIM.Async_Session_Type;
    begin
+      if Initialized (D) then
+         return;
+      end if;
       for I in Reg.Registry'Range loop
          if Reg.Registry (I).Kind = CIM.None then
             D.Registry_Index := I;
@@ -66,8 +69,10 @@ is
    procedure Finalize (D : in out Dispatcher_Session)
    is
    begin
-      Reg.Registry (D.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
-      D.Registry_Index := CIM.Invalid_Index;
+      if Initialized (D) then
+         Reg.Registry (D.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
+         D.Registry_Index                := CIM.Invalid_Index;
+      end if;
    end Finalize;
 
    function Str (C : Dispatcher_Capability) return String is

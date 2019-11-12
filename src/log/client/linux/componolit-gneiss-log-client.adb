@@ -19,7 +19,9 @@ is
                          Label          :        String)
    is
    begin
-      Writer.Initialize (C.Session, Cap, Label);
+      if not Initialized (C) then
+         Writer.Initialize (C.Session, Cap, Label);
+      end if;
    end Initialize;
 
    --------------
@@ -29,7 +31,9 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      Writer.Finalize (C.Session);
+      if Initialized (C) then
+         Writer.Finalize (C.Session);
+      end if;
    end Finalize;
 
    procedure Cat (C : in out Client_Session;

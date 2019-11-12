@@ -17,9 +17,9 @@ is
       SPARK_Mode => Off
    is
       procedure C_Initialize (S : in out Client_Session;
-                              C : Componolit.Gneiss.Types.Capability;
-                              L : System.Address;
-                              N : System.Address) with
+                              C :        Componolit.Gneiss.Types.Capability;
+                              L :        System.Address;
+                              N :        System.Address) with
          Import,
          Convention    => C,
          External_Name => "configuration_client_initialize",
@@ -27,7 +27,9 @@ is
       C_Name      : constant String         := Name & Character'First;
       C_Name_Addr : constant System.Address := (if Name'Length > 0 then C_Name'Address else System.Null_Address);
    begin
-      C_Initialize (C, Cap, C_Parse'Address, C_Name_Addr);
+      if not Initialized (C) then
+         C_Initialize (C, Cap, C_Parse'Address, C_Name_Addr);
+      end if;
    end Initialize;
 
    procedure Load (C : in out Client_Session)
@@ -83,11 +85,13 @@ is
          Global        => null;
       --  FIXME: model platform state (freeing memory)
    begin
-      C_Finalize (C);
-      C.Ifd   := -1;
-      C.Parse := System.Null_Address;
-      C.Cap   := System.Null_Address;
-      C.Name  := System.Null_Address;
+      if Initialized (C) then
+         C_Finalize (C);
+         C.Ifd   := -1;
+         C.Parse := System.Null_Address;
+         C.Cap   := System.Null_Address;
+         C.Name  := System.Null_Address;
+      end if;
    end Finalize;
 
 end Componolit.Gneiss.Rom.Client;

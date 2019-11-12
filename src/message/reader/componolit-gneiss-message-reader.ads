@@ -50,14 +50,18 @@ is
    --
    --  @param R  Reader session instance
    --  @return   True if a message is available
-   function Available (R : Reader_Session) return Boolean;
+   function Available (R : Reader_Session) return Boolean with
+      Pre => Initialized (R);
 
    --  Read a message from the channel
    --
    --  @param R  Reader session instance
    --  @param B  Message buffer
    procedure Read (R : in out Reader_Session;
-                   B :    out Message_Buffer);
+                   B :    out Message_Buffer) with
+      Pre  => Initialized (R)
+              and then Available (R),
+      Post => Initialized (R);
 
    --  Finalize reader session
    --

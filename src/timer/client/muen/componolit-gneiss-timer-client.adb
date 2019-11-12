@@ -30,7 +30,7 @@ is
       pragma Unreferenced (Cap);
       use type CIM.Async_Session_Type;
    begin
-      if not Musinfo.Instance.Is_Valid then
+      if Initialized (C) or else not Musinfo.Instance.Is_Valid then
          return;
       end if;
       for I in Reg.Registry'Range loop
@@ -83,8 +83,10 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      Reg.Registry (C.Index) := Reg.Session_Entry'(Kind => CIM.None);
-      C.Index := CIM.Invalid_Index;
+      if Initialized (C) then
+         Reg.Registry (C.Index) := Reg.Session_Entry'(Kind => CIM.None);
+         C.Index := CIM.Invalid_Index;
+      end if;
    end Finalize;
 
 end Componolit.Gneiss.Timer.Client;

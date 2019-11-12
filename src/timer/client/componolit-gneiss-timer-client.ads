@@ -10,8 +10,7 @@ is
    --
    --  @param C    Timer client session object
    --  @param Cap  System capability
-   procedure Initialize (C : in out Client_Session; Cap : Componolit.Gneiss.Types.Capability) with
-      Pre => not Initialized (C);
+   procedure Initialize (C : in out Client_Session; Cap : Componolit.Gneiss.Types.Capability);
 
    --  Returns a monotonic clock value
    --
@@ -44,7 +43,6 @@ is
    --
    --  @param C  Timer client session object
    procedure Finalize (C : in out Client_Session) with
-      Pre  => Initialized (C),
       Post => not Initialized (C);
 
 end Componolit.Gneiss.Timer.Client;

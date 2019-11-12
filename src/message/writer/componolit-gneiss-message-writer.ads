@@ -48,7 +48,9 @@ is
    --  @param W  Writer session instance
    --  @param B  Message buffer
    procedure Write (W : in out Writer_Session;
-                    B :        Message_Buffer);
+                    B :        Message_Buffer) with
+      Pre  => Initialized (W),
+      Post => Initialized (W);
 
    --  Finalize writer session
    --

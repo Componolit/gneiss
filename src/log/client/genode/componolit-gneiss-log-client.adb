@@ -13,15 +13,19 @@ is
    is
       C_Label : String := Label & Character'Val (0);
    begin
-      Cxx.Log.Client.Initialize (C.Instance,
-                                 Cap,
-                                 C_Label'Address);
+      if not Initialized (C) then
+         Cxx.Log.Client.Initialize (C.Instance,
+                                    Cap,
+                                    C_Label'Address);
+      end if;
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      Cxx.Log.Client.Finalize (C.Instance);
+      if Initialized (C) then
+         Cxx.Log.Client.Finalize (C.Instance);
+      end if;
    end Finalize;
 
    Blue       : constant String    := Character'Val (8#33#) & "[34m";
