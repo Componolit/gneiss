@@ -8,9 +8,7 @@ is
    use type Cxx.Bool;
 
    function Initialized (C : Client_Session) return Boolean is
-      (Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1));
-
-   function Maximum_Message_Length (C : Client_Session) return Integer is
-      (Integer (Cxx.Log.Client.Maximum_Message_Length (C.Instance)));
+      (Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1)
+       and then C.Cursor in C.Buffer'Range);
 
 end Componolit.Gneiss.Log;
