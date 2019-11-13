@@ -4,13 +4,17 @@
 
 #include <list.h>
 
-#define COMPONENT_RUNNING -1
-#define COMPONENT_SUCCESS 0
-#define COMPONENT_ERROR 1
+enum COMPONENT {
+    COMPONENT_RUNNING = -1,
+    COMPONENT_SUCCESS = 0,
+    COMPONENT_ERROR = 1
+};
 
-#define RESOURCE_READ 1
-#define RESOURCE_WRITE 2
-#define RESOURCE_READ_WRITE 3
+enum RESOURCE {
+    RESOURCE_READ = 1,
+    RESOURCE_WRITE = 2,
+    RESOURCE_READ_WRITE = 3
+};
 
 typedef struct component component_t;
 typedef struct capability capability_t;
