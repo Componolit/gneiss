@@ -77,13 +77,17 @@ int main(int argc, char *argv[])
     int status;
     pid_t chpid;
     if(argc != 2){
-        fprintf(stderr, "Usage: %s config\n", argv[0]);
+        fprintf(stderr, "Usage: %s <config>\n", argv[0]);
         return 1;
     }
 
     component_registry = list_new();
     resource_registry = list_new();
     config = read_config(argv[1]);
+    if(!config){
+        fprintf(stderr, "failed to read config\n");
+        return 1;
+    }
     TRACE("parse_resources\n");
     status = parse_resources(config, resource_registry);
     if(status){
