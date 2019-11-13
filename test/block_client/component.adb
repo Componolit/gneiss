@@ -160,12 +160,7 @@ is
    begin
       if Componolit.Gneiss.Log.Initialized (Log) then
          Componolit.Gneiss.Log.Client.Info (Log, "Read succeeded:");
-         if D'Length >= Componolit.Gneiss.Log.Maximum_Message_Length (Log) then
-            Componolit.Gneiss.Log.Client.Info
-               (Log, D (D'First .. D'First + (Componolit.Gneiss.Log.Maximum_Message_Length (Log) - 1)));
-         else
-            Componolit.Gneiss.Log.Client.Info (Log, D);
-         end if;
+         Componolit.Gneiss.Log.Client.Info (Log, D);
       end if;
    end Read;
 
