@@ -10,9 +10,10 @@ is
       SPARK_Mode => Off
    is
    begin
-      if not Initialized (C) then
-         Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address);
+      if Initialized (C) then
+         return;
       end if;
+      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address);
    end Initialize;
 
    function Clock (C : Client_Session) return Time
@@ -31,9 +32,10 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Cxx.Timer.Client.Finalize (C.Instance);
+      if not Initialized (C) then
+         return;
       end if;
+      Cxx.Timer.Client.Finalize (C.Instance);
    end Finalize;
 
 end Componolit.Gneiss.Timer.Client;

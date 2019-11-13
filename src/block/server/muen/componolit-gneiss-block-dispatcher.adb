@@ -69,10 +69,11 @@ is
    procedure Finalize (D : in out Dispatcher_Session)
    is
    begin
-      if Initialized (D) then
-         Reg.Registry (D.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
-         D.Registry_Index                := CIM.Invalid_Index;
+      if not Initialized (D) then
+         return;
       end if;
+      Reg.Registry (D.Registry_Index) := Reg.Session_Entry'(Kind => CIM.None);
+      D.Registry_Index                := CIM.Invalid_Index;
    end Finalize;
 
    function Str (C : Dispatcher_Capability) return String is

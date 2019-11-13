@@ -192,25 +192,27 @@ is
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String,
                                                             C_String);
    begin
-      if not Initialized (C) then
-         Cxx.Block.Client.Initialize (C.Instance,
-                                      Cap,
-                                      To_C_String (C_Path),
-                                      Event_Address,
-                                      Crw_Address,
-                                      Cxx.Genode.Uint64_T (Buffer_Size));
-         if Initialized (C) then
-            C.Instance.Tag := Session_Id'Pos (Tag);
-         end if;
+      if Initialized (C) then
+         return;
+      end if;
+      Cxx.Block.Client.Initialize (C.Instance,
+                                   Cap,
+                                   To_C_String (C_Path),
+                                   Event_Address,
+                                   Crw_Address,
+                                   Cxx.Genode.Uint64_T (Buffer_Size));
+      if Initialized (C) then
+         C.Instance.Tag := Session_Id'Pos (Tag);
       end if;
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Cxx.Block.Client.Finalize (C.Instance);
+      if not Initialized (C) then
+         return;
       end if;
+      Cxx.Block.Client.Finalize (C.Instance);
    end Finalize;
 
    procedure Enqueue (C : in out Client_Session;

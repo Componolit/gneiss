@@ -163,10 +163,11 @@ is
          External_Name => "block_client_initialize",
          Global        => null;
    begin
-      if not Initialized (C) then
-         C_Initialize (C, C_Path'Address, Buffer_Size, Event'Address, Crw'Address);
-         C.Tag := Standard.C.Uint32_T'Val (Session_Id'Pos (Tag) - Session_Id'Pos (Session_Id'First));
+      if Initialized (C) then
+         return;
       end if;
+      C_Initialize (C, C_Path'Address, Buffer_Size, Event'Address, Crw'Address);
+      C.Tag := Standard.C.Uint32_T'Val (Session_Id'Pos (Tag) - Session_Id'Pos (Session_Id'First));
    end Initialize;
 
    --------------
@@ -182,9 +183,10 @@ is
          Global        => null,
          Post          => not Initialized (T);
    begin
-      if Initialized (C) then
-         C_Finalize (C);
+      if not Initialized (C) then
+         return;
       end if;
+      C_Finalize (C);
    end Finalize;
 
    -------------

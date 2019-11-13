@@ -17,9 +17,10 @@ is
    is
       C_Name : constant String := (if Name'Length > 0 then Name else "config") & Character'First;
    begin
-      if not Initialized (C) then
-         Cxx.Configuration.Client.Initialize (C.Instance, Cap, C_Parse'Address, C_Name'Address);
+      if Initialized (C) then
+         return;
       end if;
+      Cxx.Configuration.Client.Initialize (C.Instance, Cap, C_Parse'Address, C_Name'Address);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
@@ -31,9 +32,10 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Cxx.Configuration.Client.Finalize (C.Instance);
+      if not Initialized (C) then
+         return;
       end if;
+      Cxx.Configuration.Client.Finalize (C.Instance);
    end Finalize;
 
    procedure C_Parse (Ptr : System.Address;
