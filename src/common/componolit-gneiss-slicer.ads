@@ -11,7 +11,7 @@ is
       First : Index;
       Last  : Index;
    end record with
-      Dynamic_Predicate => First <= Last;
+      Dynamic_Predicate => Slice.First <= Slice.Last;
 
    function Create (Range_First  : Index;
                     Range_Last   : Index;
