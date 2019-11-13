@@ -39,10 +39,10 @@ is
    end Finalize;
 
    procedure Concatenate (C : in out Client_Session;
-                  S :        String);
+                          S :        String);
 
    procedure Concatenate (C : in out Client_Session;
-                  S :        String)
+                          S :        String)
    is
    begin
       for O of S loop
