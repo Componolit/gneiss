@@ -16,7 +16,7 @@ is
    procedure Write (C : Cxx.Log.Client.Class;
                     M : String) with
       Pre => Initialized (C)
-      and then M'Length > 0;
+             and then M'Length > 0;
 
    procedure C_Write (C : Cxx.Log.Client.Class;
                       M : String) with
@@ -24,7 +24,7 @@ is
 
    procedure Buffer (C : in out Client_Session;
                      M :        String) with
-      Pre => Initialized (C),
+      Pre  => Initialized (C),
       Post => Initialized (C);
 
    procedure Initialize (C              : in out Client_Session;
@@ -111,7 +111,6 @@ is
                      M :        String)
    is
    begin
-
       if M'Length = 0 then
          return;
       end if;
@@ -128,7 +127,7 @@ is
    procedure Write (C : Cxx.Log.Client.Class;
                     M : String)
    is
-      Len    : constant Positive := Positive (Cxx.Log.Client.Maximum_Message_Length (C));
+      Len    : constant Positive     := Positive (Cxx.Log.Client.Maximum_Message_Length (C));
       Slicer : String_Slicer.Context := String_Slicer.Create (M'First, M'Last, Len);
       Slice  : String_Slicer.Slice;
    begin
