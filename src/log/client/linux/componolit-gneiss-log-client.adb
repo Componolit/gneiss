@@ -36,10 +36,10 @@ is
       end if;
    end Finalize;
 
-   procedure Cat (C : in out Client_Session;
+   procedure Concatenate (C : in out Client_Session;
                   S :        String);
 
-   procedure Cat (C : in out Client_Session;
+   procedure Concatenate (C : in out Client_Session;
                   S :        String)
    is
    begin
@@ -50,7 +50,7 @@ is
          C.Buffer (C.Cursor) := Internal.Log.Unsigned_Character (Character'Pos (O));
          C.Cursor            := C.Cursor + 1;
       end loop;
-   end Cat;
+   end Concatenate;
 
    ----------
    -- Info --
@@ -61,7 +61,7 @@ is
                    Newline :        Boolean := True)
    is
    begin
-      Cat (C, "Info: " & Msg);
+      Concatenate (C, "Info: " & Msg);
       if Newline then
          Flush (C);
       end if;
@@ -76,7 +76,7 @@ is
                       Newline :        Boolean := True)
    is
    begin
-      Cat (C, "Warning: " & Msg);
+      Concatenate (C, "Warning: " & Msg);
       if Newline then
          Flush (C);
       end if;
@@ -91,7 +91,7 @@ is
                     Newline :        Boolean := True)
    is
    begin
-      Cat (C, "Error: " & Msg);
+      Concatenate (C, "Error: " & Msg);
       if Newline then
          Flush (C);
       end if;
