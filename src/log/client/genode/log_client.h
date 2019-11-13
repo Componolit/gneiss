@@ -16,7 +16,6 @@ namespace Log{
             void initialize(void *env, const char *label);
             void finalize();
             void write(const char *message);
-            void flush();
             Genode::uint64_t maximum_message_length();
     };
 }
