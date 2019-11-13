@@ -12,12 +12,16 @@ gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clea
 
 set -e
 
+echo prove unit componolit-gneiss-strings
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -u componolit-gneiss-strings
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux --clean
+echo prove test fifo
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=fifo -u component
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=fifo -u component --clean
+echo prove test hello_world
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component --clean
+echo prove test slicer
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=slicer -u component
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=slicer -u component --clean
 
