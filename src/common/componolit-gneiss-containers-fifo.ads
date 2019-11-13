@@ -1,3 +1,13 @@
+--
+--  @summary Generic fifo queue
+--  @author  Johannes Kliemann
+--  @date    2019-10-15
+--
+--  Copyright (C) 2019 Componolit GmbH
+--
+--  This file is part of Gneiss, which is distributed under the terms of the
+--  GNU Affero General Public License version 3.
+--
 
 generic
    type T is private;
