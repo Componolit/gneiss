@@ -45,7 +45,7 @@ is
          Import,
          Convention => C,
          External_Name => "print_message";
-      Label : String := Gns.Strings.Image (I) & Character'First;
+      Label : String := Gns.Strings.Image (I) & ASCII.NUL;
    begin
       if
          Gns.Message.Initialized (Client (I))
@@ -55,7 +55,7 @@ is
          for I in Message'Range loop
             M_Str (I) := Character'Val (Message (I));
          end loop;
-         M_Str (M_Str'Last) := Character'First;
+         M_Str (M_Str'Last) := ASCII.NUL;
          Print (Label, M_Str);
       end if;
    end Check_And_Print;
