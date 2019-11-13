@@ -15,6 +15,7 @@ is
    procedure Construct (Cap : Gns.Types.Capability)
    is
       S : Slicer.Context := Slicer.Create (Alphabet'First, Alphabet'Last, 5);
+      R : Slicer.Slice;
    begin
       Gns.Log.Client.Initialize (Log, Cap, "log_slicer");
       if not Gns.Log.Initialized (Log) then
@@ -24,9 +25,21 @@ is
       for I in Alphabet'Range loop
          Alphabet (I) := Character'Val (I + 64);
       end loop;
+      --  R := Slicer.Get_Range (S);
+      --  pragma Assert (R.First = Alphabet'First);
+      --  pragma Assert (R.Last = Alphabet'Last);
+      --  pragma Assert (Slicer.Get_Length (S) = 5);
+      --  R := Slicer.Get_Slice (S);
+      --  pragma Assert (R.Last - R.First + 1 <= Slicer.Get_Length (S));
+      --  pragma Assert (Alphabet (R.First .. R.Last)'Length <= Slicer.Get_Length (S));
       loop
          pragma Loop_Invariant (Gns.Log.Initialized (Log));
-         Gns.Log.Client.Info (Log, Alphabet (Slicer.First (S) .. Slicer.Last (S)));
+         pragma Loop_Invariant (Slicer.Get_Range (S).First = Alphabet'First);
+         pragma Loop_Invariant (Slicer.Get_Range (S).Last = Alphabet'Last);
+         --  pragma Loop_Invariant (Slicer.Get_Length (S) = 5);
+         --  pragma Loop_Invariant (Alphabet (R.First .. R.Last)'Length <= Slicer.Get_Length (S));
+         R := Slicer.Get_Slice (S);
+         Gns.Log.Client.Info (Log, Alphabet (R.First .. R.Last));
          exit when not Slicer.Has_Next (S);
          Slicer.Next (S);
       end loop;
