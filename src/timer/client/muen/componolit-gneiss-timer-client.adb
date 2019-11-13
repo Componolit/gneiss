@@ -83,10 +83,11 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Reg.Registry (C.Index) := Reg.Session_Entry'(Kind => CIM.None);
-         C.Index := CIM.Invalid_Index;
+      if not Initialized (C) then
+         return;
       end if;
+      Reg.Registry (C.Index) := Reg.Session_Entry'(Kind => CIM.None);
+      C.Index := CIM.Invalid_Index;
    end Finalize;
 
 end Componolit.Gneiss.Timer.Client;

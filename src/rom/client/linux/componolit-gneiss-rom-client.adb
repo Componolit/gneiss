@@ -27,9 +27,10 @@ is
       C_Name      : constant String         := Name & Character'First;
       C_Name_Addr : constant System.Address := (if Name'Length > 0 then C_Name'Address else System.Null_Address);
    begin
-      if not Initialized (C) then
-         C_Initialize (C, Cap, C_Parse'Address, C_Name_Addr);
+      if Initialized (C) then
+         return;
       end if;
+      C_Initialize (C, Cap, C_Parse'Address, C_Name_Addr);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
@@ -85,13 +86,14 @@ is
          Global        => null;
       --  FIXME: model platform state (freeing memory)
    begin
-      if Initialized (C) then
-         C_Finalize (C);
-         C.Ifd   := -1;
-         C.Parse := System.Null_Address;
-         C.Cap   := System.Null_Address;
-         C.Name  := System.Null_Address;
+      if not Initialized (C) then
+         return;
       end if;
+      C_Finalize (C);
+      C.Ifd   := -1;
+      C.Parse := System.Null_Address;
+      C.Cap   := System.Null_Address;
+      C.Name  := System.Null_Address;
    end Finalize;
 
 end Componolit.Gneiss.Rom.Client;

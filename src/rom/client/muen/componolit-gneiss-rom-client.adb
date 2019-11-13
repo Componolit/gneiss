@@ -18,9 +18,10 @@ is
       Rom_Name : constant Musinfo.Name_Type :=
          (if Name = "" then CIM.String_To_Name ("config") else CIM.String_To_Name (Name));
    begin
-      if not Initialized (C) and then Musinfo.Instance.Is_Valid then
-         C.Mem := Musinfo.Instance.Memory_By_Name (Rom_Name);
+      if Initialized (C) or else not Musinfo.Instance.Is_Valid then
+         return;
       end if;
+      C.Mem := Musinfo.Instance.Memory_By_Name (Rom_Name);
    end Initialize;
 
    procedure Load (C : in out Client_Session)
@@ -40,9 +41,10 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         C.Mem := Musinfo.Null_Memregion;
+      if not Initialized (C) then
+         return;
       end if;
+      C.Mem := Musinfo.Null_Memregion;
    end Finalize;
 
 end Componolit.Gneiss.Rom.Client;

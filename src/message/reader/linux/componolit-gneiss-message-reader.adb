@@ -73,12 +73,13 @@ is
    is
       Success : Boolean;
    begin
-      if Initialized (R) then
-         if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
-            Gns.Platform.Resource_Delete_Event (R.Resource, Event_Address, Success);
-         end if;
-         R.Resource := Gns.Platform.Invalid_Resource;
+      if not Initialized (R) then
+         return;
       end if;
+      if Gns.Platform.Valid_Resource_Descriptor (R.Resource) then
+         Gns.Platform.Resource_Delete_Event (R.Resource, Event_Address, Success);
+      end if;
+      R.Resource := Gns.Platform.Invalid_Resource;
    end Finalize;
 
 end Componolit.Gneiss.Message.Reader;

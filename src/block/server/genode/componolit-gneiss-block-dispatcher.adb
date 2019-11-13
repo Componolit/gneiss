@@ -36,9 +36,10 @@ is
    procedure Finalize (D : in out Dispatcher_Session)
    is
    begin
-      if Initialized (D) then
-         Cxx.Block.Dispatcher.Finalize (D.Instance);
+      if not Initialized (D) then
+         return;
       end if;
+      Cxx.Block.Dispatcher.Finalize (D.Instance);
    end Finalize;
 
    procedure Register (D : in out Dispatcher_Session)
