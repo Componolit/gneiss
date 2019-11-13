@@ -17,13 +17,11 @@ struct Log_session
 {
     enum {WRITE_BUFFER = Genode::Log_session::MAX_STRING_LEN - 1};
     Genode::Log_connection _log;
-    char _buffer[WRITE_BUFFER + 1];
 
     Log_session(Genode::Env &env, const char *label) :
         _log(env, label)
     {
         TLOG("label=", label);
-        Genode::memset(_buffer, 0, sizeof(_buffer));
     }
 };
 
@@ -62,24 +60,7 @@ static Log_session *log(void *session)
 void Cai::Log::Client::write(const char *message)
 {
     TLOG("message=", message);
-    if(Genode::strlen(log(_session)->_buffer) < Log_session::WRITE_BUFFER){
-        Genode::memcpy(&(log(_session)->_buffer[Genode::strlen(log(_session)->_buffer)]),
-                       message,
-                       Genode::min(Genode::strlen(message),
-                                   Log_session::WRITE_BUFFER - Genode::strlen(log(_session)->_buffer)));
-    }else{
-        flush();
-        if(Genode::strlen(message) < Log_session::WRITE_BUFFER){
-            write(message);
-        }
-    }
-}
-
-void Cai::Log::Client::flush()
-{
-    TLOG();
-    log(_session)->_log.write(log(_session)->_buffer);
-    Genode::memset(log(_session)->_buffer, 0, sizeof(Log_session::_buffer));
+    log(_session)->_log.write(message);
 }
 
 Genode::uint64_t Cai::Log::Client::maximum_message_length()
