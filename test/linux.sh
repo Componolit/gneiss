@@ -18,13 +18,17 @@ gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=fifo -u component --clean
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component
 gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=hello_world -u component --clean
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=slicer -u component
+gnatprove -P gneiss.gpr -j0 --level=2 --checks-as-errors -XPLATFORM=linux -XTEST=slicer -u component --clean
 
 gprbuild -P gneiss.gpr -XPLATFORM=linux -XTEST=init
 gprbuild -P gneiss.gpr -XPLATFORM=linux -XTEST=hello_world
 gprbuild -P gneiss.gpr -XPLATFORM=linux -XTEST=message_server
+gprbuild -P gneiss.gpr -XPLATFORM=linux -XTEST=slicer
 
 export LD_LIBRARY_PATH=build/libcomponents:ada-runtime/obj/adalib
 expect test/hello_world/hello_world.expect
+expect test/slicer/slicer.expect
 
 gprbuild -P test/aunit/test.gpr
 ./test/aunit/test
