@@ -24,18 +24,6 @@ is
    --  @return True if C is initialized
    function Initialized (C : Client_Session) return Boolean;
 
-   --  Minimum message length, guaranteed by all platforms
-   Minimum_Message_Length : constant Positive := 78 with Ghost;
-
-   --  Maximum message length the platform can handle in a single message
-   --
-   --  @param C  Client session instance
-   --  @return Maximum message length for Info, Warning and Error
-   function Maximum_Message_Length (C : Client_Session) return Integer with
-     Annotate => (GNATprove, Terminating),
-      Pre  => Initialized (C),
-      Post => Maximum_Message_Length'Result > Minimum_Message_Length;
-
 private
 
    type Client_Session is new Componolit.Gneiss.Internal.Log.Client_Session;

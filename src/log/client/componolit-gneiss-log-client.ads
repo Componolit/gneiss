@@ -37,10 +37,8 @@ is
    procedure Info (C       : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True) with
-      Pre  => Initialized (C) and then (Msg'Length <= Minimum_Message_Length
-                                        or else Msg'Length <= Maximum_Message_Length (C)),
-      Post => Initialized (C)
-              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
+      Pre  => Initialized (C),
+      Post => Initialized (C);
 
    --  Print warning message
    --
@@ -50,10 +48,8 @@ is
    procedure Warning (C       : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True) with
-      Pre  => Initialized (C) and then (Msg'Length <= Minimum_Message_Length
-                                        or else Msg'Length <= Maximum_Message_Length (C)),
-      Post => Initialized (C)
-              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
+      Pre  => Initialized (C),
+      Post => Initialized (C);
 
    --  Print error message
    --
@@ -63,17 +59,14 @@ is
    procedure Error (C       : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True) with
-      Pre  => Initialized (C) and then (Msg'Length <= Minimum_Message_Length
-                                        or else Msg'Length <= Maximum_Message_Length (C)),
-      Post => Initialized (C)
-              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
+      Pre  => Initialized (C),
+      Post => Initialized (C);
 
    --  Flush all messages to make sure they're printed
    --
    --  @param C        Client session instance
    procedure Flush (C : in out Client_Session) with
       Pre  => Initialized (C),
-      Post => Initialized (C)
-              and Maximum_Message_Length (C)'Old = Maximum_Message_Length (C);
+      Post => Initialized (C);
 
 end Componolit.Gneiss.Log.Client;
