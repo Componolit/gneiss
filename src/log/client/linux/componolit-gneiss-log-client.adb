@@ -19,9 +19,10 @@ is
                          Label          :        String)
    is
    begin
-      if not Initialized (C) then
-         Writer.Initialize (C.Session, Cap, Label);
+      if Initialized (C) then
+         return;
       end if;
+      Writer.Initialize (C.Session, Cap, Label);
    end Initialize;
 
    --------------
@@ -31,9 +32,10 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Writer.Finalize (C.Session);
+      if not Initialized (C) then
+         return;
       end if;
+      Writer.Finalize (C.Session);
    end Finalize;
 
    procedure Concatenate (C : in out Client_Session;

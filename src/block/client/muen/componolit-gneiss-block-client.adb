@@ -197,10 +197,7 @@ is
       Reader     : Blk.Client_Response_Channel.Reader_Type := Blk.Client_Response_Channel.Null_Reader;
       Res        : Blk.Client_Response_Channel.Result_Type;
    begin
-      if Initialized (C) then
-         return;
-      end if;
-      if not Musinfo.Instance.Is_Valid then
+      if Initialized (C) or else not Musinfo.Instance.Is_Valid then
          return;
       end if;
       if Path'Length <= Blk.Session_Name'Length then
@@ -257,10 +254,11 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Blk.Client_Request_Channel.Deactivate (C.Request_Memory);
-         Set_Null (C);
+      if not Initialized (C) then
+         return;
       end if;
+      Blk.Client_Request_Channel.Deactivate (C.Request_Memory);
+      Set_Null (C);
    end Finalize;
 
    procedure Enqueue (C : in out Client_Session;

@@ -47,9 +47,10 @@ is
    procedure Finalize (W : in out Writer_Session)
    is
    begin
-      if Initialized (W) then
-         W.Resource := Gns.Platform.Invalid_Resource;
+      if not Initialized (W) then
+         return;
       end if;
+      W.Resource := Gns.Platform.Invalid_Resource;
    end Finalize;
 
 end Componolit.Gneiss.Message.Writer;

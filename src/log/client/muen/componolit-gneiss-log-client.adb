@@ -111,13 +111,14 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Initialized (C) then
-         Deactivate_Channel (C.Mem);
-         C.Name   := Musinfo.Null_Name;
-         C.Mem    := Musinfo.Null_Memregion;
-         C.Index  := Debuglog.Types.Message_Index'First;
-         C.Buffer := Debuglog.Types.Null_Data;
+      if not Initialized (C) then
+         return;
       end if;
+      Deactivate_Channel (C.Mem);
+      C.Name   := Musinfo.Null_Name;
+      C.Mem    := Musinfo.Null_Memregion;
+      C.Index  := Debuglog.Types.Message_Index'First;
+      C.Buffer := Debuglog.Types.Null_Data;
    end Finalize;
 
    function Get_Label (C : Client_Session) return String;

@@ -15,9 +15,10 @@ is
          Convention => C,
          External_Name => "timer_client_initialize";
    begin
-      if not Initialized (C) then
-         C_Initialize (C.Instance, Cap, Event'Address);
+      if Initialized (C) then
+         return;
       end if;
+      C_Initialize (C.Instance, Cap, Event'Address);
    end Initialize;
 
    function Clock (C : Client_Session) return Time with
@@ -55,10 +56,11 @@ is
          External_Name => "timer_client_finalize",
          Global        => null;
    begin
-      if Initialized (C) then
-         C_Finalize (C.Instance);
-         C.Instance := System.Null_Address;
+      if not Initialized (C) then
+         return;
       end if;
+      C_Finalize (C.Instance);
+      C.Instance := System.Null_Address;
    end Finalize;
 
 end Componolit.Gneiss.Timer.Client;
