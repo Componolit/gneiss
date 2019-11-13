@@ -189,25 +189,10 @@ is
    is
       pragma Unreferenced (S);
       pragma Unreferenced (B);
-      Max : Natural;
    begin
       if Componolit.Gneiss.Log.Initialized (Log) then
-         Max := Componolit.Gneiss.Log.Maximum_Message_Length (Log);
          Componolit.Gneiss.Log.Client.Info (Log, "Server initialize with label: ");
-         if L'Length <= Max then
-            Componolit.Gneiss.Log.Client.Info (Log, L);
-         else
-            for I in Natural range 0 .. Natural'Last / Max - L'First - 1 loop
-               pragma Loop_Invariant (Componolit.Gneiss.Log.Initialized (Log));
-               pragma Loop_Invariant (Max = Componolit.Gneiss.Log.Maximum_Message_Length (Log));
-               if L'First + (I + 1) * Max <= L'Last then
-                  Componolit.Gneiss.Log.Client.Info (Log, L (L'First + I * Max .. L'First + (I + 1) * Max - 1));
-               else
-                  Componolit.Gneiss.Log.Client.Info (Log, L (L'First + I * Max .. L'Last));
-                  exit;
-               end if;
-            end loop;
-         end if;
+         Componolit.Gneiss.Log.Client.Info (Log, L);
          Componolit.Gneiss.Log.Client.Info (Log, "Initialized");
          Ready := True;
       end if;
