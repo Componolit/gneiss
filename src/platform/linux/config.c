@@ -22,7 +22,7 @@ int parse_resources(xmlNode *root, list_t resources)
         res.type = xmlGetProp(node, "type");
         res.name = xmlGetProp(node, "name");
         if(!res.name || !res.type){
-            fprintf(stderr, "resource without name or type\n");
+            fprintf(stderr, "resource without name or type at line %li\n", xmlGetLineNo(node));
             return 1;
         }
         value = xmlGetProp(node, "read");
@@ -49,14 +49,14 @@ int parse_components(xmlNode *root, list_t components)
         }
         comp.name = xmlGetProp(node, "name");
         if(!comp.name){
-            fprintf(stderr, "component without name\n");
+            fprintf(stderr, "component without name at line %li\n", xmlGetLineNo(node));
             return 1;
         }
         comp.file = xmlGetProp(node, "file");
         if(!comp.file){
-            comp.file = (char *)malloc(strlen(comp.name) + 17);
+            comp.file = (char *)malloc(strlen(comp.name) + 17); //length of name + libcomponent_ + .so
             if(!comp.file){
-                perror("component file");
+                perror("malloc component file");
                 return 1;
             }
             memset(comp.file, 0, strlen(comp.name) + 17);
@@ -76,7 +76,7 @@ int parse_components(xmlNode *root, list_t components)
             resd.label = xmlGetProp(res, "label");
             mode = xmlGetProp(res, "mode");
             if(!resd.type || !resd.name || !resd.label || !mode){
-                fprintf(stderr, "ignoring invalid resource\n");
+                fprintf(stderr, "ignoring invalid resource at line %li\n", xmlGetLineNo(res));
                 continue;
             }
             if(!strcmp(mode, "read")){
@@ -86,8 +86,8 @@ int parse_components(xmlNode *root, list_t components)
             }else if(!strcmp(mode, "read_write")){
                 resd.mode = RESOURCE_READ_WRITE;
             }else{
-                fprintf(stderr, "resource %s of %s has invalid mode %s\n",
-                        resd.name, comp.name, mode);
+                fprintf(stderr, "resource %s of %s has invalid mode %s at line %li\n",
+                        resd.name, comp.name, mode, xmlGetLineNo (res));
                 continue;
             }
             TRACE("add resource desc %s %s %s %s\n", resd.type, resd.name, resd.label, mode);
