@@ -25,6 +25,9 @@ is
       for I in Alphabet'Range loop
          Alphabet (I) := Character'Val (I + 64);
       end loop;
+      --  As this is only a test the commented out lines are kept
+      --  to help proving the test in case the proof fails in the future.
+      --
       --  R := Slicer.Get_Range (S);
       --  pragma Assert (R.First = Alphabet'First);
       --  pragma Assert (R.Last = Alphabet'Last);
