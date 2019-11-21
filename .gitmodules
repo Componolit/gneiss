@@ -1,3 +1,6 @@
 [submodule "ada-runtime"]
 	path = ada-runtime
 	url = https://github.com/Componolit/ada-runtime.git
+[submodule "lib/basalt"]
+	path = lib/basalt
+	url = https://github.com/Componolit/basalt.git
