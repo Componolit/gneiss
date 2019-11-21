@@ -1,7 +1,7 @@
 
 with Componolit.Gneiss.Message;
 with Componolit.Gneiss.Message.Reader;
-with Componolit.Gneiss.Strings;
+with Basalt.Strings;
 
 package body Component with
    SPARK_Mode
@@ -24,7 +24,7 @@ is
    is
    begin
       for I in Client'Range loop
-         Message_Client.Initialize (Client (I), Cap, Gns.Strings.Image (I));
+         Message_Client.Initialize (Client (I), Cap, Basalt.Strings.Image (I));
       end loop;
    end Construct;
 
@@ -45,7 +45,7 @@ is
          Import,
          Convention => C,
          External_Name => "print_message";
-      Label : String := Gns.Strings.Image (I) & ASCII.NUL;
+      Label : String := Basalt.Strings.Image (I) & ASCII.NUL;
    begin
       if
          Gns.Message.Initialized (Client (I))
