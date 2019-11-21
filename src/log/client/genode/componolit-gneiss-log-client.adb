@@ -1,14 +1,14 @@
 
 with Cxx;
 with Cxx.Log.Client;
-with Componolit.Gneiss.Slicer;
+with Basalt.Slicer;
 
 package body Componolit.Gneiss.Log.Client with
    SPARK_Mode
 is
    use type Cxx.Bool;
 
-   package String_Slicer is new Componolit.Gneiss.Slicer (Positive);
+   package String_Slicer is new Basalt.Slicer (Positive);
 
    function Initialized (C : Cxx.Log.Client.Class) return Boolean is
       (Cxx.Log.Client.Initialized (C) = Cxx.Bool'Val (1));
