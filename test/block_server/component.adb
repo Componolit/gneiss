@@ -1,5 +1,5 @@
 
-with Componolit.Gneiss.Log.Client;
+with Gneiss.Log.Client;
 
 package body Component with
    SPARK_Mode
@@ -8,7 +8,7 @@ is
    use type Block.Request_Status;
    use type Block.Request_Kind;
 
-   Log         : Componolit.Gneiss.Log.Client_Session;
+   Log         : Gneiss.Log.Client_Session;
    Dispatcher  : Block.Dispatcher_Session;
    Server      : Block.Server_Session;
 
@@ -26,21 +26,21 @@ is
 
    Ready : Boolean := False;
 
-   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Types.Capability)
    is
    begin
-      if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_block_server");
+      if not Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Initialize (Log, Cap, "log_block_server");
       end if;
-      if Componolit.Gneiss.Log.Initialized (Log) then
+      if Gneiss.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap, 42);
          end if;
          if Block.Initialized (Dispatcher) then
             Block_Dispatcher.Register (Dispatcher);
-            Componolit.Gneiss.Log.Client.Info (Log, "Dispatcher initialized");
+            Gneiss.Log.Client.Info (Log, "Dispatcher initialized");
          else
-            Componolit.Gneiss.Log.Client.Error (Log, "Failed to initialize dispatcher");
+            Gneiss.Log.Client.Error (Log, "Failed to initialize dispatcher");
             Main.Vacate (Cap, Main.Failure);
          end if;
       else
@@ -51,8 +51,8 @@ is
    procedure Destruct
    is
    begin
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Finalize (Log);
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
@@ -190,10 +190,10 @@ is
       pragma Unreferenced (S);
       pragma Unreferenced (B);
    begin
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Info (Log, "Server initialize with label: ");
-         Componolit.Gneiss.Log.Client.Info (Log, L);
-         Componolit.Gneiss.Log.Client.Info (Log, "Initialized");
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Info (Log, "Server initialize with label: ");
+         Gneiss.Log.Client.Info (Log, L);
+         Gneiss.Log.Client.Info (Log, "Initialized");
          Ready := True;
       end if;
       Ram_Disk := (others => 0);

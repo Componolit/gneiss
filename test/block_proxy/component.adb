@@ -1,6 +1,6 @@
 
-with Componolit.Gneiss.Log;
-with Componolit.Gneiss.Log.Client;
+with Gneiss.Log;
+with Gneiss.Log.Client;
 with Basalt.Strings_Generic;
 
 package body Component is
@@ -15,29 +15,29 @@ package body Component is
    Client : Block.Client_Session;
    Server : Block.Server_Session;
 
-   Capability : Componolit.Gneiss.Types.Capability;
+   Capability : Gneiss.Types.Capability;
 
-   Log : Componolit.Gneiss.Log.Client_Session;
+   Log : Gneiss.Log.Client_Session;
 
    function Image is new Basalt.Strings_Generic.Image_Modular (Byte);
    function Image is new Basalt.Strings_Generic.Image_Modular (Block.Id);
    function Image is new Basalt.Strings_Generic.Image_Ranged (Unsigned_Long);
 
-   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Types.Capability)
    is
    begin
       Capability := Cap;
-      if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_block_proxy");
+      if not Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Initialize (Log, Cap, "log_block_proxy");
       end if;
-      if Componolit.Gneiss.Log.Initialized (Log) then
+      if Gneiss.Log.Initialized (Log) then
          if not Block.Initialized (Dispatcher) then
             Block_Dispatcher.Initialize (Dispatcher, Cap, 42);
          end if;
          if Block.Initialized (Dispatcher) then
             Block_Dispatcher.Register (Dispatcher);
          else
-            Componolit.Gneiss.Log.Client.Error (Log, "Failed to initialize Dispatcher");
+            Gneiss.Log.Client.Error (Log, "Failed to initialize Dispatcher");
             Main.Vacate (Capability, Main.Failure);
          end if;
       else
@@ -48,8 +48,8 @@ package body Component is
    procedure Destruct
    is
    begin
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Finalize (Log);
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
@@ -69,7 +69,7 @@ package body Component is
    procedure Print_Buffer (I : Request_Index;
                            D : Buffer;
                            E : Boolean) with
-      Pre => Componolit.Gneiss.Log.Initialized (Log)
+      Pre => Gneiss.Log.Initialized (Log)
              and then Block_Server.Status (Cache (I).S) = Block.Pending
              and then Block_Server.Kind (Cache (I).S) in Block.Read | Block.Write;
 
@@ -85,12 +85,12 @@ package body Component is
          return;
       end if;
       if Block_Server.Kind (Cache (I).S) = Block.Write then
-         Componolit.Gneiss.Log.Client.Info (Log, "Write @ " & Image (Block_Server.Start (Cache (I).S)));
+         Gneiss.Log.Client.Info (Log, "Write @ " & Image (Block_Server.Start (Cache (I).S)));
       else
-         Componolit.Gneiss.Log.Client.Info (Log, "Read @ " & Image (Block_Server.Start (Cache (I).S)));
+         Gneiss.Log.Client.Info (Log, "Read @ " & Image (Block_Server.Start (Cache (I).S)));
       end if;
       while J < D'Last and then D'Last - J > 16 loop
-         Componolit.Gneiss.Log.Client.Info
+         Gneiss.Log.Client.Info
             (Log, Image (J - D'First, 16, False) & ": "
                   & Pad (Image (D (J), 16, False))      & Pad (Image (D (J + 1), 16, False)) & " "
                   & Pad (Image (D (J + 2), 16, False))  & Pad (Image (D (J + 3), 16, False)) & " "

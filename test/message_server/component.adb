@@ -1,6 +1,6 @@
 
-with Componolit.Gneiss.Message;
-with Componolit.Gneiss.Message.Reader;
+with Gneiss.Message;
+with Gneiss.Message.Reader;
 with Basalt.Strings;
 
 package body Component with
