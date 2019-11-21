@@ -1,7 +1,7 @@
 
 with Componolit.Gneiss.Log;
 with Componolit.Gneiss.Log.Client;
-with Componolit.Gneiss.Strings_Generic;
+with Basalt.Strings_Generic;
 
 package body Component is
 
@@ -19,9 +19,9 @@ package body Component is
 
    Log : Componolit.Gneiss.Log.Client_Session;
 
-   function Image is new Componolit.Gneiss.Strings_Generic.Image_Modular (Byte);
-   function Image is new Componolit.Gneiss.Strings_Generic.Image_Modular (Block.Id);
-   function Image is new Componolit.Gneiss.Strings_Generic.Image_Ranged (Unsigned_Long);
+   function Image is new Basalt.Strings_Generic.Image_Modular (Byte);
+   function Image is new Basalt.Strings_Generic.Image_Modular (Block.Id);
+   function Image is new Basalt.Strings_Generic.Image_Ranged (Unsigned_Long);
 
    procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
    is

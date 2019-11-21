@@ -1,9 +1,0 @@
-<config>
-    <resource type="Message" name="test1" read="1" write="1"/>
-    <component name="message_server" file="libcomponent_message_server.so">
-        <resource type="Message" name="test1" label="1" mode="read"/>
-    </component>
-    <component name="slicer" file="libcomponent_slicer.so">
-        <resource type="Message" name="test1" label="log_slicer" mode="write"/>
-    </component>
-</config>

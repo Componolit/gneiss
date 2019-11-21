@@ -3,7 +3,7 @@ with Componolit.Gneiss.Block;
 with Componolit.Gneiss.Block.Client;
 with Componolit.Gneiss.Log;
 with Componolit.Gneiss.Log.Client;
-with Componolit.Gneiss.Strings_Generic;
+with Basalt.Strings_Generic;
 
 package body Component with
   SPARK_Mode
@@ -23,8 +23,8 @@ is
                    D :        String) with
       Pre => Block.Initialized (C);
 
-   function Image is new Componolit.Gneiss.Strings_Generic.Image_Ranged (Block.Count);
-   function Image is new Componolit.Gneiss.Strings_Generic.Image_Ranged (Block.Size);
+   function Image is new Basalt.Strings_Generic.Image_Ranged (Block.Count);
+   function Image is new Basalt.Strings_Generic.Image_Ranged (Block.Size);
 
    package Block_Client is new Block.Client (Run, Read, Write);
 

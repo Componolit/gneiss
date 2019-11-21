@@ -3,7 +3,7 @@ with Componolit.Gneiss.Log;
 with Componolit.Gneiss.Log.Client;
 with Componolit.Gneiss.Timer;
 with Componolit.Gneiss.Timer.Client;
-with Componolit.Gneiss.Strings;
+with Basalt.Strings;
 
 package body Component with
    SPARK_Mode
@@ -34,7 +34,7 @@ is
          Timer_Client.Set_Timeout (Timer, 60.0);
          Timer_Client.Set_Timeout (Timer, 1.5);
          Componolit.Gneiss.Log.Client.Info
-            (Log, "Time: " & Componolit.Gneiss.Strings.Image (Duration (Timer_Client.Clock (Timer))));
+            (Log, "Time: " & Basalt.Strings.Image (Duration (Timer_Client.Clock (Timer))));
       else
          Main.Vacate (Cap, Main.Failure);
       end if;
@@ -48,7 +48,7 @@ is
          and Componolit.Gneiss.Timer.Initialized (Timer)
       then
          Componolit.Gneiss.Log.Client.Info
-            (Log, "Time: " & Componolit.Gneiss.Strings.Image (Duration (Timer_Client.Clock (Timer))));
+            (Log, "Time: " & Basalt.Strings.Image (Duration (Timer_Client.Clock (Timer))));
          Main.Vacate (Capability, Main.Success);
       else
          Main.Vacate (Capability, Main.Failure);
