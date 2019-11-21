@@ -1,8 +1,8 @@
 
-with Componolit.Gneiss.Block;
-with Componolit.Gneiss.Block.Client;
-with Componolit.Gneiss.Log;
-with Componolit.Gneiss.Log.Client;
+with Gneiss.Block;
+with Gneiss.Block.Client;
+with Gneiss.Log;
+with Gneiss.Log.Client;
 with Basalt.Strings_Generic;
 
 package body Component with
@@ -11,7 +11,7 @@ is
 
    type Request_Id is mod 8;
 
-   package Block is new Componolit.Gneiss.Block (Character, Positive, String, Integer, Request_Id);
+   package Block is new Gneiss.Block (Character, Positive, String, Integer, Request_Id);
 
    procedure Write (C : in out Block.Client_Session;
                     R :        Request_Id;
@@ -45,8 +45,8 @@ is
    end record;
 
    Client : Block.Client_Session;
-   Log    : Componolit.Gneiss.Log.Client_Session;
-   P_Cap  : Componolit.Gneiss.Types.Capability;
+   Log    : Gneiss.Log.Client_Session;
+   P_Cap  : Gneiss.Types.Capability;
 
    Request_Count : constant Integer := 32;
 
@@ -59,10 +59,10 @@ is
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
       Pre  => Block.Initialized (Client)
-              and then Componolit.Gneiss.Log.Initialized (Log)
+              and then Gneiss.Log.Initialized (Log)
               and then Operation in Block.Read .. Block.Write,
       Post => Block.Initialized (Client)
-              and then Componolit.Gneiss.Log.Initialized (Log);
+              and then Gneiss.Log.Initialized (Log);
 
    procedure Write (C : in out Block.Client_Session;
                     R :        Request_Id;
@@ -74,8 +74,8 @@ is
       if Block_Client.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
          D := (others => Character'Val (33 + Integer (Block_Client.Start (Request_Cache (R)) mod 93)));
       else
-         if Componolit.Gneiss.Log.Initialized (Log) then
-            Componolit.Gneiss.Log.Client.Warning (Log, "Failed to calculate content");
+         if Gneiss.Log.Initialized (Log) then
+            Gneiss.Log.Client.Warning (Log, "Failed to calculate content");
          end if;
          D := (others => Character'First);
       end if;
@@ -103,7 +103,7 @@ is
                         if Block_Client.Length (Request_Cache (I)) = 1 then
                            Block_Client.Read (Client, Request_Cache (I));
                         else
-                           Componolit.Gneiss.Log.Client.Error (Log, "Read failed.");
+                           Gneiss.Log.Client.Error (Log, "Read failed.");
                         end if;
                         S.Acked := S.Acked + 1;
                      when others =>
@@ -111,7 +111,7 @@ is
                   end case;
                   Block_Client.Release (Client, Request_Cache (I));
                elsif Block_Client.Status (Request_Cache (I)) = Block.Error then
-                  Componolit.Gneiss.Log.Client.Error (Log, "Request failed");
+                  Gneiss.Log.Client.Error (Log, "Request failed");
                   Block_Client.Release (Client, Request_Cache (I));
                end if;
             end if;
@@ -137,17 +137,17 @@ is
                   when Block.Retry | Block.Out_Of_Memory =>
                      null;
                   when Block.Unsupported =>
-                     Componolit.Gneiss.Log.Client.Error (Log, "Cannot allocate request");
+                     Gneiss.Log.Client.Error (Log, "Cannot allocate request");
                      Main.Vacate (P_Cap, Main.Failure);
                end case;
             end if;
 
             pragma Loop_Invariant (Block.Initialized (Client));
-            pragma Loop_Invariant (Componolit.Gneiss.Log.Initialized (Log));
+            pragma Loop_Invariant (Gneiss.Log.Initialized (Log));
          end loop;
          Block_Client.Submit (Client);
       else
-         Componolit.Gneiss.Log.Client.Error (Log, "Failed to send requests. Invalid block size.");
+         Gneiss.Log.Client.Error (Log, "Failed to send requests. Invalid block size.");
       end if;
    end Single;
 
@@ -158,29 +158,29 @@ is
       pragma Unreferenced (C);
       pragma Unreferenced (R);
    begin
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Info (Log, "Read succeeded:");
-         Componolit.Gneiss.Log.Client.Info (Log, D);
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Info (Log, "Read succeeded:");
+         Gneiss.Log.Client.Info (Log, D);
       end if;
    end Read;
 
-   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Types.Capability)
    is
    begin
       P_Cap := Cap;
-      if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "log_block_client");
+      if not Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Initialize (Log, Cap, "log_block_client");
       end if;
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Info (Log, "Ada block test");
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Info (Log, "Ada block test");
          if not Block.Initialized (Client) then
             Block_Client.Initialize (Client, Cap, "/tmp/test_disk.img", 42);
          end if;
          if Block.Initialized (Client) then
-            if Componolit.Gneiss.Log.Initialized (Log) then
+            if Gneiss.Log.Initialized (Log) then
                --  FIXME: Calls of Image with explicit default parameters
                --  Componolit/Workarounds#2
-               Componolit.Gneiss.Log.Client.Info (Log, "Block device with "
+               Gneiss.Log.Client.Info (Log, "Block device with "
                                     & Image (Block.Block_Count (Client), 10, True)
                                     & " blocks of size "
                                     & Image (Block.Block_Size (Client), 10, True));
@@ -188,11 +188,11 @@ is
             if Block.Writable (Client) then
                Run;
             else
-               Componolit.Gneiss.Log.Client.Error (Log, "Block device not writable, cannot run test");
+               Gneiss.Log.Client.Error (Log, "Block device not writable, cannot run test");
                Main.Vacate (P_Cap, Main.Failure);
             end if;
          else
-            Componolit.Gneiss.Log.Client.Error (Log, "Failed to initialize Block session");
+            Gneiss.Log.Client.Error (Log, "Failed to initialize Block session");
             Main.Vacate (P_Cap, Main.Failure);
          end if;
       else
@@ -203,18 +203,18 @@ is
    procedure Run is
    begin
       if
-         Componolit.Gneiss.Log.Initialized (Log)
+         Gneiss.Log.Initialized (Log)
          and Block.Initialized (Client)
       then
          if not State_Finished (Write_State) then
-            Componolit.Gneiss.Log.Client.Info (Log, "Writing...");
+            Gneiss.Log.Client.Info (Log, "Writing...");
             Single (Write_State, Block.Write);
          end if;
          if
             State_Finished (Write_State)
             and not State_Finished (Read_State)
          then
-            Componolit.Gneiss.Log.Client.Info (Log, "Reading...");
+            Gneiss.Log.Client.Info (Log, "Reading...");
             Single (Read_State, Block.Read);
          end if;
          if
@@ -222,7 +222,7 @@ is
             and State_Finished (Read_State)
          then
             Main.Vacate (P_Cap, Main.Success);
-            Componolit.Gneiss.Log.Client.Info (Log, "Test finished.");
+            Gneiss.Log.Client.Info (Log, "Test finished.");
          end if;
       end if;
    end Run;
@@ -233,8 +233,8 @@ is
       if Block.Initialized (Client) then
          Block_Client.Finalize (Client);
       end if;
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Finalize (Log);
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Finalize (Log);
       end if;
    end Destruct;
 
