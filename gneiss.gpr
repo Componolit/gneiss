@@ -1,4 +1,5 @@
 with "switches";
+with "lib/basalt/basalt.gpr";
 
 project Gneiss is
 
@@ -8,7 +9,7 @@ project Gneiss is
    Test := external ("TEST", "");
    Custom_Runtime := external ("RUNTIME", "componolit");
 
-   Source := ("src", "src/common");
+   Source := ("src");
    Source_Platform := "src/platform";
    Source_Block := "src/block";
    Source_Block_Client := "src/block/client";
