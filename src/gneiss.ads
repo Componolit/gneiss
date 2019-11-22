@@ -9,5 +9,10 @@
 --  GNU Affero General Public License version 3.
 --
 
-package Gneiss is
+package Gneiss with
+   SPARK_Mode
+is
+
+   type Session_Status is (Uninitialized, Pending, Initialized);
+
 end Gneiss;
