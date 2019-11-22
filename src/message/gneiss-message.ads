@@ -11,29 +11,36 @@
 
 private with Gneiss.Internal.Message;
 
+generic
+   type Index is range <>;
+   type Byte is mod <>;
+   type Buffer is array (Index range <>) of Byte;
+   First  : Index;
+   Length : Index;
 package Gneiss.Message with
    SPARK_Mode
 is
 
-   --  Reader and Writer session objects
-   type Writer_Session is limited private;
-   type Reader_Session is limited private;
+   subtype Message_Buffer is Buffer (First .. First + Length - 1);
 
-   --  Checks if W is initialized
-   --
-   --  @param W  Writer session instance
-   --  @return   True if W is initialized
-   function Initialized (W : Writer_Session) return Boolean;
+   --  Client, Server and Dispatcher session objects
+   type Client_Session is limited private;
+   type Server_Session is limited private;
+   type Dispatcher_Session is limited private;
 
-   --  Checks if R is initialized
-   --
-   --  @param R  Reader session instance
-   --  @return   True if R is initialized
-   function Initialized (R : Reader_Session) return Boolean;
+   type Dispatcher_Capability is limited private;
+
+   function State (Session : Client_Session) return Session_State;
+
+   function State (Session : Server_Session) return Session_State;
+
+   function State (Session : Dispatcher_Session) return Session_State;
 
 private
 
-   type Writer_Session is new Gneiss.Internal.Message.Writer_Session;
-   type Reader_Session is new Gneiss.Internal.Message.Reader_Session;
+   type Client_Session is new Gneiss.Internal.Message.Client_Session;
+   type Server_Session is new Gneiss.Internal.Message.Server_Session;
+   type Dispatcher_Session is new Gneiss.Internal.Message.Dispatcher_Session;
+   type Dispatcher_Capability is new Gneiss.Internal.Message.Dispatcher_Capability;
 
 end Gneiss.Message;
