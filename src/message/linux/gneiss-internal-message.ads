@@ -5,14 +5,16 @@ package Gneiss.Internal.Message with
    SPARK_Mode
 is
 
-   type Writer_Session is limited record
-      Resource : Gneiss.Platform.Resource_Descriptor :=
-         Gneiss.Platform.Invalid_Resource;
+   type Client_Session is record
+      null;
    end record;
 
-   type Reader_Session is limited record
-      Resource : Gneiss.Platform.Resource_Descriptor :=
-         Gneiss.Platform.Invalid_Resource;
+   type Server_Session is record
+      null;
+   end record;
+
+   type Dispatcher_Session is record
+      null;
    end record;
 
 end Gneiss.Internal.Message;
