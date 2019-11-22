@@ -5,10 +5,13 @@ package body Gneiss.Message with
    SPARK_Mode
 is
 
-   function Initialized (W : Writer_Session) return Boolean is
-      (Gneiss.Platform.Valid_Resource_Descriptor (W.Resource));
+   function Initialized (C : Client_Session) return Boolean is
+      (False);
 
-   function Initialized (R : Reader_Session) return Boolean is
-      (Gneiss.Platform.Valid_Resource_Descriptor (R.Resource));
+   function Initialized (R : Server_Session) return Boolean is
+      (False);
+
+   function Initialized (D : Dispatcher_Session) return Boolean is
+      (False);
 
 end Gneiss.Message;
