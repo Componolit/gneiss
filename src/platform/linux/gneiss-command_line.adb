@@ -1,7 +1,8 @@
 
 with System;
+with Gneiss.Libc;
 
-package body Command_Line with
+package body Gneiss.Command_Line with
    SPARK_Mode
 is
 
@@ -21,22 +22,17 @@ is
       Import,
       Address => Argv;
 
-   function Strlen (S : System.Address) return Integer with
-      Import,
-      Convention    => C,
-      External_Name => "strlen";
-
    function Argument_Count return Natural is
       (Argc);
 
    function Argument (Number : Natural) return String with
       SPARK_Mode => Off
    is
-      Arg : String (1 .. Strlen (Argvl (Number))) with
+      Arg : String (1 .. Libc.Strlen (Argvl (Number))) with
          Import,
          Address => Argvl (Number);
    begin
       return Arg;
    end Argument;
 
-end Command_Line;
+end Gneiss.Command_Line;

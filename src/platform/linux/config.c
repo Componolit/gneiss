@@ -1,112 +1,43 @@
 
 #include <stdio.h>
-#include <string.h>
 #include <stdlib.h>
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/stat.h>
+#include <sys/types.h>
 
-#include <list.h>
 #include <config.h>
-#include <component.h>
 
-//#define ENABLE_TRACE
-#include <trace.h>
-
-int parse_resources(xmlNode *root, list_t resources)
+void gneiss_load_config(const char *file, char **content)
 {
-    resource_t res;
-    char *value;
-    for(xmlNode *node = root->children; node; node = node->next){
-        memset(&res, 0, sizeof(res));
-        if(strcmp(node->name, "resource")){
-            continue;
-        }
-        res.type = xmlGetProp(node, "type");
-        res.name = xmlGetProp(node, "name");
-        if(!res.name || !res.type){
-            fprintf(stderr, "resource without name or type at line %li\n", xmlGetLineNo(node));
-            return 1;
-        }
-        value = xmlGetProp(node, "read");
-        res.read = value ? atoi(value) : 0;
-        value = xmlGetProp(node, "write");
-        res.write = value ? atoi(value) : 0;
-        value = xmlGetProp(node, "read_write");
-        res.read_write = value ? atoi(value) : 0;
-        TRACE("add resource %s %s\n", res.type, res.name);
-        list_append(resources, (void *)&res, sizeof(res));
+    struct stat st;
+    char *file_content;
+    int fd;
+
+    *content = 0;
+
+    if(stat(file, &st) < 0){
+        perror("stat");
+        return;
     }
-    return 0;
-}
 
-int parse_components(xmlNode *root, list_t components)
-{
-    component_t comp;
-    resource_descriptor_t resd;
-    char *mode;
-    for(xmlNode *node = root->children; node; node = node->next){
-        memset(&comp, 0, sizeof(comp));
-        if(strcmp(node->name, "component")){
-            continue;
-        }
-        comp.name = xmlGetProp(node, "name");
-        if(!comp.name){
-            fprintf(stderr, "component without name at line %li\n", xmlGetLineNo(node));
-            return 1;
-        }
-        comp.file = xmlGetProp(node, "file");
-        if(!comp.file){
-            comp.file = (char *)malloc(strlen(comp.name) + 17); //length of name + libcomponent_ + .so
-            if(!comp.file){
-                perror("malloc component file");
-                return 1;
-            }
-            memset(comp.file, 0, strlen(comp.name) + 17);
-            strcat(comp.file, "libcomponent_");
-            strcat(comp.file, comp.name);
-            strcat(comp.file, ".so");
-        }
-        comp.resources = list_new();
-        for(xmlNode *res = node->children; res; res = res->next){
-            memset(&resd, 0, sizeof(resd));
-            mode = 0;
-            if(strcmp(res->name, "resource")){
-                continue;
-            }
-            resd.type = xmlGetProp(res, "type");
-            resd.name = xmlGetProp(res, "name");
-            resd.label = xmlGetProp(res, "label");
-            mode = xmlGetProp(res, "mode");
-            if(!resd.type || !resd.name || !resd.label || !mode){
-                fprintf(stderr, "ignoring invalid resource at line %li\n", xmlGetLineNo(res));
-                continue;
-            }
-            if(!strcmp(mode, "read")){
-                resd.mode = RESOURCE_READ;
-            }else if(!strcmp(mode, "write")){
-                resd.mode = RESOURCE_WRITE;
-            }else if(!strcmp(mode, "read_write")){
-                resd.mode = RESOURCE_READ_WRITE;
-            }else{
-                fprintf(stderr, "resource %s of %s has invalid mode %s at line %li\n",
-                        resd.name, comp.name, mode, xmlGetLineNo (res));
-                continue;
-            }
-            TRACE("add resource desc %s %s %s %s\n", resd.type, resd.name, resd.label, mode);
-            resd.fd = -1;
-            resd.event = 0;
-            list_append(comp.resources, (void *)&resd, sizeof(resd));
-        }
-        list_append(components, (void *)&comp, sizeof(comp));
+    file_content = malloc(st.st_size);
+    if(!file_content){
+        perror("malloc");
+        return;
     }
-    return 0;
-}
 
-xmlNode *read_config(const char *file)
-{
-    xmlDoc *document;
-    xmlNode *root;
-    int status;
-
-    document = xmlReadFile(file, 0, 0);
-    root = xmlDocGetRootElement(document);
-    return root;
+    fd = open(file, O_RDONLY);
+    if(fd < 0){
+        perror("open");
+        free(file_content);
+        return;
+    }
+    if(read(fd, file_content, st.st_size) < 0){
+        perror("read");
+        free(file_content);
+        return;
+    }
+    close(fd);
+    *content = file_content;
 }
