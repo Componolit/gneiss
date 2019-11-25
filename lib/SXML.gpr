@@ -1,0 +1,20 @@
+
+library project SXML is
+
+   for Source_Dirs use ("SXML/src");
+   for Object_Dir use "SXML/obj";
+   for Library_Name use "sxml";
+   for Library_Kind use "static";
+   for Library_Dir use "SXML/obj/lib";
+   for Create_Missing_Dirs use "True";
+   for Languages use ("Ada");
+
+   package Builder is
+      for Global_Configuration_Pragmas use "SXML/build/default.adc";
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("Ada") use ("-fPIC");
+   end Compiler;
+
+end SXML;
