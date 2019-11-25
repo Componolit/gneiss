@@ -4,3 +4,6 @@
 [submodule "lib/basalt"]
 	path = lib/basalt
 	url = https://github.com/Componolit/basalt.git
+[submodule "lib/SXML"]
+	path = lib/SXML
+	url = https://github.com/Componolit/SXML.git
