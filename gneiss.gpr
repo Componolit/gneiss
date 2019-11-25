@@ -1,5 +1,6 @@
 with "switches";
 with "lib/basalt/basalt.gpr";
+with "lib/SXML.gpr";
 
 project Gneiss is
 
@@ -78,6 +79,7 @@ project Gneiss is
 
    package Builder is
       for Global_Configuration_Pragmas use "spark.adc";
+      for Executable ("main.adb") use "init";
    end Builder;
 
    package Compiler is
@@ -116,12 +118,12 @@ project Gneiss is
       when "init" =>
          case Platform is
             when "linux" =>
-               for Source_Dirs use (Source_Platform & "/linux",
-                                    "/usr/include/libxml2");
-               for Languages use ("C");
-               Linux_Switches := ("-lxml2", "-ldl");
+               for Source_Dirs use Source & (Source_Platform & "/linux");
+               for Excluded_Source_Files use ("init.c");
+               for Languages use ("Ada", "C");
+               --  Linux_Switches := ("-ldl");
                Build_Dir := "build/init";
-               for Main use ("init.c");
+               for Main use ("main.adb");
             when others =>
                null;
          end case;
