@@ -1,5 +1,5 @@
 
-package Command_Line with
+package Gneiss.Command_Line with
    SPARK_Mode
 is
 
@@ -14,4 +14,4 @@ is
       Convention    => C,
       External_Name => "__gnat_set_exit_status";
 
-end Command_Line;
+end Gneiss.Command_Line;
