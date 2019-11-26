@@ -9,11 +9,10 @@ is
    type Component is record
       Fd   : Integer               := -1;
       Node : SXML.Query.State_Type := SXML.Query.Invalid_State;
+      Pid  : Integer               := -1;
    end record;
 
    type Component_List is array (Positive range <>) of Component;
-
-   Policy : Component_List (1 .. 1024);
 
    Document : SXML.Document_Type (1 .. 100) := (others => SXML.Null_Node);
 
@@ -22,11 +21,12 @@ is
 
 private
 
-   type Pid_Status is (Parent, Child_Success, Child_Error, Error);
+   procedure Start_Components (Root   :     SXML.Query.State_Type;
+                               Status : out Integer;
+                               Parent : out Boolean);
 
-   procedure Load (Pid  :        Integer;
-                   Fd   : in out Integer;
+   procedure Load (Fd   :        Integer;
                    Comp :        SXML.Query.State_Type;
-                   Ret  :    out Pid_Status);
+                   Ret  :    out Integer);
 
 end Gneiss.Broker;
