@@ -4,6 +4,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 #include <sys/un.h>
+#include <sys/wait.h>
 
 void gneiss_socketpair(int *fd1, int *fd2)
 {
@@ -31,4 +32,12 @@ void gneiss_close (int *fd)
 {
     close(*fd);
     *fd = -1;
+}
+
+void gneiss_waitpid(int pid, int *status)
+{
+    if(waitpid(pid, status, WNOHANG) < 0){
+        perror("waitpid");
+    }
+    *status = WEXITSTATUS(*status);
 }
