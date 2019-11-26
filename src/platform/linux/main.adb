@@ -5,7 +5,8 @@ with Gneiss.Broker;
 
 procedure Main
 is
-   Cap : Gneiss.Config.Config_Capability;
+   Cap    : Gneiss.Config.Config_Capability;
+   Status : Integer;
 begin
    if Gneiss.Command_Line.Argument_Count = 2 then
       Gneiss.Config.Load (Gneiss.Command_Line.Argument (1), Cap);
@@ -15,9 +16,11 @@ begin
                Import,
                Address => Gneiss.Config.Get_Address (Cap);
          begin
-            Gneiss.Broker.Construct (Conf);
+            Gneiss.Broker.Construct (Conf, Status);
+            Gneiss.Command_Line.Set_Exit_Status (Status);
          end;
+      else
+         Gneiss.Command_Line.Set_Exit_Status (1);
       end if;
    end if;
-   Gneiss.Command_Line.Set_Exit_Status (1);
 end Main;
