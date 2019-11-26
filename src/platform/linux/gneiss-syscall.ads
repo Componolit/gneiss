@@ -19,4 +19,10 @@ is
       Convention    => C,
       External_Name => "gneiss_close";
 
+   procedure Waitpid (Pid : Integer;
+                      Status : out Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_waitpid";
+
 end Gneiss.Syscall;
