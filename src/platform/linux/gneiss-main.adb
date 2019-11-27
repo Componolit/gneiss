@@ -1,15 +1,21 @@
 
+with Gneiss.Epoll;
 with Gneiss.Linker;
+with Gneiss.Internal.Types;
 with System;
 with Componolit.Runtime.Debug;
-with Gneiss.Internal.Types;
 
 package body Gneiss.Main with
    SPARK_Mode
 is
+   use type Gneiss.Epoll.Epoll_Fd;
+   use type System.Address;
 
    function Create_Cap (Fd : Integer) return Gneiss.Internal.Types.Capability;
    procedure Set_Status (S : Integer);
+   procedure Event_Handler;
+   procedure Call_Event (Fp : System.Address) with
+      Pre => Fp /= System.Null_Address;
    procedure Construct (Symbol     : System.Address;
                         Capability : Gneiss.Internal.Types.Capability);
    procedure Destruct (Symbol : System.Address);
@@ -17,13 +23,23 @@ is
    Running : constant Integer := -1;
    Success : constant Integer := 0;
    Failure : constant Integer := 1;
-   Component_Status : Integer := Running;
+
+   Component_Status : Integer               := Running;
+   Epoll_Fd         : Gneiss.Epoll.Epoll_Fd := -1;
+
+   procedure Call_Event (Fp : System.Address)
+   is
+      procedure Event with
+         Import,
+         Address => Fp;
+   begin
+      Event;
+   end Call_Event;
 
    procedure Run (Name       :     String;
                   Fd         :     Integer;
                   Status     : out Integer)
    is
-      use type System.Address;
       use type Gneiss.Linker.Dl_Handle;
       Capability    : constant Gneiss.Internal.Types.Capability := Create_Cap (Fd);
       Handle        : Gneiss.Linker.Dl_Handle;
@@ -47,13 +63,39 @@ is
          Status := 1;
          return;
       end if;
+      Gneiss.Epoll.Create (Epoll_Fd);
+      if Epoll_Fd < 0 then
+         Componolit.Runtime.Debug.Log_Error ("Epoll creation failed");
+         Status := 1;
+         return;
+      end if;
+      Gneiss.Epoll.Add (Epoll_Fd, Fd, System.Null_Address, Status);
+      if Status /= 0 then
+         Componolit.Runtime.Debug.Log_Error ("Failed to add epoll fd");
+         Status := 1;
+         return;
+      end if;
       Construct (Construct_Sym, Capability);
       while Component_Status = Running loop
-         null;
+         Event_Handler;
       end loop;
       Destruct (Destruct_Sym);
       Status := Component_Status;
    end Run;
+
+   procedure Event_Handler
+   is
+      Event_Ptr : System.Address;
+      Event     : Gneiss.Epoll.Event;
+   begin
+      Gneiss.Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
+      if Event.Epoll_In then
+         Componolit.Runtime.Debug.Log_Debug ("Received event");
+         if Event_Ptr /= System.Null_Address then
+            Call_Event (Event_Ptr);
+         end if;
+      end if;
+   end Event_Handler;
 
    function Create_Cap (Fd : Integer) return Gneiss.Internal.Types.Capability with
       SPARK_Mode => Off
