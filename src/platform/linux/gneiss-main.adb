@@ -41,7 +41,6 @@ is
                   Status     : out Integer)
    is
       use type Gneiss.Linker.Dl_Handle;
-      Capability    : constant Gneiss.Internal.Types.Capability := Create_Cap (Fd);
       Handle        : Gneiss.Linker.Dl_Handle;
       Construct_Sym : System.Address;
       Destruct_Sym  : System.Address;
@@ -75,7 +74,7 @@ is
          Status := 1;
          return;
       end if;
-      Construct (Construct_Sym, Capability);
+      Construct (Construct_Sym, Create_Cap (Fd));
       while Component_Status = Running loop
          Event_Handler;
       end loop;
@@ -102,7 +101,8 @@ is
    is
    begin
       return Gneiss.Internal.Types.Capability'(Filedesc   => Fd,
-                                               Set_Status => Set_Status'Address);
+                                               Set_Status => Set_Status'Address,
+                                               Epoll_Fd   => Epoll_Fd);
    end Create_Cap;
 
    procedure Set_Status (S : Integer)
