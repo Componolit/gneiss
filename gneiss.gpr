@@ -27,15 +27,15 @@ project Gneiss is
 
    Linux_Source := Source &
                    (Source_Platform,
-                    Source_Platform & "/linux",
+                    Source_Platform & "/linux"
                     --  Source_Block,
                     --  Source_Block & "/linux",
                     --  Source_Block_Client,
                     --  Source_Block_Client & "/linux",
-                    Source_Log,
-                    Source_Log & "/linux",
-                    Source_Log_Client,
-                    Source_Log_Client & "/linux",
+                    --  Source_Log,
+                    --  Source_Log & "/linux",
+                    --  Source_Log_Client,
+                    --  Source_Log_Client & "/linux",
                     --  Source_Timer,
                     --  Source_Timer & "/linux",
                     --  Source_Timer_Client,
@@ -44,12 +44,13 @@ project Gneiss is
                     --  Source_Rom & "/linux",
                     --  Source_Rom_Client,
                     --  Source_Rom_Client & "/linux",
-                    Source_Message,
-                    Source_Message & "/linux",
-                    Source_Message_Writer,
-                    Source_Message_Writer & "/linux",
-                    Source_Message_Reader,
-                    Source_Message_Reader & "/linux");
+                    --  Source_Message,
+                    --  Source_Message & "/linux",
+                    --  Source_Message_Writer,
+                    --  Source_Message_Writer & "/linux",
+                    --  Source_Message_Reader,
+                    --  Source_Message_Reader & "/linux"
+                    );
 
    Genode_Source := Source &
                     (Source_Platform,
@@ -121,7 +122,7 @@ project Gneiss is
                for Source_Dirs use Source & (Source_Platform & "/linux");
                for Excluded_Source_Files use ("init.c");
                for Languages use ("Ada", "C");
-               --  Linux_Switches := ("-ldl");
+               Linux_Switches := ("-ldl");
                Build_Dir := "build/init";
                for Main use ("main.adb");
             when others =>
