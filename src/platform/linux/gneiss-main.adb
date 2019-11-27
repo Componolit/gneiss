@@ -89,7 +89,7 @@ is
    begin
       Gneiss.Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
       if Event.Epoll_In then
-         Componolit.Runtime.Debug.Log_Debug ("Received event");
+         --  Componolit.Runtime.Debug.Log_Debug ("Received event");
          if Event_Ptr /= System.Null_Address then
             Call_Event (Event_Ptr);
          end if;

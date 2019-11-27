@@ -45,6 +45,7 @@ is
                            Message :     System.Address;
                            Size    :     Integer;
                            Fd      : out Integer;
+                           Length  : out Integer;
                            Trunc   : out Integer) with
       Import,
       Convention    => C,
