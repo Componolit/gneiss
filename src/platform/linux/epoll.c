@@ -14,7 +14,7 @@ void gneiss_epoll_create(int *efd)
     void gneiss_epoll_add_##name(int efd, int fd, type priv, int *success) \
 { \
     struct epoll_event eev; \
-    eev.events = EPOLLRDHUP; \
+    eev.events = EPOLLRDHUP | EPOLLIN; \
     eev.data.name = priv; \
     *success = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &eev); \
     if(*success < 0){ \

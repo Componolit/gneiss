@@ -19,14 +19,4 @@ is
    procedure Construct (Config :     String;
                         Status : out Integer);
 
-private
-
-   procedure Start_Components (Root   :     SXML.Query.State_Type;
-                               Status : out Integer;
-                               Parent : out Boolean);
-
-   procedure Load (Fd   :        Integer;
-                   Comp :        SXML.Query.State_Type;
-                   Ret  :    out Integer);
-
 end Gneiss.Broker;

@@ -1,9 +1,14 @@
 
+with Ada.Unchecked_Conversion;
 with Gneiss.Syscall;
 with Gneiss.Main;
 with Gneiss.Epoll;
 with Basalt.Strings;
+with Basalt.Strings_Generic;
 with SXML.Parser;
+with RFLX.Types;
+with RFLX.Session;
+with RFLX.Session.Packet;
 with Componolit.Runtime.Debug;
 
 package body Gneiss.Broker with
@@ -11,10 +16,20 @@ package body Gneiss.Broker with
 is
    use type Gneiss.Epoll.Epoll_Fd;
 
-   procedure Event_Loop (Status : out Integer);
-
    Policy : Component_List (1 .. 1024);
    Efd    : Gneiss.Epoll.Epoll_Fd := -1;
+
+   procedure Start_Components (Root   :     SXML.Query.State_Type;
+                               Status : out Integer;
+                               Parent : out Boolean);
+
+   procedure Load (Fd   :        Integer;
+                   Comp :        SXML.Query.State_Type;
+                   Ret  :    out Integer);
+
+   procedure Event_Loop (Status : out Integer);
+
+   procedure Read_Message (Index : Positive);
 
    procedure Construct (Config :     String;
                         Status : out Integer)
@@ -149,10 +164,12 @@ is
       Status := 1;
       loop
          Gneiss.Epoll.Wait (Efd, Ev, Index);
+         Componolit.Runtime.Debug.Log_Debug ("Broker Event");
          if Index in Policy'Range then
             if Ev.Epoll_In then
                Componolit.Runtime.Debug.Log_Debug ("Received command from "
                                                    & SXML.Query.Attribute (Policy (Index).Node, Document, "name"));
+               Read_Message (Index);
             end if;
             if Ev.Epoll_Hup or else Ev.Epoll_Rdhup then
                Gneiss.Syscall.Waitpid (Policy (Index).Pid, Success);
@@ -164,8 +181,69 @@ is
                Gneiss.Syscall.Close (Policy (Index).Fd);
                Policy (Index).Node := SXML.Query.Invalid_State;
             end if;
+         else
+            Componolit.Runtime.Debug.Log_Warning ("Invalid index");
          end if;
       end loop;
    end Event_Loop;
+
+   procedure Peek_Message (Socket    :     Integer;
+                           Message   : out RFLX.Types.Bytes;
+                           Last      : out RFLX.Types.Index;
+                           Truncated : out Boolean);
+
+   procedure Peek_Message (Socket    :     Integer;
+                           Message   : out RFLX.Types.Bytes;
+                           Last      : out RFLX.Types.Index;
+                           Truncated : out Boolean) with
+      SPARK_Mode => Off
+   is
+      use type RFLX.Types.Index;
+      Ignore_Fd : Integer;
+      Trunc     : Integer;
+      Length    : Integer;
+   begin
+      Gneiss.Syscall.Peek_Message (Socket, Message'Address, Message'Length, Ignore_Fd, Length, Trunc);
+      Truncated := Trunc = 1;
+      Componolit.Runtime.Debug.Log_Debug (Basalt.Strings.Image (Length));
+      Last      := (Message'First + RFLX.Types.Index (Length)) - 1;
+   end Peek_Message;
+
+   type Bytes_Ptr is access all RFLX.Types.Bytes;
+   function Convert is new Ada.Unchecked_Conversion (Bytes_Ptr, RFLX.Types.Bytes_Ptr);
+   --  FIXME: We have to convert access to access all to use it with 'Access, we should not do this
+   Read_Buffer : aliased RFLX.Types.Bytes := (1 .. 512 => 0);
+
+   procedure Read_Message (Index : Positive)
+   is
+      function Image is new Basalt.Strings_Generic.Image_Modular (RFLX.Session.Length_Type);
+      Truncated  : Boolean;
+      Context    : RFLX.Session.Packet.Context;
+      Buffer_Ptr : RFLX.Types.Bytes_Ptr := Convert (Read_Buffer'Access);
+      Last       : RFLX.Types.Index;
+   begin
+      Peek_Message (Policy (Index).Fd, Read_Buffer, Last, Truncated);
+      Gneiss.Syscall.Drop_Message (Policy (Index).Fd);
+      if Truncated then
+         Componolit.Runtime.Debug.Log_Warning ("Message too large, dropping");
+         return;
+      end if;
+      Componolit.Runtime.Debug.Log_Debug ("Parsing...");
+      RFLX.Session.Packet.Initialize (Context,
+                                      Buffer_Ptr,
+                                      RFLX.Types.First_Bit_Index (Read_Buffer'First),
+                                      RFLX.Types.Last_Bit_Index (Last));
+      RFLX.Session.Packet.Verify_Message (Context);
+      if
+         not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Name_Length)
+         or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Label_Length)
+         or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Label_Payload)
+      then
+         Componolit.Runtime.Debug.Log_Warning ("Invalid message, dropping");
+         return;
+      end if;
+      Componolit.Runtime.Debug.Log_Debug ("Name: " & Image (RFLX.Session.Packet.Get_Name_Length (Context))
+                                          & "Label: " & Image (RFLX.Session.Packet.Get_Label_Length (Context)));
+   end Read_Message;
 
 end Gneiss.Broker;

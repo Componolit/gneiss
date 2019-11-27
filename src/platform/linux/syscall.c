@@ -6,6 +6,9 @@
 #include <sys/un.h>
 #include <sys/wait.h>
 
+#define ENABLE_TRACE
+#include <trace.h>
+
 void gneiss_socketpair(int *fd1, int *fd2)
 {
     int fds[2];
@@ -52,6 +55,8 @@ void gneiss_dup(int oldfd, int *newfd)
 
 void gneiss_write_message(int sock, void *msg, size_t size, int fd)
 {
+    TRACE("sock=%d msg=%p size=%zu\n", sock, msg, size);
+    unsigned char *uc;
     struct msghdr message;
     struct iovec iov;
     union {
@@ -60,6 +65,8 @@ void gneiss_write_message(int sock, void *msg, size_t size, int fd)
     } cmsgu;
     struct cmsghdr *cmsg;
 
+    uc = msg;
+    TRACE("%x %x %x\n", uc[0], uc[1], uc[2]);
     iov.iov_base = msg;
     iov.iov_len = size;
 
@@ -88,6 +95,8 @@ void gneiss_write_message(int sock, void *msg, size_t size, int fd)
 
 void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length, int *trunc)
 {
+    TRACE("sock=%d msg=%p size=%zu fd=%p length=%p trunc=%p\n", sock, msg, size, fd, length, trunc);
+    unsigned char *uc;
     ssize_t ssize;
     struct msghdr message;
     struct iovec iov;
@@ -113,6 +122,8 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length,
         *length = 0;
         return;
     }
+    uc = msg;
+    TRACE("%x %x %x\n", uc[0], uc[1], uc[2]);
     *trunc = !!(message.msg_flags & MSG_TRUNC);
     cmsg = CMSG_FIRSTHDR(&message);
     if(cmsg && cmsg->cmsg_len == CMSG_LEN(sizeof(int))
@@ -120,10 +131,12 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length,
             && cmsg->cmsg_type == SCM_RIGHTS){
         *fd = *((int *)CMSG_DATA(cmsg));
     }
+    TRACE("%x %x %x\n", uc[0], uc[1], uc[2]);
 }
 
 void gneiss_drop_message(int sock)
 {
+    TRACE("sock=%d\n", sock);
     struct msghdr message;
     struct iovec iov;
     union {
