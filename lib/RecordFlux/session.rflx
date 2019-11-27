@@ -1,0 +1,26 @@
+
+package Session is
+
+   type Action_Type is (Request, Confirm, Reject) with
+      Size => 8;
+
+   type Kind_Type is (Message) with
+      Size => 8;
+
+   type Length_Type is mod 2 ** 8;
+
+   type Packet is
+      message
+         Action        : Action_Type;
+         Kind          : Kind_Type;
+         Name_Length   : Length_Type
+            then Name_Payload
+               with Length => Name_Length * 8;
+         Name_Payload  : Payload;
+         Label_Length  : Length_Type then
+            Label_Payload
+               with Length => Label_Length * 8;
+         Label_Payload : Payload;
+      end message;
+
+end Session;
