@@ -6,6 +6,7 @@ generic
 package Gneiss.Message.Client with
    SPARK_Mode
 is
+   pragma Unevaluated_Use_Of_Old (Allow);
 
    procedure Initialize (Session    : in out Client_Session;
                          Capability :        Gneiss.Types.Capability;
@@ -14,18 +15,18 @@ is
    procedure Finalize (Session : in out Client_Session);
 
    function Available (Session : Client_Session) return Boolean with
-      Pre => State (Session) = Initialized;
+      Pre => Status (Session) = Initialized;
 
    procedure Write (Session : in out Client_Session;
-                    Message :        Message_Buffer) with
-      Pre  => State (Session) = Initialized,
-      Post => State (Session) = Initialized
+                    Content :        Message_Buffer) with
+      Pre  => Status (Session) = Initialized,
+      Post => Status (Session) = Initialized
               and then Available (Session)'Old = Available (Session);
 
    procedure Read (Session : in out Client_Session;
-                   Message :    out Message_Buffer) with
-      Pre  => State (Session) = Initialized
+                   Content :    out Message_Buffer) with
+      Pre  => Status (Session) = Initialized
               and then Available (Session),
-      Post => State (Session) = Initialized;
+      Post => Status (Session) = Initialized;
 
 end Gneiss.Message.Client;
