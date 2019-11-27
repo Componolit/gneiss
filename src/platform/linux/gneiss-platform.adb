@@ -19,4 +19,10 @@ is
       Set (S);
    end Set_Status;
 
+   function Get_Broker (C : Gneiss.Types.Capability) return Integer is
+      (Convert (C).Filedesc);
+
+   function Get_Epoll (C : Gneiss.Types.Capability) return Gneiss.Epoll.Epoll_Fd is
+      (Convert (C).Epoll_Fd);
+
 end Gneiss.Platform;

@@ -20,6 +20,7 @@ generic
 package Gneiss.Message with
    SPARK_Mode
 is
+   pragma Compile_Time_Error (Byte'Size /= 8, "Byte size must be 8 bit");
 
    subtype Message_Buffer is Buffer (First .. First + Length - 1);
 
@@ -30,11 +31,11 @@ is
 
    type Dispatcher_Capability is limited private;
 
-   function State (Session : Client_Session) return Session_State;
+   function Status (Session : Client_Session) return Session_Status;
 
-   function State (Session : Server_Session) return Session_State;
+   function Status (Session : Server_Session) return Session_Status;
 
-   function State (Session : Dispatcher_Session) return Session_State;
+   function Status (Session : Dispatcher_Session) return Session_Status;
 
 private
 
