@@ -284,6 +284,8 @@ private
                    or Cursors (F_Kind).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Length).State = S_Valid
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size,
@@ -296,6 +298,8 @@ private
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Payload).State = S_Valid
                    or Cursors (F_Name_Payload).State = S_Structural_Valid)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size,
@@ -306,27 +310,48 @@ private
                    or Cursors (F_Kind).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Length).State = S_Valid
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Name_Payload).State = S_Valid
-                   or Cursors (F_Name_Payload).State = S_Structural_Valid)
                  and then (Cursors (F_Label_Length).State = S_Valid
                    or Cursors (F_Label_Length).State = S_Structural_Valid)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) = 0)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size
                  and then (Cursors (F_Label_Length).Last - Cursors (F_Label_Length).First + 1) = Length_Type'Size,
-           when F_Label_Payload | F_Final =>
+           when F_Label_Payload =>
               (Cursors (F_Action).State = S_Valid
                    or Cursors (F_Action).State = S_Structural_Valid)
                  and then (Cursors (F_Kind).State = S_Valid
                    or Cursors (F_Kind).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Length).State = S_Valid
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Name_Payload).State = S_Valid
-                   or Cursors (F_Name_Payload).State = S_Structural_Valid)
                  and then (Cursors (F_Label_Length).State = S_Valid
                    or Cursors (F_Label_Length).State = S_Structural_Valid)
                  and then (Cursors (F_Label_Payload).State = S_Valid
                    or Cursors (F_Label_Payload).State = S_Structural_Valid)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) = 0)
+                 and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
+                 and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
+                 and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size
+                 and then (Cursors (F_Label_Length).Last - Cursors (F_Label_Length).First + 1) = Length_Type'Size,
+           when F_Final =>
+              (Cursors (F_Action).State = S_Valid
+                   or Cursors (F_Action).State = S_Structural_Valid)
+                 and then (Cursors (F_Kind).State = S_Valid
+                   or Cursors (F_Kind).State = S_Structural_Valid)
+                 and then (Cursors (F_Name_Length).State = S_Valid
+                   or Cursors (F_Name_Length).State = S_Structural_Valid)
+                 and then (Cursors (F_Label_Length).State = S_Valid
+                   or Cursors (F_Label_Length).State = S_Structural_Valid)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
+                 and then (RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) > 0
+                   or RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) = 0)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size
