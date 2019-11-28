@@ -26,8 +26,8 @@ is
    is
       Request : Buffer (1 .. Label'Length + 4) := (others => 0);
    begin
-      Request (1) := RFLX.Session.Action_Type'Pos (RFLX.Session.Request);
-      Request (2) := RFLX.Session.Kind_Type'Pos (RFLX.Session.Message);
+      Request (1) := Byte (RFLX.Session.Convert (RFLX.Session.Confirm));
+      Request (2) := Byte (RFLX.Session.Convert (RFLX.Session.Message));
       Request (3) := 0;
       Request (4) := Label'Length;
       for I in 5 .. Request'Last loop
