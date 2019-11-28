@@ -15,11 +15,17 @@ package Session is
          Kind          : Kind_Type;
          Name_Length   : Length_Type
             then Name_Payload
-               with Length => Name_Length * 8;
+               with Length => Name_Length * 8
+               if Name_Length > 0,
+            then Label_Length
+               if Name_Length = 0;
          Name_Payload  : Payload;
-         Label_Length  : Length_Type then
-            Label_Payload
-               with Length => Label_Length * 8;
+         Label_Length  : Length_Type
+         then Label_Payload
+               with Length => Label_Length * 8
+               if Label_Length > 0,
+         then null
+               if Label_Length = 0;
          Label_Payload : Payload;
       end message;
 
