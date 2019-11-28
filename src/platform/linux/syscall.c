@@ -13,7 +13,7 @@ void gneiss_socketpair(int *fd1, int *fd2)
 {
     int fds[2];
 
-    if(socketpair(AF_UNIX, SOCK_STREAM, 0, fds) < 0){
+    if(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds) < 0){
         perror("socketpair");
         *fd1 = -1;
         *fd2 = -1;
@@ -56,7 +56,6 @@ void gneiss_dup(int oldfd, int *newfd)
 void gneiss_write_message(int sock, void *msg, size_t size, int fd)
 {
     TRACE("sock=%d msg=%p size=%zu\n", sock, msg, size);
-    unsigned char *uc;
     struct msghdr message;
     struct iovec iov;
     union {
@@ -65,10 +64,13 @@ void gneiss_write_message(int sock, void *msg, size_t size, int fd)
     } cmsgu;
     struct cmsghdr *cmsg;
 
-    uc = msg;
-    TRACE("%x %x %x\n", uc[0], uc[1], uc[2]);
     iov.iov_base = msg;
     iov.iov_len = size;
+    TRACE("message (%d):", size);
+    for(int i = 0; i < size; i++){
+        TRACE_CONT(" %02x", ((char *)msg)[i]);
+    }
+    TRACE_CONT("\n");
 
     message.msg_name = 0;
     message.msg_namelen = 0;
@@ -96,7 +98,6 @@ void gneiss_write_message(int sock, void *msg, size_t size, int fd)
 void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length, int *trunc)
 {
     TRACE("sock=%d msg=%p size=%zu fd=%p length=%p trunc=%p\n", sock, msg, size, fd, length, trunc);
-    unsigned char *uc;
     ssize_t ssize;
     struct msghdr message;
     struct iovec iov;
@@ -122,8 +123,11 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length,
         *length = 0;
         return;
     }
-    uc = msg;
-    TRACE("%x %x %x\n", uc[0], uc[1], uc[2]);
+    TRACE("message (%d):", *length);
+    for(int i = 0; i < *length; i++){
+        TRACE_CONT(" %02x", ((char *)msg)[i]);
+    }
+    TRACE_CONT("\n");
     *trunc = !!(message.msg_flags & MSG_TRUNC);
     cmsg = CMSG_FIRSTHDR(&message);
     if(cmsg && cmsg->cmsg_len == CMSG_LEN(sizeof(int))
@@ -131,7 +135,6 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length,
             && cmsg->cmsg_type == SCM_RIGHTS){
         *fd = *((int *)CMSG_DATA(cmsg));
     }
-    TRACE("%x %x %x\n", uc[0], uc[1], uc[2]);
 }
 
 void gneiss_drop_message(int sock)
@@ -154,7 +157,7 @@ void gneiss_drop_message(int sock)
     message.msg_iovlen = 1;
     message.msg_control = cmsgu.control;
     message.msg_controllen = sizeof(cmsgu.control);
-    if(recvmsg(sock, &message, 0) < 0){
+    if(recvmsg(sock, &message, MSG_TRUNC) < 0){
         perror("recvmsg");
         return;
     }

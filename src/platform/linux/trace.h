@@ -10,10 +10,11 @@
 
 #define TRACE(...) fprintf(stderr, "[%d] %s:%d (%s): ", getpid(), __FILE__, __LINE__, __func__);\
                    fprintf(stderr, __VA_ARGS__)
-
+#define TRACE_CONT(...) fprintf(stderr, __VA_ARGS__);
 #else
 
 #define TRACE(...)
+#define TRACE_CONT(...)
 
 #endif
 
