@@ -41,6 +41,37 @@ is
                              Name   : String;
                              Label  : String);
 
+   procedure Process_Request (Kind  : RFLX.Session.Kind_Type;
+                              Name  : String;
+                              Label : String);
+
+   procedure Process_Confirm (Kind  : RFLX.Session.Kind_Type;
+                              Name  : String;
+                              Label : String);
+
+   procedure Process_Reject (Kind  : RFLX.Session.Kind_Type;
+                             Name  : String;
+                             Label : String);
+
+   procedure Send_Request (Destination : Integer;
+                           Kind        : RFLX.Session.Kind_Type;
+                           Name        : String;
+                           Label       : String);
+   pragma Unreferenced (Send_Request);
+
+   procedure Send_Confirm (Destination : Integer;
+                           Kind        : RFLX.Session.Kind_Type;
+                           Name        : String;
+                           Label       : String;
+                           Filedesc    : Integer);
+   pragma Unreferenced (Send_Confirm);
+
+   procedure Send_Reject (Destination : Integer;
+                          Kind        : RFLX.Session.Kind_Type;
+                          Name        : String;
+                          Label       : String);
+   pragma Unreferenced (Send_Reject);
+
    procedure Construct (Config :     String;
                         Status : out Integer)
    is
@@ -342,13 +373,70 @@ is
                              Name   : String;
                              Label  : String)
    is
-      pragma Unreferenced (Source);
-      pragma Unreferenced (Action);
-      pragma Unreferenced (Kind);
    begin
       Componolit.Runtime.Debug.Log_Debug ("Message:");
       Componolit.Runtime.Debug.Log_Debug (Name);
       Componolit.Runtime.Debug.Log_Debug (Label);
+      case Action is
+         when RFLX.Session.Request =>
+            Process_Request (Kind, SXML.Query.Attribute (Policy (Source).Node, Document, "name"), Label);
+         when RFLX.Session.Confirm =>
+            Process_Confirm (Kind, Name, Label);
+         when RFLX.Session.Reject =>
+            Process_Reject (Kind, Name, Label);
+      end case;
    end Handle_Message;
+
+   procedure Process_Request (Kind  : RFLX.Session.Kind_Type;
+                              Name  : String;
+                              Label : String)
+   is
+   begin
+      null;
+   end Process_Request;
+
+   procedure Process_Confirm (Kind  : RFLX.Session.Kind_Type;
+                              Name  : String;
+                              Label : String)
+   is
+   begin
+      null;
+   end Process_Confirm;
+
+   procedure Process_Reject (Kind  : RFLX.Session.Kind_Type;
+                             Name  : String;
+                             Label : String)
+   is
+   begin
+      null;
+   end Process_Reject;
+
+   procedure Send_Request (Destination : Integer;
+                           Kind        : RFLX.Session.Kind_Type;
+                           Name        : String;
+                           Label       : String)
+   is
+   begin
+      null;
+   end Send_Request;
+
+   procedure Send_Confirm (Destination : Integer;
+                           Kind        : RFLX.Session.Kind_Type;
+                           Name        : String;
+                           Label       : String;
+                           Filedesc    : Integer)
+   is
+   begin
+      null;
+   end Send_Confirm;
+
+   procedure Send_Reject (Destination : Integer;
+                          Kind        : RFLX.Session.Kind_Type;
+                          Name        : String;
+                          Label       : String)
+   is
+   begin
+      null;
+   end Send_Reject;
 
 end Gneiss.Broker;
