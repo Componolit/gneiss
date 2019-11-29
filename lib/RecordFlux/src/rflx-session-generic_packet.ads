@@ -8,9 +8,9 @@ is
 
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   type Virtual_Field is (F_Initial, F_Action, F_Kind, F_Name_Length, F_Name_Payload, F_Label_Length, F_Label_Payload, F_Final);
+   type Virtual_Field is (F_Initial, F_Action, F_Kind, F_Name_Length, F_Payload_Length, F_Payload, F_Final);
 
-   subtype Field is Virtual_Field range F_Action .. F_Label_Payload;
+   subtype Field is Virtual_Field range F_Action .. F_Payload;
 
    type Context (Buffer_First, Buffer_Last : RFLX.Types.Index := RFLX.Types.Index'First; First, Last : RFLX.Types.Bit_Index := RFLX.Types.Bit_Index'First; Buffer_Address : RFLX.Types.Integer_Address := 0) is private with
      Default_Initial_Condition =>
@@ -69,9 +69,8 @@ is
           and then Present (Ctx, F_Action) = Present (Ctx, F_Action)'Old
           and then Present (Ctx, F_Kind) = Present (Ctx, F_Kind)'Old
           and then Present (Ctx, F_Name_Length) = Present (Ctx, F_Name_Length)'Old
-          and then Present (Ctx, F_Name_Payload) = Present (Ctx, F_Name_Payload)'Old
-          and then Present (Ctx, F_Label_Length) = Present (Ctx, F_Label_Length)'Old
-          and then Present (Ctx, F_Label_Payload) = Present (Ctx, F_Label_Payload)'Old;
+          and then Present (Ctx, F_Payload_Length) = Present (Ctx, F_Payload_Length)'Old
+          and then Present (Ctx, F_Payload) = Present (Ctx, F_Payload)'Old;
 
    function Has_Buffer (Ctx : Context) return Boolean with
      Pre =>
@@ -102,9 +101,8 @@ is
           and then (if Fld /= F_Action then (if Valid (Ctx, F_Action)'Old then Valid (Ctx, F_Action)))
           and then (if Fld /= F_Kind then (if Valid (Ctx, F_Kind)'Old then Valid (Ctx, F_Kind)))
           and then (if Fld /= F_Name_Length then (if Valid (Ctx, F_Name_Length)'Old then Valid (Ctx, F_Name_Length)))
-          and then (if Fld /= F_Name_Payload then (if Valid (Ctx, F_Name_Payload)'Old then Valid (Ctx, F_Name_Payload)))
-          and then (if Fld /= F_Label_Length then (if Valid (Ctx, F_Label_Length)'Old then Valid (Ctx, F_Label_Length)))
-          and then (if Fld /= F_Label_Payload then (if Valid (Ctx, F_Label_Payload)'Old then Valid (Ctx, F_Label_Payload)))
+          and then (if Fld /= F_Payload_Length then (if Valid (Ctx, F_Payload_Length)'Old then Valid (Ctx, F_Payload_Length)))
+          and then (if Fld /= F_Payload then (if Valid (Ctx, F_Payload)'Old then Valid (Ctx, F_Payload)))
           and then Has_Buffer (Ctx) = Has_Buffer (Ctx)'Old
           and then Ctx.Buffer_First = Ctx.Buffer_First'Old
           and then Ctx.Buffer_Last = Ctx.Buffer_Last'Old
@@ -170,26 +168,18 @@ is
        Valid_Context (Ctx)
           and then Valid (Ctx, F_Name_Length);
 
-   function Get_Label_Length (Ctx : Context) return Length_Type with
+   function Get_Payload_Length (Ctx : Context) return Length_Type with
      Pre =>
        Valid_Context (Ctx)
-          and then Valid (Ctx, F_Label_Length);
+          and then Valid (Ctx, F_Payload_Length);
 
    generic
-      with procedure Process_Name_Payload (Name_Payload : RFLX.Types.Bytes);
-   procedure Get_Name_Payload (Ctx : Context) with
+      with procedure Process_Payload (Payload : RFLX.Types.Bytes);
+   procedure Get_Payload (Ctx : Context) with
      Pre =>
        Valid_Context (Ctx)
           and then Has_Buffer (Ctx)
-          and then Present (Ctx, F_Name_Payload);
-
-   generic
-      with procedure Process_Label_Payload (Label_Payload : RFLX.Types.Bytes);
-   procedure Get_Label_Payload (Ctx : Context) with
-     Pre =>
-       Valid_Context (Ctx)
-          and then Has_Buffer (Ctx)
-          and then Present (Ctx, F_Label_Payload);
+          and then Present (Ctx, F_Payload);
 
    function Valid_Context (Ctx : Context) return Boolean;
 
@@ -200,7 +190,7 @@ private
    type Field_Dependent_Value (Fld : Virtual_Field := F_Initial) is
       record
          case Fld is
-            when F_Initial | F_Name_Payload | F_Label_Payload | F_Final =>
+            when F_Initial | F_Payload | F_Final =>
                null;
             when F_Action =>
                Action_Value : Action_Type_Base;
@@ -208,8 +198,8 @@ private
                Kind_Value : Kind_Type_Base;
             when F_Name_Length =>
                Name_Length_Value : Length_Type;
-            when F_Label_Length =>
-               Label_Length_Value : Length_Type;
+            when F_Payload_Length =>
+               Payload_Length_Value : Length_Type;
          end case;
       end record;
 
@@ -221,11 +211,9 @@ private
             Valid (Value.Kind_Value),
          when F_Name_Length =>
             Valid (Value.Name_Length_Value),
-         when F_Name_Payload =>
-            True,
-         when F_Label_Length =>
-            Valid (Value.Label_Length_Value),
-         when F_Label_Payload =>
+         when F_Payload_Length =>
+            Valid (Value.Payload_Length_Value),
+         when F_Payload =>
             True,
          when F_Initial | F_Final =>
             False));
@@ -284,78 +272,39 @@ private
                    or Cursors (F_Kind).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Length).State = S_Valid
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size,
-           when F_Name_Payload =>
+           when F_Payload_Length =>
               (Cursors (F_Action).State = S_Valid
                    or Cursors (F_Action).State = S_Structural_Valid)
                  and then (Cursors (F_Kind).State = S_Valid
                    or Cursors (F_Kind).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Length).State = S_Valid
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Name_Payload).State = S_Valid
-                   or Cursors (F_Name_Payload).State = S_Structural_Valid)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
-                 and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
-                 and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
-                 and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size,
-           when F_Label_Length =>
-              (Cursors (F_Action).State = S_Valid
-                   or Cursors (F_Action).State = S_Structural_Valid)
-                 and then (Cursors (F_Kind).State = S_Valid
-                   or Cursors (F_Kind).State = S_Structural_Valid)
-                 and then (Cursors (F_Name_Length).State = S_Valid
-                   or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Label_Length).State = S_Valid
-                   or Cursors (F_Label_Length).State = S_Structural_Valid)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) = 0)
+                 and then (Cursors (F_Payload_Length).State = S_Valid
+                   or Cursors (F_Payload_Length).State = S_Structural_Valid)
+                 and then RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) <= RFLX.Types.Bit_Length (Cursors (F_Payload_Length).Value.Payload_Length_Value)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size
-                 and then (Cursors (F_Label_Length).Last - Cursors (F_Label_Length).First + 1) = Length_Type'Size,
-           when F_Label_Payload =>
+                 and then (Cursors (F_Payload_Length).Last - Cursors (F_Payload_Length).First + 1) = Length_Type'Size,
+           when F_Payload | F_Final =>
               (Cursors (F_Action).State = S_Valid
                    or Cursors (F_Action).State = S_Structural_Valid)
                  and then (Cursors (F_Kind).State = S_Valid
                    or Cursors (F_Kind).State = S_Structural_Valid)
                  and then (Cursors (F_Name_Length).State = S_Valid
                    or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Label_Length).State = S_Valid
-                   or Cursors (F_Label_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Label_Payload).State = S_Valid
-                   or Cursors (F_Label_Payload).State = S_Structural_Valid)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) = 0)
+                 and then (Cursors (F_Payload_Length).State = S_Valid
+                   or Cursors (F_Payload_Length).State = S_Structural_Valid)
+                 and then (Cursors (F_Payload).State = S_Valid
+                   or Cursors (F_Payload).State = S_Structural_Valid)
+                 and then RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) <= RFLX.Types.Bit_Length (Cursors (F_Payload_Length).Value.Payload_Length_Value)
                  and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
                  and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
                  and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size
-                 and then (Cursors (F_Label_Length).Last - Cursors (F_Label_Length).First + 1) = Length_Type'Size,
-           when F_Final =>
-              (Cursors (F_Action).State = S_Valid
-                   or Cursors (F_Action).State = S_Structural_Valid)
-                 and then (Cursors (F_Kind).State = S_Valid
-                   or Cursors (F_Kind).State = S_Structural_Valid)
-                 and then (Cursors (F_Name_Length).State = S_Valid
-                   or Cursors (F_Name_Length).State = S_Structural_Valid)
-                 and then (Cursors (F_Label_Length).State = S_Valid
-                   or Cursors (F_Label_Length).State = S_Structural_Valid)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Name_Length).Value.Name_Length_Value) = 0)
-                 and then (RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) > 0
-                   or RFLX.Types.Bit_Length (Cursors (F_Label_Length).Value.Label_Length_Value) = 0)
-                 and then (Cursors (F_Action).Last - Cursors (F_Action).First + 1) = Action_Type_Base'Size
-                 and then (Cursors (F_Kind).Last - Cursors (F_Kind).First + 1) = Kind_Type_Base'Size
-                 and then (Cursors (F_Name_Length).Last - Cursors (F_Name_Length).First + 1) = Length_Type'Size
-                 and then (Cursors (F_Label_Length).Last - Cursors (F_Label_Length).First + 1) = Length_Type'Size));
+                 and then (Cursors (F_Payload_Length).Last - Cursors (F_Payload_Length).First + 1) = Length_Type'Size));
 
    type Context (Buffer_First, Buffer_Last : RFLX.Types.Index := RFLX.Types.Index'First; First, Last : RFLX.Types.Bit_Index := RFLX.Types.Bit_Index'First; Buffer_Address : RFLX.Types.Integer_Address := 0) is
       record
