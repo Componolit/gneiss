@@ -31,9 +31,8 @@ is
 
    procedure Read_Message (Index : Positive);
 
-   procedure Load_Labels (Context : in out RFLX.Session.Packet.Context;
-                          Name    :    out String;
-                          Label   :    out String);
+   procedure Load_Message (Index   :        Positive;
+                           Context : in out RFLX.Session.Packet.Context);
 
    procedure Handle_Message (Source : Positive;
                              Action : RFLX.Session.Action_Type;
@@ -61,16 +60,17 @@ is
 
    procedure Send_Confirm (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
-                           Name        : String;
                            Label       : String;
                            Filedesc    : Integer);
    pragma Unreferenced (Send_Confirm);
 
    procedure Send_Reject (Destination : Integer;
                           Kind        : RFLX.Session.Kind_Type;
-                          Name        : String;
                           Label       : String);
    pragma Unreferenced (Send_Reject);
+
+   procedure Send_Message (Destination : Integer;
+                           Data        : RFLX.Types.Bytes);
 
    procedure Construct (Config :     String;
                         Status : out Integer)
@@ -287,12 +287,10 @@ is
           & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Kind))
           & " F_Name_Length="
           & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Name_Length))
-          & " F_Name_Payload="
-          & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Name_Payload))
-          & " F_Label_Length="
-          & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Label_Length))
-          & " F_Label_Payload="
-          & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Label_Payload))
+          & " F_Payload_Length="
+          & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Payload_Length))
+          & " F_Payload="
+          & Basalt.Strings.Image (RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Payload))
           );
       Componolit.Runtime.Debug.Log_Debug
          ("Present: "
@@ -302,70 +300,62 @@ is
           & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Kind))
           & " F_Name_Length="
           & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Name_Length))
-          & " F_Name_Payload="
-          & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Name_Payload))
-          & " F_Label_Length="
-          & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Label_Length))
-          & " F_Label_Payload="
-          & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Label_Payload))
+          & " F_Payload_Length="
+          & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Payload_Length))
+          & " F_Payload="
+          & Basalt.Strings.Image (RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Payload))
           );
       if
          not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Action)
          or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Kind)
          or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Name_Length)
-         or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Label_Length)
-         or else not RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Label_Payload)
+         or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Payload_Length)
+         or else not RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Payload)
       then
          Componolit.Runtime.Debug.Log_Warning ("Invalid message, dropping");
          return;
       end if;
       Componolit.Runtime.Debug.Log_Debug ("Name=" & Image (RFLX.Session.Packet.Get_Name_Length (Context))
-                                          & " Label=" & Image (RFLX.Session.Packet.Get_Label_Length (Context)));
-      declare
-         Name : String (1 .. Integer (RFLX.Session.Packet.Get_Name_Length (Context)));
-         Label : String (1 .. Integer (RFLX.Session.Packet.Get_Label_Length (Context)));
+                                          & " Payload=" & Image (RFLX.Session.Packet.Get_Payload_Length (Context)));
+      Load_Message (Index, Context);
+   end Read_Message;
+
+   procedure Load_Message (Index   :        Positive;
+                           Context : in out RFLX.Session.Packet.Context)
+   is
+      use type RFLX.Types.Length;
+      use type RFLX.Session.Length_Type;
+      procedure Process_Payload (Payload : RFLX.Types.Bytes);
+      procedure Get_Payload is new RFLX.Session.Packet.Get_Payload (Process_Payload);
+      Name : String (1 .. Integer (RFLX.Session.Packet.Get_Name_Length (Context)));
+      Label : String (1 .. Integer (RFLX.Session.Packet.Get_Payload_Length (Context)
+                                    - RFLX.Session.Packet.Get_Name_Length (Context)));
+      procedure Process_Payload (Payload : RFLX.Types.Bytes)
+      is
+         Label_First : constant RFLX.Types.Length :=
+            Payload'First + RFLX.Types.Length (RFLX.Session.Packet.Get_Name_Length (Context));
       begin
-         Load_Labels (Context, Name, Label);
+         for I in Name'Range loop
+            Name (I) := Character'Val (Payload (Payload'First + RFLX.Types.Length (I - Name'First)));
+         end loop;
+         for I in Label'Range loop
+            Label (I) := Character'Val (Payload (Label_First + RFLX.Types.Length (I - Label'First)));
+         end loop;
+      end Process_Payload;
+   begin
+      if
+         RFLX.Session.Packet.Has_Buffer (Context)
+         and then RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Payload)
+      then
+         Get_Payload (Context);
          Handle_Message (Index,
                          RFLX.Session.Packet.Get_Action (Context),
                          RFLX.Session.Packet.Get_Kind (Context),
                          Name, Label);
-      end;
-   end Read_Message;
-
-   procedure Load_Labels (Context : in out RFLX.Session.Packet.Context;
-                          Name    :    out String;
-                          Label   :    out String)
-   is
-      use type RFLX.Types.Length;
-      procedure Process_Name (Payload : RFLX.Types.Bytes);
-      procedure Process_Name (Payload : RFLX.Types.Bytes)
-      is
-      begin
-         for I in Name'Range loop
-            Name (I) := Character'Val (Payload (Payload'First + RFLX.Types.Index (I) - 1));
-         end loop;
-      end Process_Name;
-      procedure Process_Label (Payload : RFLX.Types.Bytes);
-      procedure Process_Label (Payload : RFLX.Types.Bytes)
-      is
-      begin
-         for I in Label'Range loop
-            Label (I) := Character'Val (Payload (Payload'First + RFLX.Types.Index (I) - 1));
-         end loop;
-      end Process_Label;
-      procedure Get_Name is new RFLX.Session.Packet.Get_Name_Payload (Process_Name);
-      procedure Get_Label is new RFLX.Session.Packet.Get_Label_Payload (Process_Label);
-   begin
-      if RFLX.Session.Packet.Has_Buffer (Context) then
-         if RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Name_Payload) then
-            Get_Name (Context);
-         end if;
-         if RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Label_Payload) then
-            Get_Label (Context);
-         end if;
+      else
+         Componolit.Runtime.Debug.Log_Warning ("Missing payload");
       end if;
-   end Load_Labels;
+   end Load_Message;
 
    procedure Handle_Message (Source : Positive;
                              Action : RFLX.Session.Action_Type;
@@ -422,7 +412,6 @@ is
 
    procedure Send_Confirm (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
-                           Name        : String;
                            Label       : String;
                            Filedesc    : Integer)
    is
