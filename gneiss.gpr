@@ -24,7 +24,7 @@ project Gneiss is
    Source_Rom_Client := "src/rom/client";
    Source_Message := "src/message";
    Source_Message_Client := "src/message/client";
-   Source_Message_Reader := "src/message/reader";
+   Source_Message_Server := "src/message/server";
 
    Linux_Source := Source &
                    (Source_Platform,
@@ -48,10 +48,9 @@ project Gneiss is
                     Source_Message,
                     Source_Message & "/linux",
                     Source_Message_Client,
-                    Source_Message_Client & "/linux"
-                    --  Source_Message_Reader,
-                    --  Source_Message_Reader & "/linux"
-                    );
+                    Source_Message_Client & "/linux",
+                    Source_Message_Server,
+                    Source_Message_Server & "/linux");
 
    Genode_Source := Source &
                     (Source_Platform,
