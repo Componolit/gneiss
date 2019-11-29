@@ -52,15 +52,21 @@ is
          when F_Name_Length =>
             Preliminary_Valid (Ctx, F_Action)
                and then Preliminary_Valid (Ctx, F_Kind),
-         when F_Name_Payload | F_Label_Length =>
+         when F_Payload_Length =>
             Preliminary_Valid (Ctx, F_Action)
                and then Preliminary_Valid (Ctx, F_Kind)
                and then Preliminary_Valid (Ctx, F_Name_Length),
-         when F_Label_Payload | F_Final =>
+         when F_Payload =>
             Preliminary_Valid (Ctx, F_Action)
                and then Preliminary_Valid (Ctx, F_Kind)
                and then Preliminary_Valid (Ctx, F_Name_Length)
-               and then Preliminary_Valid (Ctx, F_Label_Length)));
+               and then Preliminary_Valid (Ctx, F_Payload_Length),
+         when F_Final =>
+            Preliminary_Valid (Ctx, F_Action)
+               and then Preliminary_Valid (Ctx, F_Kind)
+               and then Preliminary_Valid (Ctx, F_Name_Length)
+               and then Preliminary_Valid (Ctx, F_Payload_Length)
+               and then Preliminary_Valid (Ctx, F_Payload)));
 
    function Valid_Predecessors (Ctx : Context; Fld : Field) return Boolean is
      ((case Fld is
@@ -71,15 +77,15 @@ is
          when F_Name_Length =>
             Present (Ctx, F_Action)
                and then Present (Ctx, F_Kind),
-         when F_Name_Payload | F_Label_Length =>
+         when F_Payload_Length =>
             Present (Ctx, F_Action)
                and then Present (Ctx, F_Kind)
                and then Present (Ctx, F_Name_Length),
-         when F_Label_Payload =>
+         when F_Payload =>
             Present (Ctx, F_Action)
                and then Present (Ctx, F_Kind)
                and then Present (Ctx, F_Name_Length)
-               and then Present (Ctx, F_Label_Length)))
+               and then Present (Ctx, F_Payload_Length)))
     with
      Post =>
        (if Valid_Predecessors'Result then Preliminary_Valid_Predecessors (Ctx, Fld));
@@ -93,27 +99,19 @@ is
          when F_Kind =>
             Target_Field = F_Name_Length,
          when F_Name_Length =>
-            Target_Field = F_Name_Payload
-               or Target_Field = F_Label_Length,
-         when F_Name_Payload =>
-            Target_Field = F_Label_Length,
-         when F_Label_Length =>
-            Target_Field = F_Label_Payload
-               or Target_Field = F_Final,
-         when F_Label_Payload =>
+            Target_Field = F_Payload_Length,
+         when F_Payload_Length =>
+            Target_Field = F_Payload,
+         when F_Payload =>
             Target_Field = F_Final,
          when F_Final =>
             False));
 
    function Composite_Field (Fld : Field) return Boolean is
      ((case Fld is
-         when F_Action | F_Kind | F_Name_Length =>
+         when F_Action | F_Kind | F_Name_Length | F_Payload_Length =>
             False,
-         when F_Name_Payload =>
-            True,
-         when F_Label_Length =>
-            False,
-         when F_Label_Payload =>
+         when F_Payload =>
             True));
 
    function Field_Condition (Ctx : Context; Source_Field, Target_Field : Virtual_Field) return Boolean is
@@ -138,27 +136,17 @@ is
                      False),
          when F_Name_Length =>
             (case Target_Field is
-                  when F_Name_Payload =>
-                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) > 0,
-                  when F_Label_Length =>
-                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) = 0,
-                  when others =>
-                     False),
-         when F_Name_Payload =>
-            (case Target_Field is
-                  when F_Label_Length =>
+                  when F_Payload_Length =>
                      True,
                   when others =>
                      False),
-         when F_Label_Length =>
+         when F_Payload_Length =>
             (case Target_Field is
-                  when F_Label_Payload =>
-                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) > 0,
-                  when F_Final =>
-                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) = 0,
+                  when F_Payload =>
+                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) <= RFLX.Types.Bit_Length (Ctx.Cursors (F_Payload_Length).Value.Payload_Length_Value),
                   when others =>
                      False),
-         when F_Label_Payload =>
+         when F_Payload =>
             (case Target_Field is
                   when F_Final =>
                      True,
@@ -193,25 +181,17 @@ is
                      RFLX.Types.Unreachable_Bit_Length),
          when F_Name_Length =>
             (case Fld is
-                  when F_Name_Payload =>
-                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) * 8,
-                  when F_Label_Length =>
+                  when F_Payload_Length =>
                      Length_Type'Size,
                   when others =>
                      RFLX.Types.Unreachable_Bit_Length),
-         when F_Name_Payload =>
+         when F_Payload_Length =>
             (case Fld is
-                  when F_Label_Length =>
-                     Length_Type'Size,
+                  when F_Payload =>
+                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Payload_Length).Value.Payload_Length_Value) * 8,
                   when others =>
                      RFLX.Types.Unreachable_Bit_Length),
-         when F_Label_Length =>
-            (case Fld is
-                  when F_Label_Payload =>
-                     RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) * 8,
-                  when others =>
-                     RFLX.Types.Unreachable_Bit_Length),
-         when F_Label_Payload | F_Final =>
+         when F_Payload | F_Final =>
             0))
     with
      Pre =>
@@ -221,7 +201,7 @@ is
 
    function Field_First (Ctx : Context; Fld : Field) return RFLX.Types.Bit_Index is
      ((case Ctx.Fld is
-         when F_Initial | F_Action | F_Kind | F_Name_Length | F_Name_Payload | F_Label_Length | F_Label_Payload | F_Final =>
+         when F_Initial | F_Action | F_Kind | F_Name_Length | F_Payload_Length | F_Payload | F_Final =>
             Ctx.Index))
     with
      Pre =>
@@ -236,14 +216,10 @@ is
          when F_Kind =>
             Field_Condition (Ctx, Fld, F_Name_Length),
          when F_Name_Length =>
-            Field_Condition (Ctx, Fld, F_Name_Payload)
-               or Field_Condition (Ctx, Fld, F_Label_Length),
-         when F_Name_Payload =>
-            Field_Condition (Ctx, Fld, F_Label_Length),
-         when F_Label_Length =>
-            Field_Condition (Ctx, Fld, F_Label_Payload)
-               or Field_Condition (Ctx, Fld, F_Final),
-         when F_Label_Payload =>
+            Field_Condition (Ctx, Fld, F_Payload_Length),
+         when F_Payload_Length =>
+            Field_Condition (Ctx, Fld, F_Payload),
+         when F_Payload =>
             Field_Condition (Ctx, Fld, F_Final)))
     with
      Pre =>
@@ -296,12 +272,10 @@ is
                (Fld => F_Kind, Kind_Value => Extract (Ctx.Buffer.all (Buffer_First .. Buffer_Last), Offset)),
             when F_Name_Length =>
                (Fld => F_Name_Length, Name_Length_Value => Extract (Ctx.Buffer.all (Buffer_First .. Buffer_Last), Offset)),
-            when F_Name_Payload =>
-               (Fld => F_Name_Payload),
-            when F_Label_Length =>
-               (Fld => F_Label_Length, Label_Length_Value => Extract (Ctx.Buffer.all (Buffer_First .. Buffer_Last), Offset)),
-            when F_Label_Payload =>
-               (Fld => F_Label_Payload)));
+            when F_Payload_Length =>
+               (Fld => F_Payload_Length, Payload_Length_Value => Extract (Ctx.Buffer.all (Buffer_First .. Buffer_Last), Offset)),
+            when F_Payload =>
+               (Fld => F_Payload)));
    end Get_Field_Value;
 
    procedure Verify (Ctx : in out Context; Fld : Field) is
@@ -342,9 +316,8 @@ is
       Verify (Ctx, F_Action);
       Verify (Ctx, F_Kind);
       Verify (Ctx, F_Name_Length);
-      Verify (Ctx, F_Name_Payload);
-      Verify (Ctx, F_Label_Length);
-      Verify (Ctx, F_Label_Payload);
+      Verify (Ctx, F_Payload_Length);
+      Verify (Ctx, F_Payload);
    end Verify_Message;
 
    function Present (Ctx : Context; Fld : Field) return Boolean is
@@ -369,41 +342,24 @@ is
      (Valid (Ctx, F_Action)
       and then Valid (Ctx, F_Kind)
       and then Valid (Ctx, F_Name_Length)
-      and then ((Structural_Valid (Ctx, F_Name_Payload)
-          and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-          and then Valid (Ctx, F_Label_Length)
-          and then ((Structural_Valid (Ctx, F_Label_Payload)
-              and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) > 0)
-            or RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) = 0))
-        or (Valid (Ctx, F_Label_Length)
-          and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) = 0
-          and then ((Structural_Valid (Ctx, F_Label_Payload)
-              and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) > 0)
-            or RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) = 0))));
+      and then Valid (Ctx, F_Payload_Length)
+      and then Structural_Valid (Ctx, F_Payload)
+      and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) <= RFLX.Types.Bit_Length (Ctx.Cursors (F_Payload_Length).Value.Payload_Length_Value));
 
    function Valid_Message (Ctx : Context) return Boolean is
      (Valid (Ctx, F_Action)
       and then Valid (Ctx, F_Kind)
       and then Valid (Ctx, F_Name_Length)
-      and then ((Valid (Ctx, F_Name_Payload)
-          and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) > 0
-          and then Valid (Ctx, F_Label_Length)
-          and then ((Valid (Ctx, F_Label_Payload)
-              and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) > 0)
-            or RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) = 0))
-        or (Valid (Ctx, F_Label_Length)
-          and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) = 0
-          and then ((Valid (Ctx, F_Label_Payload)
-              and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) > 0)
-            or RFLX.Types.Bit_Length (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value) = 0))));
+      and then Valid (Ctx, F_Payload_Length)
+      and then Valid (Ctx, F_Payload)
+      and then RFLX.Types.Bit_Length (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value) <= RFLX.Types.Bit_Length (Ctx.Cursors (F_Payload_Length).Value.Payload_Length_Value));
 
    function Incomplete_Message (Ctx : Context) return Boolean is
      (Incomplete (Ctx, F_Action)
       or Incomplete (Ctx, F_Kind)
       or Incomplete (Ctx, F_Name_Length)
-      or Incomplete (Ctx, F_Name_Payload)
-      or Incomplete (Ctx, F_Label_Length)
-      or Incomplete (Ctx, F_Label_Payload));
+      or Incomplete (Ctx, F_Payload_Length)
+      or Incomplete (Ctx, F_Payload));
 
    function Get_Action (Ctx : Context) return Action_Type is
      (Convert (Ctx.Cursors (F_Action).Value.Action_Value));
@@ -414,21 +370,14 @@ is
    function Get_Name_Length (Ctx : Context) return Length_Type is
      (Ctx.Cursors (F_Name_Length).Value.Name_Length_Value);
 
-   function Get_Label_Length (Ctx : Context) return Length_Type is
-     (Ctx.Cursors (F_Label_Length).Value.Label_Length_Value);
+   function Get_Payload_Length (Ctx : Context) return Length_Type is
+     (Ctx.Cursors (F_Payload_Length).Value.Payload_Length_Value);
 
-   procedure Get_Name_Payload (Ctx : Context) is
-      First : constant RFLX.Types.Index := RFLX.Types.Byte_Index (Ctx.Cursors (F_Name_Payload).First);
-      Last : constant RFLX.Types.Index := RFLX.Types.Byte_Index (Ctx.Cursors (F_Name_Payload).Last);
+   procedure Get_Payload (Ctx : Context) is
+      First : constant RFLX.Types.Index := RFLX.Types.Byte_Index (Ctx.Cursors (F_Payload).First);
+      Last : constant RFLX.Types.Index := RFLX.Types.Byte_Index (Ctx.Cursors (F_Payload).Last);
    begin
-      Process_Name_Payload (Ctx.Buffer.all (First .. Last));
-   end Get_Name_Payload;
-
-   procedure Get_Label_Payload (Ctx : Context) is
-      First : constant RFLX.Types.Index := RFLX.Types.Byte_Index (Ctx.Cursors (F_Label_Payload).First);
-      Last : constant RFLX.Types.Index := RFLX.Types.Byte_Index (Ctx.Cursors (F_Label_Payload).Last);
-   begin
-      Process_Label_Payload (Ctx.Buffer.all (First .. Last));
-   end Get_Label_Payload;
+      Process_Payload (Ctx.Buffer.all (First .. Last));
+   end Get_Payload;
 
 end RFLX.Session.Generic_Packet;
