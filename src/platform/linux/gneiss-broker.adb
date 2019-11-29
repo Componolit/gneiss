@@ -3,6 +3,7 @@ with Ada.Unchecked_Conversion;
 with Gneiss.Syscall;
 with Gneiss.Main;
 with Gneiss.Epoll;
+with Gneiss.Protocoll;
 with Basalt.Strings;
 with Basalt.Strings_Generic;
 with SXML.Parser;
@@ -16,8 +17,13 @@ package body Gneiss.Broker with
 is
    use type Gneiss.Epoll.Epoll_Fd;
 
+   type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
+   package Proto is new Gneiss.Protocoll (RFLX.Types.Byte, RFLX_String);
+
    Policy : Component_List (1 .. 1024);
    Efd    : Gneiss.Epoll.Epoll_Fd := -1;
+
+   function Convert_Message (S : String) return RFLX_String;
 
    procedure Start_Components (Root   :     SXML.Query.State_Type;
                                Status : out Integer;
@@ -40,17 +46,20 @@ is
                              Name   : String;
                              Label  : String);
 
-   procedure Process_Request (Kind  : RFLX.Session.Kind_Type;
-                              Name  : String;
-                              Label : String);
+   procedure Process_Request (Source : Positive;
+                              Kind   : RFLX.Session.Kind_Type;
+                              Name   : String;
+                              Label  : String);
 
-   procedure Process_Confirm (Kind  : RFLX.Session.Kind_Type;
-                              Name  : String;
-                              Label : String);
+   procedure Process_Confirm (Source : Positive;
+                              Kind   : RFLX.Session.Kind_Type;
+                              Name   : String;
+                              Label  : String);
 
-   procedure Process_Reject (Kind  : RFLX.Session.Kind_Type;
-                             Name  : String;
-                             Label : String);
+   procedure Process_Reject (Source : Positive;
+                             Kind   : RFLX.Session.Kind_Type;
+                             Name   : String;
+                             Label  : String);
 
    procedure Send_Request (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
@@ -69,8 +78,16 @@ is
                           Label       : String);
    pragma Unreferenced (Send_Reject);
 
-   procedure Send_Message (Destination : Integer;
-                           Data        : RFLX.Types.Bytes);
+   function Convert_Message (S : String) return RFLX_String
+   is
+      use type RFLX.Session.Length_Type;
+      R : RFLX_String (1 .. RFLX.Session.Length_Type (S'Length));
+   begin
+      for I in R'Range loop
+         R (I) := S (S'First + Natural (I - R'First));
+      end loop;
+      return R;
+   end Convert_Message;
 
    procedure Construct (Config :     String;
                         Status : out Integer)
@@ -369,33 +386,36 @@ is
       Componolit.Runtime.Debug.Log_Debug (Label);
       case Action is
          when RFLX.Session.Request =>
-            Process_Request (Kind, SXML.Query.Attribute (Policy (Source).Node, Document, "name"), Label);
+            Process_Request (Source, Kind, Name, Label);
          when RFLX.Session.Confirm =>
-            Process_Confirm (Kind, Name, Label);
+            Process_Confirm (Source, Kind, Name, Label);
          when RFLX.Session.Reject =>
-            Process_Reject (Kind, Name, Label);
+            Process_Reject (Source, Kind, Name, Label);
       end case;
    end Handle_Message;
 
-   procedure Process_Request (Kind  : RFLX.Session.Kind_Type;
-                              Name  : String;
-                              Label : String)
+   procedure Process_Request (Source : Positive;
+                              Kind   : RFLX.Session.Kind_Type;
+                              Name   : String;
+                              Label  : String)
    is
    begin
       null;
    end Process_Request;
 
-   procedure Process_Confirm (Kind  : RFLX.Session.Kind_Type;
-                              Name  : String;
-                              Label : String)
+   procedure Process_Confirm (Source : Positive;
+                              Kind   : RFLX.Session.Kind_Type;
+                              Name   : String;
+                              Label  : String)
    is
    begin
       null;
    end Process_Confirm;
 
-   procedure Process_Reject (Kind  : RFLX.Session.Kind_Type;
-                             Name  : String;
-                             Label : String)
+   procedure Process_Reject (Source : Positive;
+                             Kind   : RFLX.Session.Kind_Type;
+                             Name   : String;
+                             Label  : String)
    is
    begin
       null;
@@ -407,7 +427,12 @@ is
                            Label       : String)
    is
    begin
-      null;
+      Proto.Send_Message (Destination,
+                          Proto.Message'(Length      => RFLX.Session.Length_Type (Name'Length + Label'Length)
+                                         Action      => RFLX.Session.Request,
+                                         Kind        => Kind,
+                                         Name_Length => RFLX.Session.Length_Type (Name'Length),
+                                         Payload     => Convert_Message (Name & Label)));
    end Send_Request;
 
    procedure Send_Confirm (Destination : Integer;
@@ -416,16 +441,25 @@ is
                            Filedesc    : Integer)
    is
    begin
-      null;
+      Proto.Send_Message (Destination,
+                          Proto.Message'(Length      => RFLX.Session.Length_Type (Label'Length),
+                                         Action      => RFLX.Session.Confirm,
+                                         Kind        => Kind,
+                                         Name_Length => 0,
+                                         Payload     => Convert_Message (Label)),
+                          Filedesc);
    end Send_Confirm;
 
    procedure Send_Reject (Destination : Integer;
                           Kind        : RFLX.Session.Kind_Type;
-                          Name        : String;
                           Label       : String)
    is
    begin
-      null;
+      Proto.Send_Message (Destination, Proto.Message'(Length      => RFLX.Session.Length_Type (Label'Length),
+                                                      Action      => RFLX.Session.Reject,
+                                                      Kind        => Kind,
+                                                      Name_Length => 0,
+                                                      Payload     => Convert_Message (Label)));
    end Send_Reject;
 
 end Gneiss.Broker;
