@@ -4,16 +4,16 @@ with RFLX.Session;
 with Gneiss.Epoll;
 with Gneiss.Platform;
 with Gneiss.Syscall;
---  with Componolit.Runtime.Debug;
+with Gneiss.Protocoll;
+with Componolit.Runtime.Debug;
 
 package body Gneiss.Message.Client with
    SPARK_Mode
 is
 
    function Get_Event_Address return System.Address;
-   function Create_Request (Label : String) return Buffer;
-   procedure Send_Request (Session : in out Client_Session;
-                           Request :        Buffer);
+   type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
+   package Proto is new Gneiss.Protocoll (Character, RFLX_String);
 
    function Get_Event_Address return System.Address with
       SPARK_Mode => Off
@@ -22,35 +22,24 @@ is
       return Event'Address;
    end Get_Event_Address;
 
-   function Create_Request (Label : String) return Buffer
-   is
-      Request : Buffer (1 .. Label'Length + 4) := (others => 0);
-   begin
-      Request (1) := Byte (RFLX.Session.Convert (RFLX.Session.Confirm));
-      Request (2) := Byte (RFLX.Session.Convert (RFLX.Session.Message));
-      Request (3) := 0;
-      Request (4) := Label'Length;
-      for I in 5 .. Request'Last loop
-         Request (I) := Character'Pos (Label (Label'First + Integer (I - 5)));
-      end loop;
-      return Request;
-   end Create_Request;
-
-   procedure Send_Request (Session : in out Client_Session;
-                           Request :        Buffer) with
-      SPARK_Mode => Off
-   is
-   begin
-      Gneiss.Syscall.Write_Message (Session.Broker, Request'Address, Request'Length);
-   end Send_Request;
+   function Create_Request (Label : RFLX_String) return Proto.Message is
+      (Proto.Message'(Length      => Label'Length,
+                      Action      => RFLX.Session.Request,
+                      Kind        => RFLX.Session.Message,
+                      Name_Length => 0,
+                      Payload     => Label));
 
    procedure Initialize (Session    : in out Client_Session;
                          Capability :        Gneiss.Types.Capability;
                          Label      :        String)
    is
       Success : Integer;
+      C_Label : RFLX_String (RFLX.Session.Length_Type (Label'First) .. RFLX.Session.Length_Type (Label'Last));
    begin
       --  Componolit.Runtime.Debug.Log_Debug ("Initialize " & Label);
+      for I in C_Label'Range loop
+         C_Label (I) := Label (Positive (I));
+      end loop;
       case Status (Session) is
          when Initialized =>
             return;
@@ -69,7 +58,8 @@ is
                Session.Broker := -1;
                return;
             end if;
-            Send_Request (Session, Create_Request (Label));
+            Componolit.Runtime.Debug.Log_Debug ("Initialize label: " & Label);
+            Proto.Send_Message (Session.Broker, Create_Request (C_Label));
       end case;
    end Initialize;
 
