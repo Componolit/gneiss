@@ -1,7 +1,8 @@
 
+with Gneiss;
 with Gneiss.Message;
-with Gneiss.Message.Reader;
-with Basalt.Strings;
+with Gneiss.Message.Dispatcher;
+with Gneiss.Message.Server;
 
 package body Component with
    SPARK_Mode
@@ -10,62 +11,85 @@ is
    type Unsigned_Char is mod 2 ** 8;
    type C_String is array (Positive range <>) of Unsigned_Char;
 
+   package Message is new Gneiss.Message (Positive, Unsigned_Char, C_String, 1, 128);
+
    procedure Event;
 
-   package Message_Client is new Gns.Message.Reader (Unsigned_Char, Positive, C_String, 4096, Event);
+   procedure Initialize (Session : in out Message.Server_Session;
+                         Label   :        String);
 
-   type Client_Registry is array (Integer range <>) of Gns.Message.Reader_Session;
+   procedure Finalize (Session : in out Message.Server_Session);
 
-   Client  : Client_Registry (1 .. 3);
-   Message : Message_Client.Message_Buffer;
-   M_Str   : String (1 .. 4097);
+   function Ready (Session : Message.Server_Session) return Boolean;
+
+   procedure Dispatch (Session  : in out Message.Dispatcher_Session;
+                       Disp_Cap :        Message.Dispatcher_Capability);
+
+   package Message_Server is new Message.Server (Event, Initialize, Finalize, Ready);
+   package Message_Dispatcher is new Message.Dispatcher (Message_Server, Dispatch);
+
+   Dispatcher : Message.Dispatcher_Session;
+   Server     : Message.Server_Session;
+   Registered : Boolean := False;
+   Capability : Gneiss.Types.Capability;
 
    procedure Construct (Cap : Gns.Types.Capability)
    is
    begin
-      for I in Client'Range loop
-         Message_Client.Initialize (Client (I), Cap, Basalt.Strings.Image (I));
-      end loop;
+      Capability := Cap;
+      Message_Dispatcher.Initialize (Dispatcher, Cap);
    end Construct;
 
    procedure Destruct
    is
    begin
-      for I in Client'Range loop
-         Message_Client.Finalize (Client (I));
-      end loop;
+      Message_Dispatcher.Finalize (Dispatcher);
    end Destruct;
-
-   procedure Check_And_Print (I : Integer);
-
-   procedure Check_And_Print (I : Integer)
-   is
-      procedure Print (S1 : in out String;
-                       S2 : in out String) with
-         Import,
-         Convention => C,
-         External_Name => "print_message";
-      Label : String := Basalt.Strings.Image (I) & ASCII.NUL;
-   begin
-      if
-         Gns.Message.Initialized (Client (I))
-         and then Message_Client.Available (Client (I))
-      then
-         Message_Client.Read (Client (I), Message);
-         for I in Message'Range loop
-            M_Str (I) := Character'Val (Message (I));
-         end loop;
-         M_Str (M_Str'Last) := ASCII.NUL;
-         Print (Label, M_Str);
-      end if;
-   end Check_And_Print;
 
    procedure Event
    is
    begin
-      for I in Client'Range loop
-         Check_And_Print (I);
-      end loop;
+      case Message.Status (Dispatcher) is
+         when Gneiss.Initialized =>
+            if not Registered then
+               Message_Dispatcher.Register (Dispatcher);
+               Registered := True;
+            end if;
+         when Gneiss.Pending =>
+            Message_Dispatcher.Initialize (Dispatcher, Capability);
+         when Gneiss.Uninitialized =>
+            Main.Vacate (Capability, Main.Failure);
+      end case;
    end Event;
+
+   procedure Initialize (Session : in out Message.Server_Session;
+                         Label   :        String)
+   is
+   begin
+      null;
+   end Initialize;
+
+   procedure Finalize (Session : in out Message.Server_Session)
+   is
+   begin
+      null;
+   end Finalize;
+
+   procedure Dispatch (Session  : in out Message.Dispatcher_Session;
+                       Disp_Cap :        Message.Dispatcher_Capability)
+   is
+      use type Gneiss.Session_Status;
+   begin
+      if Message_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
+         Message_Dispatcher.Session_Initialize (Session, Disp_Cap, Server);
+         if Ready (Server) and then Message.Status (Server) = Gneiss.Initialized then
+            Message_Dispatcher.Session_Accept (Session, Disp_Cap, Server);
+         end if;
+      end if;
+      Message_Dispatcher.Session_Cleanup (Session, Disp_Cap, Server);
+   end Dispatch;
+
+   function Ready (Session : Message.Server_Session) return Boolean is
+      (False);
 
 end Component;
