@@ -1,5 +1,4 @@
 
-with System;
 with Gneiss.Syscall;
 
 package body Gneiss.Protocoll with
