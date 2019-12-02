@@ -20,10 +20,16 @@ is
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
    package Proto is new Gneiss.Protocoll (RFLX.Types.Byte, RFLX_String);
 
-   Policy : Component_List (1 .. 1024);
-   Efd    : Gneiss.Epoll.Epoll_Fd := -1;
+   Policy  : Component_List (1 .. 1024);
+   Efd     : Gneiss.Epoll.Epoll_Fd := -1;
+   XML_Buf : String (1 .. 255);
 
    function Convert_Message (S : String) return RFLX_String;
+
+   procedure Find_Service_By_Name (Name  :     String;
+                                   Index : out Positive;
+                                   Valid : out Boolean) with
+      Post => (if Valid then Index in Policy'Range);
 
    procedure Start_Components (Root   :     SXML.Query.State_Type;
                                Status : out Integer;
@@ -35,37 +41,41 @@ is
 
    procedure Event_Loop (Status : out Integer);
 
-   procedure Read_Message (Index : Positive);
+   procedure Read_Message (Index : Positive) with
+      Pre => Index in Policy'Range;
 
    procedure Load_Message (Index   :        Positive;
-                           Context : in out RFLX.Session.Packet.Context);
+                           Context : in out RFLX.Session.Packet.Context) with
+      Pre => Index in Policy'Range;
 
    procedure Handle_Message (Source : Positive;
                              Action : RFLX.Session.Action_Type;
                              Kind   : RFLX.Session.Kind_Type;
                              Name   : String;
-                             Label  : String);
+                             Label  : String) with
+      Pre => Source in Policy'Range;
 
    procedure Process_Request (Source : Positive;
                               Kind   : RFLX.Session.Kind_Type;
-                              Name   : String;
-                              Label  : String);
+                              Label  : String) with
+      Pre => Source in Policy'Range;
 
    procedure Process_Confirm (Source : Positive;
                               Kind   : RFLX.Session.Kind_Type;
                               Name   : String;
-                              Label  : String);
+                              Label  : String) with
+      Pre => Source in Policy'Range;
 
    procedure Process_Reject (Source : Positive;
                              Kind   : RFLX.Session.Kind_Type;
                              Name   : String;
-                             Label  : String);
+                             Label  : String) with
+      Pre => Source in Policy'Range;
 
    procedure Send_Request (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
                            Name        : String;
                            Label       : String);
-   pragma Unreferenced (Send_Request);
 
    procedure Send_Confirm (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
@@ -76,7 +86,7 @@ is
    procedure Send_Reject (Destination : Integer;
                           Kind        : RFLX.Session.Kind_Type;
                           Label       : String);
-   pragma Unreferenced (Send_Reject);
+   --  pragma Unreferenced (Send_Reject);
 
    function Convert_Message (S : String) return RFLX_String
    is
@@ -88,6 +98,32 @@ is
       end loop;
       return R;
    end Convert_Message;
+
+   procedure Find_Service_By_Name (Name  : String;
+                                   Index : out Positive;
+                                   Valid : out Boolean)
+   is
+      use type SXML.Result_Type;
+      Result : SXML.Result_Type;
+      Last   : Natural;
+   begin
+      Index := Positive'Last;
+      Valid := False;
+      for I in Policy'Range loop
+         if Policy (I).Node.Result = SXML.Result_OK then
+            SXML.Query.Attribute (Policy (I).Node, Document, Name, Result, XML_Buf, Last);
+            if
+               Result = SXML.Result_OK
+               and then Last in XML_Buf'Range
+               and then Last - XML_Buf'First = Name'Last - Name'First
+               and then XML_Buf (1 .. Last) = Name
+            then
+               Index := I;
+               Valid := True;
+            end if;
+         end if;
+      end loop;
+   end Find_Service_By_Name;
 
    procedure Construct (Config :     String;
                         Status : out Integer)
@@ -156,18 +192,16 @@ is
       Success : Integer;
       Index   : Positive := Policy'First;
       State   : SXML.Query.State_Type;
+      Result  : SXML.Result_Type;
+      Last    : Natural;
    begin
       State := SXML.Query.Path (Root, Document, "/config/component");
       Status := 0;
       while State.Result = SXML.Result_OK loop
-         if
-            SXML.Query.Has_Attribute (State, Document, "name")
-            and then SXML.Query.Has_Attribute (State, Document, "file")
-         then
-            Componolit.Runtime.Debug.Log_Debug
-               ("Name : " & SXML.Query.Attribute (State, Document, "name"));
-            Componolit.Runtime.Debug.Log_Debug
-               ("File : " & SXML.Query.Attribute (State, Document, "file"));
+         State := SXML.Query.Find_Sibling (State, Document, "component");
+         exit when State.Result /= SXML.Result_OK;
+         SXML.Query.Attribute (State, Document, "name", Result, XML_Buf, Last);
+         if Result = SXML.Result_OK then
             Policy (Index).Node := State;
             Gneiss.Syscall.Socketpair (Policy (Index).Fd, Fd);
             Gneiss.Epoll.Add (Efd, Policy (Index).Fd, Index, Success);
@@ -186,31 +220,37 @@ is
                Parent := False;
                return;
             end if;
-            State := SXML.Query.Sibling (State, Document);
-            exit when Index = Policy'Last;
-            Index := Index + 1;
          else
-            State := SXML.Query.Sibling (State, Document);
+            Componolit.Runtime.Debug.Log_Warning ("Failed to load component name");
          end if;
+         exit when Index = Policy'Last;
+         Index := Index + 1;
+         State := SXML.Query.Sibling (State, Document);
       end loop;
    end Start_Components;
+
+   File_Name : String (1 .. 4096);
 
    procedure Load (Fd   :        Integer;
                    Comp :        SXML.Query.State_Type;
                    Ret  :    out Integer)
    is
+      use type SXML.Result_Type;
+      Result : SXML.Result_Type;
+      Last   : Natural;
    begin
       Gneiss.Syscall.Close (Integer (Efd));
       for I in Policy'Range loop
          Policy (I).Node := SXML.Query.Invalid_State;
          Gneiss.Syscall.Close (Policy (I).Fd);
       end loop;
-      if not SXML.Query.Has_Attribute (Comp, Document, "file") then
+      SXML.Query.Attribute (Comp, Document, "file", Result, File_Name, Last);
+      if Result /= SXML.Result_OK and then Last not in File_Name'Range then
          Componolit.Runtime.Debug.Log_Error ("No file to load");
          Ret := 1;
          return;
       end if;
-      Gneiss.Main.Run (SXML.Query.Attribute (Comp, Document, "file"), Fd, Ret);
+      Gneiss.Main.Run (File_Name (File_Name'First .. Last), Fd, Ret);
    end Load;
 
    procedure Event_Loop (Status : out Integer)
@@ -218,21 +258,23 @@ is
       Ev      : Gneiss.Epoll.Event;
       Index   : Integer;
       Success : Integer;
+      Result  : SXML.Result_Type;
+      Last    : Natural;
    begin
       Status := 1;
       loop
          Gneiss.Epoll.Wait (Efd, Ev, Index);
          Componolit.Runtime.Debug.Log_Debug ("Broker Event");
          if Index in Policy'Range then
+            SXML.Query.Attribute (Policy (Index).Node, Document, "name", Result, XML_Buf, Last);
             if Ev.Epoll_In then
-               Componolit.Runtime.Debug.Log_Debug ("Received command from "
-                                                   & SXML.Query.Attribute (Policy (Index).Node, Document, "name"));
+               Componolit.Runtime.Debug.Log_Debug ("Received command from " & XML_Buf (XML_Buf'First .. Last));
                Read_Message (Index);
             end if;
             if Ev.Epoll_Hup or else Ev.Epoll_Rdhup then
                Gneiss.Syscall.Waitpid (Policy (Index).Pid, Success);
                Componolit.Runtime.Debug.Log_Debug ("Component "
-                                                   & SXML.Query.Attribute (Policy (Index).Node, Document, "name")
+                                                   & XML_Buf (XML_Buf'First .. Last)
                                                    & " exited with status "
                                                    & Basalt.Strings.Image (Success));
                Gneiss.Epoll.Remove (Efd, Policy (Index).Fd, Success);
@@ -386,7 +428,7 @@ is
       Componolit.Runtime.Debug.Log_Debug (Label);
       case Action is
          when RFLX.Session.Request =>
-            Process_Request (Source, Kind, Name, Label);
+            Process_Request (Source, Kind, Label);
          when RFLX.Session.Confirm =>
             Process_Confirm (Source, Kind, Name, Label);
          when RFLX.Session.Reject =>
@@ -396,11 +438,60 @@ is
 
    procedure Process_Request (Source : Positive;
                               Kind   : RFLX.Session.Kind_Type;
-                              Name   : String;
                               Label  : String)
    is
+      use type SXML.Result_Type;
+      State       : SXML.Query.State_Type := SXML.Query.Child (Policy (Source).Node, Document);
+      Destination : Positive;
+      Valid       : Boolean;
+      Result      : SXML.Result_Type := SXML.Result_Invalid;
+      Last        : Natural;
    begin
-      null;
+      Componolit.Runtime.Debug.Log_Debug ("Check type and label");
+      while State.Result = SXML.Result_OK loop
+         State := SXML.Query.Find_Sibling (State, Document, "service", "name", Proto.Image (Kind));
+         exit when State.Result /= SXML.Result_OK;
+         SXML.Query.Attribute (State, Document, "label", Result, XML_Buf, Last);
+         Componolit.Runtime.Debug.Log_Debug (case Result is
+                                                when SXML.Result_OK        => "Result_OK",
+                                                when SXML.Result_Overflow  => "Result_Overflow",
+                                                when SXML.Result_Invalid   => "Result_Invalid",
+                                                when SXML.Result_Not_Found => "Result_Not_Found");
+         exit when (Result = SXML.Result_OK
+                    and then Last in XML_Buf'Range
+                    and then Last - XML_Buf'First = Label'Last - Label'First
+                    and then XML_Buf (XML_Buf'First .. Last) = Label)
+                   or else Result = SXML.Result_Invalid; --  FIXME: this should be SXML.Result_Not_Found
+         State := SXML.Query.Sibling (State, Document);
+      end loop;
+      if State.Result /= SXML.Result_OK then
+         Componolit.Runtime.Debug.Log_Error ("No service found");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      Componolit.Runtime.Debug.Log_Debug ("Lookup service");
+      SXML.Query.Attribute (State, Document, "server", Result, XML_Buf, Last);
+      if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
+         Componolit.Runtime.Debug.Log_Error ("Failed to get service provider");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      Componolit.Runtime.Debug.Log_Debug ("-> " & XML_Buf (XML_Buf'First .. Last) & " -> " & Label);
+      Componolit.Runtime.Debug.Log_Debug ("Lookup server");
+      Find_Service_By_Name (XML_Buf (XML_Buf'First .. Last), Destination, Valid);
+      if not Valid then
+         Componolit.Runtime.Debug.Log_Error ("Service provider not found");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      Componolit.Runtime.Debug.Log_Debug ("Lookup source name");
+      SXML.Query.Attribute (Policy (Source).Node, Document, "name", Result, XML_Buf, Last);
+      if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
+         Componolit.Runtime.Debug.Log_Error ("Failed to get source name");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      Send_Request (Policy (Destination).Fd, Kind, XML_Buf (XML_Buf'First .. Last), Label);
    end Process_Request;
 
    procedure Process_Confirm (Source : Positive;
@@ -428,7 +519,7 @@ is
    is
    begin
       Proto.Send_Message (Destination,
-                          Proto.Message'(Length      => RFLX.Session.Length_Type (Name'Length + Label'Length)
+                          Proto.Message'(Length      => RFLX.Session.Length_Type (Name'Length + Label'Length),
                                          Action      => RFLX.Session.Request,
                                          Kind        => Kind,
                                          Name_Length => RFLX.Session.Length_Type (Name'Length),
