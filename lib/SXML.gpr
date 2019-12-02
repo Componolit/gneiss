@@ -1,3 +1,4 @@
+with "basalt/basalt.gpr";
 
 library project SXML is
 
