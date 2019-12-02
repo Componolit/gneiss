@@ -28,4 +28,14 @@ is
                            Data        : Message;
                            File_Desc   : Integer := -1);
 
+   function Image (V : RFLX.Session.Action_Type) return String is
+      (case V is
+         when RFLX.Session.Request => "Request",
+         when RFLX.Session.Confirm => "Confirm",
+         when RFLX.Session.Reject  => "Reject");
+
+   function Image (V : RFLX.Session.Kind_Type) return String is
+      (case V is
+         when RFLX.Session.Message => "Message");
+
 end Gneiss.Protocoll;

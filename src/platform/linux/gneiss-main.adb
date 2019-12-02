@@ -88,8 +88,12 @@ is
       Event     : Gneiss.Epoll.Event;
    begin
       Gneiss.Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
+      if Event.Epoll_Hup or else Event.Epoll_Rdhup then
+         Componolit.Runtime.Debug.Log_Error ("Socket closed unexpectedly, shutting down");
+         raise Program_Error;
+      end if;
       if Event.Epoll_In then
-         --  Componolit.Runtime.Debug.Log_Debug ("Received event");
+         Componolit.Runtime.Debug.Log_Debug ("Received event");
          if Event_Ptr /= System.Null_Address then
             Call_Event (Event_Ptr);
          end if;
