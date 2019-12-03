@@ -45,14 +45,16 @@ is
       Pre => Index in Policy'Range;
 
    procedure Load_Message (Index   :        Positive;
-                           Context : in out RFLX.Session.Packet.Context) with
+                           Context : in out RFLX.Session.Packet.Context;
+                           Fd      :        Integer) with
       Pre => Index in Policy'Range;
 
    procedure Handle_Message (Source : Positive;
                              Action : RFLX.Session.Action_Type;
                              Kind   : RFLX.Session.Kind_Type;
                              Name   : String;
-                             Label  : String) with
+                             Label  : String;
+                             Fd     : Integer) with
       Pre => Source in Policy'Range;
 
    procedure Process_Request (Source : Positive;
@@ -63,7 +65,8 @@ is
    procedure Process_Confirm (Source : Positive;
                               Kind   : RFLX.Session.Kind_Type;
                               Name   : String;
-                              Label  : String) with
+                              Label  : String;
+                              Fd     : Integer) with
       Pre => Source in Policy'Range;
 
    procedure Process_Reject (Source : Positive;
@@ -111,7 +114,8 @@ is
       Valid := False;
       for I in Policy'Range loop
          if Policy (I).Node.Result = SXML.Result_OK then
-            SXML.Query.Attribute (Policy (I).Node, Document, Name, Result, XML_Buf, Last);
+            SXML.Query.Attribute (Policy (I).Node, Document, "name", Result, XML_Buf, Last);
+            Componolit.Runtime.Debug.Log_Debug ("Lookup (" & Basalt.Strings.Image (Last) & "): " & XML_Buf);
             if
                Result = SXML.Result_OK
                and then Last in XML_Buf'Range
@@ -287,32 +291,6 @@ is
       end loop;
    end Event_Loop;
 
-   procedure Peek_Message (Socket    :     Integer;
-                           Message   : out RFLX.Types.Bytes;
-                           Last      : out RFLX.Types.Index;
-                           Truncated : out Boolean);
-
-   procedure Peek_Message (Socket    :     Integer;
-                           Message   : out RFLX.Types.Bytes;
-                           Last      : out RFLX.Types.Index;
-                           Truncated : out Boolean) with
-      SPARK_Mode => Off
-   is
-      use type RFLX.Types.Index;
-      Ignore_Fd : Integer;
-      Trunc     : Integer;
-      Length    : Integer;
-   begin
-      Gneiss.Syscall.Peek_Message (Socket, Message'Address, Message'Length, Ignore_Fd, Length, Trunc);
-      Truncated := Trunc = 1;
-      if Length < 1 then
-         Last := RFLX.Types.Index'First;
-         return;
-      end if;
-      Componolit.Runtime.Debug.Log_Debug (Basalt.Strings.Image (Length));
-      Last      := (Message'First + RFLX.Types.Index (Length)) - 1;
-   end Peek_Message;
-
    type Bytes_Ptr is access all RFLX.Types.Bytes;
    function Convert is new Ada.Unchecked_Conversion (Bytes_Ptr, RFLX.Types.Bytes_Ptr);
    --  FIXME: We have to convert access to access all to use it with 'Access, we should not do this
@@ -325,10 +303,12 @@ is
       Context    : RFLX.Session.Packet.Context;
       Buffer_Ptr : RFLX.Types.Bytes_Ptr := Convert (Read_Buffer'Access);
       Last       : RFLX.Types.Index;
+      Fd         : Integer;
    begin
-      Peek_Message (Policy (Index).Fd, Read_Buffer, Last, Truncated);
+      Gneiss.Main.Peek_Message (Policy (Index).Fd, Read_Buffer, Last, Truncated, Fd);
       Gneiss.Syscall.Drop_Message (Policy (Index).Fd);
       if Truncated then
+         Gneiss.Syscall.Close (Fd);
          Componolit.Runtime.Debug.Log_Warning ("Message too large, dropping");
          return;
       end if;
@@ -372,15 +352,17 @@ is
          or else not RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Payload)
       then
          Componolit.Runtime.Debug.Log_Warning ("Invalid message, dropping");
+         Gneiss.Syscall.Close (Fd);
          return;
       end if;
       Componolit.Runtime.Debug.Log_Debug ("Name=" & Image (RFLX.Session.Packet.Get_Name_Length (Context))
                                           & " Payload=" & Image (RFLX.Session.Packet.Get_Payload_Length (Context)));
-      Load_Message (Index, Context);
+      Load_Message (Index, Context, Fd);
    end Read_Message;
 
    procedure Load_Message (Index   :        Positive;
-                           Context : in out RFLX.Session.Packet.Context)
+                           Context : in out RFLX.Session.Packet.Context;
+                           Fd      :        Integer)
    is
       use type RFLX.Types.Length;
       use type RFLX.Session.Length_Type;
@@ -410,7 +392,7 @@ is
          Handle_Message (Index,
                          RFLX.Session.Packet.Get_Action (Context),
                          RFLX.Session.Packet.Get_Kind (Context),
-                         Name, Label);
+                         Name, Label, Fd);
       else
          Componolit.Runtime.Debug.Log_Warning ("Missing payload");
       end if;
@@ -420,7 +402,8 @@ is
                              Action : RFLX.Session.Action_Type;
                              Kind   : RFLX.Session.Kind_Type;
                              Name   : String;
-                             Label  : String)
+                             Label  : String;
+                             Fd     : Integer)
    is
    begin
       Componolit.Runtime.Debug.Log_Debug ("Message:");
@@ -430,7 +413,7 @@ is
          when RFLX.Session.Request =>
             Process_Request (Source, Kind, Label);
          when RFLX.Session.Confirm =>
-            Process_Confirm (Source, Kind, Name, Label);
+            Process_Confirm (Source, Kind, Name, Label, Fd);
          when RFLX.Session.Reject =>
             Process_Reject (Source, Kind, Name, Label);
       end case;
@@ -497,7 +480,8 @@ is
    procedure Process_Confirm (Source : Positive;
                               Kind   : RFLX.Session.Kind_Type;
                               Name   : String;
-                              Label  : String)
+                              Label  : String;
+                              Fd     : Integer)
    is
    begin
       null;
