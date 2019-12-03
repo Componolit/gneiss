@@ -119,7 +119,8 @@ project Gneiss is
       when "init" =>
          case Platform is
             when "linux" =>
-               for Source_Dirs use Source & (Source_Platform & "/linux");
+               for Source_Dirs use Source & (Source_Platform & "/linux",
+                                             Source_Message & "/linux");
                for Excluded_Source_Files use ("init.c");
                for Languages use ("Ada", "C");
                Linux_Switches := ("-ldl");
