@@ -1,9 +1,9 @@
 
 with System;
 with RFLX.Session;
-with Gneiss.Platform;
 with Gneiss.Protocoll;
 with Gneiss_Epoll;
+with Gneiss_Platform;
 with Componolit.Runtime.Debug;
 
 package body Gneiss.Message.Client with
@@ -18,7 +18,7 @@ is
                    Label    :        String;
                    Success  :        Boolean;
                    Filedesc :        Integer);
-   procedure Register_Init is new Gneiss.Platform.Register_Initializer (Client_Session, Init);
+   function Init_Cap is new Gneiss_Platform.Create_Initializer_Cap (Client_Session, Init);
 
    function Get_Event_Address return System.Address with
       SPARK_Mode => Off
@@ -61,6 +61,7 @@ is
                          Cap     :        Capability;
                          Label   :        String)
    is
+      Succ : Boolean;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Initialize " & Label);
       case Status (Session) is
@@ -78,11 +79,17 @@ is
                C_Label (I) := Session.Label.Value (Positive (I));
             end loop;
             Session.Epoll_Fd := Cap.Epoll_Fd;
-            Register_Init (Session, Cap, RFLX.Session.Message, Label);
-            Proto.Send_Message
-               (Cap.Broker_Fd,
-                Create_Request (C_Label (C_Label'First ..
-                                         RFLX.Session.Length_Type (Session.Label.Last))));
+            Gneiss_Platform.Call (Cap.Register_Initializer,
+                                  Init_Cap (Session),
+                                  RFLX.Session.Message, Succ);
+            if Succ then
+               Proto.Send_Message
+                  (Cap.Broker_Fd,
+                   Create_Request (C_Label (C_Label'First ..
+                                            RFLX.Session.Length_Type (Session.Label.Last))));
+            else
+               Init (Session, Label, False, -1);
+            end if;
       end case;
    end Initialize;
 

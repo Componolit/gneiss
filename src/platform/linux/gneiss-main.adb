@@ -1,10 +1,11 @@
 
 with Ada.Unchecked_Conversion;
-with Gneiss_Epoll;
 with Gneiss.Linker;
 with Gneiss_Internal.Message;
 --  with Gneiss.Protocoll;
 with Gneiss.Syscall;
+with Gneiss_Epoll;
+with Gneiss_Platform;
 with System;
 with Componolit.Runtime.Debug;
 with RFLX.Session;
@@ -16,34 +17,27 @@ is
    use type Gneiss_Epoll.Epoll_Fd;
    use type System.Address;
 
-   type Service_Registry is array (RFLX.Session.Kind_Type'Range) of System.Address;
-   type Initializer is record
-      Func : System.Address := System.Null_Address;
-      Cap  : System.Address := System.Null_Address;
-   end record;
-   type Initializer_Registry is array (Positive range <>) of Initializer;
+   type Service_Registry is array (RFLX.Session.Kind_Type'Range) of Gneiss_Platform.Dispatcher_Cap;
+   type Initializer_Registry is array (Positive range <>) of Gneiss_Platform.Initializer_Cap;
    type Initializer_Service_Registry is array (RFLX.Session.Kind_Type'Range) of Initializer_Registry (1 .. 10);
 
    function Create_Cap (Fd : Integer) return Capability;
    procedure Set_Status (S : Integer);
+   function Set_Status_Cap is new Gneiss_Platform.Create_Set_Status_Cap (Set_Status);
    procedure Event_Handler;
    procedure Call_Event (Fp : System.Address) with
       Pre => Fp /= System.Null_Address;
-   generic
-      type Session_Type is limited private;
-   procedure Call_Initializer (Cap      : System.Address;
-                               Fp       : System.Address;
-                               Label    : String;
-                               Succ     : Boolean;
-                               Filedesc : Integer);
 
-   procedure Register_Service (Kind    :     RFLX.Session.Kind_Type;
-                               Fp      :     System.Address;
-                               Succ    : out Boolean);
+   procedure Register_Service (Kind :     RFLX.Session.Kind_Type;
+                               Cap  :     Gneiss_Platform.Dispatcher_Cap;
+                               Succ : out Boolean);
    procedure Register_Initializer (Kind    :     RFLX.Session.Kind_Type;
-                                   Fp      :     System.Address;
-                                   Cap     :     System.Address;
+                                   Cap     :     Gneiss_Platform.Initializer_Cap;
                                    Succ    : out Boolean);
+   function Register_Service_Cap is new Gneiss_Platform.Create_Register_Service_Cap
+      (Register_Service);
+   function Register_Initializer_Cap is new Gneiss_Platform.Create_Register_Initializer_Cap
+      (Register_Initializer);
 
    procedure Construct (Symbol : System.Address;
                         Cap    : Capability);
@@ -65,30 +59,11 @@ is
 
    Component_Status : Integer                      := Running;
    Epoll_Fd         : Gneiss_Epoll.Epoll_Fd        := -1;
-   Services         : Service_Registry             := (others => System.Null_Address);
+   Services         : Service_Registry;
    Broker_Fd        : Integer                      := -1;
    Initializers     : Initializer_Service_Registry;
 
-   procedure Call_Initializer (Cap      : System.Address;
-                               Fp       : System.Address;
-                               Label    : String;
-                               Succ     : Boolean;
-                               Filedesc : Integer)
-   is
-      procedure Initialize (Session : in out Session_Type;
-                            L       :        String;
-                            S       :        Boolean;
-                            Fd      :        Integer) with
-         Import,
-         Address => Fp;
-      Session : Session_Type with
-         Import,
-         Address => Cap;
-   begin
-      Initialize (Session, Label, Succ, Filedesc);
-   end Call_Initializer;
-
-   procedure Message_Initializer is new Call_Initializer (Gneiss_Internal.Message.Client_Session);
+   procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
 
    procedure Call_Event (Fp : System.Address)
    is
@@ -100,35 +75,33 @@ is
    end Call_Event;
 
    procedure Register_Service (Kind    :     RFLX.Session.Kind_Type;
-                               Fp      :     System.Address;
+                               Cap     :     Gneiss_Platform.Dispatcher_Cap;
                                Succ    : out Boolean)
    is
    begin
       if
-         Fp = System.Null_Address
-         or else Services (Kind) /= System.Null_Address
+         not Gneiss_Platform.Is_Valid (Cap)
+         or else Gneiss_Platform.Is_Valid (Services (Kind))
       then
          Succ := False;
       else
-         Services (Kind) := Fp;
+         Services (Kind) := Cap;
          Succ := True;
       end if;
    end Register_Service;
 
    procedure Register_Initializer (Kind :     RFLX.Session.Kind_Type;
-                                   Fp   :     System.Address;
-                                   Cap  :     System.Address;
+                                   Cap  :     Gneiss_Platform.Initializer_Cap;
                                    Succ : out Boolean)
    is
    begin
       Succ := False;
-      if Fp = System.Null_Address or else Cap = System.Null_Address then
+      if not Gneiss_Platform.Is_Valid (Cap) then
          return;
       end if;
       for I in Initializers (Kind)'Range loop
-         if Initializers (Kind)(I).Func = System.Null_Address then
-            Initializers (Kind)(I) := Initializer'(Func => Fp,
-                                                   Cap  => Cap);
+         if not Gneiss_Platform.Is_Valid (Initializers (Kind)(I)) then
+            Initializers (Kind)(I) := Cap;
             Succ := True;
             return;
          end if;
@@ -258,17 +231,13 @@ is
    begin
       Componolit.Runtime.Debug.Log_Debug ("Handle_Answer");
       for I of Initializers (Kind) loop
-         if
-            I.Func /= System.Null_Address
-            and then I.Cap /= System.Null_Address
-         then
+         if Gneiss_Platform.Is_Valid (I) then
             Componolit.Runtime.Debug.Log_Debug ("Initialize with Answer " & Label);
             case Kind is
                when RFLX.Session.Message =>
-                  Message_Initializer (I.Cap, I.Func, Label, Fd >= 0, Fd);
+                  Message_Initializer (I, Label, Fd >= 0, Fd);
             end case;
-            I.Func := System.Null_Address;
-            I.Cap  := System.Null_Address;
+            Gneiss_Platform.Invalidate (I);
          end if;
       end loop;
    end Handle_Answer;
@@ -280,16 +249,12 @@ is
       return Broker_Event'Address;
    end Broker_Event_Address;
 
-   function Create_Cap (Fd : Integer) return Capability with
-      SPARK_Mode => Off
-   is
-   begin
-      return Capability'(Broker_Fd            => Fd,
-                         Set_Status           => Set_Status'Address,
-                         Register_Service     => Register_Service'Address,
-                         Register_Initializer => Register_Initializer'Address,
-                         Epoll_Fd             => Epoll_Fd);
-   end Create_Cap;
+   function Create_Cap (Fd : Integer) return Capability is
+      (Capability'(Broker_Fd            => Fd,
+                   Set_Status           => Set_Status_Cap,
+                   Register_Service     => Register_Service_Cap,
+                   Register_Initializer => Register_Initializer_Cap,
+                   Epoll_Fd             => Epoll_Fd));
 
    procedure Load_Message (Context    : in out RFLX.Session.Packet.Context;
                            Label      :    out String;
