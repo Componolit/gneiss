@@ -1,6 +1,4 @@
 
-with Gneiss.Types;
-
 generic
    with procedure Event;
 package Gneiss.Message.Client with
@@ -8,9 +6,9 @@ package Gneiss.Message.Client with
 is
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   procedure Initialize (Session    : in out Client_Session;
-                         Capability :        Gneiss.Types.Capability;
-                         Label      :        String);
+   procedure Initialize (Session : in out Client_Session;
+                         Cap     :        Capability;
+                         Label   :        String);
 
    procedure Finalize (Session : in out Client_Session);
 

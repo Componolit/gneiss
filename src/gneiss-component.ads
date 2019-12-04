@@ -9,13 +9,11 @@
 --  GNU Affero General Public License version 3.
 --
 
-with Gneiss.Types;
-
 generic
    --  Component intialization procedure
    --
    --  @param Cap  Capability provided by the platform to use services
-   with procedure Component_Construct (Capability : Gneiss.Types.Capability);
+   with procedure Component_Construct (Cap : Capability);
 
    --  Component destruction procedure
    --  This procedure is called after Vacate has been called and the procedure Vacate has been called from returned.
@@ -31,7 +29,7 @@ is
 
    type Component_Status is (Success, Failure);
 
-   procedure Construct (Capability : Gneiss.Types.Capability) with
+   procedure Construct (Cap : Capability) with
       Export,
       Convention => C,
       External_Name => "componolit_interfaces_component_construct";
@@ -41,7 +39,7 @@ is
       Convention => C,
       External_Name => "componolit_interfaces_component_destruct";
 
-   procedure Vacate (Cap    : Gneiss.Types.Capability;
+   procedure Vacate (Cap    : Capability;
                      Status : Component_Status) with
       Global => (In_Out => Platform);
 

@@ -1,5 +1,4 @@
 
-with Gneiss;
 with Gneiss.Message;
 with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
@@ -31,9 +30,9 @@ is
    Dispatcher : Message.Dispatcher_Session;
    Server     : Message.Server_Session;
    Registered : Boolean := False;
-   Capability : Gneiss.Types.Capability;
+   Capability : Gneiss.Capability;
 
-   procedure Construct (Cap : Gns.Types.Capability)
+   procedure Construct (Cap : Gns.Capability)
    is
    begin
       Capability := Cap;

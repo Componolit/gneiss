@@ -8,17 +8,17 @@ is
 
    type Config_Capability is private;
 
-   procedure Load (Location   : String;
-                   Capability : out Config_Capability);
+   procedure Load (Location : String;
+                   Cap      : out Config_Capability);
 
-   function Valid (Capability : Config_Capability) return Boolean;
+   function Valid (Cap : Config_Capability) return Boolean;
 
-   function Get_Address (Capability : Config_Capability) return System.Address with
-      Pre  => Valid (Capability),
+   function Get_Address (Cap : Config_Capability) return System.Address with
+      Pre  => Valid (Cap),
       Post => Get_Address'Result /= System.Null_Address;
 
-   function Get_Length (Capability : Config_Capability) return Natural with
-      Pre => Valid (Capability);
+   function Get_Length (Cap : Config_Capability) return Natural with
+      Pre => Valid (Cap);
 
 private
 

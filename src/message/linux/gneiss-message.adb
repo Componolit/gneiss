@@ -1,10 +1,10 @@
 
-with Gneiss.Epoll;
+with Gneiss_Epoll;
 
 package body Gneiss.Message with
    SPARK_Mode
 is
-   use type Gneiss.Epoll.Epoll_Fd;
+   use type Gneiss_Epoll.Epoll_Fd;
 
    function Status (Session : Client_Session) return Session_Status is
       (if Session.Epoll_Fd >= 0 then Pending else

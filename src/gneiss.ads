@@ -9,10 +9,18 @@
 --  GNU Affero General Public License version 3.
 --
 
+private with Gneiss_Internal;
+
 package Gneiss with
    SPARK_Mode
 is
 
    type Session_Status is (Uninitialized, Pending, Initialized);
+
+   type Capability is private;
+
+private
+
+   type Capability is new Gneiss_Internal.Capability;
 
 end Gneiss;
