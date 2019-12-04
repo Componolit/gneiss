@@ -1,5 +1,5 @@
 
-with Gneiss.Platform;
+with Gneiss_Platform;
 
 package body Gneiss.Component with
    SPARK_Mode => Off
@@ -23,9 +23,9 @@ is
    begin
       case Status is
          when Success =>
-            Gneiss.Platform.Set_Status (Cap, 0);
+            Gneiss_Platform.Call (Cap.Set_Status, 0);
          when Failure =>
-            Gneiss.Platform.Set_Status (Cap, 1);
+            Gneiss_Platform.Call (Cap.Set_Status, 1);
       end case;
    end Vacate;
 
