@@ -3,8 +3,8 @@ package body Gneiss.Message.Dispatcher with
    SPARK_Mode
 is
 
-   procedure Initialize (Session    : in out Dispatcher_Session;
-                         Capability :        Gneiss.Types.Capability)
+   procedure Initialize (Session : in out Dispatcher_Session;
+                         Cap     :        Capability)
    is
    begin
       null;
@@ -22,28 +22,28 @@ is
       null;
    end Finalize;
 
-   function Valid_Session_Request (Session    : Dispatcher_Session;
-                                   Capability : Dispatcher_Capability) return Boolean is (False);
+   function Valid_Session_Request (Session : Dispatcher_Session;
+                                   Cap     : Dispatcher_Capability) return Boolean is (False);
 
-   procedure Session_Initialize (Session    : in out Dispatcher_Session;
-                                 Capability :        Dispatcher_Capability;
-                                 Server_S   : in out Server_Session)
+   procedure Session_Initialize (Session  : in out Dispatcher_Session;
+                                 Cap      :        Dispatcher_Capability;
+                                 Server_S : in out Server_Session)
    is
    begin
       null;
    end Session_Initialize;
 
-   procedure Session_Accept (Session    : in out Dispatcher_Session;
-                             Capability :        Dispatcher_Capability;
-                             Server_S   : in out Server_Session)
+   procedure Session_Accept (Session  : in out Dispatcher_Session;
+                             Cap      :        Dispatcher_Capability;
+                             Server_S : in out Server_Session)
    is
    begin
       null;
    end Session_Accept;
 
-   procedure Session_Cleanup (Session    : in out Dispatcher_Session;
-                              Capability :        Dispatcher_Capability;
-                              Server_S   : in out Server_Session)
+   procedure Session_Cleanup (Session  : in out Dispatcher_Session;
+                              Cap      :        Dispatcher_Capability;
+                              Server_S : in out Server_Session)
    is
    begin
       null;

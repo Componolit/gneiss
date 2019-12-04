@@ -2,8 +2,8 @@
 with Ada.Unchecked_Conversion;
 with Gneiss.Syscall;
 with Gneiss.Main;
-with Gneiss.Epoll;
 with Gneiss.Protocoll;
+with Gneiss_Epoll;
 with Basalt.Strings;
 with Basalt.Strings_Generic;
 with SXML.Parser;
@@ -15,13 +15,13 @@ with Componolit.Runtime.Debug;
 package body Gneiss.Broker with
    SPARK_Mode
 is
-   use type Gneiss.Epoll.Epoll_Fd;
+   use type Gneiss_Epoll.Epoll_Fd;
 
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
    package Proto is new Gneiss.Protocoll (RFLX.Types.Byte, RFLX_String);
 
    Policy  : Component_List (1 .. 1024);
-   Efd     : Gneiss.Epoll.Epoll_Fd := -1;
+   Efd     : Gneiss_Epoll.Epoll_Fd := -1;
    XML_Buf : String (1 .. 255);
 
    function Convert_Message (S : String) return RFLX_String;
@@ -167,7 +167,7 @@ is
          Status := 1;
          return;
       end if;
-      Gneiss.Epoll.Create (Efd);
+      Gneiss_Epoll.Create (Efd);
       if Efd < 0 then
          Status := 1;
          return;
@@ -208,7 +208,7 @@ is
          if Result = SXML.Result_OK then
             Policy (Index).Node := State;
             Gneiss.Syscall.Socketpair (Policy (Index).Fd, Fd);
-            Gneiss.Epoll.Add (Efd, Policy (Index).Fd, Index, Success);
+            Gneiss_Epoll.Add (Efd, Policy (Index).Fd, Index, Success);
             Gneiss.Syscall.Fork (Pid);
             if Pid < 0 then
                Status := 1;
@@ -259,7 +259,7 @@ is
 
    procedure Event_Loop (Status : out Integer)
    is
-      Ev      : Gneiss.Epoll.Event;
+      Ev      : Gneiss_Epoll.Event;
       Index   : Integer;
       Success : Integer;
       Result  : SXML.Result_Type;
@@ -267,7 +267,7 @@ is
    begin
       Status := 1;
       loop
-         Gneiss.Epoll.Wait (Efd, Ev, Index);
+         Gneiss_Epoll.Wait (Efd, Ev, Index);
          Componolit.Runtime.Debug.Log_Debug ("Broker Event");
          if Index in Policy'Range then
             SXML.Query.Attribute (Policy (Index).Node, Document, "name", Result, XML_Buf, Last);
@@ -281,7 +281,7 @@ is
                                                    & XML_Buf (XML_Buf'First .. Last)
                                                    & " exited with status "
                                                    & Basalt.Strings.Image (Success));
-               Gneiss.Epoll.Remove (Efd, Policy (Index).Fd, Success);
+               Gneiss_Epoll.Remove (Efd, Policy (Index).Fd, Success);
                Gneiss.Syscall.Close (Policy (Index).Fd);
                Policy (Index).Node := SXML.Query.Invalid_State;
             end if;
