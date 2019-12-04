@@ -3,7 +3,7 @@ with System;
 with RFLX.Session;
 with Gneiss.Platform;
 with Gneiss.Protocoll;
-with Gneiss.Epoll;
+with Gneiss_Epoll;
 with Componolit.Runtime.Debug;
 
 package body Gneiss.Message.Client with
@@ -39,7 +39,7 @@ is
                    Success  :        Boolean;
                    Filedesc :        Integer)
    is
-      use type Gneiss.Epoll.Epoll_Fd;
+      use type Gneiss_Epoll.Epoll_Fd;
       S : Integer;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Init " & Label);
@@ -48,7 +48,7 @@ is
       end if;
       Session.Epoll_Fd := -1;
       if Success then
-         Gneiss.Epoll.Add (Session.Epoll_Fd, Filedesc, Get_Event_Address, S);
+         Gneiss_Epoll.Add (Session.Epoll_Fd, Filedesc, Get_Event_Address, S);
          if S = 0 then
             Session.File_Descriptor := Filedesc;
          end if;
@@ -57,9 +57,9 @@ is
    end Init;
 
    C_Label : RFLX_String (1 .. 255);
-   procedure Initialize (Session    : in out Client_Session;
-                         Capability :        Gneiss.Types.Capability;
-                         Label      :        String)
+   procedure Initialize (Session : in out Client_Session;
+                         Cap     :        Capability;
+                         Label   :        String)
    is
    begin
       Componolit.Runtime.Debug.Log_Debug ("Initialize " & Label);
@@ -77,10 +77,10 @@ is
             for I in C_Label'Range loop
                C_Label (I) := Session.Label.Value (Positive (I));
             end loop;
-            Session.Epoll_Fd := Gneiss.Platform.Get_Epoll (Capability);
-            Register_Init (Session, Capability, RFLX.Session.Message, Label);
+            Session.Epoll_Fd := Cap.Epoll_Fd;
+            Register_Init (Session, Cap, RFLX.Session.Message, Label);
             Proto.Send_Message
-               (Gneiss.Platform.Get_Broker (Capability),
+               (Cap.Broker_Fd,
                 Create_Request (C_Label (C_Label'First ..
                                          RFLX.Session.Length_Type (Session.Label.Last))));
       end case;

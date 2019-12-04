@@ -16,9 +16,9 @@ is
 
    Client     : Message.Client_Session;
    Msg        : Message.Message_Buffer;
-   Capability : Gneiss.Types.Capability;
+   Capability : Gneiss.Capability;
 
-   procedure Construct (Cap : Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Componolit.Runtime.Debug.Log_Debug ("Message client");

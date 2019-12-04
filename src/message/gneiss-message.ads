@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss.Internal.Message;
+private with Gneiss_Internal.Message;
 
 generic
    type Index is range <>;
@@ -39,9 +39,9 @@ is
 
 private
 
-   type Client_Session is new Gneiss.Internal.Message.Client_Session;
-   type Server_Session is new Gneiss.Internal.Message.Server_Session;
-   type Dispatcher_Session is new Gneiss.Internal.Message.Dispatcher_Session;
-   type Dispatcher_Capability is new Gneiss.Internal.Message.Dispatcher_Capability;
+   type Client_Session is new Gneiss_Internal.Message.Client_Session;
+   type Server_Session is new Gneiss_Internal.Message.Server_Session;
+   type Dispatcher_Session is new Gneiss_Internal.Message.Dispatcher_Session;
+   type Dispatcher_Capability is new Gneiss_Internal.Message.Dispatcher_Capability;
 
 end Gneiss.Message;

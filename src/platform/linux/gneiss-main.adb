@@ -1,9 +1,8 @@
 
 with Ada.Unchecked_Conversion;
-with Gneiss.Epoll;
+with Gneiss_Epoll;
 with Gneiss.Linker;
-with Gneiss.Internal.Types;
-with Gneiss.Internal.Message;
+with Gneiss_Internal.Message;
 --  with Gneiss.Protocoll;
 with Gneiss.Syscall;
 with System;
@@ -14,7 +13,7 @@ with RFLX.Session.Packet;
 package body Gneiss.Main with
    SPARK_Mode
 is
-   use type Gneiss.Epoll.Epoll_Fd;
+   use type Gneiss_Epoll.Epoll_Fd;
    use type System.Address;
 
    type Service_Registry is array (RFLX.Session.Kind_Type'Range) of System.Address;
@@ -25,7 +24,7 @@ is
    type Initializer_Registry is array (Positive range <>) of Initializer;
    type Initializer_Service_Registry is array (RFLX.Session.Kind_Type'Range) of Initializer_Registry (1 .. 10);
 
-   function Create_Cap (Fd : Integer) return Gneiss.Internal.Types.Capability;
+   function Create_Cap (Fd : Integer) return Capability;
    procedure Set_Status (S : Integer);
    procedure Event_Handler;
    procedure Call_Event (Fp : System.Address) with
@@ -46,8 +45,8 @@ is
                                    Cap     :     System.Address;
                                    Succ    : out Boolean);
 
-   procedure Construct (Symbol     : System.Address;
-                        Capability : Gneiss.Internal.Types.Capability);
+   procedure Construct (Symbol : System.Address;
+                        Cap    : Capability);
    procedure Destruct (Symbol : System.Address);
    procedure Broker_Event;
    function Broker_Event_Address return System.Address;
@@ -65,7 +64,7 @@ is
    Failure : constant Integer := 1;
 
    Component_Status : Integer                      := Running;
-   Epoll_Fd         : Gneiss.Epoll.Epoll_Fd        := -1;
+   Epoll_Fd         : Gneiss_Epoll.Epoll_Fd        := -1;
    Services         : Service_Registry             := (others => System.Null_Address);
    Broker_Fd        : Integer                      := -1;
    Initializers     : Initializer_Service_Registry;
@@ -89,7 +88,7 @@ is
       Initialize (Session, Label, Succ, Filedesc);
    end Call_Initializer;
 
-   procedure Message_Initializer is new Call_Initializer (Gneiss.Internal.Message.Client_Session);
+   procedure Message_Initializer is new Call_Initializer (Gneiss_Internal.Message.Client_Session);
 
    procedure Call_Event (Fp : System.Address)
    is
@@ -163,13 +162,13 @@ is
          Status := 1;
          return;
       end if;
-      Gneiss.Epoll.Create (Epoll_Fd);
+      Gneiss_Epoll.Create (Epoll_Fd);
       if Epoll_Fd < 0 then
          Componolit.Runtime.Debug.Log_Error ("Epoll creation failed");
          Status := 1;
          return;
       end if;
-      Gneiss.Epoll.Add (Epoll_Fd, Broker_Fd, Broker_Event_Address, Status);
+      Gneiss_Epoll.Add (Epoll_Fd, Broker_Fd, Broker_Event_Address, Status);
       if Status /= 0 then
          Componolit.Runtime.Debug.Log_Error ("Failed to add epoll fd");
          Status := 1;
@@ -186,9 +185,9 @@ is
    procedure Event_Handler
    is
       Event_Ptr : System.Address;
-      Event     : Gneiss.Epoll.Event;
+      Event     : Gneiss_Epoll.Event;
    begin
-      Gneiss.Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
+      Gneiss_Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
       if Event.Epoll_Hup or else Event.Epoll_Rdhup then
          Componolit.Runtime.Debug.Log_Error ("Socket closed unexpectedly, shutting down");
          raise Program_Error;
@@ -281,15 +280,15 @@ is
       return Broker_Event'Address;
    end Broker_Event_Address;
 
-   function Create_Cap (Fd : Integer) return Gneiss.Internal.Types.Capability with
+   function Create_Cap (Fd : Integer) return Capability with
       SPARK_Mode => Off
    is
    begin
-      return Gneiss.Internal.Types.Capability'(Filedesc             => Fd,
-                                               Set_Status           => Set_Status'Address,
-                                               Register_Service     => Register_Service'Address,
-                                               Register_Initializer => Register_Initializer'Address,
-                                               Epoll_Fd             => Epoll_Fd);
+      return Capability'(Broker_Fd            => Fd,
+                         Set_Status           => Set_Status'Address,
+                         Register_Service     => Register_Service'Address,
+                         Register_Initializer => Register_Initializer'Address,
+                         Epoll_Fd             => Epoll_Fd);
    end Create_Cap;
 
    procedure Load_Message (Context    : in out RFLX.Session.Packet.Context;
@@ -339,14 +338,14 @@ is
       Component_Status := (if S = 0 then Success else Failure);
    end Set_Status;
 
-   procedure Construct (Symbol     : System.Address;
-                        Capability : Gneiss.Internal.Types.Capability)
+   procedure Construct (Symbol : System.Address;
+                        Cap    : Capability)
    is
-      procedure Component_Construct (C : Gneiss.Internal.Types.Capability) with
+      procedure Component_Construct (C : Capability) with
          Import,
          Address => Symbol;
    begin
-      Component_Construct (Capability);
+      Component_Construct (Cap);
    end Construct;
 
    procedure Destruct (Symbol : System.Address)

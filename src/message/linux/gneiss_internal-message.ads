@@ -1,16 +1,15 @@
 
-with Gneiss.Internal.Types;
-with Gneiss.Epoll;
+with Gneiss_Epoll;
 
-package Gneiss.Internal.Message with
+package Gneiss_Internal.Message with
    SPARK_Mode
 is
-   use type Gneiss.Epoll.Epoll_Fd;
+   use type Gneiss_Epoll.Epoll_Fd;
 
    type Client_Session is record
       File_Descriptor : Integer := -1;
-      Epoll_Fd        : Gneiss.Epoll.Epoll_Fd := -1;
-      Label           : Gneiss.Internal.Types.Session_Label;
+      Epoll_Fd        : Gneiss_Epoll.Epoll_Fd := -1;
+      Label           : Session_Label;
    end record;
 
    type Server_Session is record
@@ -23,4 +22,4 @@ is
 
    type Dispatcher_Capability is null record;
 
-end Gneiss.Internal.Message;
+end Gneiss_Internal.Message;

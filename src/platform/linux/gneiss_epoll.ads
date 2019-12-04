@@ -1,7 +1,7 @@
 
 with System;
 
-package Gneiss.Epoll with
+package Gneiss_Epoll with
    SPARK_Mode
 is
 
@@ -84,4 +84,4 @@ is
       Convention    => C,
       External_Name => "gneiss_epoll_wait_ptr";
 
-end Gneiss.Epoll;
+end Gneiss_Epoll;
