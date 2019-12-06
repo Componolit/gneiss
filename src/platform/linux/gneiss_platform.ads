@@ -12,12 +12,14 @@ is
    type Register_Service_Cap is private;
    type Dispatcher_Cap is private;
 
+   function Is_Valid (Cap : Set_Status_Cap) return Boolean;
    function Is_Valid (Cap : Initializer_Cap) return Boolean;
+   function Is_Valid (Cap : Dispatcher_Cap) return Boolean;
+   function Is_Valid (Cap : Register_Initializer_Cap) return Boolean;
+   function Is_Valid (Cap : Register_Service_Cap) return Boolean;
 
    procedure Invalidate (Cap : in out Initializer_Cap) with
       Post => not Is_Valid (Cap);
-
-   function Is_Valid (Cap : Dispatcher_Cap) return Boolean;
 
    procedure Invalidate (Cap : in out Dispatcher_Cap) with
       Post => not Is_Valid (Cap);
@@ -25,10 +27,12 @@ is
    generic
       --  @param S  Status code (0 - Success, 1 - Failure)
       with procedure Set_Status (S : Integer);
-   function Create_Set_Status_Cap return Set_Status_Cap;
+   function Create_Set_Status_Cap return Set_Status_Cap with
+      Post => Is_Valid (Create_Set_Status_Cap'Result);
 
    procedure Call (Cap : Set_Status_Cap;
-                   S   : Integer);
+                   S   : Integer) with
+      Pre => Is_Valid (Cap);
 
    generic
       type Session_Type is limited private;
@@ -36,7 +40,8 @@ is
                                   Label   :        String;
                                   Success :        Boolean;
                                   Fd      :        Integer);
-   function Create_Initializer_Cap (S : Session_Type) return Initializer_Cap;
+   function Create_Initializer_Cap (S : Session_Type) return Initializer_Cap with
+      Post => Is_Valid (Create_Initializer_Cap'Result);
 
    generic
       type Session_Type is limited private;
@@ -50,41 +55,49 @@ is
       with procedure Register (K :     RFLX.Session.Kind_Type;
                                I :     Initializer_Cap;
                                S : out Boolean);
-   function Create_Register_Initializer_Cap return Register_Initializer_Cap;
+   function Create_Register_Initializer_Cap return Register_Initializer_Cap with
+      Post => Is_Valid (Create_Register_Initializer_Cap'Result);
 
    procedure Call (Cap     :     Register_Initializer_Cap;
                    I_Cap   :     Initializer_Cap;
                    Kind    :     RFLX.Session.Kind_Type;
-                   Success : out Boolean);
+                   Success : out Boolean) with
+      Pre => Is_Valid (Cap);
 
    generic
       with procedure Register (K :     RFLX.Session.Kind_Type;
                                D :     Dispatcher_Cap;
                                S : out Boolean);
-   function Create_Register_Service_Cap return Register_Service_Cap;
+   function Create_Register_Service_Cap return Register_Service_Cap with
+      Post => Is_Valid (Create_Register_Service_Cap'Result);
 
    procedure Call (Cap     :     Register_Service_Cap;
                    Kind    :     RFLX.Session.Kind_Type;
                    D_Cap   :     Dispatcher_Cap;
-                   Success : out Boolean);
+                   Success : out Boolean) with
+      Pre => Is_Valid (Cap);
 
    generic
       type Session_Type is limited private;
       with procedure Dispatch (Session : in out Session_Type;
                                Name    :        String;
-                               Label   :        String);
-   function Create_Dispatcher_Cap (S : Session_Type) return Dispatcher_Cap;
+                               Label   :        String;
+                               Fd      :        Integer);
+   function Create_Dispatcher_Cap (S : Session_Type) return Dispatcher_Cap with
+      Post => Is_Valid (Create_Dispatcher_Cap'Result);
 
    generic
       type Session_Type is limited private;
    procedure Dispatcher_Call (Cap   : Dispatcher_Cap;
                               Name  : String;
-                              Label : String);
+                              Label : String;
+                              Fd    : Integer) with
+      Pre => Is_Valid (Cap);
 
 private
 
    type Set_Status_Cap is record
-      Address : System.Address;
+      Address : System.Address := System.Null_Address;
    end record;
 
    type Initializer_Cap is record
@@ -93,11 +106,11 @@ private
    end record;
 
    type Register_Initializer_Cap is record
-      Address : System.Address;
+      Address : System.Address := System.Null_Address;
    end record;
 
    type Register_Service_Cap is record
-      Address : System.Address;
+      Address : System.Address := System.Null_Address;
    end record;
 
    type Dispatcher_Cap is record

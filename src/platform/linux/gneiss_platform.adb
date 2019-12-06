@@ -7,15 +7,24 @@ is
    function Is_Valid (Cap : Initializer_Cap) return Boolean is
       (Cap.Address /= System.Null_Address and then Cap.Cap /= System.Null_Address);
 
+   function Is_Valid (Cap : Dispatcher_Cap) return Boolean is
+      (Cap.Address /= System.Null_Address and then Cap.Cap /= System.Null_Address);
+
+   function Is_Valid (Cap : Set_Status_Cap) return Boolean is
+      (Cap.Address /= System.Null_Address);
+
+   function Is_Valid (Cap : Register_Initializer_Cap) return Boolean is
+      (Cap.Address /= System.Null_Address);
+
+   function Is_Valid (Cap : Register_Service_Cap) return Boolean is
+      (Cap.Address /= System.Null_Address);
+
    procedure Invalidate (Cap : in out Initializer_Cap)
    is
    begin
       Cap.Address := System.Null_Address;
       Cap.Cap     := System.Null_Address;
    end Invalidate;
-
-   function Is_Valid (Cap : Dispatcher_Cap) return Boolean is
-      (Cap.Address /= System.Null_Address and then Cap.Cap /= System.Null_Address);
 
    procedure Invalidate (Cap : in out Dispatcher_Cap)
    is
@@ -119,18 +128,20 @@ is
 
    procedure Dispatcher_Call (Cap   : Dispatcher_Cap;
                               Name  : String;
-                              Label : String)
+                              Label : String;
+                              Fd    : Integer)
    is
       procedure Dispatch (S : in out Session_Type;
                           N :        String;
-                          L :        String) with
+                          L :        String;
+                          F :        Integer) with
          Import,
          Address => Cap.Address;
       Session : Session_Type with
          Import,
          Address => Cap.Cap;
    begin
-      Dispatch (Session, Name, Label);
+      Dispatch (Session, Name, Label, Fd);
    end Dispatcher_Call;
 
 end Gneiss_Platform;

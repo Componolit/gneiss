@@ -2,7 +2,7 @@
 with Ada.Unchecked_Conversion;
 with Gneiss.Linker;
 with Gneiss_Internal.Message;
---  with Gneiss.Protocoll;
+with Gneiss.Protocoll;
 with Gneiss.Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
@@ -20,6 +20,9 @@ is
    type Service_Registry is array (RFLX.Session.Kind_Type'Range) of Gneiss_Platform.Dispatcher_Cap;
    type Initializer_Registry is array (Positive range <>) of Gneiss_Platform.Initializer_Cap;
    type Initializer_Service_Registry is array (RFLX.Session.Kind_Type'Range) of Initializer_Registry (1 .. 10);
+   type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
+
+   package Proto is new Gneiss.Protocoll (Character, RFLX_String);
 
    function Create_Cap (Fd : Integer) return Capability;
    procedure Set_Status (S : Integer);
@@ -44,14 +47,17 @@ is
    procedure Destruct (Symbol : System.Address);
    procedure Broker_Event;
    function Broker_Event_Address return System.Address;
-   procedure Handle_Answer (Context : in out RFLX.Session.Packet.Context;
-                            Fd      :        Integer;
-                            Label   :        String);
+   procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
+                            Fd    : Integer;
+                            Label : String);
    procedure Load_Message (Context    : in out RFLX.Session.Packet.Context;
                            Label      :    out String;
                            Last_Label :    out Natural;
                            Name       :    out String;
                            Last_Name  :    out Natural);
+   procedure Handle_Request (Kind  : RFLX.Session.Kind_Type;
+                             Name  : String;
+                             Label : String);
 
    Running : constant Integer := -1;
    Success : constant Integer := 0;
@@ -64,6 +70,7 @@ is
    Initializers     : Initializer_Service_Registry;
 
    procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
+   procedure Message_Dispatcher is new Gneiss_Platform.Dispatcher_Call (Gneiss_Internal.Message.Dispatcher_Session);
 
    procedure Call_Event (Fp : System.Address)
    is
@@ -79,6 +86,7 @@ is
                                Succ    : out Boolean)
    is
    begin
+      Componolit.Runtime.Debug.Log_Debug ("Registering...");
       if
          not Gneiss_Platform.Is_Valid (Cap)
          or else Gneiss_Platform.Is_Valid (Services (Kind))
@@ -189,6 +197,7 @@ is
       Fd         : Integer;
       Name_Last  : Natural;
       Label_Last : Natural;
+      Kind       : RFLX.Session.Kind_Type;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Broker_Event");
       Peek_Message (Broker_Fd, Read_Buffer, Last, Truncated, Fd);
@@ -211,23 +220,26 @@ is
          return;
       end if;
       Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
+      Kind := RFLX.Session.Packet.Get_Kind (Context);
       case RFLX.Session.Packet.Get_Action (Context) is
          when RFLX.Session.Request =>
             Componolit.Runtime.Debug.Log_Debug ("Request");
+            Handle_Request (Kind,
+                            Read_Name (Read_Name'First .. Name_Last),
+                            Read_Label (Read_Label'First .. Label_Last));
          when RFLX.Session.Confirm =>
             Componolit.Runtime.Debug.Log_Debug ("Confirm");
-            Handle_Answer (Context, Fd, Read_Label (Read_Label'First .. Label_Last));
+            Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
          when RFLX.Session.Reject =>
             Componolit.Runtime.Debug.Log_Debug ("Reject");
-            Handle_Answer (Context, Fd, Read_Label (Read_Label'First .. Label_Last));
+            Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
       end case;
    end Broker_Event;
 
-   procedure Handle_Answer (Context : in out RFLX.Session.Packet.Context;
-                            Fd      :        Integer;
-                            Label   :        String)
+   procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
+                            Fd    : Integer;
+                            Label : String)
    is
-      Kind : constant RFLX.Session.Kind_Type := RFLX.Session.Packet.Get_Kind (Context);
    begin
       Componolit.Runtime.Debug.Log_Debug ("Handle_Answer");
       for I of Initializers (Kind) loop
@@ -241,6 +253,48 @@ is
          end if;
       end loop;
    end Handle_Answer;
+
+   Return_Message : RFLX_String (1 .. 255);
+
+   procedure Handle_Request (Kind  : RFLX.Session.Kind_Type;
+                             Name  : String;
+                             Label : String)
+   is
+      use type RFLX.Session.Length_Type;
+      Dispatcher : constant Gneiss_Platform.Dispatcher_Cap :=
+         Services (Kind);
+      Next       : RFLX.Session.Length_Type := Return_Message'First;
+      N_Length   : RFLX.Session.Length_Type;
+   begin
+      if Name'Length + Label'Length < 256 then
+         for C of Name loop
+            Return_Message (Next) := C;
+            Next := Next + 1;
+         end loop;
+         N_Length := Next - 1;
+         for C of Label loop
+            Return_Message (Next) := C;
+            Next := Next + 1;
+         end loop;
+      else
+         Componolit.Runtime.Debug.Log_Error ("Name and label too long, aborting answer");
+         return;
+      end if;
+      if Gneiss_Platform.Is_Valid (Dispatcher) then
+         Componolit.Runtime.Debug.Log_Debug ("Request accept");
+         Message_Dispatcher (Dispatcher, Name, Label, -1);
+      else
+         Componolit.Runtime.Debug.Log_Debug ("Request reject");
+         Proto.Send_Message
+            (Broker_Fd,
+             Proto.Message'(Length      => Next - 1,
+                            Action      => RFLX.Session.Reject,
+                            Kind        => Kind,
+                            Name_Length => N_Length,
+                            Payload     => Return_Message
+                               (Return_Message'First .. Next - 1)));
+      end if;
+   end Handle_Request;
 
    function Broker_Event_Address return System.Address with
       SPARK_Mode => Off
