@@ -14,22 +14,22 @@ is
 
    function Available (Session : Server_Session) return Boolean with
       Pre => Ready (Session)
-             and then Status (Session) = Initialized;
+             and then Initialized (Session);
 
    procedure Write (Session : in out Server_Session;
                     Data    :        Message_Buffer) with
       Pre  => Ready (Session)
-              and then Status (Session) = Initialized,
+              and then Initialized (Session),
       Post => Ready (Session)
-              and then Status (Session) = Initialized
+              and then Initialized (Session)
               and then Available (Session)'Old = Available (Session);
 
    procedure Read (Session : in out Server_Session;
                    Data    :    out Message_Buffer) with
       Pre  => Ready (Session)
-              and then Status (Session) = Initialized
+              and then Initialized (Session)
               and then Available (Session),
       Post => Ready (Session)
-              and then Status (Session) = Initialized;
+              and then Initialized (Session);
 
 end Gneiss.Message.Server;

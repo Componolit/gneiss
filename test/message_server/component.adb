@@ -29,7 +29,6 @@ is
 
    Dispatcher : Message.Dispatcher_Session;
    Server     : Message.Server_Session;
-   Registered : Boolean := False;
    Capability : Gneiss.Capability;
 
    procedure Construct (Cap : Gns.Capability)
@@ -37,6 +36,12 @@ is
    begin
       Capability := Cap;
       Message_Dispatcher.Initialize (Dispatcher, Cap);
+      if Message.Initialized (Dispatcher) then
+         --  Message_Dispatcher.Register (Dispatcher);
+         null;
+      else
+         Main.Vacate (Capability, Main.Failure);
+      end if;
    end Construct;
 
    procedure Destruct
@@ -48,17 +53,7 @@ is
    procedure Event
    is
    begin
-      case Message.Status (Dispatcher) is
-         when Gneiss.Initialized =>
-            if not Registered then
-               Message_Dispatcher.Register (Dispatcher);
-               Registered := True;
-            end if;
-         when Gneiss.Pending =>
-            Message_Dispatcher.Initialize (Dispatcher, Capability);
-         when Gneiss.Uninitialized =>
-            Main.Vacate (Capability, Main.Failure);
-      end case;
+      null;
    end Event;
 
    procedure Initialize (Session : in out Message.Server_Session;
@@ -77,11 +72,10 @@ is
    procedure Dispatch (Session  : in out Message.Dispatcher_Session;
                        Disp_Cap :        Message.Dispatcher_Capability)
    is
-      use type Gneiss.Session_Status;
    begin
       if Message_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
          Message_Dispatcher.Session_Initialize (Session, Disp_Cap, Server);
-         if Ready (Server) and then Message.Status (Server) = Gneiss.Initialized then
+         if Ready (Server) and then Message.Initialized (Server) then
             Message_Dispatcher.Session_Accept (Session, Disp_Cap, Server);
          end if;
       end if;

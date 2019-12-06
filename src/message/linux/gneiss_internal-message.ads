@@ -17,7 +17,7 @@ is
    end record;
 
    type Dispatcher_Session is record
-      null;
+      Register_Service : Gneiss_Platform.Register_Service_Cap;
    end record;
 
    type Dispatcher_Capability is null record;
