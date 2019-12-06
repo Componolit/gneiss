@@ -1,5 +1,6 @@
 
 with Gneiss_Epoll;
+with Gneiss_Platform;
 
 package Gneiss_Internal.Message with
    SPARK_Mode
