@@ -1,19 +1,45 @@
 
+with Gneiss_Platform;
+with RFLX.Session;
+with Componolit.Runtime.Debug;
+
 package body Gneiss.Message.Dispatcher with
    SPARK_Mode
 is
+   procedure Dispatch_Event (Session : in out Dispatcher_Session;
+                             Name    :        String;
+                             Label   :        String;
+                             Fd      :        Integer);
+
+   procedure Dispatch_Event (Session : in out Dispatcher_Session;
+                             Name    :        String;
+                             Label   :        String;
+                             Fd      :        Integer)
+   is
+      pragma Unreferenced (Session);
+      pragma Unreferenced (Fd);
+   begin
+      Componolit.Runtime.Debug.Log_Debug ("Dispatch_Event " & Name & " " & Label);
+   end Dispatch_Event;
 
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability)
    is
    begin
-      null;
+      Session.Register_Service := Cap.Register_Service;
    end Initialize;
+
+   function Reg_Dispatcher_Cap is new Gneiss_Platform.Create_Dispatcher_Cap
+      (Dispatcher_Session, Dispatch_Event);
 
    procedure Register (Session : in out Dispatcher_Session)
    is
+      Ignore_Success : Boolean;
    begin
-      null;
+      Gneiss_Platform.Call (Session.Register_Service,
+                            RFLX.Session.Message,
+                            Reg_Dispatcher_Cap (Session),
+                            Ignore_Success);
    end Register;
 
    procedure Finalize (Session : in out Dispatcher_Session)

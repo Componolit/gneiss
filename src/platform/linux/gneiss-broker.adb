@@ -26,9 +26,9 @@ is
 
    function Convert_Message (S : String) return RFLX_String;
 
-   procedure Find_Service_By_Name (Name  :     String;
-                                   Index : out Positive;
-                                   Valid : out Boolean) with
+   procedure Find_Component_By_Name (Name  :     String;
+                                     Index : out Positive;
+                                     Valid : out Boolean) with
       Post => (if Valid then Index in Policy'Range);
 
    procedure Start_Components (Root   :     SXML.Query.State_Type;
@@ -69,11 +69,9 @@ is
                               Fd     : Integer) with
       Pre => Source in Policy'Range;
 
-   procedure Process_Reject (Source : Positive;
-                             Kind   : RFLX.Session.Kind_Type;
-                             Name   : String;
-                             Label  : String) with
-      Pre => Source in Policy'Range;
+   procedure Process_Reject (Kind  : RFLX.Session.Kind_Type;
+                             Name  : String;
+                             Label : String);
 
    procedure Send_Request (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
@@ -89,7 +87,6 @@ is
    procedure Send_Reject (Destination : Integer;
                           Kind        : RFLX.Session.Kind_Type;
                           Label       : String);
-   --  pragma Unreferenced (Send_Reject);
 
    function Convert_Message (S : String) return RFLX_String
    is
@@ -102,9 +99,9 @@ is
       return R;
    end Convert_Message;
 
-   procedure Find_Service_By_Name (Name  : String;
-                                   Index : out Positive;
-                                   Valid : out Boolean)
+   procedure Find_Component_By_Name (Name  :     String;
+                                     Index : out Positive;
+                                     Valid : out Boolean)
    is
       use type SXML.Result_Type;
       Result : SXML.Result_Type;
@@ -127,7 +124,7 @@ is
             end if;
          end if;
       end loop;
-   end Find_Service_By_Name;
+   end Find_Component_By_Name;
 
    procedure Construct (Config :     String;
                         Status : out Integer)
@@ -415,7 +412,7 @@ is
          when RFLX.Session.Confirm =>
             Process_Confirm (Source, Kind, Name, Label, Fd);
          when RFLX.Session.Reject =>
-            Process_Reject (Source, Kind, Name, Label);
+            Process_Reject (Kind, Name, Label);
       end case;
    end Handle_Message;
 
@@ -461,7 +458,7 @@ is
       end if;
       Componolit.Runtime.Debug.Log_Debug ("-> " & XML_Buf (XML_Buf'First .. Last) & " -> " & Label);
       Componolit.Runtime.Debug.Log_Debug ("Lookup server");
-      Find_Service_By_Name (XML_Buf (XML_Buf'First .. Last), Destination, Valid);
+      Find_Component_By_Name (XML_Buf (XML_Buf'First .. Last), Destination, Valid);
       if not Valid then
          Componolit.Runtime.Debug.Log_Error ("Service provider not found");
          Send_Reject (Policy (Source).Fd, Kind, Label);
@@ -487,13 +484,20 @@ is
       null;
    end Process_Confirm;
 
-   procedure Process_Reject (Source : Positive;
-                             Kind   : RFLX.Session.Kind_Type;
+   procedure Process_Reject (Kind   : RFLX.Session.Kind_Type;
                              Name   : String;
                              Label  : String)
    is
+      Destination : Positive;
+      Valid       : Boolean;
    begin
-      null;
+      Componolit.Runtime.Debug.Log_Debug ("Process_Reject " & Name & " " & Label);
+      Find_Component_By_Name (Name, Destination, Valid);
+      if Valid then
+         Send_Reject (Policy (Destination).Fd, Kind, Label);
+      else
+         Componolit.Runtime.Debug.Log_Warning ("Failed to process reject");
+      end if;
    end Process_Reject;
 
    procedure Send_Request (Destination : Integer;
