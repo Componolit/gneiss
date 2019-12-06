@@ -33,9 +33,9 @@ is
 
    function Status (Session : Client_Session) return Session_Status;
 
-   function Status (Session : Server_Session) return Session_Status;
+   function Initialized (Session : Server_Session) return Boolean;
 
-   function Status (Session : Dispatcher_Session) return Session_Status;
+   function Initialized (Session : Dispatcher_Session) return Boolean;
 
 private
 
