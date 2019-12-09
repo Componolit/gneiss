@@ -14,13 +14,17 @@ is
    end record;
 
    type Server_Session is record
-      null;
+      Fd : Integer := -1;
    end record;
 
    type Dispatcher_Session is record
       Register_Service : Gneiss_Platform.Register_Service_Cap;
+      Client_Fd        : Integer := -1;
+      Accepted         : Boolean := False;
    end record;
 
-   type Dispatcher_Capability is null record;
+   type Dispatcher_Capability is limited record
+      Clean_Fd : Integer := -1;
+   end record;
 
 end Gneiss_Internal.Message;
