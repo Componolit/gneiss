@@ -39,14 +39,12 @@ is
                    Success  :        Boolean;
                    Filedesc :        Integer)
    is
-      use type Gneiss_Epoll.Epoll_Fd;
       S : Integer;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Init " & Label);
       if Label /= Session.Label.Value (Session.Label.Value'First .. Session.Label.Last) then
          return;
       end if;
-      Session.Epoll_Fd := -1;
       if Success then
          Gneiss_Epoll.Add (Session.Epoll_Fd, Filedesc, Get_Event_Address, S);
          if S = 0 then
