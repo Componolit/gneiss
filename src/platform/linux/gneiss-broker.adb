@@ -62,12 +62,10 @@ is
                               Label  : String) with
       Pre => Source in Policy'Range;
 
-   procedure Process_Confirm (Source : Positive;
-                              Kind   : RFLX.Session.Kind_Type;
+   procedure Process_Confirm (Kind   : RFLX.Session.Kind_Type;
                               Name   : String;
                               Label  : String;
-                              Fd     : Integer) with
-      Pre => Source in Policy'Range;
+                              Fd     : Integer);
 
    procedure Process_Reject (Kind  : RFLX.Session.Kind_Type;
                              Name  : String;
@@ -82,7 +80,6 @@ is
                            Kind        : RFLX.Session.Kind_Type;
                            Label       : String;
                            Filedesc    : Integer);
-   pragma Unreferenced (Send_Confirm);
 
    procedure Send_Reject (Destination : Integer;
                           Kind        : RFLX.Session.Kind_Type;
@@ -410,7 +407,7 @@ is
          when RFLX.Session.Request =>
             Process_Request (Source, Kind, Label);
          when RFLX.Session.Confirm =>
-            Process_Confirm (Source, Kind, Name, Label, Fd);
+            Process_Confirm (Kind, Name, Label, Fd);
          when RFLX.Session.Reject =>
             Process_Reject (Kind, Name, Label);
       end case;
@@ -474,14 +471,27 @@ is
       Send_Request (Policy (Destination).Fd, Kind, XML_Buf (XML_Buf'First .. Last), Label);
    end Process_Request;
 
-   procedure Process_Confirm (Source : Positive;
-                              Kind   : RFLX.Session.Kind_Type;
+   procedure Process_Confirm (Kind   : RFLX.Session.Kind_Type;
                               Name   : String;
                               Label  : String;
                               Fd     : Integer)
    is
+      Destination : Positive;
+      Valid       : Boolean;
    begin
-      null;
+      Componolit.Runtime.Debug.Log_Debug ("Process_Confirm " & Name & " " & Label
+                                          & " " & Basalt.Strings.Image (Fd));
+      Find_Component_By_Name (Name, Destination, Valid);
+      if Valid then
+         if Fd >= 0 then
+            Send_Confirm (Policy (Destination).Fd, Kind, Label, Fd);
+         else
+            Componolit.Runtime.Debug.Log_Warning ("Invalid Fd, rejecting");
+            Send_Reject (Policy (Destination).Fd, Kind, Label);
+         end if;
+      else
+         Componolit.Runtime.Debug.Log_Warning ("Failed to process confirm");
+      end if;
    end Process_Confirm;
 
    procedure Process_Reject (Kind   : RFLX.Session.Kind_Type;

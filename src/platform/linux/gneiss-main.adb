@@ -1,5 +1,6 @@
 
 with Ada.Unchecked_Conversion;
+with Basalt.Strings;
 with Gneiss.Linker;
 with Gneiss_Internal.Message;
 with Gneiss.Protocoll;
@@ -241,7 +242,7 @@ is
                             Label : String)
    is
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Handle_Answer");
+      Componolit.Runtime.Debug.Log_Debug ("Handle_Answer " & Basalt.Strings.Image (Fd));
       for I of Initializers (Kind) loop
          if Gneiss_Platform.Is_Valid (I) then
             Componolit.Runtime.Debug.Log_Debug ("Initialize with Answer " & Label);
@@ -293,6 +294,7 @@ is
                                                Payload     => Return_Message
                                                 (Return_Message'First .. Next - 1)),
                                 Client_Fd);
+            Gneiss.Syscall.Close (Client_Fd);
             return;
          end if;
       end if;

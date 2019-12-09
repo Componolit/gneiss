@@ -33,7 +33,13 @@ void gneiss_fork(int *pid)
 
 void gneiss_close (int *fd)
 {
-    close(*fd);
+    if(*fd < 0){
+        return;
+    }
+    TRACE("fd=%d\n", *fd);
+    if(close(*fd)){
+        perror("close");
+    }
     *fd = -1;
 }
 
