@@ -21,8 +21,9 @@ is
 
    type Dispatcher_Session is record
       Register_Service : Gneiss_Platform.Register_Service_Cap;
-      Client_Fd        : Integer := -1;
-      Accepted         : Boolean := False;
+      Client_Fd        : Integer               := -1;
+      Accepted         : Boolean               := False;
+      Epoll_Fd         : Gneiss_Epoll.Epoll_Fd := -1;
    end record;
 
    type Dispatcher_Capability is limited record
