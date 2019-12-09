@@ -96,7 +96,7 @@ is
    end Initialize;
 
    function Available (Session : Client_Session) return Boolean is
-      (Gneiss_Internal.Message.Peek (Session.File_Descriptor) > Message_Buffer'Length);
+      (Gneiss_Internal.Message.Peek (Session.File_Descriptor) >= Message_Buffer'Length);
 
    procedure Write (Session : in out Client_Session;
                     Content :        Message_Buffer) with

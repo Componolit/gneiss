@@ -1,4 +1,6 @@
 
+with System;
+with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss.Syscall;
 with Basalt.Strings;
@@ -8,10 +10,20 @@ with Componolit.Runtime.Debug;
 package body Gneiss.Message.Dispatcher with
    SPARK_Mode
 is
+
+   function Server_Event_Address return System.Address;
+
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
                              Label   :        String;
                              Fd      : in out Integer);
+
+   function Server_Event_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Server_Instance.Event'Address;
+   end Server_Event_Address;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
@@ -35,6 +47,7 @@ is
    is
    begin
       Session.Register_Service := Cap.Register_Service;
+      Session.Epoll_Fd         := Cap.Epoll_Fd;
    end Initialize;
 
    function Reg_Dispatcher_Cap is new Gneiss_Platform.Create_Dispatcher_Cap
@@ -82,9 +95,10 @@ is
                              Server_S : in out Server_Session)
    is
       pragma Unreferenced (Cap);
-      pragma Unreferenced (Server_S);
+      Ignore_Success : Integer;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Accept " & Basalt.Strings.Image (Session.Client_Fd));
+      Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address, Ignore_Success);
       Session.Accepted := True;
    end Session_Accept;
 
@@ -92,9 +106,10 @@ is
                               Cap      :        Dispatcher_Capability;
                               Server_S : in out Server_Session)
    is
-      pragma Unreferenced (Session);
+      Ignore_Success : Integer;
    begin
       if Server_S.Fd = Cap.Clean_Fd then
+         Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
          Gneiss.Syscall.Close (Server_S.Fd);
          Server_Instance.Finalize (Server_S);
       end if;
