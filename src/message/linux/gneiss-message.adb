@@ -12,7 +12,7 @@ is
          (if Session.File_Descriptor < 0 then Uninitialized else Initialized));
 
    function Initialized (Session : Server_Session) return Boolean is
-      (False);
+      (Session.Fd >= 0);
 
    function Initialized (Session : Dispatcher_Session) return Boolean is
       (Gneiss_Platform.Is_Valid (Session.Register_Service));

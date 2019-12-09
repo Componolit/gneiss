@@ -82,16 +82,16 @@ is
       with procedure Dispatch (Session : in out Session_Type;
                                Name    :        String;
                                Label   :        String;
-                               Fd      :        Integer);
+                               Fd      : in out Integer);
    function Create_Dispatcher_Cap (S : Session_Type) return Dispatcher_Cap with
       Post => Is_Valid (Create_Dispatcher_Cap'Result);
 
    generic
       type Session_Type is limited private;
-   procedure Dispatcher_Call (Cap   : Dispatcher_Cap;
-                              Name  : String;
-                              Label : String;
-                              Fd    : Integer) with
+   procedure Dispatcher_Call (Cap   :        Dispatcher_Cap;
+                              Name  :        String;
+                              Label :        String;
+                              Fd    : in out Integer) with
       Pre => Is_Valid (Cap);
 
 private

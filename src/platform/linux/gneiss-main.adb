@@ -265,6 +265,7 @@ is
          Services (Kind);
       Next       : RFLX.Session.Length_Type := Return_Message'First;
       N_Length   : RFLX.Session.Length_Type;
+      Client_Fd  : Integer := -1;
    begin
       if Name'Length + Label'Length < 256 then
          for C of Name loop
@@ -282,18 +283,28 @@ is
       end if;
       if Gneiss_Platform.Is_Valid (Dispatcher) then
          Componolit.Runtime.Debug.Log_Debug ("Request accept");
-         Message_Dispatcher (Dispatcher, Name, Label, -1);
-      else
-         Componolit.Runtime.Debug.Log_Debug ("Request reject");
-         Proto.Send_Message
-            (Broker_Fd,
-             Proto.Message'(Length      => Next - 1,
-                            Action      => RFLX.Session.Reject,
-                            Kind        => Kind,
-                            Name_Length => N_Length,
-                            Payload     => Return_Message
-                               (Return_Message'First .. Next - 1)));
+         Message_Dispatcher (Dispatcher, Name, Label, Client_Fd);
+         if Client_Fd >= 0 then
+            Proto.Send_Message (Broker_Fd,
+                                Proto.Message'(Length      => Next - 1,
+                                               Action      => RFLX.Session.Confirm,
+                                               Kind        => Kind,
+                                               Name_Length => N_Length,
+                                               Payload     => Return_Message
+                                                (Return_Message'First .. Next - 1)),
+                                Client_Fd);
+            return;
+         end if;
       end if;
+      Componolit.Runtime.Debug.Log_Debug ("Request reject");
+      Proto.Send_Message
+         (Broker_Fd,
+          Proto.Message'(Length      => Next - 1,
+                         Action      => RFLX.Session.Reject,
+                         Kind        => Kind,
+                         Name_Length => N_Length,
+                         Payload     => Return_Message
+                            (Return_Message'First .. Next - 1)));
    end Handle_Request;
 
    function Broker_Event_Address return System.Address with

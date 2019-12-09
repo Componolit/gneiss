@@ -5,7 +5,9 @@ generic
    pragma Warnings (Off, "* is not referenced");
    with package Server_Instance is new Gneiss.Message.Server (<>);
    with procedure Dispatch (Session : in out Dispatcher_Session;
-                            Cap     :        Dispatcher_Capability);
+                            Cap     :        Dispatcher_Capability;
+                            Name    :        String;
+                            Label   :        String);
    pragma Warnings (On, "* is not referenced");
 package Gneiss.Message.Dispatcher with
    SPARK_Mode
