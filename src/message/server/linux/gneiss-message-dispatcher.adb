@@ -1,6 +1,7 @@
 
 with Gneiss_Platform;
 with Gneiss.Syscall;
+with Basalt.Strings;
 with RFLX.Session;
 with Componolit.Runtime.Debug;
 
@@ -83,6 +84,7 @@ is
       pragma Unreferenced (Cap);
       pragma Unreferenced (Server_S);
    begin
+      Componolit.Runtime.Debug.Log_Debug ("Accept " & Basalt.Strings.Image (Session.Client_Fd));
       Session.Accepted := True;
    end Session_Accept;
 
