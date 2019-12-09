@@ -1,4 +1,5 @@
 
+with System;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 
@@ -11,6 +12,7 @@ is
       File_Descriptor : Integer := -1;
       Epoll_Fd        : Gneiss_Epoll.Epoll_Fd := -1;
       Label           : Session_Label;
+      Pending         : Boolean := False;
    end record;
 
    type Server_Session is record
@@ -26,5 +28,24 @@ is
    type Dispatcher_Capability is limited record
       Clean_Fd : Integer := -1;
    end record;
+
+   procedure Write (Fd   : Integer;
+                    Msg  : System.Address;
+                    Size : Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_message_write";
+
+   procedure Read (Fd   : Integer;
+                   Msg  : System.Address;
+                   Size : Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_message_read";
+
+   function Peek (Fd : Integer) return Integer with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_message_peek";
 
 end Gneiss_Internal.Message;

@@ -1,14 +1,11 @@
 
-with Gneiss_Epoll;
 with Gneiss_Platform;
 
 package body Gneiss.Message with
    SPARK_Mode
 is
-   use type Gneiss_Epoll.Epoll_Fd;
-
    function Status (Session : Client_Session) return Session_Status is
-      (if Session.Epoll_Fd >= 0 then Pending else
+      (if Session.Pending then Pending else
          (if Session.File_Descriptor < 0 then Uninitialized else Initialized));
 
    function Initialized (Session : Server_Session) return Boolean is
