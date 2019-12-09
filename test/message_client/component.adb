@@ -31,12 +31,15 @@ is
    begin
       case Message.Status (Client) is
          when Gneiss.Initialized =>
+            Componolit.Runtime.Debug.Log_Debug ("Message client initialized");
             Msg := (72, 101, 108, 108, 111, others => 0);
             Message_Client.Write (Client, Msg);
             Main.Vacate (Capability, Main.Success);
          when Gneiss.Pending =>
+            Componolit.Runtime.Debug.Log_Debug ("Message client pending");
             Message_Client.Initialize (Client, Capability, "log");
          when Gneiss.Uninitialized =>
+            Componolit.Runtime.Debug.Log_Debug ("Message client uninitialized");
             Main.Vacate (Capability, Main.Failure);
       end case;
    end Event;
