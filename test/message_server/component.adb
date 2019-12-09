@@ -2,6 +2,7 @@
 with Gneiss.Message;
 with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
+with Componolit.Runtime.Debug;
 
 package body Component with
    SPARK_Mode
@@ -14,22 +15,24 @@ is
 
    procedure Event;
 
-   procedure Initialize (Session : in out Message.Server_Session;
-                         Label   :        String);
+   procedure Initialize (Session : in out Message.Server_Session);
 
    procedure Finalize (Session : in out Message.Server_Session);
 
    function Ready (Session : Message.Server_Session) return Boolean;
 
    procedure Dispatch (Session  : in out Message.Dispatcher_Session;
-                       Disp_Cap :        Message.Dispatcher_Capability);
+                       Disp_Cap :        Message.Dispatcher_Capability;
+                       Name     :        String;
+                       Label    :        String);
 
    package Message_Server is new Message.Server (Event, Initialize, Finalize, Ready);
    package Message_Dispatcher is new Message.Dispatcher (Message_Server, Dispatch);
 
-   Dispatcher : Message.Dispatcher_Session;
-   Server     : Message.Server_Session;
-   Capability : Gneiss.Capability;
+   Dispatcher  : Message.Dispatcher_Session;
+   Server      : Message.Server_Session;
+   Capability  : Gneiss.Capability;
+   Initialized : Boolean := False;
 
    procedure Construct (Cap : Gns.Capability)
    is
@@ -37,7 +40,7 @@ is
       Capability := Cap;
       Message_Dispatcher.Initialize (Dispatcher, Cap);
       if Message.Initialized (Dispatcher) then
-         --  Message_Dispatcher.Register (Dispatcher);
+         Message_Dispatcher.Register (Dispatcher);
          null;
       else
          Main.Vacate (Capability, Main.Failure);
@@ -56,23 +59,27 @@ is
       null;
    end Event;
 
-   procedure Initialize (Session : in out Message.Server_Session;
-                         Label   :        String)
+   procedure Initialize (Session : in out Message.Server_Session)
    is
+      pragma Unreferenced (Session);
    begin
-      null;
+      Initialized := True;
    end Initialize;
 
    procedure Finalize (Session : in out Message.Server_Session)
    is
+      pragma Unreferenced (Session);
    begin
-      null;
+      Initialized := False;
    end Finalize;
 
    procedure Dispatch (Session  : in out Message.Dispatcher_Session;
-                       Disp_Cap :        Message.Dispatcher_Capability)
+                       Disp_Cap :        Message.Dispatcher_Capability;
+                       Name     :        String;
+                       Label    :        String)
    is
    begin
+      Componolit.Runtime.Debug.Log_Debug ("Dispatch " & Name & " " & Label);
       if Message_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
          Message_Dispatcher.Session_Initialize (Session, Disp_Cap, Server);
          if Ready (Server) and then Message.Initialized (Server) then
@@ -83,6 +90,6 @@ is
    end Dispatch;
 
    function Ready (Session : Message.Server_Session) return Boolean is
-      (False);
+      (Initialized);
 
 end Component;
