@@ -126,15 +126,15 @@ is
                              Cap     => S'Address);
    end Create_Dispatcher_Cap;
 
-   procedure Dispatcher_Call (Cap   : Dispatcher_Cap;
-                              Name  : String;
-                              Label : String;
-                              Fd    : Integer)
+   procedure Dispatcher_Call (Cap   :        Dispatcher_Cap;
+                              Name  :        String;
+                              Label :        String;
+                              Fd    : in out Integer)
    is
       procedure Dispatch (S : in out Session_Type;
                           N :        String;
                           L :        String;
-                          F :        Integer) with
+                          F : in out Integer) with
          Import,
          Address => Cap.Address;
       Session : Session_Type with
