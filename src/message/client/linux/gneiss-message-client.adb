@@ -2,8 +2,10 @@
 with System;
 with RFLX.Session;
 with Gneiss.Protocoll;
+with Gneiss.Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
+with Gneiss_Internal.Message;
 with Componolit.Runtime.Debug;
 
 package body Gneiss.Message.Client with
@@ -51,6 +53,7 @@ is
             Session.File_Descriptor := Filedesc;
          end if;
       end if;
+      Session.Pending := False;
       Event;
    end Init;
 
@@ -77,6 +80,7 @@ is
                C_Label (I) := Session.Label.Value (Positive (I));
             end loop;
             Session.Epoll_Fd := Cap.Epoll_Fd;
+            Session.Pending  := True;
             Gneiss_Platform.Call (Cap.Register_Initializer,
                                   Init_Cap (Session),
                                   RFLX.Session.Message, Succ);
@@ -91,26 +95,32 @@ is
       end case;
    end Initialize;
 
-   function Available (Session : Client_Session) return Boolean is (False);
+   function Available (Session : Client_Session) return Boolean is
+      (Gneiss_Internal.Message.Peek (Session.File_Descriptor) > Message_Buffer'Length);
 
    procedure Write (Session : in out Client_Session;
-                    Content :        Message_Buffer)
+                    Content :        Message_Buffer) with
+      SPARK_Mode => Off
    is
    begin
-      null;
+      Gneiss_Internal.Message.Write (Session.File_Descriptor, Content'Address, Content'Length);
    end Write;
 
    procedure Read (Session : in out Client_Session;
-                   Content :    out Message_Buffer)
+                   Content :    out Message_Buffer) with
+      SPARK_Mode => Off
    is
    begin
-      null;
+      Gneiss_Internal.Message.Read (Session.File_Descriptor, Content'Address, Content'Length);
    end Read;
 
    procedure Finalize (Session : in out Client_Session)
    is
+      Ignore_Success : Integer;
    begin
-      null;
+      Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.File_Descriptor, Ignore_Success);
+      Gneiss.Syscall.Close (Session.File_Descriptor);
+      Session.Label.Last := 0;
    end Finalize;
 
 end Gneiss.Message.Client;
