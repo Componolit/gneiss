@@ -12,11 +12,11 @@
 private with Gneiss_Internal.Message;
 
 generic
-   type Index is range <>;
-   type Byte is mod <>;
-   type Buffer is array (Index range <>) of Byte;
-   First  : Index;
-   Length : Index;
+   type Buffer_Index is range <>;
+   type Byte is (<>);
+   type Buffer is array (Buffer_Index range <>) of Byte;
+   First  : Buffer_Index;
+   Length : Buffer_Index;
 package Gneiss.Message with
    SPARK_Mode
 is
@@ -36,6 +36,15 @@ is
    function Initialized (Session : Server_Session) return Boolean;
 
    function Initialized (Session : Dispatcher_Session) return Boolean;
+
+   function Index (Session : Client_Session) return Session_Index with
+      Pre => Status (Session) = Initialized;
+
+   function Index (Session : Server_Session) return Session_Index with
+      Pre => Initialized (Session);
+
+   function Index (Session : Dispatcher_Session) return Session_Index with
+      Pre => Initialized (Session);
 
 private
 
