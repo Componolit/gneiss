@@ -107,7 +107,7 @@ is
       Index := Positive'Last;
       Valid := False;
       for I in Policy'Range loop
-         if Policy (I).Node.Result = SXML.Result_OK then
+         if SXML.Query.State_Result (Policy (I).Node) = SXML.Result_OK then
             SXML.Query.Attribute (Policy (I).Node, Document, "name", Result, XML_Buf, Last);
             Componolit.Runtime.Debug.Log_Debug ("Lookup (" & Basalt.Strings.Image (Last) & "): " & XML_Buf);
             if
@@ -138,7 +138,7 @@ is
          Status := 1;
          return;
       end if;
-      SXML.Parser.Parse (Config, Document, Result, Position);
+      SXML.Parser.Parse (Config, Document, Position, Result);
       if
          Result /= SXML.Parser.Match_OK
       then
@@ -168,8 +168,8 @@ is
       end if;
       State := SXML.Query.Init (Document);
       if
-         State.Result /= SXML.Result_OK
-         or else not SXML.Query.Is_Open (Document, State)
+         SXML.Query.State_Result (State) /= SXML.Result_OK
+         or else not SXML.Query.Is_Open (State, Document)
       then
          Componolit.Runtime.Debug.Log_Error ("Init failed");
          return;
@@ -195,9 +195,9 @@ is
    begin
       State := SXML.Query.Path (Root, Document, "/config/component");
       Status := 0;
-      while State.Result = SXML.Result_OK loop
+      while SXML.Query.State_Result (State) = SXML.Result_OK loop
          State := SXML.Query.Find_Sibling (State, Document, "component");
-         exit when State.Result /= SXML.Result_OK;
+         exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
          SXML.Query.Attribute (State, Document, "name", Result, XML_Buf, Last);
          if Result = SXML.Result_OK then
             Policy (Index).Node := State;
@@ -425,9 +425,9 @@ is
       Last        : Natural;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Check type and label");
-      while State.Result = SXML.Result_OK loop
+      while SXML.Query.State_Result (State) = SXML.Result_OK loop
          State := SXML.Query.Find_Sibling (State, Document, "service", "name", Proto.Image (Kind));
-         exit when State.Result /= SXML.Result_OK;
+         exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
          SXML.Query.Attribute (State, Document, "label", Result, XML_Buf, Last);
          Componolit.Runtime.Debug.Log_Debug (case Result is
                                                 when SXML.Result_OK        => "Result_OK",
@@ -438,10 +438,10 @@ is
                     and then Last in XML_Buf'Range
                     and then Last - XML_Buf'First = Label'Last - Label'First
                     and then XML_Buf (XML_Buf'First .. Last) = Label)
-                   or else Result = SXML.Result_Invalid; --  FIXME: this should be SXML.Result_Not_Found
+                   or else Result = SXML.Result_Not_Found;
          State := SXML.Query.Sibling (State, Document);
       end loop;
-      if State.Result /= SXML.Result_OK then
+      if SXML.Query.State_Result (State) /= SXML.Result_OK then
          Componolit.Runtime.Debug.Log_Error ("No service found");
          Send_Reject (Policy (Source).Fd, Kind, Label);
          return;
