@@ -189,6 +189,7 @@ is
       if Event.Epoll_In then
          Componolit.Runtime.Debug.Log_Debug ("Received event");
          if Event_Ptr /= System.Null_Address then
+            Componolit.Runtime.Debug.Log_Debug ("Call event");
             Call_Event (Event_Ptr);
          end if;
       end if;
@@ -366,13 +367,11 @@ is
       begin
          for I in Name'Range loop
             exit when Index = Label_First;
-            Componolit.Runtime.Debug.Log_Debug ("Name: " & Character'Val (Payload (Index)));
             Name (I)  := Character'Val (Payload (Index));
             Index     := Index + 1;
             Last_Name := I;
          end loop;
          for I in Label'Range loop
-            Componolit.Runtime.Debug.Log_Debug ("Label: " & Character'Val (Payload (Index)));
             Label (I)  := Character'Val (Payload (Index));
             Last_Label := I;
             exit when Index = Payload'Last;

@@ -22,7 +22,6 @@ is
 
    Policy  : Component_List (1 .. 1024);
    Efd     : Gneiss_Epoll.Epoll_Fd := -1;
-   XML_Buf : String (1 .. 255);
 
    function Convert_Message (S : String) return RFLX_String;
 
@@ -101,8 +100,9 @@ is
                                      Valid : out Boolean)
    is
       use type SXML.Result_Type;
-      Result : SXML.Result_Type;
-      Last   : Natural;
+      XML_Buf : String (1 .. 255);
+      Result  : SXML.Result_Type;
+      Last    : Natural;
    begin
       Index := Positive'Last;
       Valid := False;
@@ -116,8 +116,10 @@ is
                and then Last - XML_Buf'First = Name'Last - Name'First
                and then XML_Buf (1 .. Last) = Name
             then
+               Componolit.Runtime.Debug.Log_Debug ("Found: " & Name & "=" & XML_Buf);
                Index := I;
                Valid := True;
+               return;
             end if;
          end if;
       end loop;
@@ -185,6 +187,7 @@ is
                                Parent : out Boolean)
    is
       use type SXML.Result_Type;
+      XML_Buf : String (1 .. 255);
       Pid     : Integer;
       Fd      : Integer;
       Success : Integer;
@@ -253,6 +256,7 @@ is
 
    procedure Event_Loop (Status : out Integer)
    is
+      XML_Buf : String (1 .. 255);
       Ev      : Gneiss_Epoll.Event;
       Index   : Integer;
       Success : Integer;
@@ -418,6 +422,7 @@ is
                               Label  : String)
    is
       use type SXML.Result_Type;
+      XML_Buf     : String (1 .. 255);
       State       : SXML.Query.State_Type := SXML.Query.Child (Policy (Source).Node, Document);
       Destination : Positive;
       Valid       : Boolean;
@@ -446,7 +451,6 @@ is
          Send_Reject (Policy (Source).Fd, Kind, Label);
          return;
       end if;
-      Componolit.Runtime.Debug.Log_Debug ("Lookup service");
       SXML.Query.Attribute (State, Document, "server", Result, XML_Buf, Last);
       if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
          Componolit.Runtime.Debug.Log_Error ("Failed to get service provider");
@@ -454,7 +458,6 @@ is
          return;
       end if;
       Componolit.Runtime.Debug.Log_Debug ("-> " & XML_Buf (XML_Buf'First .. Last) & " -> " & Label);
-      Componolit.Runtime.Debug.Log_Debug ("Lookup server");
       Find_Component_By_Name (XML_Buf (XML_Buf'First .. Last), Destination, Valid);
       if not Valid then
          Componolit.Runtime.Debug.Log_Error ("Service provider not found");
