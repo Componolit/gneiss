@@ -43,11 +43,13 @@ is
    end Dispatch_Event;
 
    procedure Initialize (Session : in out Dispatcher_Session;
-                         Cap     :        Capability)
+                         Cap     :        Capability;
+                         Idx     :        Session_Index := 0)
    is
    begin
       Session.Register_Service := Cap.Register_Service;
       Session.Epoll_Fd         := Cap.Epoll_Fd;
+      Session.Index            := Idx;
    end Initialize;
 
    function Reg_Dispatcher_Cap is new Gneiss_Platform.Create_Dispatcher_Cap
@@ -75,7 +77,8 @@ is
 
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
-                                 Server_S : in out Server_Session)
+                                 Server_S : in out Server_Session;
+                                 Idx      :        Session_Index := 0)
    is
       pragma Unreferenced (Cap);
    begin
@@ -88,6 +91,7 @@ is
          Gneiss.Syscall.Close (Server_S.Fd);
          Gneiss.Syscall.Close (Session.Client_Fd);
       end if;
+      Server_S.Index := Idx;
    end Session_Initialize;
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
@@ -108,7 +112,11 @@ is
    is
       Ignore_Success : Integer;
    begin
-      if Server_S.Fd = Cap.Clean_Fd then
+      if
+         Cap.Clean_Fd >= 0
+         and then Server_S.Fd = Cap.Clean_Fd
+      then
+         Componolit.Runtime.Debug.Log_Debug ("Cleanup");
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
          Gneiss.Syscall.Close (Server_S.Fd);
          Server_Instance.Finalize (Server_S);

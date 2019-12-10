@@ -15,7 +15,8 @@ is
    pragma Unevaluated_Use_Of_Old (Allow);
 
    procedure Initialize (Session : in out Dispatcher_Session;
-                         Cap     :        Capability);
+                         Cap     :        Capability;
+                         Idx     :        Session_Index := 0);
 
    procedure Register (Session : in out Dispatcher_Session) with
       Pre  => Initialized (Session),
@@ -30,7 +31,8 @@ is
 
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
-                                 Server_S : in out Server_Session) with
+                                 Server_S : in out Server_Session;
+                                 Idx      :        Session_Index := 0) with
       Pre  => Initialized (Session)
               and then Valid_Session_Request (Session, Cap)
               and then not Server_Instance.Ready (Server_S)

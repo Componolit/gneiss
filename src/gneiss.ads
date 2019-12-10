@@ -17,6 +17,8 @@ is
 
    type Session_Status is (Uninitialized, Pending, Initialized);
 
+   type Session_Index is new Integer;
+
    type Capability is private;
 
 private
