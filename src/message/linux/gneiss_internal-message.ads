@@ -1,5 +1,6 @@
 
 with System;
+with Gneiss;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 
@@ -9,14 +10,16 @@ is
    use type Gneiss_Epoll.Epoll_Fd;
 
    type Client_Session is record
-      File_Descriptor : Integer := -1;
+      File_Descriptor : Integer               := -1;
       Epoll_Fd        : Gneiss_Epoll.Epoll_Fd := -1;
       Label           : Session_Label;
-      Pending         : Boolean := False;
+      Pending         : Boolean               := False;
+      Index           : Gneiss.Session_Index  := 0;
    end record;
 
    type Server_Session is record
-      Fd : Integer := -1;
+      Fd    : Integer              := -1;
+      Index : Gneiss.Session_Index := 0;
    end record;
 
    type Dispatcher_Session is record
@@ -24,6 +27,7 @@ is
       Client_Fd        : Integer               := -1;
       Accepted         : Boolean               := False;
       Epoll_Fd         : Gneiss_Epoll.Epoll_Fd := -1;
+      Index            : Gneiss.Session_Index  := 0;
    end record;
 
    type Dispatcher_Capability is limited record
@@ -44,7 +48,7 @@ is
       Convention    => C,
       External_Name => "gneiss_message_read";
 
-   function Peek (Fd : Integer) return Integer with
+   function Peek (Fd   : Integer) return Integer with
       Import,
       Convention    => C,
       External_Name => "gneiss_message_peek";

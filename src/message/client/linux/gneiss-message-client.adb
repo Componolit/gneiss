@@ -60,7 +60,8 @@ is
    C_Label : RFLX_String (1 .. 255);
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
-                         Label   :        String)
+                         Label   :        String;
+                         Idx     :        Session_Index := 0)
    is
       Succ : Boolean;
    begin
@@ -72,6 +73,7 @@ is
             if Label'Length > 255 then
                return;
             end if;
+            Session.Index      := Idx;
             Session.Label.Last := Session.Label.Value'First + Label'Length - 1;
             Session.Label.Value
                (Session.Label.Value'First

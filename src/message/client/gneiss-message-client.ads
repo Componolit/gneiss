@@ -8,7 +8,8 @@ is
 
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
-                         Label   :        String);
+                         Label   :        String;
+                         Idx     :        Session_Index := 0);
 
    procedure Finalize (Session : in out Client_Session);
 
