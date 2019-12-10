@@ -1,6 +1,7 @@
 
 with Ada.Unchecked_Conversion;
 with Basalt.Strings;
+with Basalt.Queue;
 with Gneiss.Linker;
 with Gneiss_Internal.Message;
 with Gneiss.Protocoll;
@@ -22,6 +23,14 @@ is
    type Initializer_Registry is array (Positive range <>) of Gneiss_Platform.Initializer_Cap;
    type Initializer_Service_Registry is array (RFLX.Session.Kind_Type'Range) of Initializer_Registry (1 .. 10);
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
+   type Request_Cache is record
+      Name   : String (1 .. 255)   := (others => Character'First);
+      Label  : String (1 .. 255)   := (others => Character'First);
+      N_Last : Natural := 0;
+      L_Last : Natural := 0;
+   end record;
+   package Queue is new Basalt.Queue (Request_Cache);
+   type Request_Registry is array (RFLX.Session.Kind_Type'Range) of Queue.Context (10);
 
    package Proto is new Gneiss.Protocoll (Character, RFLX_String);
 
@@ -35,9 +44,9 @@ is
    procedure Register_Service (Kind :     RFLX.Session.Kind_Type;
                                Cap  :     Gneiss_Platform.Dispatcher_Cap;
                                Succ : out Boolean);
-   procedure Register_Initializer (Kind    :     RFLX.Session.Kind_Type;
-                                   Cap     :     Gneiss_Platform.Initializer_Cap;
-                                   Succ    : out Boolean);
+   procedure Register_Initializer (Kind :     RFLX.Session.Kind_Type;
+                                   Cap  :     Gneiss_Platform.Initializer_Cap;
+                                   Succ : out Boolean);
    function Register_Service_Cap is new Gneiss_Platform.Create_Register_Service_Cap
       (Register_Service);
    function Register_Initializer_Cap is new Gneiss_Platform.Create_Register_Initializer_Cap
@@ -56,19 +65,22 @@ is
                            Last_Label :    out Natural;
                            Name       :    out String;
                            Last_Name  :    out Natural);
-   procedure Handle_Request (Kind  : RFLX.Session.Kind_Type;
-                             Name  : String;
-                             Label : String);
+   procedure Handle_Requests;
+   procedure Dispatch_Service (Kind     :     RFLX.Session.Kind_Type;
+                               Accepted : out Boolean) with
+      Pre => Gneiss_Platform.Is_Valid (Services (Kind));
+   procedure Reject_Request (Kind : RFLX.Session.Kind_Type);
 
    Running : constant Integer := -1;
    Success : constant Integer := 0;
    Failure : constant Integer := 1;
 
-   Component_Status : Integer                      := Running;
-   Epoll_Fd         : Gneiss_Epoll.Epoll_Fd        := -1;
+   Component_Status : Integer               := Running;
+   Epoll_Fd         : Gneiss_Epoll.Epoll_Fd := -1;
+   Broker_Fd        : Integer               := -1;
    Services         : Service_Registry;
-   Broker_Fd        : Integer                      := -1;
    Initializers     : Initializer_Service_Registry;
+   Requests         : Request_Registry;
 
    procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
    procedure Message_Dispatcher is new Gneiss_Platform.Dispatcher_Call (Gneiss_Internal.Message.Dispatcher_Session);
@@ -199,6 +211,13 @@ is
       Name_Last  : Natural;
       Label_Last : Natural;
       Kind       : RFLX.Session.Kind_Type;
+      procedure Load_Entry (E : out Request_Cache);
+      procedure Put is new Queue.Generic_Put (Load_Entry);
+      procedure Load_Entry (E : out Request_Cache)
+      is
+      begin
+         Load_Message (Context, E.Label, E.L_Last, E.Name, E.N_Last);
+      end Load_Entry;
    begin
       Componolit.Runtime.Debug.Log_Debug ("Broker_Event");
       Peek_Message (Broker_Fd, Read_Buffer, Last, Truncated, Fd);
@@ -220,21 +239,24 @@ is
          Componolit.Runtime.Debug.Log_Warning ("Invalid message, dropping");
          return;
       end if;
-      Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
       Kind := RFLX.Session.Packet.Get_Kind (Context);
       case RFLX.Session.Packet.Get_Action (Context) is
          when RFLX.Session.Request =>
             Componolit.Runtime.Debug.Log_Debug ("Request");
-            Handle_Request (Kind,
-                            Read_Name (Read_Name'First .. Name_Last),
-                            Read_Label (Read_Label'First .. Label_Last));
+            if Queue.Count (Requests (Kind)) >= Queue.Size (Requests (Kind)) then
+               Reject_Request (Kind);
+            end if;
+            Put (Requests (Kind));
          when RFLX.Session.Confirm =>
             Componolit.Runtime.Debug.Log_Debug ("Confirm");
+            Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
             Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
          when RFLX.Session.Reject =>
             Componolit.Runtime.Debug.Log_Debug ("Reject");
+            Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
             Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
       end case;
+      Handle_Requests;
    end Broker_Event;
 
    procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
@@ -255,59 +277,63 @@ is
       end loop;
    end Handle_Answer;
 
-   Return_Message : RFLX_String (1 .. 255);
-
-   procedure Handle_Request (Kind  : RFLX.Session.Kind_Type;
-                             Name  : String;
-                             Label : String)
+   procedure Dispatch_Service (Kind     :     RFLX.Session.Kind_Type;
+                               Accepted : out Boolean)
    is
-      use type RFLX.Session.Length_Type;
-      Dispatcher : constant Gneiss_Platform.Dispatcher_Cap :=
-         Services (Kind);
-      Next       : RFLX.Session.Length_Type := Return_Message'First;
-      N_Length   : RFLX.Session.Length_Type;
-      Client_Fd  : Integer := -1;
-   begin
-      if Name'Length + Label'Length < 256 then
-         for C of Name loop
-            Return_Message (Next) := C;
-            Next := Next + 1;
-         end loop;
-         N_Length := Next - 1;
-         for C of Label loop
-            Return_Message (Next) := C;
-            Next := Next + 1;
-         end loop;
-      else
-         Componolit.Runtime.Debug.Log_Error ("Name and label too long, aborting answer");
-         return;
-      end if;
-      if Gneiss_Platform.Is_Valid (Dispatcher) then
-         Componolit.Runtime.Debug.Log_Debug ("Request accept");
-         Message_Dispatcher (Dispatcher, Name, Label, Client_Fd);
-         if Client_Fd >= 0 then
-            Proto.Send_Message (Broker_Fd,
-                                Proto.Message'(Length      => Next - 1,
-                                               Action      => RFLX.Session.Confirm,
-                                               Kind        => Kind,
-                                               Name_Length => N_Length,
-                                               Payload     => Return_Message
-                                                (Return_Message'First .. Next - 1)),
-                                Client_Fd);
-            Gneiss.Syscall.Close (Client_Fd);
+      procedure Peek (E : Request_Cache);
+      procedure Peek is new Queue.Generic_Peek (Peek);
+      procedure Peek (E : Request_Cache)
+      is
+         Fd    : Integer := -1;
+         Name  : RFLX_String (1 .. RFLX.Session.Length_Type (E.N_Last));
+         Label : RFLX_String (1 .. RFLX.Session.Length_Type (E.L_Last));
+         Index : Positive := E.Name'First;
+      begin
+         Message_Dispatcher (Services (Kind),
+                             E.Name (E.Name'First .. E.N_Last),
+                             E.Label (E.Label'First .. E.L_Last),
+                             Fd);
+         Accepted := Fd >= 0;
+         if not Accepted then
             return;
          end if;
-      end if;
-      Componolit.Runtime.Debug.Log_Debug ("Request reject");
-      Proto.Send_Message
-         (Broker_Fd,
-          Proto.Message'(Length      => Next - 1,
-                         Action      => RFLX.Session.Reject,
-                         Kind        => Kind,
-                         Name_Length => N_Length,
-                         Payload     => Return_Message
-                            (Return_Message'First .. Next - 1)));
-   end Handle_Request;
+         for C of Name loop
+            C := E.Name (Index);
+            exit when Index = E.N_Last or else Index = E.Name'Last;
+            Index := Index + 1;
+         end loop;
+         Index := E.Label'First;
+         for C of Label loop
+            C := E.Label (Index);
+            exit when Index = E.L_Last or else Index = E.Label'Last;
+            Index := Index + 1;
+         end loop;
+         Proto.Send_Message (Broker_Fd,
+                             Proto.Message'(Length      => RFLX.Session.Length_Type (E.N_Last + E.L_Last),
+                                            Action      => RFLX.Session.Confirm,
+                                            Kind        => Kind,
+                                            Name_Length => RFLX.Session.Length_Type (E.N_Last),
+                                            Payload     => Name & Label),
+                             Fd);
+      end Peek;
+   begin
+      Peek (Requests (Kind));
+   end Dispatch_Service;
+
+   procedure Handle_Requests
+   is
+      Accepted : Boolean;
+   begin
+      for Kind in RFLX.Session.Kind_Type'Range loop
+         if Gneiss_Platform.Is_Valid (Services (Kind)) then
+            while Queue.Count (Requests (Kind)) > 0 loop
+               Dispatch_Service (Kind, Accepted);
+               exit when not Accepted;
+               Queue.Drop (Requests (Kind));
+            end loop;
+         end if;
+      end loop;
+   end Handle_Requests;
 
    function Broker_Event_Address return System.Address with
       SPARK_Mode => Off
@@ -408,5 +434,37 @@ is
       end if;
       Last := (Message'First + RFLX.Types.Index (Length)) - 1;
    end Peek_Message;
+
+   procedure Reject_Request (Kind : RFLX.Session.Kind_Type)
+   is
+      procedure Pop (E : Request_Cache);
+      procedure Pop is new Queue.Generic_Pop (Pop);
+      procedure Pop (E : Request_Cache)
+      is
+         Name  : RFLX_String (1 .. RFLX.Session.Length_Type (E.N_Last));
+         Label : RFLX_String (1 .. RFLX.Session.Length_Type (E.L_Last));
+         Index : Positive := E.Name'First;
+      begin
+         for C of Name loop
+            C := E.Name (Index);
+            exit when Index = E.N_Last or else Index = E.Name'Last;
+            Index := Index + 1;
+         end loop;
+         Index := E.Label'First;
+         for C of Label loop
+            C := E.Label (Index);
+            exit when Index = E.L_Last or else Index = E.Label'Last;
+            Index := Index + 1;
+         end loop;
+         Proto.Send_Message (Broker_Fd,
+                             Proto.Message'(Length      => RFLX.Session.Length_Type (E.N_Last + E.L_Last),
+                                            Action      => RFLX.Session.Reject,
+                                            Kind        => Kind,
+                                            Name_Length => RFLX.Session.Length_Type (E.N_Last),
+                                            Payload     => Name & Label));
+      end Pop;
+   begin
+      Pop (Requests (Kind));
+   end Reject_Request;
 
 end Gneiss.Main;
