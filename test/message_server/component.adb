@@ -21,11 +21,12 @@ is
    package Message is new Gneiss.Message (Positive, Unsigned_Char, C_String, 1, 128);
 
    type Server_Slot is record
-      Server : Message.Server_Session;
-      Ident  : String (1 .. 513) := (others => ASCII.NUL);
+      Ident : String (1 .. 513) := (others => ASCII.NUL);
+      Ready : Boolean := False;
    end record;
 
-   type Server_Reg is array (Integer range <>) of Server_Slot;
+   type Server_Reg is array (Gneiss.Session_Index range <>) of Message.Server_Session;
+   type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
    procedure Event;
 
@@ -45,9 +46,9 @@ is
 
    Dispatcher  : Message.Dispatcher_Session;
    Capability  : Gneiss.Capability;
-   Initialized : Boolean := False;
    Buffer      : C_String (1 .. 129) := (others => 0);
-   Servers     : Server_Reg (1 .. 1);
+   Servers     : Server_Reg (1 .. 2);
+   Server_Data : Server_Meta (Servers'Range);
 
    procedure Construct (Cap : Gns.Capability)
    is
@@ -68,32 +69,35 @@ is
       Message_Dispatcher.Finalize (Dispatcher);
    end Destruct;
 
-   procedure Event
+   procedure Event with
+      SPARK_Mode => Off
    is
    begin
-      for S of Servers loop
+      for I in Servers'Range loop
          if
-            Message.Initialized (S.Server)
-            and then Message_Server.Available (S.Server)
+            Message.Initialized (Servers (I))
+            and then Message_Server.Available (Servers (I))
          then
-            Message_Server.Read (S.Server, Buffer (1 .. 128));
-            Print_Message (S.Ident'Address, Buffer'Address);
+            Message_Server.Read (Servers (I), Buffer (1 .. 128));
+            Print_Message (Server_Data (I).Ident'Address, Buffer'Address);
          end if;
       end loop;
    end Event;
 
    procedure Initialize (Session : in out Message.Server_Session)
    is
-      pragma Unreferenced (Session);
    begin
-      Initialized := True;
+      if Message.Index (Session) in Server_Data'Range then
+         Server_Data (Message.Index (Session)).Ready := True;
+      end if;
    end Initialize;
 
    procedure Finalize (Session : in out Message.Server_Session)
    is
-      pragma Unreferenced (Session);
    begin
-      Initialized := False;
+      if Message.Index (Session) in Server_Data'Range then
+         Server_Data (Message.Index (Session)).Ready := False;
+      end if;
    end Finalize;
 
    procedure Dispatch (Session  : in out Message.Dispatcher_Session;
@@ -104,23 +108,28 @@ is
    begin
       Componolit.Runtime.Debug.Log_Debug ("Dispatch " & Name & " " & Label);
       if Message_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
-         for S of Servers loop
-            if not Ready (S.Server) then
-               Message_Dispatcher.Session_Initialize (Session, Disp_Cap, S.Server);
-               if Ready (S.Server) and then Message.Initialized (S.Server) then
-                  S.Ident (1 .. Name'Length + Label'Length + 1) := Name & ":" & Label;
-                  Message_Dispatcher.Session_Accept (Session, Disp_Cap, S.Server);
+         for I in Servers'Range loop
+            Componolit.Runtime.Debug.Log_Debug ("Server");
+            if not Ready (Servers (I)) then
+               Componolit.Runtime.Debug.Log_Debug ("Initialize " & Name & " " & Label);
+               Message_Dispatcher.Session_Initialize (Session, Disp_Cap, Servers (I), I);
+               if Ready (Servers (I)) and then Message.Initialized (Servers (I)) then
+                  Componolit.Runtime.Debug.Log_Debug ("Accept " & Name & " " & Label);
+                  Server_Data (I).Ident (1 .. Name'Length + Label'Length + 1) := Name & ":" & Label;
+                  Message_Dispatcher.Session_Accept (Session, Disp_Cap, Servers (I));
                   exit;
                end if;
             end if;
          end loop;
       end if;
       for S of Servers loop
-         Message_Dispatcher.Session_Cleanup (Session, Disp_Cap, S.Server);
+         Message_Dispatcher.Session_Cleanup (Session, Disp_Cap, S);
       end loop;
    end Dispatch;
 
    function Ready (Session : Message.Server_Session) return Boolean is
-      (Initialized);
+      (if Message.Index (Session) in Server_Data'Range
+       then Server_Data (Message.Index (Session)).Ready
+       else False);
 
 end Component;
