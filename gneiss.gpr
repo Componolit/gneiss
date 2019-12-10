@@ -121,7 +121,6 @@ project Gneiss is
             when "linux" =>
                for Source_Dirs use Source & (Source_Platform & "/linux",
                                              Source_Message & "/linux");
-               for Excluded_Source_Files use ("init.c");
                for Languages use ("Ada", "C");
                Linux_Switches := ("-ldl");
                Build_Dir := "build/init";
@@ -134,11 +133,6 @@ project Gneiss is
             when "linux" =>
                for Source_Dirs use Linux_Source & ("test/" & Test);
                for Languages use ("Ada", "C");
-               for Excluded_Source_Files use ("component_main.c",
-                                              "init.c",
-                                              "config.c", "config.h",
-                                              "list.c",
-                                              "resources.c", "resources.h");
                for Library_Name use "component_" & Test;
                for Library_Dir use "build/libcomponents";
                for Library_Kind use "dynamic";
