@@ -122,6 +122,7 @@ is
          if not Gneiss_Platform.Is_Valid (Initializers (Kind)(I)) then
             Initializers (Kind)(I) := Cap;
             Succ := True;
+            Handle_Requests;
             return;
          end if;
       end loop;
