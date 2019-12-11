@@ -9,7 +9,6 @@
 --  GNU Affero General Public License version 3.
 --
 
-with Gneiss.Types;
 with Gneiss.Block.Server;
 
 generic
@@ -33,7 +32,7 @@ is
    --  @param D    Dispatcher session instance
    --  @param Cap  System capability
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Gneiss.Types.Capability;
+                         Cap :        Capability;
                          Tag :        Session_Id);
 
    --  Register the server implementation Serv on the platform

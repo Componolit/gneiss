@@ -14,9 +14,9 @@ is
 
    Cfg : Gneiss.Rom.Client_Session;
    Log : Gneiss.Log.Client_Session;
-   C : Gneiss.Types.Capability;
+   C : Gneiss.Capability;
 
-   procedure Construct (Cap : Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       if not Gneiss.Rom.Initialized (Cfg) then

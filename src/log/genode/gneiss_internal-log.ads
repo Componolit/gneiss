@@ -2,7 +2,7 @@
 with Cxx;
 with Cxx.Log.Client;
 
-package Gneiss.Internal.Log is
+package Gneiss_Internal.Log is
 
    type Client_Session is limited record
       Instance : Cxx.Log.Client.Class := Cxx.Log.Client.Constructor;
@@ -10,4 +10,4 @@ package Gneiss.Internal.Log is
       Cursor   : Positive             := 1;
    end record;
 
-end Gneiss.Internal.Log;
+end Gneiss_Internal.Log;

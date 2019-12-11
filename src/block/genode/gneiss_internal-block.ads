@@ -6,7 +6,7 @@ with Cxx.Block.Client;
 with Cxx.Block.Dispatcher;
 with Cxx.Block.Server;
 
-package Gneiss.Internal.Block is
+package Gneiss_Internal.Block is
 
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
@@ -61,4 +61,4 @@ package Gneiss.Internal.Block is
       Instance : Cxx.Block.Dispatcher.Dispatcher_Capability;
    end record;
 
-end Gneiss.Internal.Block;
+end Gneiss_Internal.Block;

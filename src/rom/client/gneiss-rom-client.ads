@@ -9,8 +9,6 @@
 --  GNU Affero General Public License version 3.
 --
 
-with Gneiss.Types;
-
 generic
    type Element is private;
    type Index is range <>;
@@ -22,7 +20,7 @@ is
    pragma Warnings (Off, "procedure ""Parse"" is not referenced");
 
    procedure Initialize (C    : in out Client_Session;
-                         Cap  :        Gneiss.Types.Capability;
+                         Cap  :        Capability;
                          Name :        String := "");
 
    procedure Load (C : in out Client_Session) with

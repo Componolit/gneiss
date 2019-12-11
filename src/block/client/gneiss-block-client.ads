@@ -9,8 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-with Gneiss.Types;
-private with Gneiss.Internal.Block;
+private with Gneiss_Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -158,7 +157,7 @@ is
    --                      The platform is free to decide if it follows this hint.
    --                      A value of 0 uses the platform default.
    procedure Initialize (C           : in out Client_Session;
-                         Cap         :        Gneiss.Types.Capability;
+                         Cap         :        Capability;
                          Path        :        String;
                          Tag         :        Session_Id;
                          Buffer_Size :        Byte_Length := 0);
@@ -252,7 +251,7 @@ is
 
 private
 
-   type Request is new Gneiss.Internal.Block.Client_Request;
+   type Request is new Gneiss_Internal.Block.Client_Request;
 
    --  Called when a read has been triggered and data is available
    --

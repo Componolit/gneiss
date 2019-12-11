@@ -1,5 +1,5 @@
 
-with Gneiss.Types;
+with Gneiss;
 with Cxx.Genode;
 
 package Cxx.Log.Client
@@ -31,7 +31,7 @@ is
       External_Name => "_ZN3Cai3Log6Client11initializedEv";
 
    procedure Initialize (This  : Class;
-                         Cap   : Gneiss.Types.Capability;
+                         Cap   : Gneiss.Capability;
                          Label : Cxx.Void_Address) with
       Global        => null,
       Import,

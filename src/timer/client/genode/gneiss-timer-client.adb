@@ -6,7 +6,7 @@ package body Gneiss.Timer.Client
 is
 
    procedure Initialize (C   : in out Client_Session;
-                         Cap :        Gneiss.Types.Capability) with
+                         Cap :        Capability) with
       SPARK_Mode => Off
    is
    begin

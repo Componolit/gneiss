@@ -15,9 +15,9 @@ is
 
    Log        : Gneiss.Log.Client_Session;
    Timer      : Gneiss.Timer.Client_Session;
-   Capability : Gneiss.Types.Capability;
+   Capability : Gneiss.Capability;
 
-   procedure Construct (Cap : Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;

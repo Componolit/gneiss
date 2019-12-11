@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss.Internal.Rom;
+private with Gneiss_Internal.Rom;
 
 package Gneiss.Rom with
    SPARK_Mode
@@ -21,6 +21,6 @@ is
 
 private
 
-   type Client_Session is new Gneiss.Internal.Rom.Client_Session;
+   type Client_Session is new Gneiss_Internal.Rom.Client_Session;
 
 end Gneiss.Rom;
