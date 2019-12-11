@@ -88,7 +88,7 @@ is
    end Put;
 
    procedure Initialize (C     : in out Client_Session;
-                         Cap   :        Gneiss.Types.Capability;
+                         Cap   :        Capability;
                          Label :        String)
    is
       use type Musinfo.Name_Type;

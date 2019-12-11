@@ -36,7 +36,7 @@ is
    end Session_Address;
 
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Gneiss.Types.Capability;
+                         Cap :        Capability;
                          Tag :        Session_Id)
    is
       pragma Unreferenced (Cap);
@@ -92,14 +92,14 @@ is
    is
       pragma Unreferenced (D);
       use type CIM.Async_Session_Type;
-      use type CIM.Session_Index;
+      use type CIM.Session_Id;
       use type Musinfo.Memregion_Type;
       use type Standard.Interfaces.Unsigned_64;
       Req_Name  : Musinfo.Name_Type;
       Resp_Name : Musinfo.Name_Type;
       Req_Mem   : Musinfo.Memregion_Type;
       Resp_Mem  : Musinfo.Memregion_Type;
-      Index     : CIM.Session_Index := CIM.Invalid_Index;
+      Index     : CIM.Session_Id := CIM.Invalid_Index;
    begin
       Req_Name  := CIM.String_To_Name ("blk:req:" & Str (C));
       Resp_Name := CIM.String_To_Name ("blk:rsp:" & Str (C));
