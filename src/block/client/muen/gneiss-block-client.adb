@@ -31,11 +31,11 @@ is
           R.Event.Header.Priv <= Request_Id'Pos (Request_Id'Last)
        then
           (case R.Status is
-              when Gneiss.Internal.Block.Raw       => Raw,
-              when Gneiss.Internal.Block.Allocated => Allocated,
-              when Gneiss.Internal.Block.Pending   => Pending,
-              when Gneiss.Internal.Block.Ok        => Ok,
-              when Gneiss.Internal.Block.Error     => Error)
+              when Gneiss_Internal.Block.Raw       => Raw,
+              when Gneiss_Internal.Block.Allocated => Allocated,
+              when Gneiss_Internal.Block.Pending   => Pending,
+              when Gneiss_Internal.Block.Ok        => Ok,
+              when Gneiss_Internal.Block.Error     => Error)
        else
           Error);
 
@@ -67,7 +67,7 @@ is
                                I :        Request_Id;
                                E :    out Result)
    is
-      use type Gneiss.Internal.Block.Request_Status;
+      use type Gneiss_Internal.Block.Request_Status;
       Ev_Type : Blk.Event_Type;
    begin
       if L /= 1 then
@@ -86,7 +86,7 @@ is
             return;
       end case;
       E                    := Success;
-      R.Status             := Gneiss.Internal.Block.Allocated;
+      R.Status             := Gneiss_Internal.Block.Allocated;
       R.Session            := C.Tag;
       R.Event.Header.Kind  := Ev_Type;
       R.Event.Header.Id    := Blk.Sector (S);
@@ -128,12 +128,12 @@ is
             and then C.Responses (I).Header.Priv = R.Event.Header.Priv
          then
             if C.Responses (I).Header.Error = 0 then
-               R.Status := Gneiss.Internal.Block.Ok;
+               R.Status := Gneiss_Internal.Block.Ok;
                if R.Event.Header.Kind = Blk.Read then
                   R.Event.Data := C.Responses (I).Data;
                end if;
             else
-               R.Status := Gneiss.Internal.Block.Error;
+               R.Status := Gneiss_Internal.Block.Error;
             end if;
             C.Responses (I).Header.Valid := False;
             return;
@@ -146,7 +146,7 @@ is
 
    procedure Set_Null (C : in out Client_Session)
    is
-      use type CIM.Session_Index;
+      use type CIM.Session_Id;
    begin
       C.Name            := Blk.Null_Name;
       C.Count           := 0;
@@ -168,13 +168,13 @@ is
    end Event_Address;
 
    procedure Initialize (C           : in out Client_Session;
-                         Cap         :        Gneiss.Types.Capability;
+                         Cap         :        Capability;
                          Path        :        String;
                          Tag         :        Session_Id;
                          Buffer_Size :        Byte_Length := 0)
    is
       use type CIM.Async_Session_Type;
-      use type CIM.Session_Index;
+      use type CIM.Session_Id;
       use type Blk.Sector;
       use type Blk.Count;
       use type Blk.Event_Type;
@@ -187,7 +187,7 @@ is
       Res_Name   : Musinfo.Name_Type;
       Req_Mem    : Musinfo.Memregion_Type;
       Res_Mem    : Musinfo.Memregion_Type;
-      Index      : CIM.Session_Index := CIM.Invalid_Index;
+      Index      : CIM.Session_Id := CIM.Invalid_Index;
       Size_Event : Blk.Event := (Header => (Kind  => Blk.Command,
                                             Error => 0,
                                             Id    => Blk.Size,
@@ -269,7 +269,7 @@ is
          return;
       end if;
       Blk.Client_Request_Channel.Write (C.Request_Memory, R.Event);
-      R.Status := Gneiss.Internal.Block.Pending;
+      R.Status := Gneiss_Internal.Block.Pending;
       C.Queued := C.Queued + 1;
    end Enqueue;
 
@@ -321,7 +321,7 @@ is
             exit;
          end if;
       end loop;
-      R.Status       := Gneiss.Internal.Block.Raw;
+      R.Status       := Gneiss_Internal.Block.Raw;
       R.Event.Header := Blk.Null_Event_Header;
    end Release;
 

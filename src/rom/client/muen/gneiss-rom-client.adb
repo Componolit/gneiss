@@ -11,7 +11,7 @@ is
    package CIM renames Gneiss.Muen;
 
    procedure Initialize (C    : in out Client_Session;
-                         Cap  :        Gneiss.Types.Capability;
+                         Cap  :        Capability;
                          Name :        String := "")
    is
       pragma Unreferenced (Cap);

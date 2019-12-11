@@ -1,7 +1,7 @@
 
 with Musinfo;
 
-package Gneiss.Internal.Rom with
+package Gneiss_Internal.Rom with
    SPARK_Mode
 is
 
@@ -9,4 +9,4 @@ is
       Mem : Musinfo.Memregion_Type := Musinfo.Null_Memregion;
    end record;
 
-end Gneiss.Internal.Rom;
+end Gneiss_Internal.Rom;

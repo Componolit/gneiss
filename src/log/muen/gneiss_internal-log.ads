@@ -2,7 +2,7 @@
 with Musinfo;
 with Debuglog.Types;
 
-package Gneiss.Internal.Log with
+package Gneiss_Internal.Log with
    SPARK_Mode
 is
 
@@ -13,4 +13,4 @@ is
       Buffer : Debuglog.Types.Data_Type     := Debuglog.Types.Null_Data;
    end record;
 
-end Gneiss.Internal.Log;
+end Gneiss_Internal.Log;
