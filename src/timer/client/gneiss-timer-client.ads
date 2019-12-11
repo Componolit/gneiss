@@ -9,8 +9,6 @@
 --  GNU Affero General Public License version 3.
 --
 
-with Gneiss.Types;
-
 generic
    with procedure Event;
 package Gneiss.Timer.Client with
@@ -21,7 +19,8 @@ is
    --
    --  @param C    Timer client session object
    --  @param Cap  System capability
-   procedure Initialize (C : in out Client_Session; Cap : Gneiss.Types.Capability);
+   procedure Initialize (C   : in out Client_Session;
+                         Cap :        Capability);
 
    --  Returns a monotonic clock value
    --

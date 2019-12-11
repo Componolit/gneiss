@@ -3,16 +3,16 @@ package body Gneiss.Component with
    SPARK_Mode => Off
 is
 
-   procedure Construct (Capability : Gneiss.Types.Capability)
+   procedure Construct (Cap : Capability)
    is
    begin
-      Component_Construct (Capability);
+      Component_Construct (Cap);
    end Construct;
 
-   procedure Vacate (Cap    : Gneiss.Types.Capability;
+   procedure Vacate (Cap    : Capability;
                      Status : Component_Status)
    is
-      procedure C_Vacate (C : Gneiss.Types.Capability;
+      procedure C_Vacate (C : Capability;
                           S : Integer) with
          Import,
          Convention => C,

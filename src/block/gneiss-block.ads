@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss.Internal.Block;
+private with Gneiss_Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -247,9 +247,9 @@ is
 
 private
 
-   type Client_Session is new Gneiss.Internal.Block.Client_Session;
-   type Dispatcher_Session is new Gneiss.Internal.Block.Dispatcher_Session;
-   type Server_Session is new Gneiss.Internal.Block.Server_Session;
-   type Dispatcher_Capability is new Gneiss.Internal.Block.Dispatcher_Capability;
+   type Client_Session is new Gneiss_Internal.Block.Client_Session;
+   type Dispatcher_Session is new Gneiss_Internal.Block.Dispatcher_Session;
+   type Server_Session is new Gneiss_Internal.Block.Server_Session;
+   type Dispatcher_Capability is new Gneiss_Internal.Block.Dispatcher_Capability;
 
 end Gneiss.Block;

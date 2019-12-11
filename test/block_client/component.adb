@@ -46,7 +46,7 @@ is
 
    Client : Block.Client_Session;
    Log    : Gneiss.Log.Client_Session;
-   P_Cap  : Gneiss.Types.Capability;
+   P_Cap  : Gneiss.Capability;
 
    Request_Count : constant Integer := 32;
 
@@ -164,7 +164,7 @@ is
       end if;
    end Read;
 
-   procedure Construct (Cap : Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       P_Cap := Cap;

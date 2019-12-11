@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss.Internal.Block;
+private with Gneiss_Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -262,7 +262,7 @@ is
 
 private
 
-   type Request is new Gneiss.Internal.Block.Server_Request;
+   type Request is new Gneiss_Internal.Block.Server_Request;
 
    function Lemma_Ready (S : Server_Session) return Boolean is
       (Ready (S)) with

@@ -9,7 +9,6 @@
 --  GNU Affero General Public License version 3.
 --
 
-with Gneiss.Types;
 package Gneiss.Log.Client with
    SPARK_Mode
 is
@@ -20,7 +19,7 @@ is
    --  @param Cap             System capability
    --  @param Label           Session label
    procedure Initialize (C              : in out Client_Session;
-                         Cap            :        Gneiss.Types.Capability;
+                         Cap            :        Capability;
                          Label          :        String);
 
    --  Finalize client session

@@ -20,7 +20,7 @@ is
    end Dispatch_Address;
 
    procedure Initialize (D   : in out Dispatcher_Session;
-                         Cap :        Gneiss.Types.Capability;
+                         Cap :        Capability;
                          Tag :        Session_Id)
    is
    begin

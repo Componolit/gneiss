@@ -15,7 +15,7 @@ package body Component is
    Client : Block.Client_Session;
    Server : Block.Server_Session;
 
-   Capability : Gneiss.Types.Capability;
+   Capability : Gneiss.Capability;
 
    Log : Gneiss.Log.Client_Session;
 
@@ -23,7 +23,7 @@ package body Component is
    function Image is new Basalt.Strings_Generic.Image_Modular (Block.Id);
    function Image is new Basalt.Strings_Generic.Image_Ranged (Unsigned_Long);
 
-   procedure Construct (Cap : Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;
