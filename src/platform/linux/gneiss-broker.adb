@@ -1,9 +1,9 @@
 
-with Ada.Unchecked_Conversion;
 with Basalt.Strings;
 with Gneiss.Syscall;
 with Gneiss.Main;
 with Gneiss.Protocoll;
+with Gneiss_Access;
 with Gneiss_Epoll;
 with Gneiss_Log;
 with SXML.Parser;
@@ -21,6 +21,8 @@ is
 
    Policy  : Component_List (1 .. 1024);
    Efd     : Gneiss_Epoll.Epoll_Fd := -1;
+
+   package Read_Buffer is new Gneiss_Access (512);
 
    function Convert_Message (S : String) return RFLX_String;
 
@@ -286,20 +288,14 @@ is
       end loop;
    end Event_Loop;
 
-   type Bytes_Ptr is access all RFLX.Types.Bytes;
-   function Convert is new Ada.Unchecked_Conversion (Bytes_Ptr, RFLX.Types.Bytes_Ptr);
-   --  FIXME: We have to convert access to access all to use it with 'Access, we should not do this
-   Read_Buffer : aliased RFLX.Types.Bytes := (1 .. 512 => 0);
-
    procedure Read_Message (Index : Positive)
    is
       Truncated  : Boolean;
       Context    : RFLX.Session.Packet.Context;
-      Buffer_Ptr : RFLX.Types.Bytes_Ptr := Convert (Read_Buffer'Access);
       Last       : RFLX.Types.Index;
       Fd         : Integer;
    begin
-      Gneiss.Main.Peek_Message (Policy (Index).Fd, Read_Buffer, Last, Truncated, Fd);
+      Gneiss.Main.Peek_Message (Policy (Index).Fd, Read_Buffer.Ptr.all, Last, Truncated, Fd);
       Gneiss.Syscall.Drop_Message (Policy (Index).Fd);
       if Truncated then
          Gneiss.Syscall.Close (Fd);
@@ -307,8 +303,8 @@ is
          return;
       end if;
       RFLX.Session.Packet.Initialize (Context,
-                                      Buffer_Ptr,
-                                      RFLX.Types.First_Bit_Index (Read_Buffer'First),
+                                      Read_Buffer.Ptr,
+                                      RFLX.Types.First_Bit_Index (Read_Buffer.Ptr.all'First),
                                       RFLX.Types.Last_Bit_Index (Last));
       RFLX.Session.Packet.Verify_Message (Context);
       if
@@ -335,11 +331,12 @@ is
       procedure Get_Payload is new RFLX.Session.Packet.Get_Payload (Process_Payload);
       Name : String (1 .. Integer (RFLX.Session.Packet.Get_Name_Length (Context)));
       Label : String (1 .. Integer (RFLX.Session.Packet.Get_Payload_Length (Context)
-                                    - RFLX.Session.Packet.Get_Name_Length (Context)));
+                      - RFLX.Session.Packet.Get_Name_Length (Context)));
+      Length : constant RFLX.Types.Length := RFLX.Types.Length (RFLX.Session.Packet.Get_Name_Length (Context));
       procedure Process_Payload (Payload : RFLX.Types.Bytes)
       is
          Label_First : constant RFLX.Types.Length :=
-            Payload'First + RFLX.Types.Length (RFLX.Session.Packet.Get_Name_Length (Context));
+            Payload'First + Length;
       begin
          for I in Name'Range loop
             Name (I) := Character'Val (Payload (Payload'First + RFLX.Types.Length (I - Name'First)));
