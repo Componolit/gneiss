@@ -6,7 +6,7 @@
 #include <sys/un.h>
 #include <sys/wait.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 void gneiss_socketpair(int *fd1, int *fd2)
@@ -167,4 +167,9 @@ void gneiss_drop_message(int sock)
         perror("recvmsg");
         return;
     }
+}
+
+void gneiss_fputs(char *str)
+{
+    fputs(str, stderr);
 }
