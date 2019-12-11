@@ -1,5 +1,5 @@
 
-with Gneiss.Internal.Block;
+with Gneiss_Internal.Block;
 
 package body Gneiss.Muen_Registry with
    SPARK_Mode
@@ -16,10 +16,10 @@ is
 
    procedure Call_Block_Dispatcher_Event (S : Session_Entry)
    is
-      Session : Gneiss.Internal.Block.Dispatcher_Session with
+      Session : Gneiss_Internal.Block.Dispatcher_Session with
          Import,
          Address => S.Session;
-      procedure Event (D : Gneiss.Internal.Block.Dispatcher_Session) with
+      procedure Event (D : Gneiss_Internal.Block.Dispatcher_Session) with
          Import,
          Address => S.Block_Dispatch_Event;
    begin
@@ -36,9 +36,9 @@ is
    end Call_Block_Server_Event;
 
    procedure Call_Timer_Event (S : Session_Entry;
-                               I : CIM.Session_Index)
+                               I : CIM.Session_Id)
    is
-      procedure Event (Index : CIM.Session_Index) with
+      procedure Event (Index : CIM.Session_Id) with
          Import,
          Address => S.Timeout_Event;
    begin

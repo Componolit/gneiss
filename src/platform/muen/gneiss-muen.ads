@@ -13,8 +13,8 @@ is
                                Block_Client,
                                Block_Dispatcher,
                                Block_Server);
-   type Session_Index is new Natural range 0 .. 64;
-   Invalid_Index : constant Session_Index := 0;
+   type Session_Id is new Natural range 0 .. 64;
+   Invalid_Index : constant Session_Id := 0;
 
    function Name_To_String (Name : Musinfo.Name_Type) return String;
 

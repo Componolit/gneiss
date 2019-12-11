@@ -15,7 +15,7 @@ is
    use type Standard.Interfaces.Unsigned_64;
    use type Blk.Count;
    use type Blk.Session_Name;
-   use type CIM.Session_Index;
+   use type CIM.Session_Id;
    use type Musinfo.Memregion_Type;
    use type CIM.Async_Session_Type;
 

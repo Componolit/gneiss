@@ -31,7 +31,7 @@ is
       end case;
    end record;
 
-   type Session_Registry is array (CIM.Session_Index range 1 .. CIM.Session_Index'Last) of Session_Entry;
+   type Session_Registry is array (CIM.Session_Id range 1 .. CIM.Session_Id'Last) of Session_Entry;
    Registry : Session_Registry := (others => Session_Entry'(Kind => CIM.None));
 
    procedure Call_Block_Client_Event (S : Session_Entry) with
@@ -44,7 +44,7 @@ is
       Pre => S.Kind = CIM.Block_Server;
 
    procedure Call_Timer_Event (S : Session_Entry;
-                               I : CIM.Session_Index) with
+                               I : CIM.Session_Id) with
       Pre => S.Kind = CIM.Timer_Client;
 
 end Gneiss.Muen_Registry;

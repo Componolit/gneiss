@@ -4,7 +4,7 @@ with Gneiss.Muen;
 with Gneiss.Muen_Block;
 with Musinfo;
 
-package Gneiss.Internal.Block with
+package Gneiss_Internal.Block with
    SPARK_Mode
 is
    package CI renames Gneiss;
@@ -15,13 +15,13 @@ is
    type Response_Cache is array (1 .. CI.Muen_Block.Element_Count * 2) of CI.Muen_Block.Event;
 
    type Client_Session is limited record
-      Name            : CI.Muen_Block.Session_Name := CI.Muen_Block.Null_Name;
-      Count           : CI.Muen_Block.Count        := 0;
-      Request_Memory  : Musinfo.Memregion_Type     := Musinfo.Null_Memregion;
-      Response_Memory : Musinfo.Memregion_Type     := Musinfo.Null_Memregion;
+      Name            : CI.Muen_Block.Session_Name      := CI.Muen_Block.Null_Name;
+      Count           : CI.Muen_Block.Count             := 0;
+      Request_Memory  : Musinfo.Memregion_Type          := Musinfo.Null_Memregion;
+      Response_Memory : Musinfo.Memregion_Type          := Musinfo.Null_Memregion;
       Response_Reader : CI.Muen_Block.Client_Response_Channel.Reader_Type
-                           := CI.Muen_Block.Client_Response_Channel.Null_Reader;
-      Registry_Index  : CI.Muen.Session_Index           := CI.Muen.Invalid_Index;
+                                                        := CI.Muen_Block.Client_Response_Channel.Null_Reader;
+      Registry_Index  : CI.Muen.Session_Id              := CI.Muen.Invalid_Index;
       Queued          : Natural                         := 0;
       Responses       : Response_Cache                  := (others => CI.Muen_Block.Null_Event);
       Tag             : Standard.Interfaces.Unsigned_32 := 0;
@@ -30,15 +30,15 @@ is
    type Request_Status is (Raw, Allocated, Pending, Ok, Error);
 
    type Dispatcher_Session is limited record
-      Registry_Index : CI.Muen.Session_Index := CI.Muen.Invalid_Index;
+      Registry_Index : CI.Muen.Session_Id := CI.Muen.Invalid_Index;
    end record;
 
    type Server_Session is limited record
-      Name            : CI.Muen_Block.Session_Name := CI.Muen_Block.Null_Name;
-      Registry_Index  : CI.Muen.Session_Index      := CI.Muen.Invalid_Index;
-      Request_Memory  : Musinfo.Memregion_Type     := Musinfo.Null_Memregion;
+      Name            : CI.Muen_Block.Session_Name      := CI.Muen_Block.Null_Name;
+      Registry_Index  : CI.Muen.Session_Id              := CI.Muen.Invalid_Index;
+      Request_Memory  : Musinfo.Memregion_Type          := Musinfo.Null_Memregion;
       Request_Reader  : CI.Muen_Block.Server_Request_Channel.Reader_Type
-                           := CI.Muen_Block.Server_Request_Channel.Null_Reader;
+                                                        := CI.Muen_Block.Server_Request_Channel.Null_Reader;
       Response_Memory : Musinfo.Memregion_Type          := Musinfo.Null_Memregion;
       Read_Select     : Read_Select_List                := (others => CI.Muen_Block.Null_Event_Header);
       Read_Data       : Read_Data_List                  := (others => (others => 0));
@@ -62,4 +62,4 @@ is
       Status : CI.Muen_Block.Connection_Status;
    end record;
 
-end Gneiss.Internal.Block;
+end Gneiss_Internal.Block;

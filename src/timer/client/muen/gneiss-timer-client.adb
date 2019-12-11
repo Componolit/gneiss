@@ -13,7 +13,7 @@ is
    package CIM renames Gneiss.Muen;
    package Reg renames Gneiss.Muen_Registry;
 
-   procedure Check_Event (I : CIM.Session_Index);
+   procedure Check_Event (I : CIM.Session_Id);
 
    function Event_Address return System.Address;
 
@@ -25,7 +25,7 @@ is
    end Event_Address;
 
    procedure Initialize (C   : in out Client_Session;
-                         Cap :        Gneiss.Types.Capability)
+                         Cap :        Capability)
    is
       pragma Unreferenced (Cap);
       use type CIM.Async_Session_Type;
@@ -66,7 +66,7 @@ is
       Reg.Registry (C.Index).Timeout_Set  := True;
    end Set_Timeout;
 
-   procedure Check_Event (I : CIM.Session_Index)
+   procedure Check_Event (I : CIM.Session_Id)
    is
       use type Standard.Interfaces.Unsigned_64;
       Start : constant Interfaces.Unsigned_64 := Musinfo.Instance.TSC_Schedule_Start;

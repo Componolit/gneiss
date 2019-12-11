@@ -1,9 +1,6 @@
-with Ada.Unchecked_Conversion;
 with Interfaces;
 with Component;
 with SK.CPU;
-with Gneiss.Types;
-with Gneiss.Internal.Types;
 with Gneiss.Muen;
 with Gneiss.Muen_Registry;
 
@@ -17,12 +14,10 @@ is
       package CIM renames Gneiss.Muen;
       package Reg renames Gneiss.Muen_Registry;
       use type CIM.Status;
-      Null_Cap : constant Gneiss.Internal.Types.Capability := (null record);
-      function Gen_Cap is new Ada.Unchecked_Conversion (Gneiss.Internal.Types.Capability,
-                                                        Gneiss.Types.Capability);
+      Null_Cap : constant Capability := (null record);
       Epoch : Standard.Interfaces.Unsigned_64 := 0;
    begin
-      Component.Main.Construct (Gen_Cap (Null_Cap));
+      Component.Main.Construct (Null_Cap);
       while CIM.Component_Status = CIM.Running loop
          for I in Reg.Registry'Range loop
             case Reg.Registry (I).Kind is
