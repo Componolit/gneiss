@@ -83,12 +83,12 @@ is
       if Session.Client_Fd < 0 or else Server_S.Fd < 0 then
          return;
       end if;
+      Server_S.Index := Idx;
       Server_Instance.Initialize (Server_S);
       if not Server_Instance.Ready (Server_S) then
          Gneiss.Syscall.Close (Server_S.Fd);
          Gneiss.Syscall.Close (Session.Client_Fd);
       end if;
-      Server_S.Index := Idx;
    end Session_Initialize;
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
