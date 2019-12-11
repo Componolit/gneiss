@@ -1,0 +1,7 @@
+<config>
+    <component name="message_client" file="libcomponent_message_client.so">
+        <service name="Message" server="message_server"/>
+    </component>
+    <component name="message_server" file="libcomponent_message_server.so">
+    </component>
+</config>

@@ -1,0 +1,4 @@
+
+set timeout 10
+spawn ./build/init/init test/message_client/message_client.xml
+expect "I: Component message_client exited with status 0"
