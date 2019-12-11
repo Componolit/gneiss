@@ -6,7 +6,6 @@ with Gneiss.Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss_Internal.Message;
-with Componolit.Runtime.Debug;
 
 package body Gneiss.Message.Client with
    SPARK_Mode
@@ -43,7 +42,6 @@ is
    is
       S : Integer;
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Init " & Label);
       if Label /= Session.Label.Value (Session.Label.Value'First .. Session.Label.Last) then
          return;
       end if;
@@ -65,7 +63,6 @@ is
    is
       Succ : Boolean;
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Initialize " & Label);
       case Status (Session) is
          when Initialized | Pending =>
             return;

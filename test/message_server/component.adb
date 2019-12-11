@@ -3,7 +3,6 @@ with System;
 with Gneiss.Message;
 with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
-with Componolit.Runtime.Debug;
 
 package body Component with
    SPARK_Mode
@@ -106,15 +105,11 @@ is
                        Label    :        String)
    is
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Dispatch " & Name & " " & Label);
       if Message_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
          for I in Servers'Range loop
-            Componolit.Runtime.Debug.Log_Debug ("Server");
             if not Ready (Servers (I)) then
-               Componolit.Runtime.Debug.Log_Debug ("Initialize " & Name & " " & Label);
                Message_Dispatcher.Session_Initialize (Session, Disp_Cap, Servers (I), I);
                if Ready (Servers (I)) and then Message.Initialized (Servers (I)) then
-                  Componolit.Runtime.Debug.Log_Debug ("Accept " & Name & " " & Label);
                   Server_Data (I).Ident (1 .. Name'Length + Label'Length + 1) := Name & ":" & Label;
                   Message_Dispatcher.Session_Accept (Session, Disp_Cap, Servers (I));
                   exit;
