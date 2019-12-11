@@ -1,7 +1,7 @@
 
-with Ada.Unchecked_Conversion;
 with Basalt.Queue;
 with Gneiss.Linker;
+with Gneiss_Access;
 with Gneiss_Internal.Message;
 with Gneiss.Protocoll;
 with Gneiss.Syscall;
@@ -30,6 +30,8 @@ is
    end record;
    package Queue is new Basalt.Queue (Request_Cache);
    type Request_Registry is array (RFLX.Session.Kind_Type'Range) of Queue.Context (10);
+
+   package Read_Buffer is new Gneiss_Access (512);
 
    package Proto is new Gneiss.Protocoll (Character, RFLX_String);
 
@@ -191,10 +193,6 @@ is
       end if;
    end Event_Handler;
 
-   type Bytes_Ptr is access all RFLX.Types.Bytes;
-   function Convert is new Ada.Unchecked_Conversion (Bytes_Ptr, RFLX.Types.Bytes_Ptr);
-   Read_Buffer : aliased RFLX.Types.Bytes := (1 .. 512 => 0);
-
    Read_Name  : String (1 .. 255);
    Read_Label : String (1 .. 255);
 
@@ -202,7 +200,6 @@ is
    is
       Truncated  : Boolean;
       Context    : RFLX.Session.Packet.Context;
-      Buffer_Ptr : RFLX.Types.Bytes_Ptr := Convert (Read_Buffer'Access);
       Last       : RFLX.Types.Index;
       Fd         : Integer;
       Name_Last  : Natural;
@@ -216,13 +213,13 @@ is
          Load_Message (Context, E.Label, E.L_Last, E.Name, E.N_Last);
       end Load_Entry;
    begin
-      Peek_Message (Broker_Fd, Read_Buffer, Last, Truncated, Fd);
+      Peek_Message (Broker_Fd, Read_Buffer.Ptr.all, Last, Truncated, Fd);
       Gneiss.Syscall.Drop_Message (Broker_Fd);
       if Truncated then
          return;
       end if;
-      RFLX.Session.Packet.Initialize (Context, Buffer_Ptr,
-                                      RFLX.Types.First_Bit_Index (Read_Buffer'First),
+      RFLX.Session.Packet.Initialize (Context, Read_Buffer.Ptr,
+                                      RFLX.Types.First_Bit_Index (Read_Buffer.Ptr.all'First),
                                       RFLX.Types.Last_Bit_Index (Last));
       RFLX.Session.Packet.Verify_Message (Context);
       if
