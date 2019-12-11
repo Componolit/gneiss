@@ -3,9 +3,7 @@ with System;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss.Syscall;
-with Basalt.Strings;
 with RFLX.Session;
-with Componolit.Runtime.Debug;
 
 package body Gneiss.Message.Dispatcher with
    SPARK_Mode
@@ -31,7 +29,6 @@ is
                              Fd      : in out Integer)
    is
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Dispatch_Event " & Name & " " & Label);
       Session.Client_Fd := -1;
       Session.Accepted  := False;
       if Fd >= 0 then
@@ -101,7 +98,6 @@ is
       pragma Unreferenced (Cap);
       Ignore_Success : Integer;
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Accept " & Basalt.Strings.Image (Session.Client_Fd));
       Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address, Ignore_Success);
       Session.Accepted := True;
    end Session_Accept;
@@ -116,7 +112,6 @@ is
          Cap.Clean_Fd >= 0
          and then Server_S.Fd = Cap.Clean_Fd
       then
-         Componolit.Runtime.Debug.Log_Debug ("Cleanup");
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
          Gneiss.Syscall.Close (Server_S.Fd);
          Server_Instance.Finalize (Server_S);

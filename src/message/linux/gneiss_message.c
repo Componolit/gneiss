@@ -3,7 +3,7 @@
 #include <sys/types.h>
 #include <sys/socket.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 void gneiss_message_write(int fd, void *msg, int size)

@@ -56,4 +56,14 @@ is
       Convention    => C,
       External_Name => "gneiss_drop_message";
 
+   procedure Fputs (Str : String) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_fputs";
+
+   function Get_Pid return Integer with
+      Import,
+      Convention    => C,
+      External_Name => "getpid";
+
 end Gneiss.Syscall;

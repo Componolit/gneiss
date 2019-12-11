@@ -1,6 +1,5 @@
 
 with Ada.Unchecked_Conversion;
-with Basalt.Strings;
 with Basalt.Queue;
 with Gneiss.Linker;
 with Gneiss_Internal.Message;
@@ -8,8 +7,8 @@ with Gneiss.Protocoll;
 with Gneiss.Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
+with Gneiss_Log;
 with System;
-with Componolit.Runtime.Debug;
 with RFLX.Session;
 with RFLX.Session.Packet;
 
@@ -99,7 +98,6 @@ is
                                Succ    : out Boolean)
    is
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Registering...");
       if
          not Gneiss_Platform.Is_Valid (Cap)
          or else Gneiss_Platform.Is_Valid (Services (Kind))
@@ -139,10 +137,9 @@ is
       Destruct_Sym  : System.Address;
    begin
       Broker_Fd := Fd;
-      Componolit.Runtime.Debug.Log_Debug ("Main: " & Name);
       Gneiss.Linker.Open (Name, Handle);
       if Handle = Gneiss.Linker.Invalid_Handle then
-         Componolit.Runtime.Debug.Log_Error ("Linker handle failed");
+         Gneiss_Log.Error ("Linker handle failed");
          Status := 1;
          return;
       end if;
@@ -152,19 +149,19 @@ is
          Construct_Sym = System.Null_Address
          or else Destruct_Sym = System.Null_Address
       then
-         Componolit.Runtime.Debug.Log_Error ("Linker symbols failed");
+         Gneiss_Log.Error ("Linker symbols failed");
          Status := 1;
          return;
       end if;
       Gneiss_Epoll.Create (Epoll_Fd);
       if Epoll_Fd < 0 then
-         Componolit.Runtime.Debug.Log_Error ("Epoll creation failed");
+         Gneiss_Log.Error ("Epoll creation failed");
          Status := 1;
          return;
       end if;
       Gneiss_Epoll.Add (Epoll_Fd, Broker_Fd, Broker_Event_Address, Status);
       if Status /= 0 then
-         Componolit.Runtime.Debug.Log_Error ("Failed to add epoll fd");
+         Gneiss_Log.Error ("Failed to add epoll fd");
          Status := 1;
          return;
       end if;
@@ -183,13 +180,11 @@ is
    begin
       Gneiss_Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
       if Event.Epoll_Hup or else Event.Epoll_Rdhup then
-         Componolit.Runtime.Debug.Log_Error ("Socket closed unexpectedly, shutting down");
+         Gneiss_Log.Error ("Socket closed unexpectedly, shutting down");
          raise Program_Error;
       end if;
       if Event.Epoll_In then
-         Componolit.Runtime.Debug.Log_Debug ("Received event");
          if Event_Ptr /= System.Null_Address then
-            Componolit.Runtime.Debug.Log_Debug ("Call event");
             Call_Event (Event_Ptr);
          end if;
       end if;
@@ -220,7 +215,6 @@ is
          Load_Message (Context, E.Label, E.L_Last, E.Name, E.N_Last);
       end Load_Entry;
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Broker_Event");
       Peek_Message (Broker_Fd, Read_Buffer, Last, Truncated, Fd);
       Gneiss.Syscall.Drop_Message (Broker_Fd);
       if Truncated then
@@ -237,23 +231,19 @@ is
          or else not RFLX.Session.Packet.Valid (Context, RFLX.Session.Packet.F_Payload_Length)
          or else not RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Payload)
       then
-         Componolit.Runtime.Debug.Log_Warning ("Invalid message, dropping");
          return;
       end if;
       Kind := RFLX.Session.Packet.Get_Kind (Context);
       case RFLX.Session.Packet.Get_Action (Context) is
          when RFLX.Session.Request =>
-            Componolit.Runtime.Debug.Log_Debug ("Request");
             if Queue.Count (Requests (Kind)) >= Queue.Size (Requests (Kind)) then
                Reject_Request (Kind);
             end if;
             Put (Requests (Kind));
          when RFLX.Session.Confirm =>
-            Componolit.Runtime.Debug.Log_Debug ("Confirm");
             Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
             Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
          when RFLX.Session.Reject =>
-            Componolit.Runtime.Debug.Log_Debug ("Reject");
             Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
             Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
       end case;
@@ -265,10 +255,8 @@ is
                             Label : String)
    is
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Handle_Answer " & Basalt.Strings.Image (Fd));
       for I of Initializers (Kind) loop
          if Gneiss_Platform.Is_Valid (I) then
-            Componolit.Runtime.Debug.Log_Debug ("Initialize with Answer " & Label);
             case Kind is
                when RFLX.Session.Message =>
                   Message_Initializer (I, Label, Fd >= 0, Fd);

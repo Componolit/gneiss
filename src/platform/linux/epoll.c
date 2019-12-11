@@ -2,7 +2,7 @@
 #include <stdio.h>
 #include <sys/epoll.h>
 
-#define ENABLE_TRACE
+//#define ENABLE_TRACE
 #include <trace.h>
 
 void gneiss_epoll_create(int *efd)
