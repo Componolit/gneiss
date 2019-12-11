@@ -1,5 +1,5 @@
 
-with Gneiss.Types;
+with Gneiss;
 with Gneiss.Component;
 
 package Component with
@@ -7,7 +7,7 @@ SPARK_Mode
 is
 
    procedure Run;
-   procedure Construct (Cap : Gneiss.Types.Capability);
+   procedure Construct (Cap : Gneiss.Capability);
    procedure Destruct;
 
    package Main is new Gneiss.Component (Construct, Destruct);

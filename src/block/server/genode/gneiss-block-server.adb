@@ -20,11 +20,11 @@ is
 
    function Status (R : Request) return Request_Status is
       (case R.Status is
-          when Gneiss.Internal.Block.Raw       => Raw,
-          when Gneiss.Internal.Block.Allocated => Allocated,
-          when Gneiss.Internal.Block.Pending   => Pending,
-          when Gneiss.Internal.Block.Ok        => Ok,
-          when Gneiss.Internal.Block.Error     => Error);
+          when Gneiss_Internal.Block.Raw       => Raw,
+          when Gneiss_Internal.Block.Allocated => Allocated,
+          when Gneiss_Internal.Block.Pending   => Pending,
+          when Gneiss_Internal.Block.Ok        => Ok,
+          when Gneiss_Internal.Block.Error     => Error);
 
    function Start (R : Request) return Id is
       (Id (R.Request.Block_Number));
@@ -43,7 +43,7 @@ is
    begin
       Cxx.Block.Server.Process_Request (S.Instance, R.Request, State);
       if State = 1 then
-         R.Status := Gneiss.Internal.Block.Pending;
+         R.Status := Gneiss_Internal.Block.Pending;
          R.Session := S.Instance.Tag;
       end if;
    end Process;
@@ -142,7 +142,7 @@ is
    begin
       Cxx.Block.Server.Acknowledge (S.Instance, R.Request, Succ);
       if Succ = 1 then
-         R.Status := Gneiss.Internal.Block.Raw;
+         R.Status := Gneiss_Internal.Block.Raw;
       end if;
    end Acknowledge;
 

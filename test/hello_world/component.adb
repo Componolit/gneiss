@@ -8,7 +8,7 @@ is
 
    Log : Gneiss.Log.Client_Session;
 
-   procedure Construct (Cap : Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       if not Gneiss.Log.Initialized (Log) then

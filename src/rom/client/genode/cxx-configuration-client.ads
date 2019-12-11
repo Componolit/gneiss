@@ -1,5 +1,5 @@
 
-with Gneiss.Types;
+with Gneiss;
 
 package Cxx.Configuration.Client with
    SPARK_Mode
@@ -14,7 +14,7 @@ is
    pragma Cpp_Constructor (Constructor, "_ZN3Cai13Configuration6ClientC1Ev");
 
    procedure Initialize (This  : Class;
-                         Env   : Gneiss.Types.Capability;
+                         Env   : Gneiss.Capability;
                          Parse : Cxx.Void_Address;
                          Name  : Cxx.Void_Address) with
       Global => null,

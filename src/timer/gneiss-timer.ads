@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss.Internal.Timer;
+private with Gneiss_Internal.Timer;
 
 package Gneiss.Timer with
    SPARK_Mode
@@ -49,6 +49,6 @@ is
 
 private
 
-   type Client_Session is new Gneiss.Internal.Timer.Client_Session;
+   type Client_Session is new Gneiss_Internal.Timer.Client_Session;
 
 end Gneiss.Timer;

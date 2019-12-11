@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss.Internal.Log;
+private with Gneiss_Internal.Log;
 
 package Gneiss.Log with
    SPARK_Mode
@@ -26,6 +26,6 @@ is
 
 private
 
-   type Client_Session is new Gneiss.Internal.Log.Client_Session;
+   type Client_Session is new Gneiss_Internal.Log.Client_Session;
 
 end Gneiss.Log;

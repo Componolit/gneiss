@@ -1,5 +1,5 @@
 
-with Gneiss.Types;
+with Gneiss;
 with Gneiss.Component;
 with Gneiss.Block;
 with Gneiss.Block.Client;
@@ -8,7 +8,7 @@ with Gneiss.Block.Server;
 
 package Component is
 
-   procedure Construct (Cap : Gneiss.Types.Capability);
+   procedure Construct (Cap : Gneiss.Capability);
    procedure Destruct;
 
    package Main is new Gneiss.Component (Construct, Destruct);

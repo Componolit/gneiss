@@ -28,7 +28,7 @@ is
       Post => Initialized (C);
 
    procedure Initialize (C              : in out Client_Session;
-                         Cap            :        Gneiss.Types.Capability;
+                         Cap            :        Capability;
                          Label          :        String) with
       SPARK_Mode => Off
    is
