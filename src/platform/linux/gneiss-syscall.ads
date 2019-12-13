@@ -4,7 +4,7 @@ with System;
 package Gneiss.Syscall with
    SPARK_Mode,
    Abstract_State => Linux,
-   Initializes => Linux,
+   Initializes    => Linux,
    Elaborate_Body
 is
 
@@ -25,7 +25,8 @@ is
       Import,
       Convention    => C,
       External_Name => "gneiss_close",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Post          => Fd = -1;
 
    procedure Waitpid (Pid : Integer;
                       Status : out Integer) with

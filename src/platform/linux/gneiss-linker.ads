@@ -4,7 +4,7 @@ with System;
 package Gneiss.Linker with
    SPARK_Mode,
    Abstract_State => Linux,
-   Initializes => Linux
+   Initializes    => Linux
 is
 
    type Dl_Handle is private;

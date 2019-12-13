@@ -1,22 +1,25 @@
 
-with SXML;
-with SXML.Query;
-
 package Gneiss.Broker with
-   SPARK_Mode
+   SPARK_Mode,
+   Abstract_State => (Policy_State,
+                      Loader_State,
+                      Message_State),
+   Initializes    => (Policy_State,
+                      Loader_State,
+                      Message_State)
 is
 
-   type Component is record
-      Fd   : Integer               := -1;
-      Node : SXML.Query.State_Type := SXML.Query.Invalid_State;
-      Pid  : Integer               := -1;
-   end record;
-
-   type Component_List is array (Positive range <>) of Component;
-
-   Document : SXML.Document_Type (1 .. 100) := (others => SXML.Null_Node);
+   function Is_Valid return Boolean with
+      Ghost;
 
    procedure Construct (Config :     String;
-                        Status : out Integer);
+                        Status : out Integer) with
+      Post   => Is_Valid,
+      Global => (In_Out => Policy_State);
+
+   function Initialized return Boolean with
+      Pre    => Is_Valid,
+      Post   => (if Initialized'Result then Is_Valid),
+      Global => (Input => Policy_State);
 
 end Gneiss.Broker;
