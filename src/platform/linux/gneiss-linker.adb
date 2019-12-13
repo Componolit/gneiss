@@ -1,11 +1,10 @@
 
 package body Gneiss.Linker with
-   SPARK_Mode
+   SPARK_Mode => Off
 is
 
    procedure Open (File   :     String;
-                   Handle : out Dl_Handle) with
-      SPARK_Mode => Off
+                   Handle : out Dl_Handle)
    is
       procedure Dl_Open (F :     System.Address;
                          H : out Dl_Handle) with
@@ -18,8 +17,7 @@ is
    end Open;
 
    function Symbol (Handle : Dl_Handle;
-                    Name   : String) return System.Address with
-      SPARK_Mode => Off
+                    Name   : String) return System.Address
    is
       function Dl_Sym (H : Dl_Handle;
                        N : System.Address) return System.Address with

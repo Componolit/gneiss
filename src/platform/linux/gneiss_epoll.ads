@@ -2,7 +2,10 @@
 with System;
 
 package Gneiss_Epoll with
-   SPARK_Mode
+   SPARK_Mode,
+   Abstract_State => Linux,
+   Initializes => Linux,
+   Elaborate_Body
 is
 
    type Epoll_Fd is new Integer;
@@ -45,7 +48,8 @@ is
    procedure Create (Efd : out Epoll_Fd) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_epoll_create";
+      External_Name => "gneiss_epoll_create",
+      Global        => (In_Out => Linux);
 
    procedure Add (Efd     :     Epoll_Fd;
                   Fd      :     Integer;
@@ -53,7 +57,8 @@ is
                   Success : out Integer) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_epoll_add_fd";
+      External_Name => "gneiss_epoll_add_fd",
+      Global        => (In_Out => Linux);
 
    procedure Add (Efd     :     Epoll_Fd;
                   Fd      :     Integer;
@@ -61,27 +66,31 @@ is
                   Success : out Integer) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_epoll_add_ptr";
+      External_Name => "gneiss_epoll_add_ptr",
+      Global        => (In_Out => Linux);
 
    procedure Remove (Efd : Epoll_Fd;
                      Fd : Integer;
                      Success : out Integer) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_epoll_remove";
+      External_Name => "gneiss_epoll_remove",
+      Global        => (In_Out => Linux);
 
    procedure Wait (Efd   :     Epoll_Fd;
                    Ev    : out Event;
                    Index : out Integer) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_epoll_wait_fd";
+      External_Name => "gneiss_epoll_wait_fd",
+      Global        => (In_Out => Linux);
 
    procedure Wait (Efd   :     Epoll_Fd;
                    Ev    : out Event;
                    Ptr   : out System.Address) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_epoll_wait_ptr";
+      External_Name => "gneiss_epoll_wait_ptr",
+      Global        => (In_Out => Linux);
 
 end Gneiss_Epoll;
