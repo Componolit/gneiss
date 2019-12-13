@@ -5,7 +5,9 @@ generic
    type Byte is (<>);
    type Buffer is array (RFLX.Session.Length_Type range <>) of Byte;
 package Gneiss.Protocoll with
-   SPARK_Mode
+   SPARK_Mode,
+   Abstract_State => Linux,
+   Initializes    => Linux
 is
 
    pragma Compile_Time_Error (Byte'Size /= 8, "Byte must bit 8 bit long");
@@ -26,7 +28,8 @@ is
 
    procedure Send_Message (Destination : Integer;
                            Data        : Message;
-                           File_Desc   : Integer := -1);
+                           File_Desc   : Integer := -1) with
+      Global => (In_Out => Linux);
 
    function Image (V : RFLX.Session.Action_Type) return String is
       (case V is

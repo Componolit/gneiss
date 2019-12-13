@@ -205,7 +205,8 @@ is
       Name_Last  : Natural;
       Label_Last : Natural;
       Kind       : RFLX.Session.Kind_Type;
-      procedure Load_Entry (E : out Request_Cache);
+      procedure Load_Entry (E : out Request_Cache) with
+         Global => (In_Out => Context);
       procedure Put is new Queue.Generic_Put (Load_Entry);
       procedure Load_Entry (E : out Request_Cache)
       is
