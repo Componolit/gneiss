@@ -4,11 +4,15 @@ with System;
 package Gneiss_Epoll with
    SPARK_Mode,
    Abstract_State => Linux,
-   Initializes => Linux,
+   Initializes    => Linux,
    Elaborate_Body
 is
 
    type Epoll_Fd is new Integer;
+
+   function Valid_Fd (Efd : Epoll_Fd) return Boolean is
+      (Efd >= 0);
+
    type Event is record
       Epoll_In        : Boolean;
       Epoll_Pri       : Boolean;
@@ -27,6 +31,7 @@ is
       Epoll_Et        : Boolean;
    end record with
       Size => 32;
+
    for Event use record
       Epoll_In        at 0 range  0 ..  0;
       Epoll_Pri       at 0 range  1 ..  1;
@@ -58,7 +63,9 @@ is
       Import,
       Convention    => C,
       External_Name => "gneiss_epoll_add_fd",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Pre           => Fd > -1
+                       and then Valid_Fd (Efd);
 
    procedure Add (Efd     :     Epoll_Fd;
                   Fd      :     Integer;
@@ -67,15 +74,19 @@ is
       Import,
       Convention    => C,
       External_Name => "gneiss_epoll_add_ptr",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Pre           => Fd > -1
+                       and then Valid_Fd (Efd);
 
-   procedure Remove (Efd : Epoll_Fd;
-                     Fd : Integer;
+   procedure Remove (Efd     :     Epoll_Fd;
+                     Fd      :     Integer;
                      Success : out Integer) with
       Import,
       Convention    => C,
       External_Name => "gneiss_epoll_remove",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Pre           => Fd > -1
+                       and then Valid_Fd (Efd);
 
    procedure Wait (Efd   :     Epoll_Fd;
                    Ev    : out Event;
@@ -83,7 +94,8 @@ is
       Import,
       Convention    => C,
       External_Name => "gneiss_epoll_wait_fd",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Pre           => Valid_Fd (Efd);
 
    procedure Wait (Efd   :     Epoll_Fd;
                    Ev    : out Event;
@@ -91,6 +103,7 @@ is
       Import,
       Convention    => C,
       External_Name => "gneiss_epoll_wait_ptr",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Pre           => Valid_Fd (Efd);
 
 end Gneiss_Epoll;

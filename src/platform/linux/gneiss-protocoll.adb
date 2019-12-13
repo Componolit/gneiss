@@ -2,13 +2,12 @@
 with Gneiss.Syscall;
 
 package body Gneiss.Protocoll with
-   SPARK_Mode
+   SPARK_Mode => Off
 is
 
    procedure Send_Message (Destination : Integer;
                            Data        : Message;
-                           File_Desc   : Integer := -1) with
-      SPARK_Mode => Off
+                           File_Desc   : Integer := -1)
    is
    begin
       Gneiss.Syscall.Write_Message (Destination, Data'Address, Data'Size / 8, File_Desc);
