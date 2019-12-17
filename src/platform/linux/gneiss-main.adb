@@ -1,11 +1,8 @@
 
 with Basalt.Queue;
-with Gneiss.Linker;
 with Gneiss_Access;
 with Gneiss_Internal.Message;
 with Gneiss.Protocoll;
-with Gneiss.Syscall;
-with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss_Log;
 with System;
@@ -13,7 +10,17 @@ with RFLX.Session;
 with RFLX.Session.Packet;
 
 package body Gneiss.Main with
-   SPARK_Mode
+SPARK_Mode,
+   Refined_State => (Component_State => (Component_Status,
+                                         Epoll_Fd,
+                                         Broker_Fd,
+                                         Services,
+                                         Initializers,
+                                         Requests,
+                                         Read_Label,
+                                         Read_Name,
+                                         Read_Buffer.Ptr,
+                                         Proto.Linux))
 is
    use type Gneiss_Epoll.Epoll_Fd;
    use type System.Address;
@@ -35,42 +42,85 @@ is
 
    package Proto is new Gneiss.Protocoll (Character, RFLX_String);
 
-   function Create_Cap (Fd : Integer) return Capability;
-   procedure Set_Status (S : Integer);
+   function Create_Cap (Fd : Integer) return Capability with
+      Global => (Input => Epoll_Fd);
+   procedure Set_Status (S : Integer) with
+      Global => (Output => Component_Status);
    function Set_Status_Cap is new Gneiss_Platform.Create_Set_Status_Cap (Set_Status);
-   procedure Event_Handler;
+   procedure Event_Handler with
+      Global => (Input  => Epoll_Fd,
+                 In_Out => Gneiss_Epoll.Linux);
    procedure Call_Event (Fp : System.Address) with
-      Pre => Fp /= System.Null_Address;
+      Pre    => Fp /= System.Null_Address,
+      Global => (Input  => Broker_Fd,
+                 In_Out => (Services,
+                            Initializers,
+                            Requests,
+                            Proto.Linux),
+                 Output => Component_Status);
 
    procedure Register_Service (Kind :     RFLX.Session.Kind_Type;
                                Cap  :     Gneiss_Platform.Dispatcher_Cap;
-                               Succ : out Boolean);
+                               Succ : out Boolean) with
+      Global => (In_Out => Services);
    procedure Register_Initializer (Kind :     RFLX.Session.Kind_Type;
                                    Cap  :     Gneiss_Platform.Initializer_Cap;
-                                   Succ : out Boolean);
+                                   Succ : out Boolean) with
+      Global => (Input  => (Broker_Fd, Services),
+                 In_Out => (Initializers, Requests, Proto.Linux));
    function Register_Service_Cap is new Gneiss_Platform.Create_Register_Service_Cap
       (Register_Service);
    function Register_Initializer_Cap is new Gneiss_Platform.Create_Register_Initializer_Cap
       (Register_Initializer);
 
    procedure Construct (Symbol : System.Address;
-                        Cap    : Capability);
-   procedure Destruct (Symbol : System.Address);
-   procedure Broker_Event;
-   function Broker_Event_Address return System.Address;
+                        Cap    : Capability) with
+      Global => (Input  => Broker_Fd,
+                 In_Out => (Services,
+                            Initializers,
+                            Requests,
+                            Proto.Linux),
+                 Output => Component_Status);
+   procedure Destruct (Symbol : System.Address) with
+      Global => (Input  => Broker_Fd,
+                 In_Out => (Services,
+                            Initializers,
+                            Requests,
+                            Proto.Linux),
+                 Output => Component_Status);
+   procedure Broker_Event with
+      Global => (Input  => (Services,
+                            Broker_Fd),
+                 In_Out => (Read_Buffer.Ptr,
+                            Read_Label,
+                            Proto.Linux,
+                            Initializers,
+                            Requests,
+                            Read_Name,
+                            Gneiss.Syscall.Linux));
+   function Broker_Event_Address return System.Address with
+      Global => null;
    procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
                             Fd    : Integer;
-                            Label : String);
+                            Label : String) with
+      Global => (In_Out => Initializers);
    procedure Load_Message (Context    : in out RFLX.Session.Packet.Context;
                            Label      :    out String;
                            Last_Label :    out Natural;
                            Name       :    out String;
-                           Last_Name  :    out Natural);
-   procedure Handle_Requests;
+                           Last_Name  :    out Natural) with
+      Global => null;
+   procedure Handle_Requests with
+      Global => (Input  => (Broker_Fd, Services),
+                 In_Out => (Requests, Proto.Linux));
    procedure Dispatch_Service (Kind     :     RFLX.Session.Kind_Type;
                                Accepted : out Boolean) with
-      Pre => Gneiss_Platform.Is_Valid (Services (Kind));
-   procedure Reject_Request (Kind : RFLX.Session.Kind_Type);
+      Pre => Gneiss_Platform.Is_Valid (Services (Kind)),
+      Global => (Input  => (Broker_Fd, Services, Requests),
+                 In_Out => Proto.Linux);
+   procedure Reject_Request (Kind : RFLX.Session.Kind_Type) with
+      Global => (Input  => Broker_Fd,
+                 In_Out => (Proto.Linux, Requests));
 
    Running : constant Integer := -1;
    Success : constant Integer := 0;
@@ -82,6 +132,8 @@ is
    Services         : Service_Registry;
    Initializers     : Initializer_Service_Registry;
    Requests         : Request_Registry;
+   Read_Name        : String (1 .. 255);
+   Read_Label       : String (1 .. 255);
 
    procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
    procedure Message_Dispatcher is new Gneiss_Platform.Dispatcher_Call (Gneiss_Internal.Message.Dispatcher_Session);
@@ -90,14 +142,20 @@ is
    is
       procedure Event with
          Import,
-         Address => Fp;
+         Address => Fp,
+         Global  => (Input  => Broker_Fd,
+                     In_Out => (Services,
+                                Initializers,
+                                Requests,
+                                Proto.Linux),
+                     Output => Component_Status);
    begin
       Event;
    end Call_Event;
 
-   procedure Register_Service (Kind    :     RFLX.Session.Kind_Type;
-                               Cap     :     Gneiss_Platform.Dispatcher_Cap;
-                               Succ    : out Boolean)
+   procedure Register_Service (Kind :     RFLX.Session.Kind_Type;
+                               Cap  :     Gneiss_Platform.Dispatcher_Cap;
+                               Succ : out Boolean)
    is
    begin
       if
@@ -130,9 +188,9 @@ is
       end loop;
    end Register_Initializer;
 
-   procedure Run (Name       :     String;
-                  Fd         :     Integer;
-                  Status     : out Integer)
+   procedure Run (Name   :     String;
+                  Fd     :     Integer;
+                  Status : out Integer)
    is
       use type Gneiss.Linker.Dl_Handle;
       Handle        : Gneiss.Linker.Dl_Handle;
@@ -192,9 +250,6 @@ is
          end if;
       end if;
    end Event_Handler;
-
-   Read_Name  : String (1 .. 255);
-   Read_Label : String (1 .. 255);
 
    procedure Broker_Event
    is
@@ -387,7 +442,13 @@ is
    is
       procedure Component_Construct (C : Capability) with
          Import,
-         Address => Symbol;
+         Address => Symbol,
+         Global  => (Input  => Broker_Fd,
+                     In_Out => (Services,
+                                Initializers,
+                                Requests,
+                                Proto.Linux),
+                     Output => Component_Status);
    begin
       Component_Construct (Cap);
    end Construct;
@@ -396,7 +457,13 @@ is
    is
       procedure Component_Destruct with
          Import,
-         Address => Symbol;
+         Address => Symbol,
+         Global  => (Input  => Broker_Fd,
+                     In_Out => (Services,
+                                Initializers,
+                                Requests,
+                                Proto.Linux),
+                     Output => Component_Status);
    begin
       Component_Destruct;
    end Destruct;
