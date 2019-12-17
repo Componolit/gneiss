@@ -1,28 +1,24 @@
 
 with Basalt.Strings;
-with Gneiss.Syscall;
-with Gneiss.Main;
 with Gneiss.Protocoll;
 with Gneiss_Access;
-with Gneiss_Epoll;
 with Gneiss_Log;
 with SXML;
 with SXML.Query;
-with SXML.Parser;
 with RFLX.Types;
 with RFLX.Session;
 with RFLX.Session.Packet;
 
 package body Gneiss.Broker with
-SPARK_Mode,
-   Refined_State => (Policy_State  => (Document,
-                                       Policy,
-                                       Efd,
-                                       Read_Buffer.Ptr,
-                                       Proto.Linux),
-                     Loader_State  => Load_File_Name,
-                     Message_State => (Load_Message_Name,
-                                       Load_Message_Label))
+   SPARK_Mode,
+   Refined_State => (Policy_State => (Document,
+                                      Policy,
+                                      Efd,
+                                      Read_Buffer.Ptr,
+                                      Proto.Linux,
+                                      Load_File_Name,
+                                      Load_Message_Name,
+                                      Load_Message_Label))
 is
    use type Gneiss_Epoll.Epoll_Fd;
    use type SXML.Result_Type;
@@ -96,7 +92,9 @@ is
                             Efd,
                             Gneiss_Epoll.Linux,
                             Gneiss.Syscall.Linux,
-                            Load_File_Name));
+                            Main.Component_State,
+                            Load_File_Name,
+                            Gneiss.Linker.Linux));
 
    procedure Load (Fd   :     Integer;
                    Comp :     SXML.Query.State_Type;
@@ -110,7 +108,10 @@ is
                  In_Out => (Policy,
                             Efd,
                             Gneiss.Syscall.Linux,
-                            Load_File_Name));
+                            Main.Component_State,
+                            Gneiss.Linker.Linux,
+                            Gneiss_Epoll.Linux),
+                 Output => Load_File_Name);
 
    procedure Event_Loop (Status : out Integer) with
       Pre    => Is_Valid
@@ -429,7 +430,6 @@ is
          Gneiss_Log.Error ("No file to load");
          return;
       end if;
-      --  FIXME: prove Gneiss.Main
       Gneiss.Main.Run (Load_File_Name (Load_File_Name'First .. Last), Fd, Ret);
    end Load;
 
@@ -479,10 +479,10 @@ is
 
    procedure Read_Message (Index : Positive)
    is
-      Truncated  : Boolean;
-      Context    : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
-      Last       : RFLX.Types.Index;
-      Fd         : Integer;
+      Truncated : Boolean;
+      Context   : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
+      Last      : RFLX.Types.Index;
+      Fd        : Integer;
    begin
       Gneiss.Main.Peek_Message (Policy (Index).Fd, Read_Buffer.Ptr.all, Last, Truncated, Fd);
       Gneiss.Syscall.Drop_Message (Policy (Index).Fd);
