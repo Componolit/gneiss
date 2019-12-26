@@ -122,7 +122,7 @@ project Gneiss is
                for Source_Dirs use Source & (Source_Platform & "/linux",
                                              Source_Message & "/linux");
                for Languages use ("Ada", "C");
-               Linux_Switches := ("-ldl");
+               Linux_Switches := ("-ldl", "-Wl,--as-needed", "-static", "-Wl,-O3");
                Build_Dir := "build/init";
                for Main use ("main.adb");
             when others =>
