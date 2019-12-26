@@ -367,7 +367,6 @@ is
       State  := SXML.Query.Path (Root, Document, "/config/component");
       while
          SXML.Query.State_Result (State) = SXML.Result_OK
-         and then SXML.Query.Is_Open (State, Document)
       loop
          pragma Loop_Invariant (Is_Valid);
          pragma Loop_Invariant (Initialized);
@@ -395,7 +394,6 @@ is
                   Parent := True;
                   Gneiss_Log.Info ("Started " & XML_Buf (XML_Buf'First .. Last)
                                    & " with PID " & Basalt.Strings.Image (Pid));
-                  Gneiss_Log.Info (Basalt.Strings.Image (Index));
                else --  Pid = 0, Child
                   Load (Fd, State, Status);
                   Parent := False;
@@ -621,46 +619,54 @@ is
       Valid       : Boolean;
       Result      : SXML.Result_Type;
       Last        : Natural;
+      Found       : Boolean               := False;
+      Dest_State  : SXML.Query.State_Type := SXML.Query.Invalid_State;
    begin
       if Policy (Source).Fd < 0 then
          Gneiss_Log.Warning ("Cannot process invalid source");
          return;
       end if;
       State := SXML.Query.Child (Policy (Source).Node, Document);
-      Gneiss_Log.Info ("Process_Request " & Proto.Image (Kind) & " " & Basalt.Strings.Image (Source)
-                       & " " & Basalt.Strings.Image (Policy (Source).Pid));
-      --  SXML.Query.Attribute (State, Document, "name", Result, XML_Buf, Last);
-      --  Gneiss_Log.Info (XML_Buf (XML_Buf'First .. Last));
       while
          SXML.Query.State_Result (State) = SXML.Result_OK
-         and then SXML.Query.Is_Open (State, Document)
       loop
          pragma Loop_Invariant (Is_Valid);
          pragma Loop_Invariant (Initialized);
          pragma Loop_Invariant (SXML.Query.Is_Valid (State, Document));
-         Gneiss_Log.Info ("find");
+         pragma Loop_Invariant (SXML.Query.State_Result (State) = SXML.Result_OK);
+         pragma Loop_Invariant (SXML.Query.Is_Open (State, Document)
+                                or else SXML.Query.Is_Content (State, Document));
+         pragma Loop_Invariant (if Found then (SXML.Query.Is_Valid (Dest_State, Document)
+                                               and then SXML.Query.State_Result (Dest_State) = SXML.Result_OK
+                                               and then SXML.Query.Is_Open (Dest_State, Document)));
          State := SXML.Query.Find_Sibling (State, Document, "service", "name", Proto.Image (Kind));
          exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
          SXML.Query.Attribute (State, Document, "label", Result, XML_Buf, Last);
-         --  Gneiss_Log.Info (XML_Buf (XML_Buf'First .. Last));
-         --  FIXME: check if the change to Result_Not_Found is related to the service discovery bug
-         exit when Result = SXML.Result_Not_Found
-            or else (Result = SXML.Result_OK
-                     and then Label'Length > 0
-                     and then Last - XML_Buf'First = Label'Last - Label'First
-                     and then XML_Buf (XML_Buf'First .. Last) = Label);
-         Gneiss_Log.Info ("while");
+         if
+            Result = SXML.Result_OK
+            and then Label'Length > 0
+            and then Last - XML_Buf'First = Label'Last - Label'First
+            and then XML_Buf (XML_Buf'First .. Last) = Label
+         then
+            --  if an exact label match was found, stop
+            --  pragma Assert (SXML.Query.State_Result (State) = SXML.Result_OK);
+            Dest_State := State;
+            Found      := True;
+            exit;
+         elsif Result = SXML.Result_Not_Found then
+            --  if a default service w/o label was found,
+            --  continue in case the exact label exists
+            Dest_State := State;
+            Found      := True;
+         end if;
          State := SXML.Query.Sibling (State, Document);
       end loop;
-      if
-         SXML.Query.State_Result (State) /= SXML.Result_OK
-         or else not SXML.Query.Is_Open (State, Document)
-      then
+      if not Found then
          Gneiss_Log.Error ("No service found");
          Send_Reject (Policy (Source).Fd, Kind, Label);
          return;
       end if;
-      SXML.Query.Attribute (State, Document, "server", Result, XML_Buf, Last);
+      SXML.Query.Attribute (Dest_State, Document, "server", Result, XML_Buf, Last);
       if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
          Gneiss_Log.Error ("Failed to get service provider");
          Send_Reject (Policy (Source).Fd, Kind, Label);
