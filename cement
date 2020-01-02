@@ -35,11 +35,24 @@ def find(name, path):
         if name in files:
             return os.path.join(root, name)
 
-if __name__ == "__main__":
-    args = parser.parse_args(sys.argv[1:])
-    gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
-    config_root = ET.parse(args.config).getroot()
-    build_dir = os.path.abspath(args.build_dir)
+def extract_init(build_dir, target_dir):
+    try:
+        os.mkdir(target_dir)
+    except FileExistsError:
+        pass
+    shutil.copy2(os.path.join(build_dir, "init/init/obj/init"), target_dir)
+
+def extract_components(build_dir, target_dir, components):
+    try:
+        os.mkdir(target_dir)
+    except FileExistsError:
+        pass
+    for c in components:
+        src = find(c, build_dir)
+        shutil.copy2(src, target_dir)
+
+def get_component_files(xml_file):
+    config_root = ET.parse(xml_file).getroot()
     components = set()
     for c_tag in config_root.findall("component"):
         c = c_tag.get("file")
@@ -47,6 +60,13 @@ if __name__ == "__main__":
             components.add(c)
         else:
             print("invalid component file name: " + c)
+    return components
+
+if __name__ == "__main__":
+    args = parser.parse_args(sys.argv[1:])
+    gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
+    build_dir = os.path.abspath(args.build_dir)
+    components = get_component_files(args.config)
     if build_init(os.path.abspath(args.gneiss_root), args.build_dir) > 0:
         print("Compilation of init failed")
         exit(1)
@@ -59,18 +79,5 @@ if __name__ == "__main__":
             exit(1)
     bindir = os.path.join(build_dir, "bin")
     libdir = os.path.join(build_dir, "lib")
-    try:
-        os.mkdir(bindir)
-    except FileExistsError:
-        pass
-    shutil.copy2(os.path.join(args.build_dir, "init/init/obj/init"), bindir)
-    try:
-        os.mkdir(libdir)
-    except FileExistsError:
-        pass
-    for c in components:
-        src = find(c, build_dir)
-        if not src:
-            print(c + " was not built")
-            exit(1)
-        shutil.copy2(src, libdir)
+    extract_init(build_dir, bindir)
+    extract_components(build_dir, libdir, components)
