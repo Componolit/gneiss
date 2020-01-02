@@ -1,6 +1,7 @@
 
 with Gneiss.Message;
 with Gneiss.Message.Client;
+with Componolit.Runtime.Debug;
 
 package body Component with
    SPARK_Mode
@@ -20,6 +21,7 @@ is
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
+      Componolit.Runtime.Debug.Log_Debug ("Message Client");
       Capability := Cap;
       Message_Client.Initialize (Client, Cap, "log");
    end Construct;
