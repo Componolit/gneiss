@@ -19,11 +19,15 @@ def get_component_name(libname):
     return libname[13:-3]
 
 def build_init(root, outdir):
-    args = ["-P", "init", "--relocate-build-tree=" + os.path.join(outdir, "init"), "-aP", root + "/init", "-aP", root + "/lib", "-XGNEISS_ROOT=" + root]
+    args = ["-P", "init", "--relocate-build-tree=" + os.path.join(outdir, "init"),
+            "-aP", root,
+            "-aP", root + "/init",
+            "-aP", root + "/lib",
+            "-XGNEISS_ROOT=" + root]
     return gprbuild(args)
 
 def build_component(name, root, paths, outdir):
-    args = ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, "components")]
+    args = ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, "components"), "-aP", root]
     for p in paths:
         args.extend(["-aP", p])
     args.append("-XGNEISS_ROOT=" + root)
@@ -42,7 +46,7 @@ def extract_init(build_dir, target_dir):
         os.mkdir(target_dir)
     except FileExistsError:
         pass
-    shutil.copy2(os.path.join(build_dir, "init/init/obj/init"), target_dir)
+    shutil.copy2(find("init", build_dir), target_dir)
 
 def extract_components(build_dir, target_dir, components):
     try:
@@ -50,8 +54,7 @@ def extract_components(build_dir, target_dir, components):
     except FileExistsError:
         pass
     for c in components:
-        src = find(c, build_dir)
-        shutil.copy2(src, target_dir)
+        shutil.copy2(find(c, build_dir), target_dir)
 
 def get_component_files(xml_file):
     config_root = ET.parse(xml_file).getroot()
