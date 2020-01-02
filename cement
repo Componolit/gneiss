@@ -5,12 +5,14 @@ import os
 import argparse
 import subprocess
 import shutil
+import logging
 import xml.etree.ElementTree as ET
 
 parser = argparse.ArgumentParser()
 parser.add_argument("config", help="gneiss config file")
 parser.add_argument("gneiss_root", help="gneiss repository")
 parser.add_argument("-b", "--build_dir", help="build directory", default="build")
+parser.add_argument("-r", "--root_fs", help="use separate rootfs", default="build")
 parser.add_argument("paths", help="component search paths", nargs="*")
 
 def get_component_name(libname):
@@ -59,25 +61,49 @@ def get_component_files(xml_file):
         if c.startswith("libcomponent_") and c.endswith(".so"):
             components.add(c)
         else:
-            print("invalid component file name: " + c)
+            raise ValueError(c)
     return components
 
 if __name__ == "__main__":
+    logger = logging.getLogger("Cement")
+    logger.setLevel(logging.INFO);
+    fmt = logging.Formatter("%(levelname)s: %(message)s")
+    sh = logging.StreamHandler()
+    sh.setFormatter(fmt)
+    logger.addHandler(sh)
     args = parser.parse_args(sys.argv[1:])
     gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
+    logger.info("Gneiss root at " + gprargs[0])
     build_dir = os.path.abspath(args.build_dir)
+    root_dir = os.path.abspath(args.root_fs)
     components = get_component_files(args.config)
+    logger.info("Compiling init...")
     if build_init(os.path.abspath(args.gneiss_root), args.build_dir) > 0:
-        print("Compilation of init failed")
+        logger.error("Compilation of init failed")
         exit(1)
     for c in components:
+        logger.info("Compiling " + c + "...")
         if build_component(get_component_name(c),
                            os.path.abspath(args.gneiss_root),
                            [os.path.abspath(p) for p in args.paths],
                            build_dir) > 0:
-            print("Compilation of " + c + " failed")
+            logger.error("Compilation of " + c + " failed")
             exit(1)
-    bindir = os.path.join(build_dir, "bin")
-    libdir = os.path.join(build_dir, "lib")
+    logger.info("Extracting results...")
+    try:
+        os.mkdir(root_dir)
+    except FileExistsError:
+        pass
+    bindir = os.path.join(root_dir, "bin")
+    try:
+        os.mkdir(bindir)
+    except FileExistsError:
+        pass
+    libdir = os.path.join(root_dir, "lib")
+    try:
+        os.mkdir(libdir)
+    except FileExistsError:
+        pass
     extract_init(build_dir, bindir)
     extract_components(build_dir, libdir, components)
+    logger.info("Finished.")
