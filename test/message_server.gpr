@@ -1,6 +1,7 @@
 
 library project Message_Server extends "gneiss_component" is
 
+   for Languages use ("Ada", "C");
    for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";
    for Source_Dirs use ("message_server");
    for Object_Dir use "obj";
