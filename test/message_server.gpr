@@ -1,0 +1,13 @@
+
+library project Message_Server extends "gneiss_component" is
+
+   for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";
+   for Source_Dirs use ("message_server");
+   for Object_Dir use "obj";
+   for Library_Name use Library_Prefix & "message_server";
+   for Library_Kind use "dynamic";
+   for Library_Standalone use "encapsulated";
+   for Library_Interface use ("component");
+   for Library_Dir use Lib_Dir;
+
+end Message_Server;

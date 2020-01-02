@@ -1,0 +1,33 @@
+
+with "switches";
+with "gneiss";
+with "basalt";
+with "SXML";
+with "recordflux";
+
+project Init is
+
+   Gneiss_Root := external ("GNEISS_ROOT", ".");
+
+   for Create_Missing_Dirs use "True";
+   for Source_Dirs use (Gneiss_Root & "/init");
+   for Languages use ("Ada");
+   for Object_Dir use "obj";
+   for Main use ("main.adb");
+
+   package Builder is
+      for Global_Configuration_Pragmas use Gneiss_Root & "/spark.adc";
+      for Executable ("main.adb") use "init";
+   end Builder;
+
+   package Compiler is
+      for Default_Switches ("Ada") use Switches.Compiler_Switches;
+   end Compiler;
+
+   for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";
+
+   package Linker is
+      for Required_Switches use ("-lpthread", "-lrt", "-ldl");
+   end Linker;
+
+end Init;
