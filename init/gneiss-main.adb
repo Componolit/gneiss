@@ -346,6 +346,8 @@ is
             case Kind is
                when RFLX.Session.Message =>
                   Message_Initializer (I, Label, Fd >= 0, Fd);
+               when RFLX.Session.Log =>
+                  Message_Initializer (I, Label, Fd >= 0, Fd);
             end case;
             Gneiss_Platform.Invalidate (I);
          end if;

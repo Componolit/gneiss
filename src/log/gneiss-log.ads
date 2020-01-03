@@ -15,17 +15,33 @@ package Gneiss.Log with
    SPARK_Mode
 is
 
-   --  Log client session object
+   --  Log client, dispatcher and server session objects
    type Client_Session is limited private;
+   type Dispatcher_Session is limited private;
+   type Server_Session is limited private;
 
-   --  Checks if C is initialized
-   --
-   --  @param C  Client session instance
-   --  @return True if C is initialized
-   function Initialized (C : Client_Session) return Boolean;
+   type Dispatcher_Capability is limited private;
+
+   function Status (Session : Client_Session) return Session_Status;
+
+   function Initialized (Session : Dispatcher_Session) return Boolean;
+
+   function Initialized (Session : Server_Session) return Boolean;
+
+   function Index (Session : Client_Session) return Session_Index with
+      Pre => Status (Session) = Initialized;
+
+   function Index (Session : Dispatcher_Session) return Session_Index with
+      Pre => Initialized (Session);
+
+   function Index (Session : Server_Session) return Session_Index with
+      Pre => Initialized (Session);
 
 private
 
    type Client_Session is new Gneiss_Internal.Log.Client_Session;
+   type Dispatcher_Session is new Gneiss_Internal.Log.Dispatcher_Session;
+   type Server_Session is new Gneiss_Internal.Log.Server_Session;
+   type Dispatcher_Capability is new Gneiss_Internal.Log.Dispatcher_Capability;
 
 end Gneiss.Log;
