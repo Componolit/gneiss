@@ -1,125 +1,44 @@
 
-with System;
 with RFLX.Session;
-with Gneiss.Protocol;
-with Gneiss.Syscall;
-with Gneiss_Epoll;
-with Gneiss_Platform;
-with Gneiss_Internal.Message;
+with Gneiss.Message.Generic_Client;
 
 package body Gneiss.Message.Client with
    SPARK_Mode
 is
 
-   function Get_Event_Address return System.Address;
-   type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
-   package Proto is new Gneiss.Protocol (Character, RFLX_String);
+   package Message_Client is new Gneiss.Message.Generic_Client
+      (Event, RFLX.Session.Message);
 
-   procedure Init (Session  : in out Client_Session;
-                   Label    :        String;
-                   Success  :        Boolean;
-                   Filedesc :        Integer);
-   function Init_Cap is new Gneiss_Platform.Create_Initializer_Cap (Client_Session, Init);
-
-   function Get_Event_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Event'Address;
-   end Get_Event_Address;
-
-   function Create_Request (Label : RFLX_String) return Proto.Message is
-      (Proto.Message'(Length      => Label'Length,
-                      Action      => RFLX.Session.Request,
-                      Kind        => RFLX.Session.Message,
-                      Name_Length => 0,
-                      Payload     => Label));
-
-   procedure Init (Session  : in out Client_Session;
-                   Label    :        String;
-                   Success  :        Boolean;
-                   Filedesc :        Integer)
-   is
-      S : Integer;
-   begin
-      if Label /= Session.Label.Value (Session.Label.Value'First .. Session.Label.Last) then
-         return;
-      end if;
-      if Success then
-         Gneiss_Epoll.Add (Session.Epoll_Fd, Filedesc, Get_Event_Address, S);
-         if S = 0 then
-            Session.File_Descriptor := Filedesc;
-         end if;
-      end if;
-      Session.Pending := False;
-      Event;
-   end Init;
-
-   C_Label : RFLX_String (1 .. 255);
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
                          Idx     :        Session_Index := 0)
    is
-      Succ : Boolean;
    begin
-      case Status (Session) is
-         when Initialized | Pending =>
-            return;
-         when Uninitialized =>
-            if Label'Length > 255 then
-               return;
-            end if;
-            Session.Index      := Idx;
-            Session.Label.Last := Session.Label.Value'First + Label'Length - 1;
-            Session.Label.Value
-               (Session.Label.Value'First
-                .. Session.Label.Value'First + Label'Length - 1) := Label;
-            for I in C_Label'Range loop
-               C_Label (I) := Session.Label.Value (Positive (I));
-            end loop;
-            Session.Epoll_Fd := Cap.Epoll_Fd;
-            Session.Pending  := True;
-            Gneiss_Platform.Call (Cap.Register_Initializer,
-                                  Init_Cap (Session),
-                                  RFLX.Session.Message, Succ);
-            if Succ then
-               Proto.Send_Message
-                  (Cap.Broker_Fd,
-                   Create_Request (C_Label (C_Label'First ..
-                                            RFLX.Session.Length_Type (Session.Label.Last))));
-            else
-               Init (Session, Label, False, -1);
-            end if;
-      end case;
+      Message_Client.Initialize (Session, Cap, Label, Idx);
    end Initialize;
-
-   function Available (Session : Client_Session) return Boolean is
-      (Gneiss_Internal.Message.Peek (Session.File_Descriptor) >= Message_Buffer'Length);
-
-   procedure Write (Session : in out Client_Session;
-                    Content :        Message_Buffer) with
-      SPARK_Mode => Off
-   is
-   begin
-      Gneiss_Internal.Message.Write (Session.File_Descriptor, Content'Address, Content'Length);
-   end Write;
-
-   procedure Read (Session : in out Client_Session;
-                   Content :    out Message_Buffer) with
-      SPARK_Mode => Off
-   is
-   begin
-      Gneiss_Internal.Message.Read (Session.File_Descriptor, Content'Address, Content'Length);
-   end Read;
 
    procedure Finalize (Session : in out Client_Session)
    is
-      Ignore_Success : Integer;
    begin
-      Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.File_Descriptor, Ignore_Success);
-      Gneiss.Syscall.Close (Session.File_Descriptor);
-      Session.Label.Last := 0;
+      Message_Client.Finalize (Session);
    end Finalize;
+
+   function Available (Session : Client_Session) return Boolean is
+      (Message_Client.Available (Session));
+
+   procedure Write (Session : in out Client_Session;
+                    Content :        Message_Buffer)
+   is
+   begin
+      Message_Client.Write (Session, Content);
+   end Write;
+
+   procedure Read (Session : in out Client_Session;
+                   Content :    out Message_Buffer)
+   is
+   begin
+      Message_Client.Read (Session, Content);
+   end Read;
 
 end Gneiss.Message.Client;
