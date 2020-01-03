@@ -1,114 +1,80 @@
 
-with Gneiss.Message.Writer;
+with Gneiss.Message.Generic_Client;
+with RFLX.Session;
 
 package body Gneiss.Log.Client
 is
 
-   package Writer is new Gneiss.Message.Writer
-      (Internal.Log.Unsigned_Character,
-       Positive,
-       Internal.Log.Message_String,
-       Internal.Log.Message_Size);
+   package Message_Client is new Gneiss_Internal.Log.Message_Log.Generic_Client
+      (Event, RFLX.Session.Log);
 
    ----------------
    -- Initialize --
    ----------------
 
-   procedure Initialize (C              : in out Client_Session;
-                         Cap            :        Gneiss.Types.Capability;
-                         Label          :        String)
+   procedure Initialize (Session : in out Client_Session;
+                         Cap     :        Capability;
+                         Label   :        String;
+                         Idx     :        Session_Index := 0)
    is
    begin
-      if Initialized (C) then
-         return;
-      end if;
-      Writer.Initialize (C.Session, Cap, Label);
+      Message_Client.Initialize (Session.Message, Cap, Label, Idx);
    end Initialize;
 
    --------------
    -- Finalize --
    --------------
 
-   procedure Finalize (C : in out Client_Session)
+   procedure Finalize (Session : in out Client_Session)
    is
    begin
-      if not Initialized (C) then
-         return;
-      end if;
-      Writer.Finalize (C.Session);
+      Message_Client.Finalize (Session.Message);
    end Finalize;
-
-   procedure Concatenate (C : in out Client_Session;
-                          S :        String);
-
-   procedure Concatenate (C : in out Client_Session;
-                          S :        String)
-   is
-   begin
-      for O of S loop
-         if C.Cursor = C.Buffer'Last then
-            Flush (C);
-         end if;
-         C.Buffer (C.Cursor) := Internal.Log.Unsigned_Character (Character'Pos (O));
-         C.Cursor            := C.Cursor + 1;
-      end loop;
-   end Concatenate;
 
    ----------
    -- Info --
    ----------
 
-   procedure Info (C       : in out Client_Session;
+   procedure Info (Session       : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True)
    is
    begin
-      Concatenate (C, "Info: " & Msg);
-      if Newline then
-         Flush (C);
-      end if;
+      null;
    end Info;
 
    -------------
    -- Warning --
    -------------
 
-   procedure Warning (C       : in out Client_Session;
+   procedure Warning (Session       : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True)
    is
    begin
-      Concatenate (C, "Warning: " & Msg);
-      if Newline then
-         Flush (C);
-      end if;
+      null;
    end Warning;
 
    -----------
    -- Error --
    -----------
 
-   procedure Error (C       : in out Client_Session;
+   procedure Error (Session       : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True)
    is
    begin
-      Concatenate (C, "Error: " & Msg);
-      if Newline then
-         Flush (C);
-      end if;
+      null;
    end Error;
 
    -----------
    -- Flush --
    -----------
 
-   procedure Flush (C : in out Client_Session)
+   procedure Flush (Session : in out Client_Session)
    is
    begin
-      Writer.Write (C.Session, C.Buffer);
-      C.Cursor := C.Buffer'First;
-      C.Buffer := (others => 0);
+      null;
    end Flush;
 
 end Gneiss.Log.Client;
