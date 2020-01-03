@@ -13,21 +13,22 @@ parser.add_argument("config", help="gneiss config file")
 parser.add_argument("gneiss_root", help="gneiss repository")
 parser.add_argument("-b", "--build_dir", help="build directory", default="build")
 parser.add_argument("-r", "--root_fs", help="use separate rootfs", default="build")
+parser.add_argument("-v", "--verbose", help="verbose output", action="store_true")
 parser.add_argument("paths", help="component search paths", nargs="*")
 
 def get_component_name(libname):
     return libname[13:-3]
 
-def build_init(root, outdir):
-    args = ["-P", "init", "--relocate-build-tree=" + os.path.join(outdir, "init"),
+def build_init(root, outdir, default_args=[]):
+    args = default_args + ["-P", "init", "--relocate-build-tree=" + os.path.join(outdir, "init"),
             "-aP", root,
             "-aP", root + "/init",
             "-aP", root + "/lib",
             "-XGNEISS_ROOT=" + root]
     return gprbuild(args)
 
-def build_component(name, root, paths, outdir):
-    args = ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, name[:-3]), "-aP", root]
+def build_component(name, root, paths, outdir, default_args=[]):
+    args = default_args + ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, name[:-3]), "-aP", root]
     for p in paths:
         args.extend(["-aP", p])
     args.append("-XGNEISS_ROOT=" + root)
@@ -81,7 +82,10 @@ if __name__ == "__main__":
     root_dir = os.path.abspath(args.root_fs)
     components = get_component_files(args.config)
     logger.info("Compiling init...")
-    if build_init(os.path.abspath(args.gneiss_root), args.build_dir) > 0:
+    default_args = []
+    if args.verbose:
+        default_args.append("-v")
+    if build_init(os.path.abspath(args.gneiss_root), args.build_dir, default_args) > 0:
         logger.error("Compilation of init failed")
         exit(1)
     for c in components:
@@ -89,7 +93,8 @@ if __name__ == "__main__":
         if build_component(get_component_name(c),
                            os.path.abspath(args.gneiss_root),
                            [os.path.abspath(p) for p in args.paths],
-                           build_dir) > 0:
+                           build_dir,
+                           default_args) > 0:
             logger.error("Compilation of " + c + " failed")
             exit(1)
     logger.info("Extracting results...")
