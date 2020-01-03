@@ -9,63 +9,66 @@
 --  GNU Affero General Public License version 3.
 --
 
+generic
+   with procedure Event;
 package Gneiss.Log.Client with
    SPARK_Mode
 is
 
    --  Intialize client
    --
-   --  @param C               Client session instance
-   --  @param Cap             System capability
-   --  @param Label           Session label
-   procedure Initialize (C              : in out Client_Session;
-                         Cap            :        Capability;
-                         Label          :        String);
+   --  @param Session Client session instance
+   --  @param Cap     System capability
+   --  @param Label   Session label
+   procedure Initialize (Session : in out Client_Session;
+                         Cap     :        Capability;
+                         Label   :        String;
+                         Idx     :        Session_Index := 0);
 
    --  Finalize client session
    --
-   --  @param C  Client session instance
-   procedure Finalize (C : in out Client_Session) with
-      Post => not Initialized (C);
+   --  @param Session  Client session instance
+   procedure Finalize (Session : in out Client_Session) with
+      Post => Status (Session) = Uninitialized;
 
    --  Print info message
    --
-   --  @param C        Client session instance
+   --  @param Session        Client session instance
    --  @param Msg      Message to print
    --  @param Newline  Append a newline to the message
-   procedure Info (C       : in out Client_Session;
+   procedure Info (Session : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True) with
-      Pre  => Initialized (C),
-      Post => Initialized (C);
+      Pre  => Status (Session) = Initialized,
+      Post => Status (Session) = Initialized;
 
    --  Print warning message
    --
-   --  @param C        Client session instance
+   --  @param Session        Client session instance
    --  @param Msg      Message to print
    --  @param Newline  Append a newline to the message
-   procedure Warning (C       : in out Client_Session;
+   procedure Warning (Session : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True) with
-      Pre  => Initialized (C),
-      Post => Initialized (C);
+      Pre  => Status (Session) = Initialized,
+      Post => Status (Session) = Initialized;
 
    --  Print error message
    --
-   --  @param C        Client session instance
+   --  @param Session        Client session instance
    --  @param Msg      Message to print
    --  @param Newline  Append a newline to the message
-   procedure Error (C       : in out Client_Session;
+   procedure Error (Session : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True) with
-      Pre  => Initialized (C),
-      Post => Initialized (C);
+      Pre  => Status (Session) = Initialized,
+      Post => Status (Session) = Initialized;
 
    --  Flush all messages to make sure they're printed
    --
-   --  @param C        Client session instance
-   procedure Flush (C : in out Client_Session) with
-      Pre  => Initialized (C),
-      Post => Initialized (C);
+   --  @param Session        Client session instance
+   procedure Flush (Session : in out Client_Session) with
+      Pre  => Status (Session) = Initialized,
+      Post => Status (Session) = Initialized;
 
 end Gneiss.Log.Client;

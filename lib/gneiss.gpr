@@ -18,7 +18,11 @@ project Gneiss is
                               "../src/message/client",
                               "../src/message/client/linux",
                               "../src/message/server",
-                              "../src/message/server/linux");
+                              "../src/message/server/linux",
+                              "../src/log",
+                              "../src/log/linux",
+                              "../src/log/client",
+                              "../src/log/client/linux");
 
          for Create_Missing_Dirs use "True";
          for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss";

@@ -39,6 +39,7 @@ is
 
    function Image (V : RFLX.Session.Kind_Type) return String is
       (case V is
-         when RFLX.Session.Message => "Message");
+         when RFLX.Session.Message => "Message",
+         when RFLX.Session.Log     => "Log");
 
 end Gneiss.Protocol;
