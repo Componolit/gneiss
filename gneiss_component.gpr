@@ -4,9 +4,9 @@ with "gneiss";
 abstract project Gneiss_Component is
 
    Gneiss_Root := external ("GNEISS_ROOT", ".");
-   Lib_Dir := "libcomponents";
+   Gneiss_Runtime := Gneiss_Root & "/ada-runtime/obj";
 
-   Library_Prefix := "component_";
+   Gneiss_Component_Prefix := "component_";
 
    for Library_Options use ("-L" & Gneiss_Root & "/ada-runtime/obj/adalib",
                             "-nostdlib",

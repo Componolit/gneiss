@@ -2,10 +2,10 @@
 library project Recordflux is
 
    for Source_Dirs use ("RecordFlux/src");
-   for Object_Dir use "obj";
+   for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "recordflux";
    for Library_Name use "recordflux";
    for Library_Kind use "static";
-   for Library_Dir use "lib";
+   for Library_Dir use external ("CEMENT_LIBRARY_DIR");
    for Create_Missing_Dirs use "True";
    for Languages use ("Ada");
 
