@@ -19,19 +19,28 @@ parser.add_argument("paths", help="component search paths", nargs="*")
 def get_component_name(libname):
     return libname[13:-3]
 
-def build_init(root, outdir, default_args=[]):
-    args = default_args + ["-P", "init", "--relocate-build-tree=" + os.path.join(outdir, "init"),
+def build_init(root, outdir, default_args, logger):
+    args = default_args + ["-P", "init",
             "-aP", root,
             "-aP", root + "/init",
             "-aP", root + "/lib",
-            "-XGNEISS_ROOT=" + root]
+            "-XGNEISS_ROOT=" + root,
+            "-XCEMENT_OBJECT_DIR=" + os.path.join(outdir, "init"),
+            "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(outdir, "libobjects/"),
+            "-XCEMENT_LIBRARY_DIR=" + os.path.join(outdir, "libs")]
+    logger.debug(args)
     return gprbuild(args)
 
-def build_component(name, root, paths, outdir, default_args=[]):
-    args = default_args + ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, name[:-3]), "-aP", root]
+def build_component(name, root, paths, outdir, default_args, logger):
+    args = default_args + ["-P", name, "-aP", root,
+                           "-XGNEISS_ROOT=" + root,
+                           "-XCEMENT_OBJECT_DIR=" + os.path.join(outdir, os.path.join("components", name)),
+                           "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(outdir, "libobjects/"),
+                           "-XCEMENT_LIBRARY_DIR=" + os.path.join(outdir, "libs"),
+                           "-XCEMENT_COMPONENT_DIR=" + os.path.join(outdir, "libcomponents")]
     for p in paths:
         args.extend(["-aP", p])
-    args.append("-XGNEISS_ROOT=" + root)
+    logger.debug(args)
     return gprbuild(args)
 
 def gprbuild(args):
@@ -55,7 +64,7 @@ def extract_components(build_dir, target_dir, components):
     except FileExistsError:
         pass
     for c in components:
-        shutil.copy2(find(c, build_dir), target_dir)
+        shutil.copy2(find(c, os.path.join(build_dir, "libcomponents")), target_dir)
 
 def get_component_files(xml_file):
     config_root = ET.parse(xml_file).getroot()
@@ -69,23 +78,23 @@ def get_component_files(xml_file):
     return components
 
 if __name__ == "__main__":
+    args = parser.parse_args(sys.argv[1:])
     logger = logging.getLogger("Cement")
-    logger.setLevel(logging.INFO);
+    logger.setLevel(logging.DEBUG if args.verbose else logging.INFO);
     fmt = logging.Formatter("%(levelname)s: %(message)s")
     sh = logging.StreamHandler()
     sh.setFormatter(fmt)
     logger.addHandler(sh)
-    args = parser.parse_args(sys.argv[1:])
     gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
     logger.info("Gneiss root at " + gprargs[0])
     build_dir = os.path.abspath(args.build_dir)
     root_dir = os.path.abspath(args.root_fs)
     components = get_component_files(args.config)
     logger.info("Compiling init...")
-    default_args = []
+    default_args = ["-p"]
     if args.verbose:
         default_args.append("-v")
-    if build_init(os.path.abspath(args.gneiss_root), args.build_dir, default_args) > 0:
+    if build_init(os.path.abspath(args.gneiss_root), build_dir, default_args, logger) > 0:
         logger.error("Compilation of init failed")
         exit(1)
     for c in components:
@@ -94,7 +103,8 @@ if __name__ == "__main__":
                            os.path.abspath(args.gneiss_root),
                            [os.path.abspath(p) for p in args.paths],
                            build_dir,
-                           default_args) > 0:
+                           default_args,
+                           logger) > 0:
             logger.error("Compilation of " + c + " failed")
             exit(1)
     logger.info("Extracting results...")

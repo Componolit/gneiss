@@ -12,7 +12,7 @@ project Init is
    for Create_Missing_Dirs use "True";
    for Source_Dirs use (Gneiss_Root & "/init");
    for Languages use ("Ada");
-   for Object_Dir use "obj";
+   for Object_Dir use external ("CEMENT_OBJECT_DIR");
    for Main use ("main.adb");
 
    package Builder is
