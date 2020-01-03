@@ -27,7 +27,7 @@ def build_init(root, outdir):
     return gprbuild(args)
 
 def build_component(name, root, paths, outdir):
-    args = ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, "components"), "-aP", root]
+    args = ["-P", name, "-p", "--relocate-build-tree=" + os.path.join(outdir, name[:-3]), "-aP", root]
     for p in paths:
         args.extend(["-aP", p])
     args.append("-XGNEISS_ROOT=" + root)
