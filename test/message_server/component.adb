@@ -3,7 +3,6 @@ with System;
 with Gneiss.Message;
 with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
-with Componolit.Runtime.Debug;
 
 package body Component with
    SPARK_Mode
@@ -53,7 +52,6 @@ is
    procedure Construct (Cap : Gns.Capability)
    is
    begin
-      Componolit.Runtime.Debug.Log_Debug ("Message Server");
       Capability := Cap;
       Message_Dispatcher.Initialize (Dispatcher, Cap);
       if Message.Initialized (Dispatcher) then
