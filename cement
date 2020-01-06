@@ -90,8 +90,25 @@ if __name__ == "__main__":
     build_dir = os.path.abspath(args.build_dir)
     root_dir = os.path.abspath(args.root_fs)
     components = get_component_files(args.config)
+    logger.info("Preparing init...")
+    default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(os.path.abspath(args.gneiss_root), "gprconfig_db")]
+    if args.verbose:
+        default_args.append("-v")
+    if build_init(os.path.abspath(args.gneiss_root), build_dir, default_args, logger) > 0:
+        logger.error("Preparation of init failed")
+        exit(1)
+    for c in components:
+        logger.info("Preparing " + c + "...")
+        if build_component(get_component_name(c),
+                           os.path.abspath(args.gneiss_root),
+                           [os.path.abspath(p) for p in args.paths],
+                           build_dir,
+                           default_args,
+                           logger) > 0:
+            logger.error("Preparation of " + c + " failed")
+            exit(1)
     logger.info("Compiling init...")
-    default_args = ["-p"]
+    default_args = ["-p", "-XCEMENT_BUILD_STEP=compile"]
     if args.verbose:
         default_args.append("-v")
     if build_init(os.path.abspath(args.gneiss_root), build_dir, default_args, logger) > 0:
