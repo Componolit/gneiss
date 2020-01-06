@@ -311,9 +311,7 @@ is
          return;
       end if;
       SXML.Parser.Parse (Config, Document, Ignore_Pos, Result);
-      if
-         Result /= SXML.Parser.Match_OK
-      then
+      if Result /= SXML.Parser.Match_OK then
          case Result is
             when SXML.Parser.Match_OK =>
                Gneiss_Log.Error ("XML document parsed successfully");
