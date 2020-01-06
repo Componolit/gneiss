@@ -1,7 +1,7 @@
 
 with Gneiss.Syscall;
 
-package body Gneiss.Protocoll with
+package body Gneiss.Protocol with
    SPARK_Mode => Off
 is
 
@@ -13,4 +13,4 @@ is
       Gneiss.Syscall.Write_Message (Destination, Data'Address, Data'Size / 8, File_Desc);
    end Send_Message;
 
-end Gneiss.Protocoll;
+end Gneiss.Protocol;

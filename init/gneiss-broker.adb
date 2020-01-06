@@ -1,6 +1,6 @@
 
 with Basalt.Strings;
-with Gneiss.Protocoll;
+with Gneiss.Protocol;
 with Gneiss_Access;
 with Gneiss_Log;
 with SXML;
@@ -26,7 +26,7 @@ is
    use type RFLX.Types.Length;
 
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
-   package Proto is new Gneiss.Protocoll (RFLX.Types.Byte, RFLX_String);
+   package Proto is new Gneiss.Protocol (RFLX.Types.Byte, RFLX_String);
 
    Buffer_Size : constant RFLX.Types.Length := 512;
    package Read_Buffer is new Gneiss_Access (Buffer_Size);

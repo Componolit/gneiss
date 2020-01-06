@@ -1,7 +1,7 @@
 
 with System;
 with RFLX.Session;
-with Gneiss.Protocoll;
+with Gneiss.Protocol;
 with Gneiss.Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
@@ -13,7 +13,7 @@ is
 
    function Get_Event_Address return System.Address;
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
-   package Proto is new Gneiss.Protocoll (Character, RFLX_String);
+   package Proto is new Gneiss.Protocol (Character, RFLX_String);
 
    procedure Init (Session  : in out Client_Session;
                    Label    :        String;
