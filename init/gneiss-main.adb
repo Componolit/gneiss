@@ -2,7 +2,7 @@
 with Basalt.Queue;
 with Gneiss_Access;
 with Gneiss_Internal.Message;
-with Gneiss.Protocoll;
+with Gneiss.Protocol;
 with Gneiss_Platform;
 with Gneiss_Log;
 with System;
@@ -41,7 +41,7 @@ is
 
    package Read_Buffer is new Gneiss_Access (512);
 
-   package Proto is new Gneiss.Protocoll (Character, RFLX_String);
+   package Proto is new Gneiss.Protocol (Character, RFLX_String);
 
    function Create_Cap (Fd : Integer) return Capability with
       Global => (Input => Epoll_Fd);

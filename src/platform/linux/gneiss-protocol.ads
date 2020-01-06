@@ -4,7 +4,7 @@ with RFLX.Session;
 generic
    type Byte is (<>);
    type Buffer is array (RFLX.Session.Length_Type range <>) of Byte;
-package Gneiss.Protocoll with
+package Gneiss.Protocol with
    SPARK_Mode,
    Abstract_State => Linux,
    Initializes    => Linux
@@ -41,4 +41,4 @@ is
       (case V is
          when RFLX.Session.Message => "Message");
 
-end Gneiss.Protocoll;
+end Gneiss.Protocol;
