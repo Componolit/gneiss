@@ -1,17 +1,6 @@
 <config>
-    <resource type="Message" name="test1" read="1" write="2"/>
-    <resource type="Message" name="test2" read="1" write="1"/>
-    <component name="message_server" file="libcomponent_message_server.so">
-        <resource type="Message" name="test1" label="1" mode="read"/>
-        <resource type="Message" name="test2" label="2" mode="read"/>
-    </component>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
     <component name="hello_world" file="libcomponent_hello_world.so">
-        <resource type="Message" name="test1" label="log_hello_world" mode="write"/>
-    </component>
-    <component name="hello_world" file="libcomponent_hello_world.so">
-        <resource type="Message" name="test1" label="log_hello_world" mode="write"/>
-    </component>
-    <component name="hello_world" file="libcomponent_hello_world.so">
-        <resource type="Message" name="test2" label="log_hello_world" mode="write"/>
+        <service name="Log" server="log_server"/>
     </component>
 </config>
