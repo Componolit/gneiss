@@ -1,13 +1,18 @@
 
-library project Message_Client extends "gneiss_component" is
+project Message_Client extends "gneiss_component" is
 
-   for Runtime ("Ada") use Gneiss_Runtime;
-   for Source_Dirs use ("message_client");
-   for Object_Dir use external ("CEMENT_OBJECT_DIR");
-   for Library_Name use Gneiss_Component_Prefix & "message_client";
-   for Library_Kind use "dynamic";
-   for Library_Standalone use "encapsulated";
-   for Library_Interface use ("component");
-   for Library_Dir use external ("CEMENT_COMPONENT_DIR");
+   case Build_Step is
+      when "compile" =>
+         for Runtime ("Ada") use Gneiss_Runtime;
+         for Source_Dirs use ("message_client");
+         for Object_Dir use external ("CEMENT_OBJECT_DIR");
+         for Library_Name use Gneiss_Component_Prefix & "message_client";
+         for Library_Kind use "dynamic";
+         for Library_Standalone use "encapsulated";
+         for Library_Interface use ("component");
+         for Library_Dir use external ("CEMENT_COMPONENT_DIR");
+      when others =>
+         for Languages use ();
+   end case;
 
 end Message_Client;

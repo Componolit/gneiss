@@ -1,14 +1,21 @@
 with "basalt";
 
-library project SXML is
+project SXML is
 
-   for Source_Dirs use ("SXML/src");
-   for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "SXML";
-   for Library_Name use "sxml";
-   for Library_Kind use "static";
-   for Library_Dir use external ("CEMENT_LIBRARY_DIR");
-   for Create_Missing_Dirs use "True";
-   for Languages use ("Ada");
+   Step := external ("CEMENT_BUILD_STEP");
+
+   case Step is
+      when "compile" =>
+         for Source_Dirs use ("SXML/src");
+         for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "SXML";
+         for Library_Name use "sxml";
+         for Library_Kind use "static";
+         for Library_Dir use external ("CEMENT_LIBRARY_DIR");
+         for Create_Missing_Dirs use "True";
+         for Languages use ("Ada");
+      when others =>
+         for Languages use ();
+   end case;
 
    package Builder is
       for Global_Configuration_Pragmas use "SXML/build/default.adc";

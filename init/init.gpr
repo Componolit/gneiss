@@ -1,30 +1,40 @@
 
 with "switches";
 with "gneiss";
+with "gneiss_rflx";
 with "basalt";
 with "SXML";
-with "recordflux";
 
 project Init is
 
    Gneiss_Root := external ("GNEISS_ROOT", ".");
+   Step := external ("CEMENT_BUILD_STEP");
 
-   for Create_Missing_Dirs use "True";
-   for Source_Dirs use (Gneiss_Root & "/init");
-   for Languages use ("Ada");
-   for Object_Dir use external ("CEMENT_OBJECT_DIR");
-   for Main use ("main.adb");
+   case Step is
+      when "compile" =>
+         for Create_Missing_Dirs use "True";
+         for Source_Dirs use (Gneiss_Root & "/init");
+         for Languages use ("Ada");
+         for Object_Dir use external ("CEMENT_OBJECT_DIR");
+         for Main use ("main.adb");
+         for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";
+      when others =>
+         for Languages use ();
+   end case;
 
    package Builder is
-      for Global_Configuration_Pragmas use Gneiss_Root & "/spark.adc";
-      for Executable ("main.adb") use "init";
+      case Step is
+         when "compile" =>
+            for Global_Configuration_Pragmas use Gneiss_Root & "/spark.adc";
+            for Executable ("main.adb") use "init";
+         when others =>
+            null;
+      end case;
    end Builder;
 
    package Compiler is
       for Default_Switches ("Ada") use Switches.Compiler_Switches;
    end Compiler;
-
-   for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";
 
    package Linker is
       for Required_Switches use ("-lpthread", "-lrt", "-ldl");
