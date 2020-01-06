@@ -3,10 +3,10 @@ with "gneiss";
 
 abstract project Gneiss_Component is
 
-   Gneiss_Root := external ("GNEISS_ROOT", ".");
-   Gneiss_Runtime := Gneiss_Root & "/ada-runtime/obj";
-
+   Gneiss_Root             := external ("GNEISS_ROOT", ".");
+   Gneiss_Runtime          := Gneiss_Root & "/ada-runtime/obj";
    Gneiss_Component_Prefix := "component_";
+   Build_Step              := external ("CEMENT_BUILD_STEP");
 
    for Library_Options use ("-L" & Gneiss_Root & "/ada-runtime/obj/adalib",
                             "-nostdlib",

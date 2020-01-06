@@ -7,3 +7,6 @@
 [submodule "lib/SXML"]
 	path = lib/SXML
 	url = https://github.com/Componolit/SXML.git
+[submodule "tool/RecordFlux"]
+	path = tool/RecordFlux
+	url = https://github.com/Componolit/RecordFlux.git
