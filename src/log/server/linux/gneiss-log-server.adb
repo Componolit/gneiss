@@ -22,7 +22,10 @@ is
                   Char    :    out Character)
    is
    begin
-      if Session.Cursor > Session.Buffer'Last then
+      if
+         Session.Cursor > Session.Buffer'Last
+         or else Session.Buffer (Session.Cursor) = ASCII.NUL
+      then
          Read_Buffer (Session);
       end if;
       Char := Session.Buffer (Session.Cursor);
