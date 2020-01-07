@@ -24,87 +24,89 @@ is
 
    procedure Buffer (C : in out Client_Session;
                      M :        String) with
-      Pre  => Initialized (C),
-      Post => Initialized (C);
+      Pre  => Status (C) = Initialized,
+      Post => Status (C) = Initialized;
 
-   procedure Initialize (C              : in out Client_Session;
-                         Cap            :        Capability;
-                         Label          :        String) with
+   procedure Initialize (Session : in out Client_Session;
+                         Cap     :        Capability;
+                         Label   :        String;
+                         Idx     :        Session_Index := 0) with
       SPARK_Mode => Off
    is
       C_Label : String := Label & Character'Val (0);
    begin
-      if Initialized (C) then
+      if Status (Session) = Initialized then
          return;
       end if;
-      Cxx.Log.Client.Initialize (C.Instance,
+      Cxx.Log.Client.Initialize (Session.Instance,
                                  Cap,
                                  C_Label'Address);
-      C.Cursor := C.Buffer'First;
+      Session.Cursor := Session.Buffer'First;
+      Session.Index := Idx;
    end Initialize;
 
-   procedure Finalize (C : in out Client_Session)
+   procedure Finalize (Session : in out Client_Session)
    is
    begin
-      if not Initialized (C) then
+      if Status (Session) = Uninitialized then
          return;
       end if;
-      Cxx.Log.Client.Finalize (C.Instance);
+      Cxx.Log.Client.Finalize (Session.Instance);
    end Finalize;
 
    Blue       : constant String    := Character'Val (8#33#) & "[34m";
    Red        : constant String    := Character'Val (8#33#) & "[31m";
    Reset      : constant String    := Character'Val (8#33#) & "[0m";
 
-   procedure Info (C       : in out Client_Session;
+   procedure Info (Session : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True)
    is
    begin
-      Buffer (C, Msg);
+      Buffer (Session, Msg);
       if Newline then
-         Buffer (C, (1 => ASCII.LF));
-         Flush (C);
+         Buffer (Session, (1 => ASCII.LF));
+         Flush (Session);
       end if;
    end Info;
 
-   procedure Warning (C       : in out Client_Session;
+   procedure Warning (Session : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True)
    is
    begin
-      Buffer (C, Blue);
-      Buffer (C, "Warning: ");
-      Buffer (C, Msg);
-      Buffer (C, Reset);
+      Buffer (Session, Blue);
+      Buffer (Session, "Warning: ");
+      Buffer (Session, Msg);
+      Buffer (Session, Reset);
       if Newline then
-         Buffer (C, (1 => ASCII.LF));
-         Flush (C);
+         Buffer (Session, (1 => ASCII.LF));
+         Flush (Session);
       end if;
    end Warning;
 
-   procedure Error (C       : in out Client_Session;
+   procedure Error (Session : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True)
    is
    begin
-      Buffer (C, Red);
-      Buffer (C, "Error: ");
-      Buffer (C, Msg);
-      Buffer (C, Reset);
+      Buffer (Session, Red);
+      Buffer (Session, "Error: ");
+      Buffer (Session, Msg);
+      Buffer (Session, Reset);
       if Newline then
-         Buffer (C, (1 => ASCII.LF));
-         Flush (C);
+         Buffer (Session, (1 => ASCII.LF));
+         Flush (Session);
       end if;
    end Error;
 
-   procedure Flush (C : in out Client_Session)
+   procedure Flush (Session : in out Client_Session)
    is
    begin
-      if C.Cursor > C.Buffer'First then
-         Write (C.Instance, C.Buffer (C.Buffer'First .. C.Cursor - 1));
+      if Session.Cursor > Session.Buffer'First then
+         Write (Session.Instance, Session.Buffer (Session.Buffer'First .. Session.Cursor - 1));
       end if;
-      C.Cursor := C.Buffer'First;
+      Session.Cursor := Session.Buffer'First;
    end Flush;
 
    procedure Buffer (C : in out Client_Session;
