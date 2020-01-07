@@ -1,0 +1,9 @@
+<config>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
+    <component name="log_proxy" file="libcomponent_log_proxy.so">
+        <service name="Log" server="log_server"/>
+    </component>
+    <component name="hello_world" file="libcomponent_hello_world.so">
+        <service name="Log" server="log_proxy"/>
+    </component>
+</config>
