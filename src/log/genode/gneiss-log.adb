@@ -7,8 +7,25 @@ package body Gneiss.Log with
 is
    use type Cxx.Bool;
 
-   function Initialized (C : Client_Session) return Boolean is
-      (Cxx.Log.Client.Initialized (C.Instance) = Cxx.Bool'Val (1)
-       and then C.Cursor in C.Buffer'Range);
+   function Status (Session : Client_Session) return Session_Status is
+      (if Cxx.Log.Client.Initialized (Session.Instance) = Cxx.Bool'Val (1)
+          and then Session.Cursor in Session.Buffer'Range
+       then Initialized
+       else Uninitialized);
+
+   function Initialized (Session : Dispatcher_Session) return Boolean is
+      (False);
+
+   function Initialized (Session : Server_Session) return Boolean is
+      (False);
+
+   function Index (Session : Client_Session) return Session_Index is
+      (0);
+
+   function Index (Session : Server_Session) return Session_Index is
+      (0);
+
+   function Index (Session : Dispatcher_Session) return Session_Index is
+      (0);
 
 end Gneiss.Log;
