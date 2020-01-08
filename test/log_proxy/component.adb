@@ -11,12 +11,13 @@ is
    type Color is (Red, Orange, Yellow, Green, Cyan, Blue, Magenta);
 
    type Server_Slot is record
-      Ident  : String (1 .. 513)  := (others => ASCII.NUL);
-      Last   : Natural            := 0;
-      Buffer : String (1 .. 1024) := (others => ASCII.NUL);
-      Cursor : Natural            := 0;
-      Hue    : Color              := Red;
-      Ready  : Boolean            := False;
+      Ident   : String (1 .. 513)  := (others => ASCII.NUL);
+      Last    : Natural            := 0;
+      Buffer  : String (1 .. 1024) := (others => ASCII.NUL);
+      Cursor  : Natural            := 0;
+      Hue     : Color              := Red;
+      Ready   : Boolean            := False;
+      Flushed : Boolean            := True;
    end record;
 
    Color_Red     : constant String := Character'Val (8#33#) & "[31m";
@@ -106,11 +107,20 @@ is
                                    "lolcat");
          when Gneiss.Initialized =>
             Log_Dispatcher.Register (Dispatcher);
-            for Server of Servers loop
-               if Gneiss.Log.Initialized (Server) then
-                  while Log_Server.Available (Server) loop
-                     Log_Server.Get (Server, Char);
-                     Put_Color (Server_Data (Gneiss.Log.Index (Server)), Char);
+            for I in Servers'Range loop
+               if Gneiss.Log.Initialized (Servers (I)) then
+                  while Log_Server.Available (Servers (I)) loop
+                     if Server_Data (I).Flushed then
+                        Put (Server_Data (I), '[');
+                        for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
+                           Put (Server_Data (I), C);
+                        end loop;
+                        Put (Server_Data (I), ']');
+                        Put (Server_Data (I), ' ');
+                        Server_Data (I).Flushed := False;
+                     end if;
+                     Log_Server.Get (Servers (I), Char);
+                     Put_Color (Server_Data (I), Char);
                   end loop;
                end if;
             end loop;
@@ -201,8 +211,9 @@ is
    procedure Flush (S : in out Server_Slot)
    is
    begin
-      Log_Client.Info (Client, S.Buffer (1 .. S.Cursor));
+      Log_Client.Print (Client, S.Buffer (1 .. S.Cursor));
       S.Cursor := 0;
+      S.Flushed := True;
    end Flush;
 
 end Component;
