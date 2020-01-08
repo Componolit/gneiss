@@ -203,7 +203,7 @@ is
    begin
       S.Cursor := S.Cursor + 1;
       S.Buffer (S.Cursor) := C;
-      if S.Cursor = S.Buffer'Last then
+      if S.Cursor = S.Buffer'Last - 4 then
          Flush (S);
       end if;
    end Put;
@@ -211,7 +211,9 @@ is
    procedure Flush (S : in out Server_Slot)
    is
    begin
+      S.Buffer (S.Cursor + 1 .. S.Cursor + 4) := Reset;
       Log_Client.Print (Client, S.Buffer (1 .. S.Cursor));
+      Log_Client.Flush (Client);
       S.Cursor := 0;
       S.Flushed := True;
    end Flush;

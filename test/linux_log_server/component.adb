@@ -58,6 +58,10 @@ is
          if Gneiss.Log.Initialized (Servers (I)) then
             while Log_Server.Available (Servers (I)) loop
                if Server_Data (I).Newline then
+                  Put (Character'Val (8#33#));
+                  Put ('[');
+                  Put ('0');
+                  Put ('m');
                   Put ('[');
                   for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
                      Put (C);
