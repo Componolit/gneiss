@@ -8,8 +8,10 @@ package body Component with
 is
 
    type Server_Slot is record
-      Ident : String (1 .. 513) := (others => ASCII.NUL);
-      Ready : Boolean           := False;
+      Ident   : String (1 .. 513) := (others => ASCII.NUL);
+      Last    : Natural           := 0;
+      Ready   : Boolean           := False;
+      Newline : Boolean           := True;
    end record;
 
    type Server_Reg is array (Gneiss.Session_Index range <>) of Gneiss.Log.Server_Session;
@@ -52,11 +54,20 @@ is
          External_Name => "put";
       Char : Character;
    begin
-      for Server of Servers loop
-         if Gneiss.Log.Initialized (Server) then
-            while Log_Server.Available (Server) loop
-               Log_Server.Get (Server, Char);
+      for I in Servers'Range loop
+         if Gneiss.Log.Initialized (Servers (I)) then
+            while Log_Server.Available (Servers (I)) loop
+               if Server_Data (I).Newline then
+                  Put ('[');
+                  for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
+                     Put (C);
+                  end loop;
+                  Put (']');
+                  Put (' ');
+               end if;
+               Log_Server.Get (Servers (I), Char);
                Put (Char);
+               Server_Data (I).Newline := Char = ASCII.LF;
             end loop;
          end if;
       end loop;
@@ -95,7 +106,8 @@ is
             if not Ready (Servers (I)) then
                Log_Dispatcher.Session_Initialize (Session, Cap, Servers (I), I);
                if Ready (Servers (I)) and then Gneiss.Log.Initialized (Servers (I)) then
-                  Server_Data (I).Ident (1 .. Name'Length + Label'Length + 1) := Name & ":" & Label;
+                  Server_Data (I).Last := Name'Length + Label'Length + 1;
+                  Server_Data (I).Ident (1 .. Server_Data (I).Last) := Name & ":" & Label;
                   Log_Dispatcher.Session_Accept (Session, Cap, Servers (I));
                   exit;
                end if;
