@@ -1,32 +1,18 @@
 
 with Gneiss.Command_Line;
-with Gneiss.Config;
 with Gneiss.Broker;
 
 procedure Main
 is
-   Cap    : Gneiss.Config.Config_Capability;
-   Status : Integer;
+   Status : Integer := 1;
 begin
    case Gneiss.Command_Line.Argument_Count is
       when 1 =>
-         Gneiss.Config.Load ("/etc/gneiss/config.xml", Cap);
+         Gneiss.Broker.Construct ("/etc/gneiss/config.xml", Status);
       when 2 =>
-         Gneiss.Config.Load (Gneiss.Command_Line.Argument (1), Cap);
+         Gneiss.Broker.Construct (Gneiss.Command_Line.Argument (1), Status);
       when others =>
-         Gneiss.Command_Line.Set_Exit_Status (1);
-         return;
+         null;
    end case;
-   if Gneiss.Config.Valid (Cap) then
-      declare
-         Conf : String (1 .. Gneiss.Config.Get_Length (Cap)) with
-            Import,
-            Address => Gneiss.Config.Get_Address (Cap);
-      begin
-         Gneiss.Broker.Construct (Conf, Status);
-         Gneiss.Command_Line.Set_Exit_Status (Status);
-      end;
-   else
-      Gneiss.Command_Line.Set_Exit_Status (1);
-   end if;
+   Gneiss.Command_Line.Set_Exit_Status (Status);
 end Main;

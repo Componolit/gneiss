@@ -14,7 +14,7 @@ project Init is
       when "compile" =>
          for Create_Missing_Dirs use "True";
          for Source_Dirs use (Gneiss_Root & "/init");
-         for Languages use ("Ada");
+         for Languages use ("Ada", "C");
          for Object_Dir use external ("CEMENT_OBJECT_DIR");
          for Main use ("main.adb");
          for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";

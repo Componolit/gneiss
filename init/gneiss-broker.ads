@@ -14,8 +14,8 @@ is
    function Is_Valid return Boolean with
       Ghost;
 
-   procedure Construct (Config :     String;
-                        Status : out Integer) with
+   procedure Construct (Conf_Loc :     String;
+                        Status   : out Integer) with
       Post   => Is_Valid,
       Global => (In_Out => (Policy_State,
                             Gneiss.Main.Component_State,
