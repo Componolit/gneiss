@@ -1,5 +1,6 @@
 
 with Basalt.Strings;
+with Gneiss.Config;
 with Gneiss.Protocol;
 with Gneiss_Access;
 with Gneiss_Log;
@@ -66,6 +67,10 @@ is
    function Convert_Message (S : String) return RFLX_String with
       Pre  => S'Length < 256,
       Post => Convert_Message'Result'Length = S'Length;
+
+   procedure Parse (Data : String);
+
+   package Conf is new Gneiss.Config (Parse);
 
    procedure Find_Component_By_Name (Name  :     String;
                                      Index : out Positive;
@@ -294,23 +299,17 @@ is
       end loop;
    end Find_Component_By_Name;
 
-   procedure Construct (Config :     String;
-                        Status : out Integer)
+   procedure Parse (Data : String)
    is
       use type SXML.Parser.Match_Type;
       Result     : SXML.Parser.Match_Type;
       Ignore_Pos : Natural;
-      State      : SXML.Query.State_Type;
-      Parent     : Boolean;
    begin
-      Gneiss_Log.Info (Config);
-      Status := 1;
-      Policy := (others => (Fd => -1, Node => SXML.Query.Init (Document => Document), Pid => -1));
-      if not SXML.Valid_Content (Config'First, Config'Last) then
+      if not SXML.Valid_Content (Data'First, Data'Last) then
          Gneiss_Log.Error ("Invalid content");
          return;
       end if;
-      SXML.Parser.Parse (Config, Document, Ignore_Pos, Result);
+      SXML.Parser.Parse (Data, Document, Ignore_Pos, Result);
       if Result /= SXML.Parser.Match_OK then
          case Result is
             when SXML.Parser.Match_OK =>
@@ -324,12 +323,23 @@ is
             when SXML.Parser.Match_None_Wellformed =>
                Gneiss_Log.Error ("Document is not wellformed");
             when SXML.Parser.Match_Trailing_Data =>
-               Gneiss_Log.Error ("Document successful parsed, but there is trailing data after it");
+               Gneiss_Log.Warning ("Document successful parsed, but there is trailing data after it");
             when SXML.Parser.Match_Depth_Limit =>
                Gneiss_Log.Error ("Recursion depth exceeded");
          end case;
-         return;
       end if;
+   end Parse;
+
+   procedure Construct (Conf_Loc :     String;
+                        Status   : out Integer)
+   is
+      State      : SXML.Query.State_Type;
+      Parent     : Boolean;
+   begin
+      Gneiss_Log.Info ("Loading config from " & Conf_Loc);
+      Status := 1;
+      Policy := (others => (Fd => -1, Node => SXML.Query.Init (Document => Document), Pid => -1));
+      Conf.Load (Conf_Loc);
       Gneiss_Epoll.Create (Efd);
       if not Gneiss_Epoll.Valid_Fd (Efd) then
          return;

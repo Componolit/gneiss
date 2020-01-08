@@ -1,31 +1,34 @@
 
-with Gneiss.Libc;
+with System;
 
 package body Gneiss.Config with
-   SPARK_Mode
+   SPARK_Mode => Off
 is
 
-   procedure Load (Location : String;
-                   Cap      : out Config_Capability)
+   procedure C_Load (File : System.Address;
+                     Func : System.Address) with
+      Import,
+      Convention => C,
+      External_Name => "gneiss_load_config";
+
+   procedure Raw_Parse (Char : System.Address;
+                        Size : Integer);
+
+   procedure Load (Location : String)
    is
-      procedure Load (Loc :     System.Address;
-                      C   : out System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "gneiss_load_config";
       C_Loc : String := Location & ASCII.NUL;
    begin
-      Cap := Config_Capability'(Address => System.Null_Address);
-      Load (C_Loc'Address, Cap.Address);
+      C_Load (C_Loc'Address, Raw_Parse'Address);
    end Load;
 
-   function Valid (Cap : Config_Capability) return Boolean is
-      (Cap.Address /= System.Null_Address);
-
-   function Get_Address (Cap : Config_Capability) return System.Address is
-      (Cap.Address);
-
-   function Get_Length (Cap : Config_Capability) return Natural is
-      (if Libc.Strlen (Cap.Address) >= 0 then Libc.Strlen (Cap.Address) else 0);
+   procedure Raw_Parse (Char : System.Address;
+                        Size : Integer)
+   is
+      Data : String (1 .. Size) with
+         Import,
+         Address => Char;
+   begin
+      Parse (Data);
+   end Raw_Parse;
 
 end Gneiss.Config;
