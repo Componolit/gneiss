@@ -31,6 +31,15 @@ is
    procedure Finalize (Session : in out Client_Session) with
       Post => Status (Session) = Uninitialized;
 
+   --  Print unformatted message
+   --
+   --  @param Session  Client session instance
+   --  @param Msg      Message to print
+   procedure Print (Session : in out Client_Session;
+                    Msg     :        String) with
+      Pre  => Status (Session) = Initialized,
+      Post => Status (Session) = Initialized;
+
    --  Print info message
    --
    --  @param Session        Client session instance
