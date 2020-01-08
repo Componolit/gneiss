@@ -8,9 +8,6 @@ is
    package Message_Client is new Gneiss_Internal.Log.Message_Log.Generic_Client
       (Event, RFLX.Session.Log);
 
-   procedure Concat (Session : in out Client_Session;
-                     Msg     :        String);
-
    procedure Prefix_Message (Session : in out Client_Session;
                              Prefix  :        String;
                              Msg     :        String;
@@ -38,6 +35,26 @@ is
    begin
       Message_Client.Finalize (Session.Message);
    end Finalize;
+
+   -----------
+   -- Print --
+   -----------
+
+   procedure Print (Session : in out Client_Session;
+                    Msg     :        String)
+   is
+   begin
+      for C of Msg loop
+         Session.Cursor := Session.Cursor + 1;
+         Session.Buffer (Session.Cursor) := C;
+         if C = ASCII.LF and then Session.Cursor < Session.Buffer'Last then
+            Session.Buffer (Session.Cursor + 1) := ASCII.NUL;
+            Flush (Session);
+         elsif Session.Cursor = Session.Buffer'Last then
+            Flush (Session);
+         end if;
+      end loop;
+   end Print;
 
    ----------
    -- Info --
@@ -83,22 +100,12 @@ is
       SPARK_Mode => Off
    is
    begin
+      if Session.Cursor < Session.Buffer'Last then
+         Session.Buffer (Session.Cursor + 1) := ASCII.NUL;
+      end if;
       Message_Client.Write (Session.Message, Session.Buffer);
       Session.Cursor := 0;
    end Flush;
-
-   procedure Concat (Session : in out Client_Session;
-                     Msg     :        String)
-   is
-   begin
-      for C of Msg loop
-         Session.Cursor := Session.Cursor + 1;
-         Session.Buffer (Session.Cursor) := C;
-         if Session.Cursor = Session.Buffer'Last then
-            Flush (Session);
-         end if;
-      end loop;
-   end Concat;
 
    procedure Prefix_Message (Session : in out Client_Session;
                              Prefix  :        String;
@@ -106,18 +113,10 @@ is
                              Newline :        Boolean)
    is
    begin
-      Concat (Session, Prefix);
-      Concat (Session, Msg);
+      Print (Session, Prefix);
+      Print (Session, Msg);
       if Newline then
-         Session.Cursor := Session.Cursor + 1;
-         Session.Buffer (Session.Cursor) := ASCII.LF;
-         if Session.Cursor = Session.Buffer'Last then
-            Flush (Session);
-            return;
-         end if;
-         Session.Cursor := Session.Cursor + 1;
-         Session.Buffer (Session.Cursor) := ASCII.NUL;
-         Flush (Session);
+         Print (Session, String'(1 => ASCII.LF));
       end if;
    end Prefix_Message;
 
