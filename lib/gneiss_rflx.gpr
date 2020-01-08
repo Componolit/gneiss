@@ -15,6 +15,7 @@ project Gneiss_RFLX is
          for Library_Name use "gneiss_rflx";
          for Library_Dir use external ("CEMENT_LIBRARY_DIR");
          for Library_Kind use "static";
+         for Excluded_Source_Files use ("session.ads");
       when others =>
          for Languages use ();
    end case;
