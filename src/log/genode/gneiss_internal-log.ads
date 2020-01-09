@@ -1,5 +1,6 @@
 
 with Gneiss;
+with System;
 with Cxx;
 with Cxx.Log.Client;
 
@@ -17,7 +18,9 @@ package Gneiss_Internal.Log is
    end record;
 
    type Server_Session is limited record
-      null;
+      Component : System.Address := System.Null_Address;
+      Event     : System.Address := System.Null_Address;
+      Write     : System.Address := System.Null_Address;
    end record;
 
    type Dispatcher_Capability is limited record
