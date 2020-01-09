@@ -22,11 +22,6 @@ is
                       M : String) with
       Pre => Initialized (C);
 
-   procedure Buffer (C : in out Client_Session;
-                     M :        String) with
-      Pre  => Status (C) = Initialized,
-      Post => Status (C) = Initialized;
-
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
@@ -63,9 +58,9 @@ is
                    Newline :        Boolean := True)
    is
    begin
-      Buffer (Session, Msg);
+      Print (Session, Msg);
       if Newline then
-         Buffer (Session, (1 => ASCII.LF));
+         Print (Session, (1 => ASCII.LF));
          Flush (Session);
       end if;
    end Info;
@@ -75,12 +70,12 @@ is
                       Newline :        Boolean := True)
    is
    begin
-      Buffer (Session, Blue);
-      Buffer (Session, "Warning: ");
-      Buffer (Session, Msg);
-      Buffer (Session, Reset);
+      Print (Session, Blue);
+      Print (Session, "Warning: ");
+      Print (Session, Msg);
+      Print (Session, Reset);
       if Newline then
-         Buffer (Session, (1 => ASCII.LF));
+         Print (Session, (1 => ASCII.LF));
          Flush (Session);
       end if;
    end Warning;
@@ -90,12 +85,12 @@ is
                     Newline :        Boolean := True)
    is
    begin
-      Buffer (Session, Red);
-      Buffer (Session, "Error: ");
-      Buffer (Session, Msg);
-      Buffer (Session, Reset);
+      Print (Session, Red);
+      Print (Session, "Error: ");
+      Print (Session, Msg);
+      Print (Session, Reset);
       if Newline then
-         Buffer (Session, (1 => ASCII.LF));
+         Print (Session, (1 => ASCII.LF));
          Flush (Session);
       end if;
    end Error;
@@ -109,22 +104,22 @@ is
       Session.Cursor := Session.Buffer'First;
    end Flush;
 
-   procedure Buffer (C : in out Client_Session;
-                     M :        String)
+   procedure Print (Session : in out Client_Session;
+                    Msg     :        String)
    is
    begin
-      if M'Length = 0 then
+      if Msg'Length = 0 then
          return;
       end if;
-      if M'Length > C.Buffer'Last - C.Cursor then
-         Flush (C);
-         Write (C.Instance, M);
+      if Msg'Length > Session.Buffer'Last - Session.Cursor then
+         Flush (Session);
+         Write (Session.Instance, Msg);
       else
-         C.Buffer (C.Cursor .. C.Cursor + M'Length - 1) := M;
-         C.Cursor := C.Cursor + M'Length;
-         pragma Assert (C.Cursor in C.Buffer'Range);
+         Session.Buffer (Session.Cursor .. Session.Cursor + Msg'Length - 1) := Msg;
+         Session.Cursor := Session.Cursor + Msg'Length;
+         pragma Assert (Session.Cursor in Session.Buffer'Range);
       end if;
-   end Buffer;
+   end Print;
 
    procedure Write (C : Cxx.Log.Client.Class;
                     M : String)
