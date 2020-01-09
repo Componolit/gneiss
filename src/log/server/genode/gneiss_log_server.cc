@@ -13,7 +13,7 @@ Gneiss::Log_Server::Log_Server() :
 
 void Gneiss::Log_Server::initialize(Gneiss::Capability *cap, void (*event)(), void(Gneiss::Log_Server::*write)(const char *, int, int *))
 {
-    TLOG("event=", (void *)event, "write=", (void *)callback);
+    TLOG("cap=", cap, " event=", (void *)event, " write=", (void *)callback);
     if(!event || !write){
         return;
     }
