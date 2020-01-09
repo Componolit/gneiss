@@ -32,11 +32,12 @@ is
 
    procedure Initialize (This  : Class;
                          Cap   : Gneiss.Capability;
-                         Label : Cxx.Void_Address) with
+                         Label : Cxx.Void_Address;
+                         Event : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai3Log6Client10initializeEPvPKc";
+      External_Name => "_ZN3Cai3Log6Client10initializeEPvPKcPFvvE";
 
    procedure Finalize (This : Class) with
       Global        => null,

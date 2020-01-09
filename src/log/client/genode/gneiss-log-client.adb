@@ -35,7 +35,8 @@ is
       end if;
       Cxx.Log.Client.Initialize (Session.Instance,
                                  Cap,
-                                 C_Label'Address);
+                                 C_Label'Address,
+                                 Event'Address);
       Session.Cursor := Session.Buffer'First;
       Session.Index := Idx;
    end Initialize;
