@@ -53,6 +53,8 @@ is
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
    procedure Event;
+   procedure Write (Session : in out Gneiss.Log.Server_Session;
+                    Data    :        String);
    procedure Initialize (Session : in out Gneiss.Log.Server_Session);
    procedure Finalize (Session : in out Gneiss.Log.Server_Session);
    function Ready (Session : Gneiss.Log.Server_Session) return Boolean;
@@ -70,7 +72,7 @@ is
    procedure Flush (S : in out Server_Slot);
 
    package Log_Client is new Gneiss.Log.Client (Event);
-   package Log_Server is new Gneiss.Log.Server (Event, Initialize, Finalize, Ready);
+   package Log_Server is new Gneiss.Log.Server (Write, Initialize, Finalize, Ready);
    package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
 
    Dispatcher  : Gneiss.Log.Dispatcher_Session;
@@ -93,10 +95,32 @@ is
       end if;
    end Construct;
 
+   procedure Write (Session : in out Gneiss.Log.Server_Session;
+                    Data    :        String)
+   is
+      use type Gneiss.Session_Status;
+      I : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
+   begin
+      if Gneiss.Log.Status (Client) /= Gneiss.Initialized then
+         return;
+      end if;
+      for Char of Data loop
+         if Server_Data (I).Flushed then
+            Put (Server_Data (I), '[');
+            for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
+               Put (Server_Data (I), C);
+            end loop;
+            Put (Server_Data (I), ']');
+            Put (Server_Data (I), ' ');
+            Server_Data (I).Flushed := False;
+         end if;
+         Put_Color (Server_Data (I), Char);
+      end loop;
+   end;
+
    procedure Event
    is
       use type Gneiss.Session_Status;
-      Char : Character;
    begin
       case Gneiss.Log.Status (Client) is
          when Gneiss.Uninitialized =>
@@ -107,23 +131,6 @@ is
                                    "lolcat");
          when Gneiss.Initialized =>
             Log_Dispatcher.Register (Dispatcher);
-            for I in Servers'Range loop
-               if Gneiss.Log.Initialized (Servers (I)) then
-                  while Log_Server.Available (Servers (I)) loop
-                     if Server_Data (I).Flushed then
-                        Put (Server_Data (I), '[');
-                        for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
-                           Put (Server_Data (I), C);
-                        end loop;
-                        Put (Server_Data (I), ']');
-                        Put (Server_Data (I), ' ');
-                        Server_Data (I).Flushed := False;
-                     end if;
-                     Log_Server.Get (Servers (I), Char);
-                     Put_Color (Server_Data (I), Char);
-                  end loop;
-               end if;
-            end loop;
       end case;
    end Event;
 
