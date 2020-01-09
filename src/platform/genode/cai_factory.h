@@ -50,6 +50,11 @@ class Factory
             Genode::warning(__func__, " is deprecated");
             destroy<T>(reinterpret_cast<T *>(obj));
         }
+
+        Genode::Allocator_avl &alloc()
+        {
+            return _alloc;
+        }
 };
 
 /*

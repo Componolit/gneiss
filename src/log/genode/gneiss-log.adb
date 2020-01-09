@@ -16,7 +16,9 @@ is
        else Uninitialized);
 
    function Initialized (Session : Dispatcher_Session) return Boolean is
-      (False);
+      (Session.Root /= System.Null_Address
+       and then Session.Env /= System.Null_Address
+       and then Session.Dispatch /= System.Null_Address);
 
    function Initialized (Session : Server_Session) return Boolean is
       (Session.Component /= System.Null_Address
