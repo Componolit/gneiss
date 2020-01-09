@@ -14,7 +14,10 @@ package Gneiss_Internal.Log is
    end record;
 
    type Dispatcher_Session is limited record
-      null;
+      Root     : System.Address       := System.Null_Address;
+      Env      : System.Address       := System.Null_Address;
+      Index    : Gneiss.Session_Index := 0;
+      Dispatch : System.Address       := System.Null_Address;
    end record;
 
    type Server_Session is limited record
