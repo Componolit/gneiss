@@ -13,7 +13,7 @@ namespace Log{
         public:
             Client();
             bool initialized();
-            void initialize(void *env, const char *label);
+            void initialize(void *env, const char *label, void (*event)(void));
             void finalize();
             void write(const char *message);
             Genode::uint64_t maximum_message_length();
