@@ -18,8 +18,19 @@ class Factory
         { }
 
         template <typename T, typename ... Args>
+        T *create2(Args &&... args)
+        {
+            try{
+                return new(_heap) T(args ...);
+            }catch(...){
+                return nullptr;
+            }
+        }
+
+        template <typename T, typename ... Args>
         void *create(Args &&... args)
         {
+            Genode::warning(__func__, " is deprecated");
             try{
                 return reinterpret_cast<void *>(new (_heap) T(args ...));
             }catch(...){
@@ -28,9 +39,16 @@ class Factory
         }
 
         template <typename T>
+        void destroy(T *obj)
+        {
+            Genode::destroy(_heap, obj);
+        }
+
+        template <typename T>
         void destroy(void *obj)
         {
-            Genode::destroy(_heap, reinterpret_cast<T *>(obj));
+            Genode::warning(__func__, " is deprecated");
+            destroy<T>(reinterpret_cast<T *>(obj));
         }
 };
 
