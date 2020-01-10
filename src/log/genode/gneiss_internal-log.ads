@@ -21,13 +21,13 @@ package Gneiss_Internal.Log is
    end record;
 
    type Server_Session is limited record
-      Component : System.Address := System.Null_Address;
-      Event     : System.Address := System.Null_Address;
-      Write     : System.Address := System.Null_Address;
+      Component : System.Address       := System.Null_Address;
+      Write     : System.Address       := System.Null_Address;
+      Index     : Gneiss.Session_Index := 0;
    end record;
 
    type Dispatcher_Capability is limited record
-      null;
+      Session : System.Address;
    end record;
 
 end Gneiss_Internal.Log;
