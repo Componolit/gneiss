@@ -22,16 +22,15 @@ is
 
    function Initialized (Session : Server_Session) return Boolean is
       (Session.Component /= System.Null_Address
-       and then Session.Event /= System.Null_Address
        and then Session.Write /= System.Null_Address);
 
    function Index (Session : Client_Session) return Session_Index is
-      (0);
+      (Session.Index);
 
    function Index (Session : Server_Session) return Session_Index is
-      (0);
+      (Session.Index);
 
    function Index (Session : Dispatcher_Session) return Session_Index is
-      (0);
+      (Session.Index);
 
 end Gneiss.Log;
