@@ -19,15 +19,16 @@ class Gneiss::Log_Server
     friend class Log_Component;
     private:
         Gneiss::Log_Component *_component;
-        void (*_event)();
-        void (Gneiss::Log_Server::*_write)(const char *, int, int *);
+        void (*_write)(Gneiss::Log_Server *, const char *, int, int *);
+        int _index;
         Log_Server(const Log_Server &);
         Log_Server &operator = (Log_Server const &);
 
     public:
         Log_Server();
-        void initialize(Gneiss::Capability *, void (*)(), void(Gneiss::Log_Server::*)(const char *, int, int *));
+        void initialize(Gneiss::Log_Component *, void(*)(Gneiss::Log_Server *, const char *, int, int *));
         Gneiss::Log_Component *component();
+        void finalize();
 };
 
 class Gneiss::Log_Component : public Genode::Rpc_object<Genode::Log_session>
