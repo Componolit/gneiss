@@ -47,10 +47,10 @@ is
       for C of Msg loop
          Session.Cursor := Session.Cursor + 1;
          Session.Buffer (Session.Cursor) := C;
-         if C = ASCII.LF and then Session.Cursor < Session.Buffer'Last then
-            Session.Buffer (Session.Cursor + 1) := ASCII.NUL;
-            Flush (Session);
-         elsif Session.Cursor = Session.Buffer'Last then
+         if
+            (C = ASCII.LF and then Session.Cursor < Session.Buffer'Last)
+            or else Session.Cursor = Session.Buffer'Last
+         then
             Flush (Session);
          end if;
       end loop;

@@ -10,21 +10,24 @@ package body Gneiss.Message.Generic_Client with
    SPARK_Mode
 is
 
-   function Get_Event_Address return System.Address;
+   function Get_Event_Address (Session : Client_Session) return System.Address;
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
    package Proto is new Gneiss.Protocol (Character, RFLX_String);
+
+   procedure Session_Event (Session : in out Client_Session);
 
    procedure Init (Session  : in out Client_Session;
                    Label    :        String;
                    Success  :        Boolean;
                    Filedesc :        Integer);
    function Init_Cap is new Gneiss_Platform.Create_Initializer_Cap (Client_Session, Init);
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session, Session_Event);
 
-   function Get_Event_Address return System.Address with
+   function Get_Event_Address (Session : Client_Session) return System.Address with
       SPARK_Mode => Off
    is
    begin
-      return Event'Address;
+      return Session.Event_Cap'Address;
    end Get_Event_Address;
 
    function Create_Request (Label : RFLX_String) return Proto.Message is
@@ -33,6 +36,13 @@ is
                       Kind        => Session_Type,
                       Name_Length => 0,
                       Payload     => Label));
+
+   procedure Session_Event (Session : in out Client_Session)
+   is
+      pragma Unreferenced (Session);
+   begin
+      Event;
+   end Session_Event;
 
    procedure Init (Session  : in out Client_Session;
                    Label    :        String;
@@ -45,7 +55,7 @@ is
          return;
       end if;
       if Success then
-         Gneiss_Epoll.Add (Session.Epoll_Fd, Filedesc, Get_Event_Address, S);
+         Gneiss_Epoll.Add (Session.Epoll_Fd, Filedesc, Get_Event_Address (Session), S);
          if S = 0 then
             Session.File_Descriptor := Filedesc;
          end if;
@@ -70,6 +80,7 @@ is
                return;
             end if;
             Session.Index      := Idx;
+            Session.Event_Cap  := Event_Cap (Session);
             Session.Label.Last := Session.Label.Value'First + Label'Length - 1;
             Session.Label.Value
                (Session.Label.Value'First
