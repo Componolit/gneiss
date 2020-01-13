@@ -101,21 +101,22 @@ is
       use type Gneiss.Session_Status;
       I : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
    begin
-      if Gneiss.Log.Status (Client) /= Gneiss.Initialized then
+      if
+         Gneiss.Log.Status (Client) /= Gneiss.Initialized
+         or else I not in Server_Data'Range
+      then
          return;
       end if;
+      Put (Server_Data (I), '[');
+      for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
+         Put (Server_Data (I), C);
+      end loop;
+      Put (Server_Data (I), ']');
+      Put (Server_Data (I), ' ');
       for Char of Data loop
-         if Server_Data (I).Flushed then
-            Put (Server_Data (I), '[');
-            for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
-               Put (Server_Data (I), C);
-            end loop;
-            Put (Server_Data (I), ']');
-            Put (Server_Data (I), ' ');
-            Server_Data (I).Flushed := False;
-         end if;
          Put_Color (Server_Data (I), Char);
       end loop;
+      Flush (Server_Data (I));
    end;
 
    procedure Event
@@ -195,13 +196,15 @@ is
          for R of Reset loop
             Put (S, R);
          end loop;
+         Put (S, C);
          Flush (S);
+      else
+         for H of Get_Color (S.Hue) loop
+            Put (S, H);
+         end loop;
+         Put (S, C);
+         S.Hue := Rainbow (S.Hue);
       end if;
-      for H of Get_Color (S.Hue) loop
-         Put (S, H);
-      end loop;
-      Put (S, C);
-      S.Hue := Rainbow (S.Hue);
    end Put_Color;
 
    procedure Put (S : in out Server_Slot;
