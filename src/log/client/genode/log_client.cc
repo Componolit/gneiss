@@ -58,7 +58,9 @@ void Cai::Log::Client::initialize(void *env, const char *label, void (*event)(vo
     _session = _factory->create<Log_session>(
             *reinterpret_cast<Cai::Env *>(env)->env,
             label, event);
-    Genode::Signal_transmitter(log(_session)->_init).submit();
+    if(_session){
+        Genode::Signal_transmitter(log(_session)->_init).submit();
+    }
 }
 
 void Cai::Log::Client::finalize()
