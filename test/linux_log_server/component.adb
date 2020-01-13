@@ -17,7 +17,8 @@ is
    type Server_Reg is array (Gneiss.Session_Index range <>) of Gneiss.Log.Server_Session;
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
-   procedure Event;
+   procedure Write (Session : in out Gneiss.Log.Server_Session;
+                    Data    :        String);
    procedure Initialize (Session : in out Gneiss.Log.Server_Session);
    procedure Finalize (Session : in out Gneiss.Log.Server_Session);
    function Ready (Session : Gneiss.Log.Server_Session) return Boolean;
@@ -26,7 +27,7 @@ is
                        Name    :        String;
                        Label   :        String);
 
-   package Log_Server is new Gneiss.Log.Server (Event, Initialize, Finalize, Ready);
+   package Log_Server is new Gneiss.Log.Server (Write, Initialize, Finalize, Ready);
    package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
 
    Dispatcher  : Gneiss.Log.Dispatcher_Session;
@@ -46,36 +47,35 @@ is
       end if;
    end Construct;
 
-   procedure Event
+   procedure Write (Session : in out Gneiss.Log.Server_Session;
+                    Data    :        String)
    is
       procedure Put (C : Character) with
          Import,
          Convention    => C,
          External_Name => "put";
-      Char : Character;
+      I : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
    begin
-      for I in Servers'Range loop
-         if Gneiss.Log.Initialized (Servers (I)) then
-            while Log_Server.Available (Servers (I)) loop
-               if Server_Data (I).Newline then
-                  Put (Character'Val (8#33#));
-                  Put ('[');
-                  Put ('0');
-                  Put ('m');
-                  Put ('[');
-                  for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
-                     Put (C);
-                  end loop;
-                  Put (']');
-                  Put (' ');
-               end if;
-               Log_Server.Get (Servers (I), Char);
-               Put (Char);
-               Server_Data (I).Newline := Char = ASCII.LF;
-            end loop;
-         end if;
+      if I not in Server_Data'Range then
+         return;
+      end if;
+      if Server_Data (I).Newline then
+         Put (Character'Val (8#33#));
+         Put ('[');
+         Put ('0');
+         Put ('m');
+         Put ('[');
+         for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
+            Put (C);
+         end loop;
+         Put (']');
+         Put (' ');
+      end if;
+      for C of Data loop
+         Put (C);
+         Server_Data (I).Newline := Server_Data (I).Newline or else C = ASCII.NUL;
       end loop;
-   end Event;
+   end Write;
 
    procedure Destruct
    is
