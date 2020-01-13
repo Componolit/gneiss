@@ -56,7 +56,7 @@ def extract_init(build_dir, target_dir):
         os.mkdir(target_dir)
     except FileExistsError:
         pass
-    shutil.copy2(find("init", build_dir), target_dir)
+    shutil.copy2(find("init", os.path.join(build_dir, "init")), target_dir)
 
 def extract_components(build_dir, target_dir, components):
     try:
