@@ -7,6 +7,7 @@ is
    use type Block.Id;
    use type Block.Request_Status;
    use type Block.Request_Kind;
+   use type Gneiss.Session_Status;
 
    Log         : Gneiss.Log.Client_Session;
    Dispatcher  : Block.Dispatcher_Session;
@@ -24,35 +25,47 @@ is
    type Request_Cache_Type is array (Request_Index'Range) of Cache_Element;
    Request_Cache : Request_Cache_Type;
 
-   Ready : Boolean := False;
+   Ready      : Boolean := False;
+   Capability : Gneiss.Capability;
+
+   procedure Initialize;
+
+   package Log_Client is new Gneiss.Log.Client (Initialize);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
-      if not Gneiss.Log.Initialized (Log) then
-         Gneiss.Log.Client.Initialize (Log, Cap, "log_block_server");
-      end if;
-      if Gneiss.Log.Initialized (Log) then
-         if not Block.Initialized (Dispatcher) then
-            Block_Dispatcher.Initialize (Dispatcher, Cap, 42);
-         end if;
-         if Block.Initialized (Dispatcher) then
-            Block_Dispatcher.Register (Dispatcher);
-            Gneiss.Log.Client.Info (Log, "Dispatcher initialized");
-         else
-            Gneiss.Log.Client.Error (Log, "Failed to initialize dispatcher");
-            Main.Vacate (Cap, Main.Failure);
-         end if;
-      else
-         Main.Vacate (Cap, Main.Failure);
-      end if;
+      Capability := Cap;
+      Log_Client.Initialize (Log, Cap, "log_block_server");
    end Construct;
+
+   procedure Initialize
+   is
+   begin
+      case Gneiss.Log.Status (Log) is
+         when Gneiss.Initialized =>
+            if Block.Initialized (Dispatcher) then
+               return;
+            end if;
+            Block_Dispatcher.Initialize (Dispatcher, Capability, 42);
+            if Block.Initialized (Dispatcher) then
+               Block_Dispatcher.Register (Dispatcher);
+            else
+               Log_Client.Error (Log, "Failed to initialize dispatcher");
+               Main.Vacate (Capability, Main.Failure);
+            end if;
+         when Gneiss.Pending =>
+            Log_Client.Initialize (Log, Capability, "log_block_server");
+         when Gneiss.Uninitialized =>
+            Main.Vacate (Capability, Main.Failure);
+      end case;
+   end Initialize;
 
    procedure Destruct
    is
    begin
-      if Gneiss.Log.Initialized (Log) then
-         Gneiss.Log.Client.Finalize (Log);
+      if Gneiss.Log.Status (Log) = Gneiss.Initialized then
+         Log_Client.Finalize (Log);
       end if;
       if Block.Initialized (Dispatcher) then
          Block_Dispatcher.Finalize (Dispatcher);
@@ -190,10 +203,10 @@ is
       pragma Unreferenced (S);
       pragma Unreferenced (B);
    begin
-      if Gneiss.Log.Initialized (Log) then
-         Gneiss.Log.Client.Info (Log, "Server initialize with label: ");
-         Gneiss.Log.Client.Info (Log, L);
-         Gneiss.Log.Client.Info (Log, "Initialized");
+      if Gneiss.Log.Status (Log) = Gneiss.Initialized then
+         Log_Client.Info (Log, "Server initialize with label: ");
+         Log_Client.Info (Log, L);
+         Log_Client.Info (Log, "Initialized");
          Ready := True;
       end if;
       Ram_Disk := (others => 0);
