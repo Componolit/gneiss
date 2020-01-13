@@ -45,4 +45,13 @@ is
       Event (I);
    end Call_Timer_Event;
 
+   procedure Call_Log_Client_Event (S : Session_Entry)
+   is
+      procedure Event with
+         Import,
+         Address => S.Log_Client_Event;
+   begin
+      Event;
+   end Call_Log_Client_Event;
+
 end Gneiss.Muen_Registry;
