@@ -7,9 +7,12 @@ with Gneiss.Log.Client;
 package body Component with
    SPARK_Mode
 is
+   use type Gneiss.Session_Status;
 
+   procedure Initialize;
    procedure Parse (Data : String);
 
+   package Log_Client is new Gneiss.Log.Client (Initialize);
    package Config is new Gneiss.Rom.Client (Character, Positive, String, Parse);
 
    Cfg : Gneiss.Rom.Client_Session;
@@ -30,11 +33,24 @@ is
       end if;
    end Construct;
 
+   procedure Initialize
+   is
+   begin
+      case Gneiss.Log.Status (Log) is
+         when Gneiss.Initialized =>
+            Log_Client.Info (Log, "Log session configured");
+         when Gneiss.Pending =>
+            Log_Client.Initialize (Log, C, "");
+         when Gneiss.Uninitialized =>
+            Main.Vacate (C, Main.Failure);
+      end case;
+   end Initialize;
+
    procedure Parse (Data : String)
    is
       Last : Positive := Data'Last;
    begin
-      if not Gneiss.Log.Initialized (Log) and then Data'Length > 1 then
+      if Gneiss.Log.Status (Log) = Gneiss.Uninitialized and then Data'Length > 1 then
          for I in Data'Range loop
             if Data (I) = ASCII.LF then
                if I > Data'First then
@@ -45,15 +61,9 @@ is
                exit;
             end if;
          end loop;
-         Gneiss.Log.Client.Initialize (Log, C, Data (Data'First .. Last));
-         if Gneiss.Log.Initialized (Log) then
-            Gneiss.Log.Client.Info (Log, "Log session configured with label: "
-                                                        & Data (Data'First .. Last));
-         else
-            Main.Vacate (C, Main.Failure);
-         end if;
+         Log_Client.Initialize (Log, C, Data (Data'First .. Last));
       else
-         Gneiss.Log.Client.Info (Log, "Rom changed, exiting...");
+         Log_Client.Info (Log, "Rom changed, exiting...");
          Main.Vacate (C, Main.Success);
       end if;
    end Parse;
@@ -61,12 +71,8 @@ is
    procedure Destruct
    is
    begin
-      if Gneiss.Log.Initialized (Log) then
-         Gneiss.Log.Client.Finalize (Log);
-      end if;
-      if Gneiss.Rom.Initialized (Cfg) then
-         Config.Finalize (Cfg);
-      end if;
+      Log_Client.Finalize (Log);
+      Config.Finalize (Cfg);
    end Destruct;
 
 end Component;
