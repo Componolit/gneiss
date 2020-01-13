@@ -1,7 +1,7 @@
 #!/bin/sh
 
-apt update
-apt install -y expect python3 python3-pip
+apt-get update
+apt-get install -y expect python3 python3-pip
 
 cd /gneiss
 git submodule update --init --recursive
