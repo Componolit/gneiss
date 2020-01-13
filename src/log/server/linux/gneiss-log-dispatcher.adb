@@ -4,24 +4,36 @@ with System;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss.Syscall;
+with Gneiss_Internal.Message;
 
 package body Gneiss.Log.Dispatcher with
    SPARK_Mode
 is
 
-   function Server_Event_Address return System.Address;
+   function Event_Cap_Address (Session : Server_Session) return System.Address;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
                              Label   :        String;
                              Fd      : in out Integer);
 
-   function Server_Event_Address return System.Address with
+   procedure Session_Event (Session : in out Server_Session);
+
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Server_Session, Session_Event);
+
+   procedure Read_Buffer (Session : in out Server_Session) with
+      Pre =>  Initialized (Session)
+              and then Gneiss_Internal.Message.Peek (Session.Fd)
+                       >= Gneiss_Internal.Log.Message_Log.Message_Buffer'Length,
+      Post => Initialized (Session)
+              and then Session.Cursor = Session.Buffer'Last;
+
+   function Event_Cap_Address (Session : Server_Session) return System.Address with
       SPARK_Mode => Off
    is
    begin
-      return Server_Instance.Event'Address;
-   end Server_Event_Address;
+      return Session.E_Cap'Address;
+   end Event_Cap_Address;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
@@ -78,6 +90,7 @@ is
          return;
       end if;
       Server_S.Index := Idx;
+      Server_S.E_Cap := Event_Cap (Server_S);
       Server_Instance.Initialize (Server_S);
       if not Server_Instance.Ready (Server_S) then
          Gneiss.Syscall.Close (Server_S.Fd);
@@ -92,7 +105,7 @@ is
       pragma Unreferenced (Cap);
       Ignore_Success : Integer;
    begin
-      Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address, Ignore_Success);
+      Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Event_Cap_Address (Server_S), Ignore_Success);
       Session.Accepted := True;
    end Session_Accept;
 
@@ -109,7 +122,29 @@ is
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
          Gneiss.Syscall.Close (Server_S.Fd);
          Server_Instance.Finalize (Server_S);
+         Gneiss_Platform.Invalidate (Server_S.E_Cap);
       end if;
    end Session_Cleanup;
+
+   procedure Session_Event (Session : in out Server_Session)
+   is
+   begin
+      Read_Buffer (Session);
+      for I in Session.Buffer'Range loop
+         exit when Session.Buffer (I) = ASCII.NUL;
+         Session.Cursor := I;
+      end loop;
+      if Session.Cursor > Session.Buffer'First then
+         Server_Instance.Write (Session, Session.Buffer (Session.Buffer'First .. Session.Cursor));
+      end if;
+   end Session_Event;
+
+   procedure Read_Buffer (Session : in out Server_Session) with
+      SPARK_Mode => Off
+   is
+   begin
+      Gneiss_Internal.Message.Read (Session.Fd, Session.Buffer'Address, Session.Buffer'Length);
+      Session.Cursor := Session.Buffer'First;
+   end Read_Buffer;
 
 end Gneiss.Log.Dispatcher;

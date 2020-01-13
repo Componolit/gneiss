@@ -1,6 +1,7 @@
 
 with Gneiss.Message;
 with Gneiss_Internal.Message;
+with Gneiss_Platform;
 
 package Gneiss_Internal.Log is
 
@@ -21,6 +22,7 @@ package Gneiss_Internal.Log is
       Index  : Gneiss.Session_Index       := 0;
       Buffer : Message_Log.Message_Buffer := (others => ASCII.NUL);
       Cursor : Positive                   := 1;
+      E_Cap  : Gneiss_Platform.Event_Cap;
    end record;
 
    type Dispatcher_Capability is new Gneiss_Internal.Message.Dispatcher_Capability;
