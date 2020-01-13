@@ -20,7 +20,9 @@ SPARK_Mode,
                                          Read_Label,
                                          Read_Name,
                                          Read_Buffer.Ptr,
-                                         Proto.Linux))
+                                         Proto.Linux,
+                                         Session,
+                                         Event_Cap))
 is
    use type Gneiss_Epoll.Epoll_Fd;
    use type System.Address;
@@ -36,6 +38,7 @@ is
       N_Last : Natural := 0;
       L_Last : Natural := 0;
    end record;
+   type Dummy_Session is limited null record;
    package Queue is new Basalt.Queue (Request_Cache);
    type Request_Registry is array (RFLX.Session.Kind_Type'Range) of Queue.Context (10);
 
@@ -91,7 +94,7 @@ is
                             Requests,
                             Proto.Linux),
                  Output => Component_Status);
-   procedure Broker_Event with
+   procedure Broker_Event (D : in out Dummy_Session) with
       Global => (Input  => (Services,
                             Broker_Fd),
                  In_Out => (Read_Buffer.Ptr,
@@ -103,8 +106,7 @@ is
                             Gneiss.Syscall.Linux)),
       Pre => Read_Buffer.Ptr /= null,
       Post => Read_Buffer.Ptr /= null;
-   function Broker_Event_Address return System.Address with
-      Global => null;
+   function Broker_Event_Cap is new Gneiss_Platform.Create_Event_Cap (Dummy_Session, Broker_Event);
    procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
                             Fd    : Integer;
                             Label : String) with
@@ -134,6 +136,8 @@ is
    procedure Reject_Request (Kind : RFLX.Session.Kind_Type) with
       Global => (Input  => Broker_Fd,
                  In_Out => (Proto.Linux, Requests));
+   function Broker_Event_Address return System.Address with
+      Global => (Input => Event_Cap);
 
    Running : constant Integer := -1;
    Success : constant Integer := 0;
@@ -147,23 +151,26 @@ is
    Requests         : Request_Registry;
    Read_Name        : String (1 .. 255) := (others => Character'First);
    Read_Label       : String (1 .. 255) := (others => Character'First);
+   Session          : constant Dummy_Session    := (null record);
+   Event_Cap        : Gneiss_Platform.Event_Cap := Broker_Event_Cap (Session);
 
    procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
    procedure Message_Dispatcher is new Gneiss_Platform.Dispatcher_Call (Gneiss_Internal.Message.Dispatcher_Session);
 
+   function Broker_Event_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Event_Cap'Address;
+   end Broker_Event_Address;
+
    procedure Call_Event (Fp : System.Address)
    is
-      procedure Event with
+      Cap : Gneiss_Platform.Event_Cap with
          Import,
-         Address => Fp,
-         Global  => (Input  => Broker_Fd,
-                     In_Out => (Services,
-                                Initializers,
-                                Requests,
-                                Proto.Linux),
-                     Output => Component_Status);
+         Address => Fp;
    begin
-      Event;
+      Gneiss_Platform.Call (Cap);
    end Call_Event;
 
    procedure Register_Service (Kind :     RFLX.Session.Kind_Type;
@@ -264,8 +271,9 @@ is
       end if;
    end Event_Handler;
 
-   procedure Broker_Event
+   procedure Broker_Event (D : in out Dummy_Session)
    is
+      pragma Unreferenced (D);
       use type RFLX.Types.Length;
       Truncated  : Boolean;
       Context    : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
@@ -411,13 +419,6 @@ is
          end if;
       end loop;
    end Handle_Requests;
-
-   function Broker_Event_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Broker_Event'Address;
-   end Broker_Event_Address;
 
    function Create_Cap (Fd : Integer) return Capability is
       (Capability'(Broker_Fd            => Fd,

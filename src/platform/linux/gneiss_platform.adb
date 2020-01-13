@@ -4,6 +4,9 @@ package body Gneiss_Platform with
 is
    use type System.Address;
 
+   function Is_Valid (Cap : Event_Cap) return Boolean is
+      (Cap.Address /= System.Null_Address and then Cap.Context /= System.Null_Address);
+
    function Is_Valid (Cap : Initializer_Cap) return Boolean is
       (Cap.Address /= System.Null_Address and then Cap.Cap /= System.Null_Address);
 
@@ -19,6 +22,13 @@ is
    function Is_Valid (Cap : Register_Service_Cap) return Boolean is
       (Cap.Address /= System.Null_Address);
 
+   procedure Invalidate (Cap : in out Event_Cap)
+   is
+   begin
+      Cap.Address := System.Null_Address;
+      Cap.Context := System.Null_Address;
+   end Invalidate;
+
    procedure Invalidate (Cap : in out Initializer_Cap)
    is
    begin
@@ -32,6 +42,23 @@ is
       Cap.Address := System.Null_Address;
       Cap.Cap     := System.Null_Address;
    end Invalidate;
+
+   function Create_Event_Cap (C : Context) return Event_Cap with
+      SPARK_Mode => Off
+   is
+   begin
+      return Event_Cap'(Address => Event'Address, Context => C'Address);
+   end Create_Event_Cap;
+
+   procedure Call (Cap : Event_Cap) with
+      SPARK_Mode => Off
+   is
+      procedure Event (Context : System.Address) with
+         Import,
+         Address => Cap.Address;
+   begin
+      Event (Cap.Context);
+   end Call;
 
    function Create_Set_Status_Cap return Set_Status_Cap with
       SPARK_Mode => Off

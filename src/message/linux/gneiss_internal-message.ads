@@ -15,11 +15,13 @@ is
       Label           : Session_Label;
       Pending         : Boolean               := False;
       Index           : Gneiss.Session_Index  := 0;
+      Event_Cap       : Gneiss_Platform.Event_Cap;
    end record;
 
    type Server_Session is record
       Fd    : Integer              := -1;
       Index : Gneiss.Session_Index := 0;
+      E_Cap : Gneiss_Platform.Event_Cap;
    end record;
 
    type Dispatcher_Session is record

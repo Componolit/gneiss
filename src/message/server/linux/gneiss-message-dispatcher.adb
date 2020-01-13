@@ -9,18 +9,27 @@ package body Gneiss.Message.Dispatcher with
    SPARK_Mode
 is
 
-   function Server_Event_Address return System.Address;
+   function Server_Event_Address (Session : Server_Session) return System.Address;
+   procedure Session_Event (Session : in out Server_Session);
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Server_Session, Session_Event);
+
+   procedure Session_Event (Session : in out Server_Session)
+   is
+      pragma Unreferenced (Session);
+   begin
+      Server_Instance.Event;
+   end Session_Event;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
                              Label   :        String;
                              Fd      : in out Integer);
 
-   function Server_Event_Address return System.Address with
+   function Server_Event_Address (Session : Server_Session) return System.Address with
       SPARK_Mode => Off
    is
    begin
-      return Server_Instance.Event'Address;
+      return Session.E_Cap'Address;
    end Server_Event_Address;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
@@ -84,6 +93,7 @@ is
          return;
       end if;
       Server_S.Index := Idx;
+      Server_S.E_Cap := Event_Cap (Server_S);
       Server_Instance.Initialize (Server_S);
       if not Server_Instance.Ready (Server_S) then
          Gneiss.Syscall.Close (Server_S.Fd);
@@ -98,7 +108,7 @@ is
       pragma Unreferenced (Cap);
       Ignore_Success : Integer;
    begin
-      Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address, Ignore_Success);
+      Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address (Server_S), Ignore_Success);
       Session.Accepted := True;
    end Session_Accept;
 

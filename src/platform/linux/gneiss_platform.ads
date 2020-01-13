@@ -6,23 +6,35 @@ package Gneiss_Platform with
    SPARK_Mode
 is
 
+   type Event_Cap is private;
    type Set_Status_Cap is private;
    type Initializer_Cap is private;
    type Register_Initializer_Cap is private;
    type Register_Service_Cap is private;
    type Dispatcher_Cap is private;
 
+   function Is_Valid (Cap : Event_Cap) return Boolean;
    function Is_Valid (Cap : Set_Status_Cap) return Boolean;
    function Is_Valid (Cap : Initializer_Cap) return Boolean;
    function Is_Valid (Cap : Dispatcher_Cap) return Boolean;
    function Is_Valid (Cap : Register_Initializer_Cap) return Boolean;
    function Is_Valid (Cap : Register_Service_Cap) return Boolean;
 
+   procedure Invalidate (Cap : in out Event_Cap) with
+      Post => not Is_Valid (Cap);
+
    procedure Invalidate (Cap : in out Initializer_Cap) with
       Post => not Is_Valid (Cap);
 
    procedure Invalidate (Cap : in out Dispatcher_Cap) with
       Post => not Is_Valid (Cap);
+
+   generic
+      type Context is limited private;
+      with procedure Event (C : in out Context);
+   function Create_Event_Cap (C : Context) return Event_Cap;
+
+   procedure Call (Cap : Event_Cap);
 
    generic
       --  @param S  Status code (0 - Success, 1 - Failure)
@@ -95,6 +107,11 @@ is
       Pre => Is_Valid (Cap);
 
 private
+
+   type Event_Cap is record
+      Address : System.Address := System.Null_Address;
+      Context : System.Address := System.Null_Address;
+   end record;
 
    type Set_Status_Cap is record
       Address : System.Address := System.Null_Address;
