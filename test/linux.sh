@@ -12,8 +12,9 @@ set -e
 
 ./cement test/message_client/message_client.xml . lib test
 ./cement test/hello_world/hello_world.xml . lib test
+./cement test/log_proxy/log_proxy.xml . lib test
 
 export LD_LIBRARY_PATH=build/lib
 expect test/message_client/message_client.expect
 expect test/hello_world/hello_world.expect
-
+expect test/log_proxy/log_proxy.expect
