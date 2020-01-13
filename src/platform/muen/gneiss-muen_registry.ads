@@ -16,6 +16,8 @@ is
       case Kind is
          when CIM.None =>
             null;
+         when CIM.Log_Client =>
+            Log_Client_Event : System.Address;
          when CIM.Timer_Client =>
             Next_Timeout    : Standard.Interfaces.Unsigned_64;
             Timeout_Set     : Boolean;
@@ -46,5 +48,8 @@ is
    procedure Call_Timer_Event (S : Session_Entry;
                                I : CIM.Session_Id) with
       Pre => S.Kind = CIM.Timer_Client;
+
+   procedure Call_Log_Client_Event (S : Session_Entry) with
+      Pre => S.Kind = CIM.Log_Client;
 
 end Gneiss.Muen_Registry;

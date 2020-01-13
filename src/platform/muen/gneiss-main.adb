@@ -29,6 +29,8 @@ is
                   Reg.Call_Block_Dispatcher_Event (Reg.Registry (I));
                when CIM.Block_Server =>
                   Reg.Call_Block_Server_Event (Reg.Registry (I));
+               when CIM.Log_Client =>
+                  Reg.Call_Log_Client_Event (Reg.Registry (I));
                when others =>
                   null;
             end case;

@@ -3,7 +3,7 @@
 cd /muen
 git reset --hard
 git fetch --all
-git checkout bf7aff19c0933b6157dc3f5a78845c39c31a6ce6
+git checkout 15c8fc449fcd7a64cb5d98bdd2b51071a96b3f0a
 git submodule update --init components/spark_runtime/src
 rm -r components/gneiss/src
 ln -fs /gneiss components/gneiss/src

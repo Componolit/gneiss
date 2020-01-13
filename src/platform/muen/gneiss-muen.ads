@@ -9,6 +9,7 @@ is
    type Status is (Running, Success, Failure);
 
    type Async_Session_Type is (None,
+                               Log_Client,
                                Timer_Client,
                                Block_Client,
                                Block_Dispatcher,
