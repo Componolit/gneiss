@@ -76,7 +76,11 @@ Gneiss::Log_Component *Gneiss::Log_Root::_create_session(const char *args)
     label = Genode::label_from_args(args);
     component = label.prefix();
     label = label.last_element();
-    _dispatcher->_dispatch(_dispatcher, &cap, component.string(), label.string());
+    if(component.length() > 1){
+        _dispatcher->_dispatch(_dispatcher, &cap, component.string(), label.string());
+    }else{
+        _dispatcher->_dispatch(_dispatcher, &cap, label.string(), component.string());
+    }
 
     if(!_accepted){
         Genode::warning("Service_denied (", args, ")");
