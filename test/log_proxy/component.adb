@@ -77,7 +77,7 @@ is
 
    Dispatcher  : Gneiss.Log.Dispatcher_Session;
    Capability  : Gneiss.Capability;
-   Servers     : Server_Reg (1 .. 1);
+   Servers     : Server_Reg (1 .. 2);
    Server_Data : Server_Meta (Servers'Range);
    Client      : Gneiss.Log.Client_Session;
 
