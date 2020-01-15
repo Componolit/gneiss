@@ -17,9 +17,11 @@ is
 
    type Session_Status is (Uninitialized, Pending, Initialized);
 
-   type Session_Index is new Integer;
+   type Session_Index is range 0 .. 2 ** 32 - 1;
 
    type Capability is private;
+
+   Invalid_Index : constant Session_Index := 0;
 
 private
 

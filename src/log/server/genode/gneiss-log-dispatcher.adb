@@ -107,7 +107,7 @@ is
 
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability;
-                         Idx     :        Session_Index := 0)
+                         Idx     :        Session_Index := 1)
    is
    begin
       Genode_Initialize (Session, Cap, Idx, Get_Dispatch_Address);
@@ -126,7 +126,7 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
-                                 Idx      :        Session_Index := 0)
+                                 Idx      :        Session_Index := 1)
    is
    begin
       Server_S.Index := Idx;

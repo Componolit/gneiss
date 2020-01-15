@@ -29,13 +29,16 @@ is
    function Initialized (Session : Server_Session) return Boolean;
 
    function Index (Session : Client_Session) return Session_Index with
-      Pre => Status (Session) = Initialized;
+      Contract_Cases => (Status (Session) = Uninitialized => Index'Result = Invalid_Index,
+                         others                           => Index'Result /= Invalid_Index);
 
    function Index (Session : Dispatcher_Session) return Session_Index with
-      Pre => Initialized (Session);
+      Contract_Cases => (Initialized (Session)     => Index'Result /= Invalid_Index,
+                         not Initialized (Session) => Index'Result = Invalid_Index);
 
    function Index (Session : Server_Session) return Session_Index with
-      Pre => Initialized (Session);
+      Contract_Cases => (Initialized (Session)     => Index'Result /= Invalid_Index,
+                         not Initialized (Session) => Index'Result = Invalid_Index);
 
 private
 
