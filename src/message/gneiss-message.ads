@@ -22,6 +22,7 @@ package Gneiss.Message with
 is
    pragma Compile_Time_Error (Byte'Size /= 8, "Byte size must be 8 bit");
 
+   --  Fixed size message buffer
    subtype Message_Buffer is Buffer (First .. First + Length - 1);
 
    --  Client, Server and Dispatcher session objects
@@ -29,20 +30,45 @@ is
    type Server_Session is limited private;
    type Dispatcher_Session is limited private;
 
+   --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
 
+   --  Check initialization status
+   --
+   --  @param Session  Client session instance
+   --  @return         Initialization status
    function Status (Session : Client_Session) return Session_Status;
 
+   --  Check if session is initialized
+   --
+   --  @param Session  Server session instance
+   --  @return         True if session is initialized
    function Initialized (Session : Server_Session) return Boolean;
 
+   --  Check if session is initialized
+   --
+   --  @param Session  Dispatcher session instance
+   --  @return         True if session is initialized
    function Initialized (Session : Dispatcher_Session) return Boolean;
 
+   --  Get the index value that has been set on initialization
+   --
+   --  @param Session  Client session instance
+   --  @return         Session index
    function Index (Session : Client_Session) return Session_Index with
       Pre => Status (Session) = Initialized;
 
+   --  Get the index value that has been set on initialization
+   --
+   --  @param Session  Server session instance
+   --  @return         Session index
    function Index (Session : Server_Session) return Session_Index with
       Pre => Initialized (Session);
 
+   --  Get the index value that has been set on initialization
+   --
+   --  @param Session  Dispatcher session instance
+   --  @return         Session index
    function Index (Session : Dispatcher_Session) return Session_Index with
       Pre => Initialized (Session);
 
