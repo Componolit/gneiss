@@ -25,7 +25,7 @@ is
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
-                         Idx     :        Session_Index := 0) with
+                         Idx     :        Session_Index := 1) with
       SPARK_Mode => Off
    is
       C_Label : String := Label & Character'Val (0);
