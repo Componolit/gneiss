@@ -20,6 +20,7 @@ is
    --  @param Session Client session instance
    --  @param Cap     System capability
    --  @param Label   Session label
+   --  @param Idx     Session index
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
