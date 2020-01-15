@@ -50,7 +50,7 @@ is
 
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability;
-                         Idx     :        Session_Index := 0)
+                         Idx     :        Session_Index := 1)
    is
    begin
       Session.Register_Service := Cap.Register_Service;
@@ -84,7 +84,7 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
-                                 Idx      :        Session_Index := 0)
+                                 Idx      :        Session_Index := 1)
    is
       pragma Unreferenced (Cap);
    begin

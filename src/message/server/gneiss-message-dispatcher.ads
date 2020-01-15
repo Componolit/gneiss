@@ -16,7 +16,7 @@ is
 
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability;
-                         Idx     :        Session_Index := 0);
+                         Idx     :        Session_Index := 1);
 
    procedure Register (Session : in out Dispatcher_Session) with
       Pre  => Initialized (Session),
@@ -32,7 +32,7 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
-                                 Idx      :        Session_Index := 0) with
+                                 Idx      :        Session_Index := 1) with
       Pre  => Initialized (Session)
               and then Valid_Session_Request (Session, Cap)
               and then not Server_Instance.Ready (Server_S)

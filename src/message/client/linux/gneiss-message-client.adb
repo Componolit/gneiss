@@ -12,7 +12,7 @@ is
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
-                         Idx     :        Session_Index := 0)
+                         Idx     :        Session_Index := 1)
    is
    begin
       Message_Client.Initialize (Session, Cap, Label, Idx);
