@@ -38,7 +38,7 @@ is
                                  C_Label'Address,
                                  Event'Address);
       Session.Cursor := Session.Buffer'First;
-      Session.Index := Idx;
+      Session.Index  := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
    procedure Finalize (Session : in out Client_Session)
@@ -47,6 +47,7 @@ is
       if Status (Session) = Uninitialized then
          return;
       end if;
+      Session.Index := Gneiss.Session_Index_Option'(Valid => False);
       Cxx.Log.Client.Finalize (Session.Instance);
    end Finalize;
 

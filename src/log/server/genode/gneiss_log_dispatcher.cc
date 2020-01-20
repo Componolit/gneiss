@@ -12,20 +12,18 @@ Gneiss::Log_Dispatcher::Log_Dispatcher():
     _dispatch(nullptr)
 { }
 
-void Gneiss::Log_Dispatcher::initialize(Gneiss::Capability *capability, int index,
+void Gneiss::Log_Dispatcher::initialize(Gneiss::Capability *capability,
                                         void (*dispatch)(Gneiss::Log_Dispatcher *,
                                                          Gneiss::Log_Dispatcher_Capability *,
                                                          const char *, const char*))
 {
     TLOG("capability=", capability, " index=", index);
     _env = capability->env;
-    _index = index;
     _dispatch = dispatch;
     check_factory(_factory, *(capability->env));
     _root = _factory->create2<Gneiss::Log_Root>(this);
     if(!_root){
         _env = nullptr;
-        _index = 0;
         _dispatch = nullptr;
     }
 }
