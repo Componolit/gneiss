@@ -10,26 +10,26 @@ is
    use type Gneiss_Epoll.Epoll_Fd;
 
    type Client_Session is record
-      File_Descriptor : Integer               := -1;
-      Epoll_Fd        : Gneiss_Epoll.Epoll_Fd := -1;
+      File_Descriptor : Integer                     := -1;
+      Epoll_Fd        : Gneiss_Epoll.Epoll_Fd       := -1;
       Label           : Session_Label;
-      Pending         : Boolean               := False;
-      Index           : Gneiss.Session_Index  := 0;
+      Pending         : Boolean                     := False;
+      Index           : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
       Event_Cap       : Gneiss_Platform.Event_Cap;
    end record;
 
    type Server_Session is record
-      Fd    : Integer              := -1;
-      Index : Gneiss.Session_Index := 0;
+      Fd    : Integer                     := -1;
+      Index : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
       E_Cap : Gneiss_Platform.Event_Cap;
    end record;
 
    type Dispatcher_Session is record
       Register_Service : Gneiss_Platform.Register_Service_Cap;
-      Client_Fd        : Integer               := -1;
-      Accepted         : Boolean               := False;
-      Epoll_Fd         : Gneiss_Epoll.Epoll_Fd := -1;
-      Index            : Gneiss.Session_Index  := 0;
+      Client_Fd        : Integer                     := -1;
+      Accepted         : Boolean                     := False;
+      Epoll_Fd         : Gneiss_Epoll.Epoll_Fd       := -1;
+      Index            : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
    end record;
 
    type Dispatcher_Capability is limited record

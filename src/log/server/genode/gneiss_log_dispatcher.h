@@ -28,9 +28,9 @@ class Gneiss::Log_Dispatcher
 
     public:
         Log_Dispatcher();
-        void initialize(Gneiss::Capability *, int, void(*)(Gneiss::Log_Dispatcher *,
-                                                           Gneiss::Log_Dispatcher_Capability *,
-                                                           const char *, const char *));
+        void initialize(Gneiss::Capability *, void(*)(Gneiss::Log_Dispatcher *,
+                                                      Gneiss::Log_Dispatcher_Capability *,
+                                                      const char *, const char *));
         void session_initialize(Gneiss::Log_Dispatcher_Capability *, Gneiss::Log_Server *,
                                 void (*write)(Gneiss::Log_Server *, const char *, int, int *));
         void register_service();

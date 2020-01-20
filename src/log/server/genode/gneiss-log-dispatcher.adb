@@ -17,12 +17,11 @@ is
 
    procedure Genode_Initialize (Session : in out Dispatcher_Session;
                                 Cap     :        Capability;
-                                Idx     :        Session_Index;
                                 Disp    :        System.Address) with
       Import,
       Convention    => CPP,
       External_Name => "_ZN6Gneiss14Log_Dispatcher10initializeE"
-                       & "PNS_10CapabilityEiPFvPS0_PNS_25Log_Dispatcher_CapabilityEPKcS7_E";
+                       & "PNS_10CapabilityEPFvPS0_PNS_25Log_Dispatcher_CapabilityEPKcS7_E";
 
    procedure Genode_Register (Session : in out Dispatcher_Session) with
       Import,
@@ -110,7 +109,9 @@ is
                          Idx     :        Session_Index := 1)
    is
    begin
-      Genode_Initialize (Session, Cap, Idx, Get_Dispatch_Address);
+      Genode_Initialize (Session, Cap, Get_Dispatch_Address);
+      if Initialized (Session) then
+         Session.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
    procedure Register (Session : in out Dispatcher_Session)
@@ -129,17 +130,16 @@ is
                                  Idx      :        Session_Index := 1)
    is
    begin
-      Server_S.Index := Idx;
+      Server_S.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Server_Instance.Initialize (Server_S);
       if not Server_Instance.Ready (Server_S) then
-         Server_S.Index := 0;
+         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
          return;
       end if;
       Genode_Initialize_Session (Session, Cap, Server_S, Get_Write_Address);
       if not Initialized (Server_S) then
          Server_Instance.Finalize (Server_S);
-         Server_S.Index := 0;
-         return;
+         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
       end if;
    end Session_Initialize;
 
@@ -158,6 +158,9 @@ is
    is
    begin
       Genode_Cleanup (Session, Cap, Server_S);
+      if not Initialized (Server_S) then
+         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
+      end if;
    end Session_Cleanup;
 
 end Gneiss.Log.Dispatcher;

@@ -18,10 +18,10 @@ package Gneiss_Internal.Log is
    type Dispatcher_Session is new Gneiss_Internal.Message.Dispatcher_Session;
 
    type Server_Session is limited record
-      Fd     : Integer                    := -1;
-      Index  : Gneiss.Session_Index       := 0;
-      Buffer : Message_Log.Message_Buffer := (others => ASCII.NUL);
-      Cursor : Positive                   := 1;
+      Fd     : Integer                     := -1;
+      Index  : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
+      Buffer : Message_Log.Message_Buffer  := (others => ASCII.NUL);
+      Cursor : Positive                    := 1;
       E_Cap  : Gneiss_Platform.Event_Cap;
    end record;
 

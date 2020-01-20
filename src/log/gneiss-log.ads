@@ -45,25 +45,22 @@ is
    --
    --  @param Session  Client session instance
    --  @return         Session index
-   function Index (Session : Client_Session) return Session_Index with
-      Contract_Cases => (Status (Session) = Uninitialized => Index'Result = Invalid_Index,
-                         others                           => Index'Result /= Invalid_Index);
+   function Index (Session : Client_Session) return Session_Index_Option with
+      Post => (Status (Session) = Uninitialized) = not Index'Result.Valid;
 
    --  Get the index value that has been set on initialization
    --
    --  @param Session  Dispatcher session instance
    --  @return         Session index
-   function Index (Session : Dispatcher_Session) return Session_Index with
-      Contract_Cases => (Initialized (Session)     => Index'Result /= Invalid_Index,
-                         not Initialized (Session) => Index'Result = Invalid_Index);
+   function Index (Session : Dispatcher_Session) return Session_Index_Option with
+      Post => Initialized (Session) = Index'Result.Valid;
 
    --  Get the index value that has been set on initialization
    --
    --  @param Session  Server session instance
    --  @return         Session index
-   function Index (Session : Server_Session) return Session_Index with
-      Contract_Cases => (Initialized (Session)     => Index'Result /= Invalid_Index,
-                         not Initialized (Session) => Index'Result = Invalid_Index);
+   function Index (Session : Server_Session) return Session_Index_Option with
+      Post => Initialized (Session) = Index'Result.Valid;
 
 private
 

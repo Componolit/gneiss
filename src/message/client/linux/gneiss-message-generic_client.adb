@@ -79,7 +79,7 @@ is
             if Label'Length > 255 then
                return;
             end if;
-            Session.Index      := Idx;
+            Session.Index      := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
             Session.Event_Cap  := Event_Cap (Session);
             Session.Label.Last := Session.Label.Value'First + Label'Length - 1;
             Session.Label.Value
@@ -130,6 +130,7 @@ is
       Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.File_Descriptor, Ignore_Success);
       Gneiss.Syscall.Close (Session.File_Descriptor);
       Session.Label.Last := 0;
+      Session.Index      := Gneiss.Session_Index_Option'(Valid => False);
    end Finalize;
 
 end Gneiss.Message.Generic_Client;

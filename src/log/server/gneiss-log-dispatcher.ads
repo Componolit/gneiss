@@ -40,8 +40,7 @@ is
    --  @param Idx      Session index
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability;
-                         Idx     :        Session_Index := 1) with
-      Pre => Idx /= Invalid_Index;
+                         Idx     :        Session_Index := 1);
 
    --  Register the server implementation Serv on the platform
    --
@@ -72,7 +71,6 @@ is
                                  Server_S : in out Server_Session;
                                  Idx      :        Session_Index := 1) with
       Pre  => Initialized (Session)
-              and then Idx /= Invalid_Index
               and then Valid_Session_Request (Session, Cap)
               and then not Server_Instance.Ready (Server_S)
               and then not Initialized (Server_S),
