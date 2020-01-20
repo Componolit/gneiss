@@ -24,8 +24,7 @@ is
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
-                         Idx     :        Session_Index := 1) with
-      Pre => Idx /= Invalid_Index;
+                         Idx     :        Session_Index := 1);
 
    --  Finalize client session
    --

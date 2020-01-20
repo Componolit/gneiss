@@ -14,13 +14,13 @@ is
    function Initialized (Session : Dispatcher_Session) return Boolean is
       (Gneiss_Platform.Is_Valid (Session.Register_Service));
 
-   function Index (Session : Client_Session) return Session_Index is
+   function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
 
-   function Index (Session : Server_Session) return Session_Index is
+   function Index (Session : Server_Session) return Session_Index_Option is
       (Session.Index);
 
-   function Index (Session : Dispatcher_Session) return Session_Index is
+   function Index (Session : Dispatcher_Session) return Session_Index_Option is
       (Session.Index);
 
 end Gneiss.Message;

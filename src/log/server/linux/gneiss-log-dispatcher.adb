@@ -58,7 +58,7 @@ is
    begin
       Session.Register_Service := Cap.Register_Service;
       Session.Epoll_Fd         := Cap.Epoll_Fd;
-      Session.Index            := Idx;
+      Session.Index            := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
    function Reg_Dispatcher_Cap is new Gneiss_Platform.Create_Dispatcher_Cap
@@ -89,12 +89,13 @@ is
       if Session.Client_Fd < 0 or else Server_S.Fd < 0 then
          return;
       end if;
-      Server_S.Index := Idx;
+      Server_S.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Server_S.E_Cap := Event_Cap (Server_S);
       Server_Instance.Initialize (Server_S);
       if not Server_Instance.Ready (Server_S) then
          Gneiss.Syscall.Close (Server_S.Fd);
          Gneiss.Syscall.Close (Session.Client_Fd);
+         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
       end if;
    end Session_Initialize;
 
@@ -123,6 +124,7 @@ is
          Gneiss.Syscall.Close (Server_S.Fd);
          Server_Instance.Finalize (Server_S);
          Gneiss_Platform.Invalidate (Server_S.E_Cap);
+         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
       end if;
    end Session_Cleanup;
 
