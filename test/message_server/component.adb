@@ -86,16 +86,16 @@ is
    procedure Initialize (Session : in out Message.Server_Session)
    is
    begin
-      if Message.Index (Session) in Server_Data'Range then
-         Server_Data (Message.Index (Session)).Ready := True;
+      if Message.Index (Session).Value in Server_Data'Range then
+         Server_Data (Message.Index (Session).Value).Ready := True;
       end if;
    end Initialize;
 
    procedure Finalize (Session : in out Message.Server_Session)
    is
    begin
-      if Message.Index (Session) in Server_Data'Range then
-         Server_Data (Message.Index (Session)).Ready := False;
+      if Message.Index (Session).Value in Server_Data'Range then
+         Server_Data (Message.Index (Session).Value).Ready := False;
       end if;
    end Finalize;
 
@@ -123,8 +123,10 @@ is
    end Dispatch;
 
    function Ready (Session : Message.Server_Session) return Boolean is
-      (if Message.Index (Session) in Server_Data'Range
-       then Server_Data (Message.Index (Session)).Ready
+      (if
+          Message.Index (Session).Valid
+          and then Message.Index (Session).Value in Server_Data'Range
+       then Server_Data (Message.Index (Session).Value).Ready
        else False);
 
 end Component;

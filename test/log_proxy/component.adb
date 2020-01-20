@@ -99,24 +99,24 @@ is
                     Data    :        String)
    is
       use type Gneiss.Session_Status;
-      I : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
+      I : constant Gneiss.Session_Index_Option := Gneiss.Log.Index (Session);
    begin
       if
          Gneiss.Log.Status (Client) /= Gneiss.Initialized
-         or else I not in Server_Data'Range
+         or else I.Value not in Server_Data'Range
       then
          return;
       end if;
-      Put (Server_Data (I), '[');
-      for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
-         Put (Server_Data (I), C);
+      Put (Server_Data (I.Value), '[');
+      for C of Server_Data (I.Value).Ident (1 .. Server_Data (I.Value).Last) loop
+         Put (Server_Data (I.Value), C);
       end loop;
-      Put (Server_Data (I), ']');
-      Put (Server_Data (I), ' ');
+      Put (Server_Data (I.Value), ']');
+      Put (Server_Data (I.Value), ' ');
       for Char of Data loop
-         Put_Color (Server_Data (I), Char);
+         Put_Color (Server_Data (I.Value), Char);
       end loop;
-      Flush (Server_Data (I));
+      Flush (Server_Data (I.Value));
    end;
 
    procedure Event
@@ -143,7 +143,7 @@ is
 
    procedure Initialize (Session : in out Gneiss.Log.Server_Session)
    is
-      Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
+      Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session).Value;
    begin
       if Index in Server_Data'Range then
          Server_Data (Index).Ready := True;
@@ -152,9 +152,9 @@ is
 
    procedure Finalize (Session : in out Gneiss.Log.Server_Session)
    is
-      Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
+      Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session).Value;
    begin
-      if Gneiss.Log.Index (Session) in Server_Data'Range then
+      if Index in Server_Data'Range then
          Server_Data (Index).Ready := False;
       end if;
    end Finalize;
@@ -184,8 +184,10 @@ is
    end Dispatch;
 
    function Ready (Session : Gneiss.Log.Server_Session) return Boolean is
-      (if Gneiss.Log.Index (Session) in Server_Data'Range
-       then Server_Data (Gneiss.Log.Index (Session)).Ready
+      (if
+          Gneiss.Log.Index (Session).Valid
+          and then Gneiss.Log.Index (Session).Value in Server_Data'Range
+       then Server_Data (Gneiss.Log.Index (Session).Value).Ready
        else False);
 
    procedure Put_Color (S : in out Server_Slot;

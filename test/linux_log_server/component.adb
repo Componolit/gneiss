@@ -54,18 +54,18 @@ is
          Import,
          Convention    => C,
          External_Name => "put";
-      I : constant Gneiss.Session_Index := Gneiss.Log.Index (Session);
+      I : constant Gneiss.Session_Index_Option := Gneiss.Log.Index (Session);
    begin
-      if I not in Server_Data'Range then
+      if not I.Valid or else I.Value not in Server_Data'Range then
          return;
       end if;
-      if Server_Data (I).Newline then
+      if Server_Data (I.Value).Newline then
          Put (Character'Val (8#33#));
          Put ('[');
          Put ('0');
          Put ('m');
          Put ('[');
-         for C of Server_Data (I).Ident (1 .. Server_Data (I).Last) loop
+         for C of Server_Data (I.Value).Ident (1 .. Server_Data (I.Value).Last) loop
             Put (C);
          end loop;
          Put (']');
@@ -73,7 +73,7 @@ is
       end if;
       for C of Data loop
          Put (C);
-         Server_Data (I).Newline := Server_Data (I).Newline or else C = ASCII.NUL;
+         Server_Data (I.Value).Newline := Server_Data (I.Value).Newline or else C = ASCII.NUL;
       end loop;
    end Write;
 
@@ -86,16 +86,22 @@ is
    procedure Initialize (Session : in out Gneiss.Log.Server_Session)
    is
    begin
-      if Gneiss.Log.Index (Session) in Server_Data'Range then
-         Server_Data (Gneiss.Log.Index (Session)).Ready := True;
+      if
+         Gneiss.Log.Index (Session).Valid
+         and then Gneiss.Log.Index (Session).Value in Server_Data'Range
+      then
+         Server_Data (Gneiss.Log.Index (Session).Value).Ready := True;
       end if;
    end Initialize;
 
    procedure Finalize (Session : in out Gneiss.Log.Server_Session)
    is
    begin
-      if Gneiss.Log.Index (Session) in Server_Data'Range then
-         Server_Data (Gneiss.Log.Index (Session)).Ready := False;
+      if
+         Gneiss.Log.Index (Session).Valid
+         and then Gneiss.Log.Index (Session).Value in Server_Data'Range
+      then
+         Server_Data (Gneiss.Log.Index (Session).Value).Ready := False;
       end if;
    end Finalize;
 
@@ -124,8 +130,10 @@ is
    end Dispatch;
 
    function Ready (Session : Gneiss.Log.Server_Session) return Boolean is
-      (if Gneiss.Log.Index (Session) in Server_Data'Range
-       then Server_Data (Gneiss.Log.Index (Session)).Ready
+      (if
+          Gneiss.Log.Index (Session).Valid
+          and then Gneiss.Log.Index (Session).Value in Server_Data'Range
+       then Server_Data (Gneiss.Log.Index (Session).Value).Ready
        else False);
 
 end Component;
