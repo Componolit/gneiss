@@ -24,13 +24,13 @@ is
       (Session.Component /= System.Null_Address
        and then Session.Write /= System.Null_Address);
 
-   function Index (Session : Client_Session) return Session_Index is
+   function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
 
-   function Index (Session : Server_Session) return Session_Index is
+   function Index (Session : Server_Session) return Session_Index_Option is
       (Session.Index);
 
-   function Index (Session : Dispatcher_Session) return Session_Index is
+   function Index (Session : Dispatcher_Session) return Session_Index_Option is
       (Session.Index);
 
 end Gneiss.Log;

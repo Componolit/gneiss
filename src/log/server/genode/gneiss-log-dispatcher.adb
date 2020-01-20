@@ -112,6 +112,7 @@ is
       Genode_Initialize (Session, Cap, Get_Dispatch_Address);
       if Initialized (Session) then
          Session.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
+      end if;
    end Initialize;
 
    procedure Register (Session : in out Dispatcher_Session)
