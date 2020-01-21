@@ -2,6 +2,7 @@
 with Basalt.Strings;
 with Gneiss.Config;
 with Gneiss.Protocol;
+with Gneiss.Resource;
 with Gneiss_Access;
 with Gneiss_Log;
 with SXML;
@@ -96,7 +97,7 @@ is
                  In_Out => (Policy,
                             Efd,
                             Gneiss_Epoll.Linux,
-                            Gneiss.Syscall.Linux,
+                            Gneiss_Syscall.Linux,
                             Main.Component_State,
                             Load_File_Name,
                             Gneiss.Linker.Linux));
@@ -112,7 +113,7 @@ is
       Global => (Input  => Document,
                  In_Out => (Policy,
                             Efd,
-                            Gneiss.Syscall.Linux,
+                            Gneiss_Syscall.Linux,
                             Main.Component_State,
                             Gneiss.Linker.Linux,
                             Gneiss_Epoll.Linux),
@@ -131,7 +132,7 @@ is
                             Load_Message_Name,
                             Load_Message_Label,
                             Gneiss_Epoll.Linux,
-                            Gneiss.Syscall.Linux,
+                            Gneiss_Syscall.Linux,
                             Proto.Linux,
                             Read_Buffer.Ptr));
 
@@ -145,7 +146,7 @@ is
                 and then Valid_Read_Buffer,
       Global => (Input    => (Document,
                               Policy),
-                 In_Out   => (Gneiss.Syscall.Linux,
+                 In_Out   => (Gneiss_Syscall.Linux,
                               Proto.Linux,
                               Read_Buffer.Ptr,
                               Load_Message_Name,
@@ -170,7 +171,7 @@ is
                               Policy),
                  In_Out   => (Load_Message_Name,
                               Load_Message_Label,
-                              Gneiss.Syscall.Linux,
+                              Gneiss_Syscall.Linux,
                               Proto.Linux),
                  Proof_In => Efd);
 
@@ -187,7 +188,7 @@ is
                 and then Initialized,
       Global => (Input    => (Document,
                               Policy),
-                 In_Out   => (Gneiss.Syscall.Linux,
+                 In_Out   => (Gneiss_Syscall.Linux,
                               Proto.Linux),
                  Proof_In => Efd);
 
@@ -202,7 +203,7 @@ is
                 and then Initialized,
       Global => (Input    => (Document,
                               Policy),
-                 In_Out   => (Gneiss.Syscall.Linux,
+                 In_Out   => (Gneiss_Syscall.Linux,
                               Proto.Linux),
                  Proof_In => Efd);
 
@@ -218,7 +219,7 @@ is
                 and then Initialized,
       Global => (Input    => (Document,
                               Policy),
-                 In_Out   => (Gneiss.Syscall.Linux,
+                 In_Out   => (Gneiss_Syscall.Linux,
                               Proto.Linux),
                  Proof_In => Efd);
 
@@ -233,7 +234,7 @@ is
                 and then Initialized,
       Global => (Input    => (Document,
                               Policy),
-                 In_Out   => (Gneiss.Syscall.Linux,
+                 In_Out   => (Gneiss_Syscall.Linux,
                               Proto.Linux),
                  Proof_In => Efd);
 
@@ -385,10 +386,10 @@ is
          exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
          SXML.Query.Attribute (State, Document, "name", Result, XML_Buf, Last);
          if Result = SXML.Result_OK then
-            Gneiss.Syscall.Socketpair (Policy (Index).Fd, Fd);
+            Gneiss_Syscall.Socketpair (Policy (Index).Fd, Fd);
             if Policy (Index).Fd > -1 then
                Gneiss_Epoll.Add (Efd, Policy (Index).Fd, Index, Success);
-               Gneiss.Syscall.Fork (Pid);
+               Gneiss_Syscall.Fork (Pid);
                if Pid < 0 then
                   Gneiss_Log.Error ("Fork failed");
                   Policy (Index).Fd := -1;
@@ -397,7 +398,7 @@ is
                   Policy (Index).Pid  := Pid;
                   Policy (Index).Node := State;
                   pragma Warnings (Off, "unused assignment to ""Fd""");
-                  Gneiss.Syscall.Close (Fd);
+                  Gneiss_Syscall.Close (Fd);
                   pragma Warnings (On, "unused assignment to ""Fd""");
                   Parent := True;
                   Gneiss_Log.Info ("Started " & XML_Buf (XML_Buf'First .. Last)
@@ -425,11 +426,11 @@ is
       Last   : Natural;
    begin
       Ret := 1;
-      Gneiss.Syscall.Close (Integer (Efd));
+      Gneiss_Syscall.Close (Integer (Efd));
       for I in Policy'Range loop
          pragma Loop_Invariant (Is_Valid);
          Policy (I).Node := SXML.Query.Invalid_State;
-         Gneiss.Syscall.Close (Policy (I).Fd);
+         Gneiss_Syscall.Close (Policy (I).Fd);
       end loop;
       SXML.Query.Attribute (Comp, Document, "file", Result, Load_File_Name, Last);
       if Result /= SXML.Result_OK and then Last not in Load_File_Name'Range then
@@ -460,7 +461,7 @@ is
                Read_Message (Index);
             end if;
             if Ev.Epoll_Hup or else Ev.Epoll_Rdhup then
-               Gneiss.Syscall.Waitpid (Policy (Index).Pid, Success);
+               Gneiss_Syscall.Waitpid (Policy (Index).Pid, Success);
                if Result = SXML.Result_OK then
                   Gneiss_Log.Info ("Component "
                                    & XML_Buf (XML_Buf'First .. Last)
@@ -473,7 +474,7 @@ is
                                    & Basalt.Strings.Image (Success));
                end if;
                Gneiss_Epoll.Remove (Efd, Policy (Index).Fd, Success);
-               Gneiss.Syscall.Close (Policy (Index).Fd);
+               Gneiss_Syscall.Close (Policy (Index).Fd);
                Policy (Index).Node := SXML.Query.Init (Document);
                Policy (Index).Pid  := -1;
             end if;
@@ -488,20 +489,22 @@ is
       Truncated : Boolean;
       Context   : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
       Last      : RFLX.Types.Index;
+      Fds       : Gneiss_Syscall.Fd_Array (1 .. 1);
       Fd        : Integer;
    begin
-      Gneiss.Main.Peek_Message (Policy (Index).Fd, Read_Buffer.Ptr.all, Last, Truncated, Fd);
-      Gneiss.Syscall.Drop_Message (Policy (Index).Fd);
+      Gneiss.Main.Peek_Message (Policy (Index).Fd, Read_Buffer.Ptr.all, Last, Truncated, Fds);
+      Fd := Fds (Fds'First);
+      Gneiss_Syscall.Drop_Message (Policy (Index).Fd);
       if Last < Read_Buffer.Ptr.all'First then
          pragma Warnings (Off, "unused assignment to ""Fd""");
-         Gneiss.Syscall.Close (Fd);
+         Gneiss_Syscall.Close (Fd);
          pragma Warnings (On, "unused assignment to ""Fd""");
          Gneiss_Log.Warning ("Message too short, dropping");
          return;
       end if;
       if Truncated or else Last > Read_Buffer.Ptr.all'Last then
          pragma Warnings (Off, "unused assignment to ""Fd""");
-         Gneiss.Syscall.Close (Fd);
+         Gneiss_Syscall.Close (Fd);
          pragma Warnings (On, "unused assignment to ""Fd""");
          Gneiss_Log.Warning ("Message too large, dropping");
          return;
@@ -524,7 +527,7 @@ is
       else
          Gneiss_Log.Warning ("Invalid message, dropping");
          pragma Warnings (Off, "unused assignment to ""Fd""");
-         Gneiss.Syscall.Close (Fd);
+         Gneiss_Syscall.Close (Fd);
          pragma Warnings (On, "unused assignment to ""Fd""");
       end if;
       pragma Warnings (Off, "unused assignment to ""Context""");
@@ -740,13 +743,16 @@ is
                            Name        : String;
                            Label       : String)
    is
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 4);
    begin
+      Resource.Allocate_Fd (Kind, Fds);
       Proto.Send_Message (Destination,
                           Proto.Message'(Length      => RFLX.Session.Length_Type (Name'Length + Label'Length),
                                          Action      => RFLX.Session.Request,
                                          Kind        => Kind,
                                          Name_Length => RFLX.Session.Length_Type (Name'Length),
-                                         Payload     => Convert_Message (Name & Label)));
+                                         Payload     => Convert_Message (Name & Label)),
+                          Resource.Truncate (Kind, Fds));
    end Send_Request;
 
    procedure Send_Confirm (Destination : Integer;
@@ -761,7 +767,7 @@ is
                                          Kind        => Kind,
                                          Name_Length => 0,
                                          Payload     => Convert_Message (Label)),
-                          Filedesc);
+                          Gneiss_Syscall.Fd_Array'(0 => Filedesc));
    end Send_Confirm;
 
    procedure Send_Reject (Destination : Integer;

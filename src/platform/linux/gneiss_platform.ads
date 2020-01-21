@@ -1,5 +1,6 @@
 
 with RFLX.Session;
+with Gneiss_Syscall;
 private with System;
 
 package Gneiss_Platform with
@@ -94,7 +95,8 @@ is
       with procedure Dispatch (Session : in out Session_Type;
                                Name    :        String;
                                Label   :        String;
-                               Fd      : in out Integer);
+                               Fd      : in out Gneiss_Syscall.Fd_Array;
+                               Num     :    out Natural);
    function Create_Dispatcher_Cap (S : Session_Type) return Dispatcher_Cap with
       Post => Is_Valid (Create_Dispatcher_Cap'Result);
 
@@ -103,7 +105,8 @@ is
    procedure Dispatcher_Call (Cap   :        Dispatcher_Cap;
                               Name  :        String;
                               Label :        String;
-                              Fd    : in out Integer) with
+                              Fd    : in out Gneiss_Syscall.Fd_Array;
+                              Num   :    out Natural) with
       Pre => Is_Valid (Cap);
 
 private

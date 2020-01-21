@@ -9,6 +9,10 @@
 //#define ENABLE_TRACE
 #include <trace.h>
 
+#ifndef min
+#define min(a,b)            (((a) < (b)) ? (a) : (b))
+#endif
+
 void gneiss_socketpair(int *fd1, int *fd2)
 {
     int fds[2];
@@ -59,14 +63,14 @@ void gneiss_dup(int oldfd, int *newfd)
     }
 }
 
-void gneiss_write_message(int sock, void *msg, size_t size, int fd)
+void gneiss_write_message(int sock, void *msg, size_t size, int *fd, int num)
 {
-    TRACE("sock=%d msg=%p size=%zu\n", sock, msg, size);
+    TRACE("sock=%d msg=%p size=%zu fd=%p num=%d\n", sock, msg, size, fd, num);
     struct msghdr message;
     struct iovec iov;
     union {
         struct cmsghdr cmsghdr;
-        char control[CMSG_SPACE(sizeof(int))];
+        char control[CMSG_SPACE(sizeof(int) * num)];
     } cmsgu;
     struct cmsghdr *cmsg;
 
@@ -83,15 +87,15 @@ void gneiss_write_message(int sock, void *msg, size_t size, int fd)
     message.msg_iov = &iov;
     message.msg_iovlen = 1;
 
-    if(fd >= 0){
+    if(num > 0){
         message.msg_control = cmsgu.control;
         message.msg_controllen = sizeof(cmsgu.control);
 
         cmsg = CMSG_FIRSTHDR(&message);
-        cmsg->cmsg_len = CMSG_LEN(sizeof(int));
+        cmsg->cmsg_len = CMSG_LEN(sizeof(int) * num);
         cmsg->cmsg_level = SOL_SOCKET;
         cmsg->cmsg_type = SCM_RIGHTS;
-        *((int *)CMSG_DATA(cmsg)) = fd;
+        memcpy(CMSG_DATA(cmsg), fd, sizeof(int) * num);
     }else{
         message.msg_control = 0;
         message.msg_controllen = 0;
@@ -101,15 +105,15 @@ void gneiss_write_message(int sock, void *msg, size_t size, int fd)
     }
 }
 
-void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length, int *trunc)
+void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc)
 {
-    TRACE("sock=%d msg=%p size=%zu fd=%p length=%p trunc=%p\n", sock, msg, size, fd, length, trunc);
+    TRACE("sock=%d msg=%p size=%zu fd=%p num=%d length=%p trunc=%p\n", sock, msg, size, fd, num, length, trunc);
     ssize_t ssize;
     struct msghdr message;
     struct iovec iov;
     union {
         struct cmsghdr cmsghdr;
-        char control[CMSG_SPACE(sizeof(int))];
+        char control[CMSG_SPACE(sizeof(int) * num)];
     } cmsgu;
     struct cmsghdr *cmsg;
 
@@ -122,7 +126,9 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length,
     message.msg_iovlen = 1;
     message.msg_control = cmsgu.control;
     message.msg_controllen = sizeof(cmsgu.control);
-    *fd = -1;
+    for(int i = 0; i < num; i++){
+        fd[i] = -1;
+    }
     *length = recvmsg(sock, &message, MSG_PEEK | MSG_TRUNC);
     if(*length < 0){
         perror("recvmsg");
@@ -136,10 +142,9 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int *length,
     TRACE_CONT("\n");
     *trunc = !!(message.msg_flags & MSG_TRUNC);
     cmsg = CMSG_FIRSTHDR(&message);
-    if(cmsg && cmsg->cmsg_len == CMSG_LEN(sizeof(int))
-            && cmsg->cmsg_level == SOL_SOCKET
+    if(cmsg && cmsg->cmsg_level == SOL_SOCKET
             && cmsg->cmsg_type == SCM_RIGHTS){
-        *fd = *((int *)CMSG_DATA(cmsg));
+        memcpy(fd, CMSG_DATA(cmsg), min(sizeof(int) * num, cmsg->cmsg_len));
     }
 }
 

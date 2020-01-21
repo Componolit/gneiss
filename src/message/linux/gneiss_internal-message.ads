@@ -33,7 +33,9 @@ is
    end record;
 
    type Dispatcher_Capability is limited record
-      Clean_Fd : Integer := -1;
+      Clean_Fd  : Integer := -1;
+      Client_Fd : Integer := -1;
+      Server_Fd : Integer := -1;
    end record;
 
    procedure Write (Fd   : Integer;
