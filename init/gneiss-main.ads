@@ -1,6 +1,6 @@
 
 with RFLX.Types;
-with Gneiss.Syscall;
+with Gneiss_Syscall;
 with Gneiss_Epoll;
 with Gneiss.Linker;
 
@@ -14,7 +14,7 @@ is
                   Fd     :     Integer;
                   Status : out Integer) with
       Global => (In_Out => (Component_State,
-                            Gneiss.Syscall.Linux,
+                            Gneiss_Syscall.Linux,
                             Gneiss_Epoll.Linux,
                             Gneiss.Linker.Linux));
 
@@ -22,7 +22,7 @@ is
                            Message   : out RFLX.Types.Bytes;
                            Last      : out RFLX.Types.Index;
                            Truncated : out Boolean;
-                           Fd        : out Integer) with
-      Global => (In_Out => Gneiss.Syscall.Linux);
+                           Fd        : out Gneiss_Syscall.Fd_Array) with
+      Global => (In_Out => Gneiss_Syscall.Linux);
 
 end Gneiss.Main;

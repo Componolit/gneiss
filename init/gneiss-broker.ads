@@ -2,7 +2,7 @@
 with SXML.Parser;
 with Gneiss_Epoll;
 with Gneiss.Linker;
-with Gneiss.Syscall;
+with Gneiss_Syscall;
 with Gneiss.Main;
 
 package Gneiss.Broker with
@@ -20,7 +20,7 @@ is
       Global => (In_Out => (Policy_State,
                             Gneiss.Main.Component_State,
                             Gneiss.Linker.Linux,
-                            Gneiss.Syscall.Linux,
+                            Gneiss_Syscall.Linux,
                             Gneiss_Epoll.Linux,
                             SXML.Parser.State));
 

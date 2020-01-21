@@ -2,7 +2,7 @@
 with System;
 with Gneiss_Epoll;
 with Gneiss_Platform;
-with Gneiss.Syscall;
+with Gneiss_Syscall;
 with RFLX.Session;
 
 package body Gneiss.Message.Dispatcher with
@@ -23,7 +23,8 @@ is
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
                              Label   :        String;
-                             Fd      : in out Integer);
+                             Fd      : in out Gneiss_Syscall.Fd_Array;
+                             Num     :    out Natural);
 
    function Server_Event_Address (Session : Server_Session) return System.Address with
       SPARK_Mode => Off
@@ -35,17 +36,22 @@ is
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
                              Name    :        String;
                              Label   :        String;
-                             Fd      : in out Integer)
+                             Fd      : in out Gneiss_Syscall.Fd_Array;
+                             Num     :    out Natural)
    is
    begin
       Session.Client_Fd := -1;
       Session.Accepted  := False;
-      if Fd >= 0 then
-         Dispatch (Session, Dispatcher_Capability'(Clean_Fd => Fd), "", "");
+      if Fd'Length = 1 then
+         Dispatch (Session, Dispatcher_Capability'(Clean_Fd => Fd (Fd'First), others => -1), "", "");
+         Num := 0;
          return;
       end if;
-      Dispatch (Session, Dispatcher_Capability'(Clean_Fd => -1), Name, Label);
-      Fd := (if Session.Accepted then Session.Client_Fd else -1);
+      Dispatch (Session, Dispatcher_Capability'(Clean_Fd  => -1,
+                                                Client_Fd => Fd (Fd'First),
+                                                Server_Fd => Fd (Fd'First + 1)),
+                Name, Label);
+      Num := (if Session.Accepted then 1 else 0);
    end Dispatch_Event;
 
    procedure Initialize (Session : in out Dispatcher_Session;
@@ -79,26 +85,22 @@ is
 
    function Valid_Session_Request (Session : Dispatcher_Session;
                                    Cap     : Dispatcher_Capability) return Boolean is
-      (Cap.Clean_Fd < 0);
+      (Cap.Client_Fd > -1 and then Cap.Server_Fd > -1);
 
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
                                  Idx      :        Session_Index := 1)
    is
-      pragma Unreferenced (Cap);
+      pragma Unreferenced (Session);
    begin
-      Gneiss.Syscall.Socketpair (Session.Client_Fd, Server_S.Fd);
-      if Session.Client_Fd < 0 or else Server_S.Fd < 0 then
-         return;
-      end if;
+      Server_S.Fd    := Cap.Server_Fd;
       Server_S.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Server_S.E_Cap := Event_Cap (Server_S);
       Server_Instance.Initialize (Server_S);
       if not Server_Instance.Ready (Server_S) then
-         Gneiss.Syscall.Close (Server_S.Fd);
-         Gneiss.Syscall.Close (Session.Client_Fd);
          Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
+         Gneiss_Syscall.Close (Server_S.Fd);
       end if;
    end Session_Initialize;
 
@@ -106,9 +108,9 @@ is
                              Cap      :        Dispatcher_Capability;
                              Server_S : in out Server_Session)
    is
-      pragma Unreferenced (Cap);
       Ignore_Success : Integer;
    begin
+      Session.Client_Fd := Cap.Client_Fd;
       Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address (Server_S), Ignore_Success);
       Session.Accepted := True;
    end Session_Accept;
@@ -124,7 +126,7 @@ is
          and then Server_S.Fd = Cap.Clean_Fd
       then
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
-         Gneiss.Syscall.Close (Server_S.Fd);
+         Gneiss_Syscall.Close (Server_S.Fd);
          Server_Instance.Finalize (Server_S);
          Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
       end if;

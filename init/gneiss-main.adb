@@ -33,10 +33,11 @@ is
    type Initializer_Service_Registry is array (RFLX.Session.Kind_Type'Range) of Initializer_Registry (1 .. 10);
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
    type Request_Cache is record
-      Name   : String (1 .. 255)   := (others => Character'First);
-      Label  : String (1 .. 255)   := (others => Character'First);
-      N_Last : Natural := 0;
-      L_Last : Natural := 0;
+      Name   : String (1 .. 255)                := (others => Character'First);
+      Label  : String (1 .. 255)                := (others => Character'First);
+      N_Last : Natural                          := 0;
+      L_Last : Natural                          := 0;
+      Fds    : Gneiss_Syscall.Fd_Array (1 .. 2) := (others => -1);
    end record;
    type Dummy_Session is limited null record;
    package Queue is new Basalt.Queue (Request_Cache);
@@ -103,12 +104,12 @@ is
                             Initializers,
                             Requests,
                             Read_Name,
-                            Gneiss.Syscall.Linux)),
+                            Gneiss_Syscall.Linux)),
       Pre => Read_Buffer.Ptr /= null,
       Post => Read_Buffer.Ptr /= null;
    function Broker_Event_Cap is new Gneiss_Platform.Create_Event_Cap (Dummy_Session, Broker_Event);
    procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
-                            Fd    : Integer;
+                            Fd    : Gneiss_Syscall.Fd_Array;
                             Label : String) with
       Global => (In_Out => Initializers);
    procedure Load_Message (Context    :     RFLX.Session.Packet.Context;
@@ -278,7 +279,7 @@ is
       Truncated  : Boolean;
       Context    : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
       Last       : RFLX.Types.Index;
-      Fd         : Integer;
+      Fd         : Gneiss_Syscall.Fd_Array (1 .. 2);
       Name_Last  : Natural;
       Label_Last : Natural;
       Kind       : RFLX.Session.Kind_Type;
@@ -288,21 +289,26 @@ is
       procedure Load_Entry (E : out Request_Cache)
       is
       begin
+         E.Fds := Fd;
          Load_Message (Context, E.Label, E.L_Last, E.Name, E.N_Last);
       end Load_Entry;
    begin
       Peek_Message (Broker_Fd, Read_Buffer.Ptr.all, Last, Truncated, Fd);
-      Gneiss.Syscall.Drop_Message (Broker_Fd);
+      Gneiss_Syscall.Drop_Message (Broker_Fd);
       if Last < Read_Buffer.Ptr.all'First then
          pragma Warnings (Off, "unused assignment to ""Fd""");
-         Gneiss.Syscall.Close (Fd);
+         for Filedesc of Fd loop
+            Gneiss_Syscall.Close (Filedesc);
+         end loop;
          pragma Warnings (On, "unused assignment to ""Fd""");
          Gneiss_Log.Warning ("Message too short, dropping");
          return;
       end if;
       if Truncated or else Last > Read_Buffer.Ptr.all'Last then
          pragma Warnings (Off, "unused assignment to ""Fd""");
-         Gneiss.Syscall.Close (Fd);
+         for Filedesc of Fd loop
+            Gneiss_Syscall.Close (Filedesc);
+         end loop;
          pragma Warnings (On, "unused assignment to ""Fd""");
          Gneiss_Log.Warning ("Message too large, dropping");
          return;
@@ -325,18 +331,15 @@ is
       then
          Kind := RFLX.Session.Packet.Get_Kind (Context);
          case RFLX.Session.Packet.Get_Action (Context) is
-         when RFLX.Session.Request =>
-            if Queue.Count (Requests (Kind)) >= Queue.Size (Requests (Kind)) then
-               Reject_Request (Kind);
-            end if;
-            Put (Requests (Kind));
-            pragma Assert (RFLX.Session.Packet.Has_Buffer (Context));
-         when RFLX.Session.Confirm =>
-            Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
-            Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
-         when RFLX.Session.Reject =>
-            Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
-            Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
+            when RFLX.Session.Request =>
+               if Queue.Count (Requests (Kind)) >= Queue.Size (Requests (Kind)) then
+                  Reject_Request (Kind);
+               end if;
+               Put (Requests (Kind));
+               pragma Assert (RFLX.Session.Packet.Has_Buffer (Context));
+            when RFLX.Session.Confirm | RFLX.Session.Reject =>
+               Load_Message (Context, Read_Label, Label_Last, Read_Name, Name_Last);
+               Handle_Answer (Kind, Fd, Read_Label (Read_Label'First .. Label_Last));
          end case;
       end if;
       pragma Assert (RFLX.Session.Packet.Has_Buffer (Context));
@@ -345,7 +348,7 @@ is
    end Broker_Event;
 
    procedure Handle_Answer (Kind  : RFLX.Session.Kind_Type;
-                            Fd    : Integer;
+                            Fd    : Gneiss_Syscall.Fd_Array;
                             Label : String)
    is
    begin
@@ -353,9 +356,9 @@ is
          if Gneiss_Platform.Is_Valid (I) then
             case Kind is
                when RFLX.Session.Message =>
-                  Message_Initializer (I, Label, Fd >= 0, Fd);
+                  Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
                when RFLX.Session.Log =>
-                  Message_Initializer (I, Label, Fd >= 0, Fd);
+                  Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
             end case;
             Gneiss_Platform.Invalidate (I);
          end if;
@@ -369,16 +372,17 @@ is
       procedure Peek is new Queue.Generic_Peek (Peek);
       procedure Peek (E : Request_Cache)
       is
-         Fd    : Integer := -1;
+         Fd    : Gneiss_Syscall.Fd_Array (1 .. 2) := E.Fds;
          Name  : RFLX_String (1 .. RFLX.Session.Length_Type (E.N_Last));
          Label : RFLX_String (1 .. RFLX.Session.Length_Type (E.L_Last));
          Index : Positive := E.Name'First;
+         Num   : Natural;
       begin
          Message_Dispatcher (Services (Kind),
                              E.Name (E.Name'First .. E.N_Last),
                              E.Label (E.Label'First .. E.L_Last),
-                             Fd);
-         Accepted := Fd >= 0;
+                             Fd, Num);
+         Accepted := Num > 0;
          if not Accepted then
             return;
          end if;
@@ -399,7 +403,7 @@ is
                                             Kind        => Kind,
                                             Name_Length => RFLX.Session.Length_Type (E.N_Last),
                                             Payload     => Name & Label),
-                             Fd);
+                             Fd (Fd'First .. Fd'First + Num - 1));
       end Peek;
    begin
       Peek (Requests (Kind));
@@ -530,14 +534,14 @@ is
                            Message   : out RFLX.Types.Bytes;
                            Last      : out RFLX.Types.Index;
                            Truncated : out Boolean;
-                           Fd        : out Integer) with
+                           Fd        : out Gneiss_Syscall.Fd_Array) with
       SPARK_Mode => Off
    is
       use type RFLX.Types.Index;
       Trunc     : Integer;
       Length    : Integer;
    begin
-      Gneiss.Syscall.Peek_Message (Socket, Message'Address, Message'Length, Fd, Length, Trunc);
+      Gneiss_Syscall.Peek_Message (Socket, Message'Address, Message'Length, Fd, Fd'Length, Length, Trunc);
       Truncated := Trunc = 1;
       if Length < 1 then
          Last := RFLX.Types.Index'First;

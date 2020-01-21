@@ -156,19 +156,21 @@ is
    procedure Dispatcher_Call (Cap   :        Dispatcher_Cap;
                               Name  :        String;
                               Label :        String;
-                              Fd    : in out Integer)
+                              Fd    : in out Gneiss_Syscall.Fd_Array;
+                              Num   :    out Natural)
    is
       procedure Dispatch (S : in out Session_Type;
                           N :        String;
                           L :        String;
-                          F : in out Integer) with
+                          F : in out Gneiss_Syscall.Fd_Array;
+                          C :    out Natural) with
          Import,
          Address => Cap.Address;
       Session : Session_Type with
          Import,
          Address => Cap.Cap;
    begin
-      Dispatch (Session, Name, Label, Fd);
+      Dispatch (Session, Name, Label, Fd, Num);
    end Dispatcher_Call;
 
 end Gneiss_Platform;
