@@ -1,12 +1,14 @@
 
 with System;
 
-package Gneiss.Syscall with
+package Gneiss_Syscall with
    SPARK_Mode,
    Abstract_State => Linux,
    Initializes    => Linux,
    Elaborate_Body
 is
+
+   type Fd_Array is array (Natural range <>) of Integer;
 
    procedure Socketpair (Fd1 : out Integer;
                          Fd2 : out Integer) with
@@ -45,7 +47,8 @@ is
    procedure Write_Message (Socket  : Integer;
                             Message : System.Address;
                             Size    : Integer;
-                            Fd      : Integer := -1) with
+                            Fds     : Fd_Array;
+                            Num     : Natural) with
       Import,
       Convention => C,
       External_Name => "gneiss_write_message",
@@ -54,7 +57,8 @@ is
    procedure Peek_Message (Socket  :     Integer;
                            Message :     System.Address;
                            Size    :     Integer;
-                           Fd      : out Integer;
+                           Fds     : out Fd_Array;
+                           Num     :     Natural;
                            Length  : out Integer;
                            Trunc   : out Integer) with
       Import,
@@ -80,4 +84,4 @@ is
       External_Name => "getpid",
       Global        => (Input => Linux);
 
-end Gneiss.Syscall;
+end Gneiss_Syscall;

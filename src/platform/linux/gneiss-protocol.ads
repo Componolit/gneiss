@@ -1,5 +1,6 @@
 
 with RFLX.Session;
+with Gneiss_Syscall;
 
 generic
    type Byte is (<>);
@@ -28,7 +29,7 @@ is
 
    procedure Send_Message (Destination : Integer;
                            Data        : Message;
-                           File_Desc   : Integer := -1) with
+                           File_Desc   : Gneiss_Syscall.Fd_Array := Gneiss_Syscall.Fd_Array'(1 .. 0 => -1)) with
       Global => (In_Out => Linux);
 
    function Image (V : RFLX.Session.Action_Type) return String is

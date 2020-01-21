@@ -1,5 +1,5 @@
 
-with Gneiss.Syscall;
+with Gneiss_Syscall;
 
 package body Gneiss_Log with
    SPARK_Mode
@@ -13,19 +13,19 @@ is
    procedure Info (S : String)
    is
    begin
-      Gneiss.Syscall.Fputs ("I: " & S & Terminator);
+      Gneiss_Syscall.Fputs ("I: " & S & Terminator);
    end Info;
 
    procedure Warning (S : String)
    is
    begin
-      Gneiss.Syscall.Fputs (Blue & "W: " & S & Reset & Terminator);
+      Gneiss_Syscall.Fputs (Blue & "W: " & S & Reset & Terminator);
    end Warning;
 
    procedure Error (S : String)
    is
    begin
-      Gneiss.Syscall.Fputs (Red & "E: " & S & Reset & Terminator);
+      Gneiss_Syscall.Fputs (Red & "E: " & S & Reset & Terminator);
    end Error;
 
 end Gneiss_Log;

@@ -1,7 +1,7 @@
 
 with System;
 with Gneiss.Protocol;
-with Gneiss.Syscall;
+with Gneiss_Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss_Internal.Message;
@@ -128,7 +128,7 @@ is
       Ignore_Success : Integer;
    begin
       Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.File_Descriptor, Ignore_Success);
-      Gneiss.Syscall.Close (Session.File_Descriptor);
+      Gneiss_Syscall.Close (Session.File_Descriptor);
       Session.Label.Last := 0;
       Session.Index      := Gneiss.Session_Index_Option'(Valid => False);
    end Finalize;
