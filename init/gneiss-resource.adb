@@ -11,6 +11,8 @@ is
       case Kind is
          when RFLX.Session.Message | RFLX.Session.Log =>
             Gneiss_Syscall.Socketpair (Fds (Fds'First), Fds (Fds'First + 1));
+         when others =>
+            null;
       end case;
    end Allocate_Fd;
 
@@ -21,6 +23,8 @@ is
       case Kind is
          when RFLX.Session.Message | RFLX.Session.Log =>
             return Fds (Fds'First .. Fds'First + 1);
+         when others =>
+            return Gneiss_Syscall.Fd_Array'(1 .. 0 => -1);
       end case;
    end Truncate;
 

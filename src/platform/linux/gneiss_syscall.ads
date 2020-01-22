@@ -76,12 +76,31 @@ is
       Import,
       Convention    => C,
       External_Name => "gneiss_fputs",
-      Global        => (In_Out => Linux);
+      Global        => (In_Out => Linux),
+      Pre           => Str (Str'Last) = ASCII.NUL;
 
    function Get_Pid return Integer with
       Import,
       Convention    => C,
       External_Name => "getpid",
       Global        => (Input => Linux);
+
+   procedure Open (Path     :     String;
+                   Fd       : out Integer;
+                   Writable :     Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_open",
+      Global        => (In_Out => Linux),
+      Pre           => Path (Path'Last) = ASCII.NUL;
+
+   procedure Memfd_Create (Name :     String;
+                           Fd   : out Integer;
+                           Size :     Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_memfd_create",
+      Global        => (In_Out => Linux),
+      Pre           => Name (Name'Last) = ASCII.NUL;
 
 end Gneiss_Syscall;
