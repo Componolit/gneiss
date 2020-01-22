@@ -12,9 +12,11 @@
 private with Gneiss_Internal.Memory;
 
 generic
+   pragma Warnings (Off, "* is not referenced");
    type Element is (<>);
-   type Index is range <>;
-   type Buffer is array (Index range <>) of Element;
+   type Buffer_Index is range <>;
+   type Buffer is array (Buffer_Index range <>) of Element;
+   pragma Warnings (On, "* is not referenced");
 package Gneiss.Memory with
    SPARK_Mode
 is
@@ -27,7 +29,7 @@ is
 
    function Status (Session : Client_Session) return Session_Status;
 
-   function Index (Session : Client_Session) return Session_Index;
+   function Index (Session : Client_Session) return Session_Index_Option;
 
 private
 

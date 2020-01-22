@@ -2,6 +2,7 @@
 with Basalt.Queue;
 with Gneiss_Access;
 with Gneiss_Internal.Message;
+with Gneiss_Internal.Memory;
 with Gneiss.Protocol;
 with Gneiss_Platform;
 with Gneiss_Log;
@@ -157,6 +158,7 @@ is
 
    procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
    procedure Message_Dispatcher is new Gneiss_Platform.Dispatcher_Call (Gneiss_Internal.Message.Dispatcher_Session);
+   procedure Memory_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Memory.Client_Session);
 
    function Broker_Event_Address return System.Address with
       SPARK_Mode => Off
@@ -355,12 +357,10 @@ is
       for I of Initializers (Kind) loop
          if Gneiss_Platform.Is_Valid (I) then
             case Kind is
-               when RFLX.Session.Message =>
-                  Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
-               when RFLX.Session.Log =>
+               when RFLX.Session.Message | RFLX.Session.Log =>
                   Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
                when RFLX.Session.Memory | RFLX.Session.Rom =>
-                  null;
+                  Memory_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
             end case;
             Gneiss_Platform.Invalidate (I);
          end if;
