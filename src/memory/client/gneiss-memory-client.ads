@@ -10,10 +10,13 @@
 --
 
 generic
+   pragma Warnings (Off, "* is not referenced");
+   with procedure Event;
    with procedure Read (Session : in out Client_Session;
                         Data    :        Buffer);
    with procedure Modify (Session : in out Client_Session;
                           Data    : in out Buffer);
+   pragma Warnings (On, "* is not referenced");
 package Gneiss.Memory.Client with
    SPARK_Mode
 is
@@ -24,9 +27,9 @@ is
                          Mode    :        Access_Mode   := Read_Only;
                          Idx     :        Session_Index := 1);
 
-   function Size (Session : Client_Session) return Index with
+   procedure Update (Session : in out Client_Session) with
       Pre => Status (Session) = Initialized;
 
-   procedure Update (Session : in out Client_Session);
+   procedure Finalize (Session : in out Client_Session);
 
 end Gneiss.Memory.Client;
