@@ -359,6 +359,8 @@ is
                   Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
                when RFLX.Session.Log =>
                   Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
+               when RFLX.Session.Memory | RFLX.Session.Rom =>
+                  null;
             end case;
             Gneiss_Platform.Invalidate (I);
          end if;

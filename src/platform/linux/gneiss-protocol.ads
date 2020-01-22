@@ -41,6 +41,8 @@ is
    function Image (V : RFLX.Session.Kind_Type) return String is
       (case V is
          when RFLX.Session.Message => "Message",
-         when RFLX.Session.Log     => "Log");
+         when RFLX.Session.Log     => "Log",
+         when RFLX.Session.Memory  => "Memory",
+         when RFLX.Session.Rom     => "Rom");
 
 end Gneiss.Protocol;

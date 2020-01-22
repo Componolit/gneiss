@@ -1,3 +1,4 @@
+#define _GNU_SOURCE
 
 #include <stdio.h>
 #include <unistd.h>
@@ -5,6 +6,9 @@
 #include <sys/socket.h>
 #include <sys/un.h>
 #include <sys/wait.h>
+#include <sys/stat.h>
+#include <sys/fcntl.h>
+#include <sys/mman.h>
 
 //#define ENABLE_TRACE
 #include <trace.h>
@@ -177,4 +181,45 @@ void gneiss_drop_message(int sock)
 void gneiss_fputs(char *str)
 {
     fputs(str, stderr);
+}
+
+void gneiss_open(char *path, int *fd, int writable)
+{
+    *fd = open(path, writable ? O_RDWR : O_RDONLY);
+    if(*fd < 0){
+        perror("open");
+    }
+}
+
+void gneiss_memfd_create(char *name, int *fd, int size)
+{
+    *fd = memfd_create(name, MFD_ALLOW_SEALING);
+    if(*fd < 0){
+        perror("memfd_create");
+        return;
+    }
+    if(ftruncate(*fd, size) < 0){
+        perror("ftruncate");
+        close(*fd);
+        *fd = -1;
+        return;
+    }
+    if(fcntl(*fd, F_ADD_SEALS, F_SEAL_SHRINK) < 0){
+        perror("fcntl(F_SEAL_SHRINK)");
+        close(*fd);
+        *fd = -1;
+        return;
+    }
+    if(fcntl(*fd, F_ADD_SEALS, F_SEAL_GROW) < 0){
+        perror("fcntl(F_SEAL_GROW)");
+        close(*fd);
+        *fd = -1;
+        return;
+    }
+    if(fcntl(*fd, F_ADD_SEALS, F_SEAL_SEAL) < 0){
+        perror("fcntl(F_SEAL_SEAL)");
+        close(*fd);
+        *fd = -1;
+        return;
+    }
 }
