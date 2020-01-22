@@ -20,7 +20,8 @@ package body Gneiss.Broker with
                                       Proto.Linux,
                                       Load_File_Name,
                                       Load_Message_Name,
-                                      Load_Message_Label))
+                                      Load_Message_Label,
+                                      Resources))
 is
    use type Gneiss_Epoll.Epoll_Fd;
    use type SXML.Result_Type;
@@ -41,9 +42,16 @@ is
       Pid  : Integer               := -1;
    end record;
 
+   type Resource_Definition is record
+      Fd : Integer := -1;
+      Node : SXML.Query.State_Type := SXML.Query.Initial_State;
+   end record;
+
    type Component_List is array (Positive range <>) of Component;
+   type Resource_List is array (Positive range <>) of Resource_Definition;
 
    Policy             : Component_List (1 .. 1024);
+   Resources          : Resource_List (1 .. 1024);
    Efd                : Gneiss_Epoll.Epoll_Fd := -1;
    Load_File_Name     : String (1 .. 4096)    := (others => Character'First);
    Load_Message_Name  : String (1 .. 255)     := (others => Character'First);
@@ -82,6 +90,12 @@ is
                 and then Initialized
                 and then Name'Length < 256,
       Post   => (if Valid then Index in Policy'Range);
+
+   procedure Find_Resource_By_Name (Name  :     String;
+                                    Index : out Positive;
+                                    Valid : out Boolean);
+
+   procedure Parse_Resources (Root : SXML.Query.State_Type);
 
    procedure Start_Components (Root   :     SXML.Query.State_Type;
                                Parent : out Boolean;
@@ -207,6 +221,29 @@ is
                               Proto.Linux),
                  Proof_In => Efd);
 
+   procedure Open_File (State :     SXML.Query.State_Type;
+                        Fd    : out Integer;
+                        Kind  :     RFLX.Session.Kind_Type);
+
+   procedure Open_Memory (Index :     Positive;
+                          Fd    : out Integer;
+                          Kind  :     RFLX.Session.Kind_Type);
+
+   procedure Lookup_Service (Source : Positive;
+                             Kind   : RFLX.Session.Kind_Type;
+                             Label  : String;
+                             State  : SXML.Query.State_Type);
+
+   procedure Lookup_Resource (Source : Positive;
+                              Kind   : RFLX.Session.Kind_Type;
+                              Label  : String;
+                              State  : SXML.Query.State_Type);
+
+   procedure Lookup_Request (Source : Positive;
+                             Kind   : RFLX.Session.Kind_Type;
+                             Label  : String;
+                             State  : SXML.Query.State_Type);
+
    procedure Process_Confirm (Kind  : RFLX.Session.Kind_Type;
                               Name  : String;
                               Label : String;
@@ -300,6 +337,32 @@ is
       end loop;
    end Find_Component_By_Name;
 
+   procedure Find_Resource_By_Name (Name  :     String;
+                                    Index : out Positive;
+                                    Valid : out Boolean)
+   is
+      XML_Buf : String (1 .. 255);
+      Result  : SXML.Result_Type;
+      Last    : Natural;
+   begin
+      Index := Positive'Last;
+      Valid := False;
+      if Name'Last < Name'First then
+         return;
+      end if;
+      for I in Resources'Range loop
+         if Resources (I).Node not in SXML.Query.Invalid_State | SXML.Query.Initial_State then
+            SXML.Query.Attribute (Resources (I).Node, Document, "name", Result, XML_Buf, Last);
+            Index := I;
+            Valid := Result = SXML.Result_OK
+                     and then Last in XML_Buf'Range
+                     and then Last - XML_Buf'First = Name'Last - Name'First
+                     and then XML_Buf (1 .. Last) = Name;
+            exit when Valid;
+         end if;
+      end loop;
+   end Find_Resource_By_Name;
+
    procedure Parse (Data : String)
    is
       use type SXML.Parser.Match_Type;
@@ -352,11 +415,28 @@ is
          Gneiss_Log.Error ("Init failed");
          return;
       end if;
+      Parse_Resources (State);
       Start_Components (State, Parent, Status);
       if Parent and then Valid_Read_Buffer then
          Event_Loop (Status);
       end if;
    end Construct;
+
+   procedure Parse_Resources (Root : SXML.Query.State_Type)
+   is
+      Index   : Positive := Resources'First;
+      State   : SXML.Query.State_Type;
+   begin
+      State := SXML.Query.Path (Root, Document, "/config/resource");
+      while SXML.Query.State_Result (State) = SXML.Result_OK loop
+         State := SXML.Query.Find_Sibling (State, Document, "resource");
+         exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
+         Resources (Index).Node := State;
+         exit when Index = Resources'Last;
+         Index := Index + 1;
+         State := SXML.Query.Sibling (State, Document);
+      end loop;
+   end Parse_Resources;
 
    procedure Start_Components (Root   :     SXML.Query.State_Type;
                                Parent : out Boolean;
@@ -374,9 +454,7 @@ is
       Status := 1;
       Parent := True;
       State  := SXML.Query.Path (Root, Document, "/config/component");
-      while
-         SXML.Query.State_Result (State) = SXML.Result_OK
-      loop
+      while SXML.Query.State_Result (State) = SXML.Result_OK loop
          pragma Loop_Invariant (Is_Valid);
          pragma Loop_Invariant (Initialized);
          pragma Loop_Invariant (SXML.Query.Is_Valid (State, Document));
@@ -626,8 +704,6 @@ is
    is
       XML_Buf     : String (1 .. 255);
       State       : SXML.Query.State_Type;
-      Destination : Positive;
-      Valid       : Boolean;
       Result      : SXML.Result_Type;
       Last        : Natural;
       Found       : Boolean               := False;
@@ -677,7 +753,119 @@ is
          Send_Reject (Policy (Source).Fd, Kind, Label);
          return;
       end if;
-      SXML.Query.Attribute (Dest_State, Document, "server", Result, XML_Buf, Last);
+      Lookup_Request (Source, Kind, Label, Dest_State);
+   end Process_Request;
+
+   procedure Lookup_Request (Source : Positive;
+                             Kind   : RFLX.Session.Kind_Type;
+                             Label  : String;
+                             State  : SXML.Query.State_Type)
+   is
+   begin
+      case Kind is
+         when RFLX.Session.Message | RFLX.Session.Log =>
+            Lookup_Service (Source, Kind, Label, State);
+         when RFLX.Session.Memory | RFLX.Session.Rom =>
+            Lookup_Resource (Source, Kind, Label, State);
+      end case;
+   end Lookup_Request;
+
+   procedure Open_File (State :     SXML.Query.State_Type;
+                        Fd    : out Integer;
+                        Kind  :     RFLX.Session.Kind_Type)
+   is
+      use type RFLX.Session.Kind_Type;
+      Result : SXML.Result_Type;
+      Last   : Natural;
+   begin
+      Fd := -1;
+      SXML.Query.Attribute (State, Document, "location", Result, Load_File_Name, Last);
+      if Result = SXML.Result_OK and then Last in Load_File_Name'Range then
+         Gneiss_Syscall.Open (Load_File_Name (Load_File_Name'First .. Last) & ASCII.NUL,
+                              Fd,
+                              Boolean'Pos (Kind = RFLX.Session.Memory));
+      end if;
+   end Open_File;
+
+   procedure Open_Memory (Index :     Positive;
+                          Fd    : out Integer;
+                          Kind  :     RFLX.Session.Kind_Type)
+   is
+      use type RFLX.Session.Kind_Type;
+   begin
+      Fd := -1;
+      if Resources (Index).Fd < 0 then
+         Gneiss_Syscall.Memfd_Create (Basalt.Strings.Image (Index),
+                                      Resources (Index).Fd, 1024);
+      end if;
+      if Resources (Index).Fd < 0 then
+         return;
+      end if;
+      Gneiss_Syscall.Open ("/proc/self/fd/" & Basalt.Strings.Image (Resources (Index).Fd) & ASCII.NUL,
+                           Fd,
+                           Boolean'Pos (Kind = RFLX.Session.Memory));
+   end Open_Memory;
+
+   procedure Lookup_Resource (Source : Positive;
+                              Kind   : RFLX.Session.Kind_Type;
+                              Label  : String;
+                              State  : SXML.Query.State_Type)
+   is
+      XML_Buf : String (1 .. 255);
+      Result  : SXML.Result_Type;
+      Valid   : Boolean;
+      Last    : Natural;
+      Res     : Positive;
+      Fd      : Integer;
+   begin
+      SXML.Query.Attribute (State, Document, "resource", Result, XML_Buf, Last);
+      if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
+         Gneiss_Log.Error ("Failed to get resource");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      Find_Resource_By_Name (XML_Buf (XML_Buf'First .. Last), Res, Valid);
+      if not Valid then
+         Gneiss_Log.Error ("Resource not found");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      SXML.Query.Attribute (Resources (Res).Node, Document, "type", Result, XML_Buf, Last);
+      if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
+         Gneiss_Log.Error ("No resource type given");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      if XML_Buf (XML_Buf'First .. Last) = "Memory" then
+         Open_Memory (Res, Fd, Kind);
+      elsif XML_Buf (XML_Buf'First .. Last) = "File" then
+         Open_File (Resources (Res).Node, Fd, Kind);
+      else
+         Gneiss_Log.Error ("Invalid resource type given: " & XML_Buf (XML_Buf'First .. Last));
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      if Fd < 0 then
+         Gneiss_Log.Error ("Failed to allocate resource");
+         Send_Reject (Policy (Source).Fd, Kind, Label);
+         return;
+      end if;
+      Send_Confirm (Policy (Source).Fd, Kind, Label, Fd);
+      Gneiss_Syscall.Close (Fd);
+   end Lookup_Resource;
+
+   procedure Lookup_Service (Source : Positive;
+                             Kind   : RFLX.Session.Kind_Type;
+                             Label  : String;
+                             State  : SXML.Query.State_Type)
+   is
+      XML_Buf     : String (1 .. 255);
+      Result      : SXML.Result_Type;
+      Valid       : Boolean;
+      Last        : Natural;
+      Destination : Positive;
+   begin
+      SXML.Query.Attribute (State, Document, "server", Result, XML_Buf, Last);
       if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
          Gneiss_Log.Error ("Failed to get service provider");
          Send_Reject (Policy (Source).Fd, Kind, Label);
@@ -700,7 +888,7 @@ is
       else
          Gneiss_Log.Warning ("Failed to send request");
       end if;
-   end Process_Request;
+   end Lookup_Service;
 
    procedure Process_Confirm (Kind  : RFLX.Session.Kind_Type;
                               Name  : String;
