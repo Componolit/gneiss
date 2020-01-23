@@ -103,4 +103,25 @@ is
       Global        => (In_Out => Linux),
       Pre           => Name (Name'Last) = ASCII.NUL;
 
+   function Stat_Size (Fd : Integer) return Integer with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_fstat_size",
+      Global        => (Input => Linux);
+
+   procedure Mmap (Fd       :     Integer;
+                   Addr     : out System.Address;
+                   Writable :     Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_mmap",
+      Global        => (In_Out => Linux);
+
+   procedure Munmap (Fd   :        Integer;
+                     Addr : in out System.Address) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_munmap",
+      Global        => (In_Out => Linux);
+
 end Gneiss_Syscall;
