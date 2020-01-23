@@ -1,6 +1,6 @@
 #define _GNU_SOURCE
 
-#include <stdio.h>
+#include <err.h>
 #include <unistd.h>
 #include <sys/types.h>
 #include <sys/socket.h>
@@ -22,7 +22,7 @@ void gneiss_socketpair(int *fd1, int *fd2)
     int fds[2];
 
     if(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds) < 0){
-        perror("socketpair");
+        warn("");
         *fd1 = -1;
         *fd2 = -1;
     }else{
@@ -35,7 +35,7 @@ void gneiss_fork(int *pid)
 {
     *pid = fork();
     if(*pid < 0){
-        perror("fork");
+        warn("");
     }
 }
 
@@ -46,7 +46,7 @@ void gneiss_close (int *fd)
     }
     TRACE("fd=%d\n", *fd);
     if(close(*fd)){
-        perror("close");
+        warn("fd=%d", *fd);
     }
     *fd = -1;
 }
@@ -54,7 +54,7 @@ void gneiss_close (int *fd)
 void gneiss_waitpid(int pid, int *status)
 {
     if(waitpid(pid, status, WNOHANG) < 0){
-        perror("waitpid");
+        warn("pid=%d", pid);
     }
     *status = WEXITSTATUS(*status);
 }
@@ -63,7 +63,7 @@ void gneiss_dup(int oldfd, int *newfd)
 {
     *newfd = dup(oldfd);
     if(*newfd < 0){
-        perror("dup");
+        warn("oldfd=%d", oldfd);
     }
 }
 
@@ -105,7 +105,7 @@ void gneiss_write_message(int sock, void *msg, size_t size, int *fd, int num)
         message.msg_controllen = 0;
     }
     if(sendmsg(sock, &message, 0) < 0){
-        perror("sendmsg");
+        warn("sock=%d", sock);
     }
 }
 
@@ -135,7 +135,7 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int num, int
     }
     *length = recvmsg(sock, &message, MSG_PEEK | MSG_TRUNC);
     if(*length < 0){
-        perror("recvmsg");
+        warn("sock=%d", sock);
         *length = 0;
         return;
     }
@@ -173,7 +173,7 @@ void gneiss_drop_message(int sock)
     message.msg_control = cmsgu.control;
     message.msg_controllen = sizeof(cmsgu.control);
     if(recvmsg(sock, &message, MSG_TRUNC) < 0){
-        perror("recvmsg");
+        warn("sock=%d", sock);
         return;
     }
 }
@@ -188,7 +188,7 @@ void gneiss_open(const char *path, int *fd, int writable)
     TRACE("path=%s fd=%p writable=%d\n", path, fd, writable);
     *fd = open(path, writable ? O_RDWR : O_RDONLY);
     if(*fd < 0){
-        perror("open");
+        warn("path=%s writable=%d", path, writable);
     }
 }
 
@@ -197,29 +197,29 @@ void gneiss_memfd_create(char *name, int *fd, int size)
     TRACE("name=%s fd=%p size=%d\n", name, fd, size);
     *fd = memfd_create(name, MFD_ALLOW_SEALING);
     if(*fd < 0){
-        perror("memfd_create");
+        warn("name=%s", name);
         return;
     }
     if(ftruncate(*fd, size) < 0){
-        perror("ftruncate");
+        warn("size=%d", size);
         close(*fd);
         *fd = -1;
         return;
     }
     if(fcntl(*fd, F_ADD_SEALS, F_SEAL_SHRINK) < 0){
-        perror("fcntl(F_SEAL_SHRINK)");
+        warn("F_SEAL_SHRINK");
         close(*fd);
         *fd = -1;
         return;
     }
     if(fcntl(*fd, F_ADD_SEALS, F_SEAL_GROW) < 0){
-        perror("fcntl(F_SEAL_GROW)");
+        warn("F_SEAL_GROW");
         close(*fd);
         *fd = -1;
         return;
     }
     if(fcntl(*fd, F_ADD_SEALS, F_SEAL_SEAL) < 0){
-        perror("fcntl(F_SEAL_SEAL)");
+        warn("F_SEAL_SEAL");
         close(*fd);
         *fd = -1;
         return;
@@ -231,7 +231,7 @@ int gneiss_fstat_size(int fd)
     TRACE("fd=%d\n", fd);
     struct stat st;
     if(fstat(fd, &st) < 0){
-        perror("fstat");
+        warn("fd=%d", fd);
         return 0;
     }
     return st.st_size;
@@ -242,7 +242,7 @@ void gneiss_mmap(int fd, void **map, int writable)
     TRACE("fd=%d *map=%p writable=%d\n", fd, *map, writable);
     *map = mmap(0, gneiss_fstat_size(fd), writable ? PROT_READ | PROT_WRITE : PROT_READ, MAP_SHARED, fd, 0);
     if(*map == MAP_FAILED){
-        perror("mmap");
+        warn("fd=%d writable=%d", fd, writable);
         *map = 0x0;
     }
 }
@@ -251,7 +251,7 @@ void gneiss_munmap(int fd, void **map)
 {
     TRACE("fd=%d *map=%p\n", fd, *map);
     if(munmap(*map, gneiss_fstat_size(fd)) < 0){
-        perror("munmap");
+        warn("fd=%d size=%d", fd, gneiss_fstat_size(fd));
     }
     *map = 0x0;
 }

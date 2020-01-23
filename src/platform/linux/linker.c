@@ -6,7 +6,7 @@ void gneiss_dlopen(char *file, void **handle)
 {
     *handle = dlopen(file, RTLD_LAZY);
     if(!*handle){
-        fprintf(stderr, "dlopen: %s\n", dlerror());
+        fprintf(stderr, "dlopen: file=%s: %s\n", file, dlerror());
     }
 }
 
