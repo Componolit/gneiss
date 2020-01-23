@@ -1,6 +1,6 @@
 
-with Gneiss.Rom;
-with Gneiss.Rom.Client;
+with Gneiss.Memory;
+with Gneiss.Memory.Client;
 with Gneiss.Log;
 with Gneiss.Log.Client;
 
@@ -9,70 +9,75 @@ package body Component with
 is
    use type Gneiss.Session_Status;
 
-   procedure Initialize;
-   procedure Parse (Data : String);
+   procedure Initialize_Log;
+   procedure Initialize_Rom;
 
-   package Log_Client is new Gneiss.Log.Client (Initialize);
-   package Config is new Gneiss.Rom.Client (Character, Positive, String, Parse);
+   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
+   package Rom is new Gneiss.Memory (Character, Positive, String);
+   procedure Read (Session : in out Rom.Client_Session;
+                   Data    :        String);
+   procedure Modify (Session : in out Rom.Client_Session;
+                     Data    : in out String);
+   package Rom_Client is new Rom.Client (Initialize_Rom, Read, Modify);
 
-   Cfg : Gneiss.Rom.Client_Session;
-   Log : Gneiss.Log.Client_Session;
-   C : Gneiss.Capability;
+   C      : Gneiss.Capability;
+   Log    : Gneiss.Log.Client_Session;
+   Config : Rom.Client_Session;
 
-   procedure Construct (Cap : Gneiss.Capability)
+   procedure Construct (Capability : Gneiss.Capability)
    is
    begin
-      if not Gneiss.Rom.Initialized (Cfg) then
-         Config.Initialize (Cfg, Cap);
-      end if;
-      C := Cap;
-      if Gneiss.Rom.Initialized (Cfg) then
-         Config.Load (Cfg);
-      else
-         Main.Vacate (Cap, Main.Failure);
-      end if;
+      C := Capability;
+      Log_Client.Initialize (Log, C, "rom");
    end Construct;
 
-   procedure Initialize
+   procedure Initialize_Log
    is
    begin
       case Gneiss.Log.Status (Log) is
          when Gneiss.Initialized =>
-            Log_Client.Info (Log, "Log session configured");
+            Rom_Client.Initialize (Config, C, "config");
          when Gneiss.Pending =>
             Log_Client.Initialize (Log, C, "");
          when Gneiss.Uninitialized =>
             Main.Vacate (C, Main.Failure);
       end case;
-   end Initialize;
+   end Initialize_Log;
 
-   procedure Parse (Data : String)
+   procedure Initialize_Rom
    is
-      Last : Positive := Data'Last;
    begin
-      if Gneiss.Log.Status (Log) = Gneiss.Uninitialized and then Data'Length > 1 then
-         for I in Data'Range loop
-            if Data (I) = ASCII.LF then
-               if I > Data'First then
-                  Last := I - 1;
-               else
-                  Last := Data'First;
-               end if;
-               exit;
-            end if;
-         end loop;
-         Log_Client.Initialize (Log, C, Data (Data'First .. Last));
-      else
-         Log_Client.Info (Log, "Rom changed, exiting...");
+      case Rom.Status (Config) is
+         when Gneiss.Initialized =>
+            Rom_Client.Update (Config);
+         when Gneiss.Pending =>
+            Rom_Client.Initialize (Config, C, "config");
+         when Gneiss.Uninitialized =>
+            Main.Vacate (C, Main.Failure);
+      end case;
+   end Initialize_Rom;
+
+   procedure Modify (Session : in out Rom.Client_Session;
+                     Data    : in out String) is null;
+
+   procedure Read (Session : in out Rom.Client_Session;
+                   Data    :        String)
+   is
+      use type Gneiss.Session_Status;
+   begin
+      if Gneiss.Log.Status (Log) = Gneiss.Initialized then
+         Log_Client.Info (Log, "Rom content: " & Data);
          Main.Vacate (C, Main.Success);
+      else
+         Main.Vacate (C, Main.Failure);
       end if;
-   end Parse;
+   end Read;
 
    procedure Destruct
    is
    begin
       Log_Client.Finalize (Log);
-      Config.Finalize (Cfg);
+      Rom_Client.Finalize (Config);
    end Destruct;
 
 end Component;
