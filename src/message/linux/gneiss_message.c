@@ -1,5 +1,5 @@
 
-#include <stdio.h>
+#include <err.h>
 #include <sys/types.h>
 #include <sys/socket.h>
 
@@ -10,7 +10,7 @@ void gneiss_message_write(int fd, void *msg, int size)
 {
     TRACE("fd=%d msg=%p size=%d\n", fd, msg, size);
     if(send(fd, msg, size, MSG_DONTWAIT) < 0){
-        perror("send");
+        warn("fd=%d msg=%p size=%d", fd, msg, size);
     }
 }
 
@@ -18,7 +18,7 @@ void gneiss_message_read(int fd, void *msg, int size)
 {
     TRACE("fd=%d msg=%p size=%d\n", fd, msg, size);
     if(recv(fd, msg, size, MSG_DONTWAIT | MSG_TRUNC) < 0){
-        perror("recv");
+        warn("fd=%d msg=%p size=%d", fd, msg, size);
     }
 }
 
