@@ -1,34 +1,35 @@
 
 with System;
+with Gneiss_Syscall;
 
 package body Gneiss.Config with
    SPARK_Mode => Off
 is
 
-   procedure C_Load (File : System.Address;
-                     Func : System.Address) with
-      Import,
-      Convention => C,
-      External_Name => "gneiss_load_config";
-
-   procedure Raw_Parse (Char : System.Address;
-                        Size : Integer);
-
    procedure Load (Location : String)
    is
-      C_Loc : String := Location & ASCII.NUL;
+      use type System.Address;
+      Fd : Integer;
+      Addr : System.Address;
    begin
-      C_Load (C_Loc'Address, Raw_Parse'Address);
+      Gneiss_Syscall.Open (Location, Fd, 0);
+      if Fd < 0 then
+         return;
+      end if;
+      Gneiss_Syscall.Mmap (Fd, Addr, 0);
+      if Addr = System.Null_Address then
+         Gneiss_Syscall.Close (Fd);
+         return;
+      end if;
+      declare
+         Data : String (1 .. Gneiss_Syscall.Stat_Size (Fd)) with
+            Import,
+            Address => Addr;
+      begin
+         Parse (Data);
+      end;
+      Gneiss_Syscall.Munmap (Fd, Addr);
+      Gneiss_Syscall.Close (Fd);
    end Load;
-
-   procedure Raw_Parse (Char : System.Address;
-                        Size : Integer)
-   is
-      Data : String (1 .. Size) with
-         Import,
-         Address => Char;
-   begin
-      Parse (Data);
-   end Raw_Parse;
 
 end Gneiss.Config;

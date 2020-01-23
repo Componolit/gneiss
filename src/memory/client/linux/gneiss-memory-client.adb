@@ -19,24 +19,6 @@ is
 
    function Init_Cap is new Gneiss_Platform.Create_Initializer_Cap (Client_Session, Init);
 
-   function Size (Fd : Integer) return Integer with
-      Import,
-      Convention    => C,
-      External_Name => "stat_size";
-
-   procedure Map (Fd       :     Integer;
-                  Addr     : out System.Address;
-                  Writable :     Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "map_file";
-
-   procedure Unmap (Fd   :        Integer;
-                    Addr : in out System.Address) with
-      Import,
-      Convention    => C,
-      External_Name => "munmap";
-
    procedure Init (Session : in out Client_Session;
                    Label   :        String;
                    Success :        Boolean;
@@ -49,7 +31,7 @@ is
       end if;
       if Success then
          Session.Fd := Fd;
-         Map (Session.Fd, Session.Map, Boolean'Pos (Session.Writable));
+         Gneiss_Syscall.Mmap (Session.Fd, Session.Map, Boolean'Pos (Session.Writable));
          if Session.Map = System.Null_Address then
             Session.Index := Session_Index_Option'(Valid => False);
             Gneiss_Syscall.Close (Session.Fd);
@@ -107,8 +89,9 @@ is
 
    procedure Update (Session : in out Client_Session)
    is
+      Size  : constant Integer      := Gneiss_Syscall.Stat_Size (Session.Fd);
       First : constant Buffer_Index := Buffer_Index'First;
-      Last  : constant Buffer_Index := Buffer_Index (Long_Integer (First) + Long_Integer (Size (Session.Fd)) - 1);
+      Last  : constant Buffer_Index := Buffer_Index (Long_Integer (First) + Long_Integer (Size - 1));
       Buf   : Buffer (First .. Last) with
          Import,
          Address => Session.Map;
@@ -127,7 +110,7 @@ is
       if Status (Session) = Uninitialized then
          return;
       end if;
-      Unmap (Session.Fd, Session.Map);
+      Gneiss_Syscall.Munmap (Session.Fd, Session.Map);
       Gneiss_Syscall.Close (Session.Fd);
       Session.Index := Session_Index_Option'(Valid => False);
    end Finalize;
