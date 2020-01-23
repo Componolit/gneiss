@@ -1,6 +1,6 @@
 
-#include <stdio.h>
 #include <sys/epoll.h>
+#include <err.h>
 
 //#define ENABLE_TRACE
 #include <trace.h>
@@ -10,7 +10,7 @@ void gneiss_epoll_create(int *efd)
     *efd = epoll_create1(0);
     TRACE("efd=%d\n", *efd);
     if(*efd < 0){
-        perror("epoll_create1");
+        warn("");
     }
 }
 
@@ -23,7 +23,7 @@ void gneiss_epoll_create(int *efd)
     eev.data.name = priv; \
     *success = epoll_ctl(efd, EPOLL_CTL_ADD, fd, &eev); \
     if(*success < 0){ \
-        perror("epoll_ctl"); \
+        warn("efd=%d fd=%d", efd, fd); \
     } \
 }
 
@@ -35,7 +35,7 @@ void gneiss_epoll_remove(int efd, int fd, int *success)
     TRACE("efd=%d fd=%d\n", efd, fd);
     *success = epoll_ctl(efd, EPOLL_CTL_DEL, fd, 0);
     if(*success < 0){
-        perror("epoll_ctl");
+        warn("efd=%d fd=%d", efd, fd);
     }
 }
 
@@ -47,7 +47,7 @@ void gneiss_epoll_remove(int efd, int fd, int *success)
     eev.events = 0; \
     eev.data.name = 0; \
     if(epoll_wait(efd, &eev, 1, -1) < 0){ \
-        perror("epoll_wait"); \
+        warn("efd=%d", efd); \
     } \
     *priv = eev.data.name; \
     *event = eev.events; \
