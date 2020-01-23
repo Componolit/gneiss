@@ -225,3 +225,33 @@ void gneiss_memfd_create(char *name, int *fd, int size)
         return;
     }
 }
+
+int gneiss_fstat_size(int fd)
+{
+    TRACE("fd=%d\n", fd);
+    struct stat st;
+    if(fstat(fd, &st) < 0){
+        perror("fstat");
+        return 0;
+    }
+    return st.st_size;
+}
+
+void gneiss_mmap(int fd, void **map, int writable)
+{
+    TRACE("fd=%d *map=%p writable=%d\n", fd, *map, writable);
+    *map = mmap(0, gneiss_fstat_size(fd), writable ? PROT_READ | PROT_WRITE : PROT_READ, MAP_SHARED, fd, 0);
+    if(*map == MAP_FAILED){
+        perror("mmap");
+        *map = 0x0;
+    }
+}
+
+void gneiss_munmap(int fd, void **map)
+{
+    TRACE("fd=%d *map=%p\n", fd, *map);
+    if(munmap(*map, gneiss_fstat_size(fd)) < 0){
+        perror("munmap");
+    }
+    *map = 0x0;
+}
