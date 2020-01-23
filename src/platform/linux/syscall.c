@@ -183,8 +183,9 @@ void gneiss_fputs(char *str)
     fputs(str, stderr);
 }
 
-void gneiss_open(char *path, int *fd, int writable)
+void gneiss_open(const char *path, int *fd, int writable)
 {
+    TRACE("path=%s fd=%p writable=%d\n", path, fd, writable);
     *fd = open(path, writable ? O_RDWR : O_RDONLY);
     if(*fd < 0){
         perror("open");
@@ -193,6 +194,7 @@ void gneiss_open(char *path, int *fd, int writable)
 
 void gneiss_memfd_create(char *name, int *fd, int size)
 {
+    TRACE("name=%s fd=%p size=%d\n", name, fd, size);
     *fd = memfd_create(name, MFD_ALLOW_SEALING);
     if(*fd < 0){
         perror("memfd_create");
