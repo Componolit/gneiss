@@ -77,6 +77,8 @@ is
       Pre  => S'Length < 256,
       Post => Convert_Message'Result'Length = S'Length;
 
+   function Parse_Size (S : String) return Natural;
+
    procedure Parse (Data : String);
 
    package Conf is new Gneiss.Config (Parse);
@@ -227,7 +229,8 @@ is
 
    procedure Open_Memory (Index :     Positive;
                           Fd    : out Integer;
-                          Kind  :     RFLX.Session.Kind_Type);
+                          Kind  :     RFLX.Session.Kind_Type;
+                          Size  :     Positive);
 
    procedure Lookup_Service (Source : Positive;
                              Kind   : RFLX.Session.Kind_Type;
@@ -305,6 +308,35 @@ is
       end loop;
       return R;
    end Convert_Message;
+
+   function Parse_Size (S : String) return Natural
+   is
+      Opt : Basalt.Strings.Value_Positive.Optional;
+      Mul : Natural;
+   begin
+      if S (S'Last) in 'k' | 'M' | 'G' and then S'Length > 1 then
+         Opt := Basalt.Strings.Value_Positive.Value (S (S'First .. S'Last - 1));
+         if not Opt.Valid then
+            return 0;
+         end if;
+         Mul := (case S (S'Last) is
+                  when 'k' => 1024,
+                  when 'M' => 1024 ** 2,
+                  when 'G' => 1024 ** 3,
+                  when others => 0);
+         if Opt.Value > Natural'Last / Mul then
+            return 0;
+         end if;
+         return Opt.Value * Mul;
+      else
+         Opt := Basalt.Strings.Value_Positive.Value (S);
+         if Opt.Valid then
+            return Opt.Value;
+         else
+            return 0;
+         end if;
+      end if;
+   end Parse_Size;
 
    procedure Find_Component_By_Name (Name  :     String;
                                      Index : out Positive;
@@ -789,14 +821,15 @@ is
 
    procedure Open_Memory (Index :     Positive;
                           Fd    : out Integer;
-                          Kind  :     RFLX.Session.Kind_Type)
+                          Kind  :     RFLX.Session.Kind_Type;
+                          Size  :     Positive)
    is
       use type RFLX.Session.Kind_Type;
    begin
       Fd := -1;
       if Resources (Index).Fd < 0 then
          Gneiss_Syscall.Memfd_Create (Basalt.Strings.Image (Index),
-                                      Resources (Index).Fd, 1024);
+                                      Resources (Index).Fd, Size);
       end if;
       if Resources (Index).Fd < 0 then
          return;
@@ -817,6 +850,7 @@ is
       Last    : Natural;
       Res     : Positive;
       Fd      : Integer;
+      Size    : Natural;
    begin
       SXML.Query.Attribute (State, Document, "resource", Result, XML_Buf, Last);
       if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
@@ -837,7 +871,20 @@ is
          return;
       end if;
       if XML_Buf (XML_Buf'First .. Last) = "Memory" then
-         Open_Memory (Res, Fd, Kind);
+         SXML.Query.Attribute (Resources (Res).Node, Document, "size", Result, XML_Buf, Last);
+         if Result /= SXML.Result_OK or else Last not in XML_Buf'Range then
+            Gneiss_Log.Error ("No memory size set");
+            Send_Reject (Policy (Source).Fd, Kind, Label);
+            return;
+         end if;
+         Size := Parse_Size (XML_Buf (XML_Buf'First .. Last));
+         if Size > 0 then
+            Open_Memory (Res, Fd, Kind, Size);
+         else
+            Gneiss_Log.Error ("Invalid memory size: " & XML_Buf (XML_Buf'First .. Last));
+            Send_Reject (Policy (Source).Fd, Kind, Label);
+            return;
+         end if;
       elsif XML_Buf (XML_Buf'First .. Last) = "File" then
          Open_File (Resources (Res).Node, Fd, Kind);
       else
