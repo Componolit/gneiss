@@ -1,7 +1,7 @@
 
 with System;
 
-package body Gneiss.Memory with
+package body Gneiss.Rom with
    SPARK_Mode
 is
    use type System.Address;
@@ -15,4 +15,4 @@ is
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
 
-end Gneiss.Memory;
+end Gneiss.Rom;
