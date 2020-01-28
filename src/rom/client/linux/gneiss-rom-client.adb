@@ -5,7 +5,7 @@ with Gneiss_Platform;
 with Gneiss_Syscall;
 with RFLX.Session;
 
-package body Gneiss.Memory.Client with
+package body Gneiss.Rom.Client with
    SPARK_Mode
 is
 
@@ -31,7 +31,7 @@ is
       end if;
       if Success then
          Session.Fd := Fd;
-         Gneiss_Syscall.Mmap (Session.Fd, Session.Map, Boolean'Pos (Session.Writable));
+         Gneiss_Syscall.Mmap (Session.Fd, Session.Map, Boolean'Pos (False));
          if Session.Map = System.Null_Address then
             Session.Index := Session_Index_Option'(Valid => False);
             Gneiss_Syscall.Close (Session.Fd);
@@ -45,13 +45,9 @@ is
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Gneiss.Capability;
                          Label   :        String;
-                         Mode    :        Access_Mode   := Read_Only;
                          Idx     :        Session_Index := 1)
    is
       Succ : Boolean;
-      Kind : constant RFLX.Session.Kind_Type := (case Mode is
-                                                   when Read_Only  => RFLX.Session.Rom,
-                                                   when Read_Write => RFLX.Session.Memory);
    begin
       if
          Status (Session) in Initialized | Pending
@@ -60,12 +56,11 @@ is
          return;
       end if;
       Session.Index      := Session_Index_Option'(Valid => True, Value => Idx);
-      Session.Writable   := Mode = Read_Write;
       Session.Label.Last := Session.Label.Value'First + Label'Length - 1;
       Session.Label.Value (Session.Label.Value'First .. Session.Label.Last) := Label;
       Gneiss_Platform.Call (Cap.Register_Initializer,
                             Init_Cap (Session),
-                            Kind,
+                            RFLX.Session.Rom,
                             Succ);
       if not Succ then
          Init (Session, Label, False, -1);
@@ -81,7 +76,7 @@ is
          Proto.Send_Message (Cap.Broker_Fd,
                              Proto.Message'(Length      => C_Label'Length,
                                             Action      => RFLX.Session.Request,
-                                            Kind        => Kind,
+                                            Kind        => RFLX.Session.Rom,
                                             Name_Length => 0,
                                             Payload     => C_Label));
       end;
@@ -96,12 +91,7 @@ is
          Import,
          Address => Session.Map;
    begin
-      case Session.Writable is
-         when True =>
-            Modify (Session, Buf);
-         when False =>
-            Read (Session, Buf);
-      end case;
+      Read (Session, Buf);
    end Update;
 
    procedure Finalize (Session : in out Client_Session)
@@ -115,4 +105,4 @@ is
       Session.Index := Session_Index_Option'(Valid => False);
    end Finalize;
 
-end Gneiss.Memory.Client;
+end Gneiss.Rom.Client;

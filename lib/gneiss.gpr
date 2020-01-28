@@ -25,10 +25,10 @@ project Gneiss is
                               "../src/log/client/linux",
                               "../src/log/server",
                               "../src/log/server/linux",
-                              "../src/memory",
-                              "../src/memory/linux",
-                              "../src/memory/client",
-                              "../src/memory/client/linux");
+                              "../src/rom",
+                              "../src/rom/linux",
+                              "../src/rom/client",
+                              "../src/rom/client/linux");
 
          for Create_Missing_Dirs use "True";
          for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss";
