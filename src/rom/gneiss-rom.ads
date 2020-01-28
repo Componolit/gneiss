@@ -1,5 +1,5 @@
 --
---  @summary Memory interface declarations
+--  @summary Rom interface declarations
 --  @author  Johannes Kliemann
 --  @date    2020-01-13
 --
@@ -9,7 +9,7 @@
 --  GNU Affero General Public License version 3.
 --
 
-private with Gneiss_Internal.Memory;
+private with Gneiss_Internal.Rom;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -17,13 +17,11 @@ generic
    type Buffer_Index is range <>;
    type Buffer is array (Buffer_Index range <>) of Element;
    pragma Warnings (On, "* is not referenced");
-package Gneiss.Memory with
+package Gneiss.Rom with
    SPARK_Mode
 is
    pragma Compile_Time_Error (Element'Size /= 8,
                               "Size of Element must be 8 bit");
-
-   type Access_Mode is (Read_Only, Read_Write);
 
    type Client_Session is limited private;
 
@@ -33,6 +31,6 @@ is
 
 private
 
-   type Client_Session is new Gneiss_Internal.Memory.Client_Session;
+   type Client_Session is new Gneiss_Internal.Rom.Client_Session;
 
-end Gneiss.Memory;
+end Gneiss.Rom;
