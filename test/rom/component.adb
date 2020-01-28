@@ -1,6 +1,6 @@
 
-with Gneiss.Memory;
-with Gneiss.Memory.Client;
+with Gneiss.Rom;
+with Gneiss.Rom.Client;
 with Gneiss.Log;
 with Gneiss.Log.Client;
 
@@ -13,12 +13,10 @@ is
    procedure Initialize_Rom;
 
    package Log_Client is new Gneiss.Log.Client (Initialize_Log);
-   package Rom is new Gneiss.Memory (Character, Positive, String);
+   package Rom is new Gneiss.Rom (Character, Positive, String);
    procedure Read (Session : in out Rom.Client_Session;
                    Data    :        String);
-   procedure Modify (Session : in out Rom.Client_Session;
-                     Data    : in out String);
-   package Rom_Client is new Rom.Client (Initialize_Rom, Read, Modify);
+   package Rom_Client is new Rom.Client (Initialize_Rom, Read);
 
    C      : Gneiss.Capability;
    Log    : Gneiss.Log.Client_Session;
@@ -56,9 +54,6 @@ is
             Main.Vacate (C, Main.Failure);
       end case;
    end Initialize_Rom;
-
-   procedure Modify (Session : in out Rom.Client_Session;
-                     Data    : in out String) is null;
 
    procedure Read (Session : in out Rom.Client_Session;
                    Data    :        String)

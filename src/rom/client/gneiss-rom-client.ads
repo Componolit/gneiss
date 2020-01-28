@@ -14,17 +14,14 @@ generic
    with procedure Event;
    with procedure Read (Session : in out Client_Session;
                         Data    :        Buffer);
-   with procedure Modify (Session : in out Client_Session;
-                          Data    : in out Buffer);
    pragma Warnings (On, "* is not referenced");
-package Gneiss.Memory.Client with
+package Gneiss.Rom.Client with
    SPARK_Mode
 is
 
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Gneiss.Capability;
                          Label   :        String;
-                         Mode    :        Access_Mode   := Read_Only;
                          Idx     :        Session_Index := 1);
 
    procedure Update (Session : in out Client_Session) with
@@ -32,4 +29,4 @@ is
 
    procedure Finalize (Session : in out Client_Session);
 
-end Gneiss.Memory.Client;
+end Gneiss.Rom.Client;
