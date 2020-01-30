@@ -1,32 +1,29 @@
 
-with SXML.Parser;
-with Gneiss_Epoll;
-with Gneiss.Linker;
-with Gneiss_Syscall;
-with Gneiss.Main;
+with SXML;
+with SXML.Query;
 
 package Gneiss.Broker with
-   SPARK_Mode,
-   Abstract_State => Policy_State,
-   Initializes    => Policy_State
+   SPARK_Mode
 is
 
-   function Is_Valid return Boolean with
-      Ghost;
+   type Component_Definition is record
+      Fd   : Integer               := -1;
+      Node : SXML.Query.State_Type := SXML.Query.Initial_State;
+      Pid  : Integer               := -1;
+   end record;
 
-   procedure Construct (Conf_Loc :     String;
-                        Status   : out Integer) with
-      Post   => Is_Valid,
-      Global => (In_Out => (Policy_State,
-                            Gneiss.Main.Component_State,
-                            Gneiss.Linker.Linux,
-                            Gneiss_Syscall.Linux,
-                            Gneiss_Epoll.Linux,
-                            SXML.Parser.State));
+   type Resource_Definition is record
+      Fd   : Integer               := -1;
+      Node : SXML.Query.State_Type := SXML.Query.Initial_State;
+   end record;
 
-   function Initialized return Boolean with
-      Pre    => Is_Valid,
-      Post   => (if Initialized'Result then Is_Valid),
-      Global => (Input => Policy_State);
+   type Component_List is array (Positive range <>) of Component_Definition;
+   type Resource_List is array (Positive range <>) of Resource_Definition;
+
+   type Broker_State (Xml_Size : SXML.Index_Type; Reg_Size : Positive) is limited record
+      Xml        : SXML.Document_Type (1 .. Xml_Size) := (others => SXML.Null_Node);
+      Components : Component_List (1 .. Reg_Size);
+      Resources  : Resource_List (1 .. Reg_Size);
+   end record;
 
 end Gneiss.Broker;
