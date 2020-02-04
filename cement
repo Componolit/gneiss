@@ -43,8 +43,8 @@ def build_component(name, root, paths, outdir, default_args, logger):
     logger.debug(args)
     return gprbuild(args)
 
-def gprbuild(args):
-    return subprocess.call(["gprbuild"] + args)
+def gprbuild(args, env=None):
+    return subprocess.call(["gprbuild"] + args, env=env)
 
 def find(name, path):
     for root, dirs, files in os.walk(path):
@@ -77,31 +77,21 @@ def get_component_files(xml_file):
             raise ValueError(c)
     return components
 
-if __name__ == "__main__":
-    args = parser.parse_args(sys.argv[1:])
-    logger = logging.getLogger("Cement")
-    logger.setLevel(logging.DEBUG if args.verbose else logging.INFO);
-    fmt = logging.Formatter("%(levelname)s: %(message)s")
-    sh = logging.StreamHandler()
-    sh.setFormatter(fmt)
-    logger.addHandler(sh)
-    gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
-    logger.info("Gneiss root at " + gprargs[0])
-    build_dir = os.path.abspath(args.build_dir)
-    root_dir = os.path.abspath(args.root_fs)
-    components = get_component_files(args.config)
+def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, logger, verbose):
+    logger.info("Compiling...")
+    components = get_component_files(config)
     logger.info("Preparing init...")
-    default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(os.path.abspath(args.gneiss_root), "gprconfig_db")]
+    default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(gneiss_root, "gprconfig_db")]
     if args.verbose:
         default_args.append("-v")
-    if build_init(os.path.abspath(args.gneiss_root), build_dir, default_args, logger) > 0:
+    if build_init(gneiss_root, build_dir, default_args, logger) > 0:
         logger.error("Preparation of init failed")
         exit(1)
     for c in components:
         logger.info("Preparing " + c + "...")
         if build_component(get_component_name(c),
-                           os.path.abspath(args.gneiss_root),
-                           [os.path.abspath(p) for p in args.paths],
+                           gneiss_root,
+                           [os.path.abspath(p) for p in paths],
                            build_dir,
                            default_args,
                            logger) > 0:
@@ -109,15 +99,15 @@ if __name__ == "__main__":
             exit(1)
     logger.info("Compiling init...")
     default_args = ["-p", "-XCEMENT_BUILD_STEP=compile"]
-    if args.verbose:
+    if verbose:
         default_args.append("-v")
-    if build_init(os.path.abspath(args.gneiss_root), build_dir, default_args, logger) > 0:
+    if build_init(gneiss_root, build_dir, default_args, logger) > 0:
         logger.error("Compilation of init failed")
         exit(1)
     for c in components:
         logger.info("Compiling " + c + "...")
         if build_component(get_component_name(c),
-                           os.path.abspath(args.gneiss_root),
+                           gneiss_root,
                            [os.path.abspath(p) for p in args.paths],
                            build_dir,
                            default_args,
@@ -142,3 +132,55 @@ if __name__ == "__main__":
     extract_init(build_dir, bindir)
     extract_components(build_dir, libdir, components)
     logger.info("Finished.")
+
+def gpr_edit(name, root, build_dir, paths, logger):
+    logger.info("Editing...")
+    step_compile = ["-XCEMENT_BUILD_STEP=compile"]
+    step_prepare = ["-XCEMENT_BUILD_STEP=prepare",
+                    "--db", os.path.join(root, "gprconfig_db")]
+    args = ["-P", name,
+            "-XGNEISS_ROOT=" + root,
+            "-XCEMENT_OBJECT_DIR=" + os.path.join(build_dir, name[:-4] + "_obj"),
+            "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(build_dir, name[:-4] + "_libobj"),
+            "-XCEMENT_LIBRARY_DIR=" + os.path.join(build_dir, name[:-4] + "_lib"),
+            "-XCEMENT_COMPONENT_DIR=" + os.path.join(build_dir, name[:-4] + "_component")]
+    project_path_file = "/tmp/cement_gpr_project_path." + str(os.getpid())
+    with open(project_path_file, "w+") as ppf:
+        for path in [root] + paths:
+            ppf.write(os.path.abspath(path) + "\n")
+    env = os.environ.copy()
+    env["GPR_PROJECT_PATH_FILE"] = project_path_file
+    gprbuild(["-p"] + args + step_prepare, env);
+    gprbuild(["-p"] + args + step_compile, env);
+    logger.debug(args)
+    logger.debug(env["GPR_PROJECT_PATH_FILE"])
+    proc = subprocess.Popen(["gnatstudio"] + args + step_compile, env=env)
+    logger.debug(f"Popen: {proc.args}")
+    proc.communicate()
+    os.remove(project_path_file)
+
+if __name__ == "__main__":
+    args = parser.parse_args(sys.argv[1:])
+    logger = logging.getLogger("Cement")
+    logger.setLevel(logging.DEBUG if args.verbose else logging.INFO);
+    fmt = logging.Formatter("%(levelname)s: %(message)s")
+    sh = logging.StreamHandler()
+    sh.setFormatter(fmt)
+    logger.addHandler(sh)
+    gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
+    logger.info("Gneiss root at " + gprargs[0])
+    build_dir = os.path.abspath(args.build_dir)
+    root_dir = os.path.abspath(args.root_fs)
+    if args.config.endswith(".xml"):
+        gpr_compile(args.config,
+                    os.path.abspath(args.gneiss_root),
+                    build_dir,
+                    root_dir,
+                    args.paths,
+                    logger,
+                    args.verbose)
+    elif args.config.endswith(".gpr"):
+        gpr_edit(args.config, os.path.abspath(args.gneiss_root), build_dir, args.paths, logger)
+    else:
+        logger.error("Unknown file type: " + args.config)
+        exit(1)
