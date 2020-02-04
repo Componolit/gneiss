@@ -15,7 +15,6 @@ is
                                Status :    out Integer;
                                Efd    : in out Gneiss_Epoll.Epoll_Fd)
    is
-      use type SXML.Result_Type;
       XML_Buf : String (1 .. 255);
       Pid     : Integer;
       Fd      : Integer;
@@ -73,7 +72,6 @@ is
                               Document  :        SXML.Document_Type;
                               Root      :        SXML.Query.State_Type)
    is
-      use type SXML.Result_Type;
       Index   : Positive := Resources'First;
       State   : SXML.Query.State_Type;
    begin
@@ -93,7 +91,6 @@ is
                    Comp  :        SXML.Query.State_Type;
                    Ret   :    out Integer)
    is
-      use type SXML.Result_Type;
       Result         : SXML.Result_Type;
       Last           : Natural;
       Load_File_Name : String (1 .. 4096);
