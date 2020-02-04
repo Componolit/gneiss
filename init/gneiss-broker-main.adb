@@ -59,7 +59,6 @@ is
                          Status  :    out Integer;
                          Efd     :        Gneiss_Epoll.Epoll_Fd)
    is
-      use type SXML.Result_Type;
       XML_Buf : String (1 .. 255);
       Ev      : Gneiss_Epoll.Event;
       Index   : Integer;

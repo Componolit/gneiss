@@ -176,7 +176,6 @@ is
                               Fds    : Gneiss_Syscall.Fd_Array)
    is
       use type SXML.Query.State_Type;
-      use type SXML.Result_Type;
       pragma Unreferenced (Fds);
       Serv_State  : SXML.Query.State_Type;
       Destination : Integer;
