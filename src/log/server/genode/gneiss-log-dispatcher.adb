@@ -1,4 +1,5 @@
 
+with Genode;
 with System;
 
 package body Gneiss.Log.Dispatcher with
@@ -6,12 +7,10 @@ package body Gneiss.Log.Dispatcher with
 is
    use type System.Address;
 
-   subtype Session_Label is String (1 .. 160);
-
    procedure Genode_Dispatch (Session : in out Dispatcher_Session;
                               Cap     :        Dispatcher_Capability;
-                              Name    :        Session_Label;
-                              Label   :        Session_Label);
+                              Name    :        Genode.Session_Label;
+                              Label   :        Genode.Session_Label);
 
    function Get_Dispatch_Address return System.Address;
 
@@ -59,11 +58,11 @@ is
 
    procedure Genode_Dispatch (Session : in out Dispatcher_Session;
                               Cap     :        Dispatcher_Capability;
-                              Name    :        Session_Label;
-                              Label   :        Session_Label)
+                              Name    :        Genode.Session_Label;
+                              Label   :        Genode.Session_Label)
    is
-      function Last (S : Session_Label) return Natural;
-      function Last (S : Session_Label) return Natural
+      function Last (S : Genode.Session_Label) return Natural;
+      function Last (S : Genode.Session_Label) return Natural
       is
          L : Natural := S'Last;
       begin
