@@ -1,0 +1,18 @@
+
+project Memory_Server extends "gneiss_component" is
+
+   case Build_Step is
+      when "compile" =>
+         for Runtime ("Ada") use Gneiss_Runtime;
+         for Source_Dirs use ("memory");
+         for Object_Dir use external ("CEMENT_OBJECT_DIR");
+         for Library_Name use Gneiss_Component_Prefix & "memory";
+         for Library_Kind use "dynamic";
+         for Library_Standalone use "encapsulated";
+         for Library_Interface use ("component");
+         for Library_Dir use external ("CEMENT_COMPONENT_DIR");
+      when others =>
+         for Languages use ();
+   end case;
+
+end Memory_Server;
