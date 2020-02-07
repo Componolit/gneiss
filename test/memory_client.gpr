@@ -1,5 +1,5 @@
 
-project Memory extends "gneiss_component" is
+project Memory_Client extends "gneiss_component" is
 
    case Build_Step is
       when "compile" =>
@@ -15,4 +15,4 @@ project Memory extends "gneiss_component" is
          for Languages use ();
    end case;
 
-end Memory;
+end Memory_Client;

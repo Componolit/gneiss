@@ -1,0 +1,12 @@
+<config>
+    <resource name="shared" type="Memory" size="128"/>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
+    <component name="rom" file="libcomponent_rom2.so">
+        <service name="Log" server="log_server"/>
+        <service name="Rom" resource="shared"/>
+    </component>
+    <component name="memory" file="libcomponent_memory.so">
+        <service name="Message" server="rom"/>
+        <service name="Memory" resource="shared"/>
+    </component>
+</config>
