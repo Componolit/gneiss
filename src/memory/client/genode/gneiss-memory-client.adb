@@ -13,11 +13,11 @@ is
       null;
    end Initialize;
 
-   procedure Update (Session : in out Client_Session)
+   procedure Modify (Session : in out Client_Session)
    is
    begin
       null;
-   end Update;
+   end Modify;
 
    procedure Finalize (Session : in out Client_Session)
    is

@@ -25,7 +25,7 @@ is
                          Size    :        Long_Integer;
                          Idx     :        Session_Index := 1);
 
-   procedure Update (Session : in out Client_Session) with
+   procedure Modify (Session : in out Client_Session) with
       Pre => Status (Session) = Initialized;
 
    procedure Finalize (Session : in out Client_Session);
