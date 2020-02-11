@@ -34,7 +34,7 @@ is
       SPARK_Mode => Off
    is
    begin
-      return Event'Address;
+      return Initialize_Event'Address;
    end Event_Address;
 
    function Modify_Address return System.Address with

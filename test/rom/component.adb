@@ -9,11 +9,11 @@ package body Component with
 is
    use type Gneiss.Session_Status;
 
-   procedure Initialize_Log;
-   procedure Initialize_Rom;
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
 
    package Log_Client is new Gneiss.Log.Client (Initialize_Log);
    package Rom is new Gneiss.Rom (Character, Positive, String);
+   procedure Initialize_Rom (Session : in out Rom.Client_Session);
    procedure Read (Session : in out Rom.Client_Session;
                    Data    :        String);
    package Rom_Client is new Rom.Client (Initialize_Rom, Read);
@@ -29,28 +29,24 @@ is
       Log_Client.Initialize (Log, C, "rom");
    end Construct;
 
-   procedure Initialize_Log
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
    is
    begin
-      case Gneiss.Log.Status (Log) is
+      case Gneiss.Log.Status (Session) is
          when Gneiss.Initialized =>
             Rom_Client.Initialize (Config, C, "config");
-         when Gneiss.Pending =>
-            Log_Client.Initialize (Log, C, "");
-         when Gneiss.Uninitialized =>
+         when others =>
             Main.Vacate (C, Main.Failure);
       end case;
    end Initialize_Log;
 
-   procedure Initialize_Rom
+   procedure Initialize_Rom (Session : in out Rom.Client_Session)
    is
    begin
-      case Rom.Status (Config) is
+      case Rom.Status (Session) is
          when Gneiss.Initialized =>
-            Rom_Client.Update (Config);
-         when Gneiss.Pending =>
-            Rom_Client.Initialize (Config, C, "config");
-         when Gneiss.Uninitialized =>
+            Rom_Client.Update (Session);
+         when others =>
             Main.Vacate (C, Main.Failure);
       end case;
    end Initialize_Rom;
@@ -58,7 +54,7 @@ is
    procedure Read (Session : in out Rom.Client_Session;
                    Data    :        String)
    is
-      use type Gneiss.Session_Status;
+      pragma Unreferenced (Session);
    begin
       if Gneiss.Log.Status (Log) = Gneiss.Initialized then
          Log_Client.Info (Log, "Rom content: " & Data);
