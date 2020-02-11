@@ -19,20 +19,27 @@ struct Log_session
     enum {WRITE_BUFFER = Genode::Log_session::MAX_STRING_LEN - 1};
     Genode::Log_connection _log;
     Genode::Signal_handler<Log_session> _init;
-    void (*_init_event)();
+    void (*_init_event)(Cai::Log::Client *);
+    Cai::Log::Client *_client;
 
-    Log_session(Genode::Env &env, const char *label, void (*init_event)()) :
+    Log_session(Genode::Env &env, const char *label,
+                void (*init_event)(Cai::Log::Client *), Cai::Log::Client *client) :
         _log(env, label),
         _init(env.ep(), *this, &Log_session::event_handler),
-        _init_event(init_event)
+        _init_event(init_event),
+        _client(client)
     {
         TLOG("label=", label);
     }
 
     void event_handler()
     {
-        _init_event();
+        _init_event(_client);
     }
+
+    private:
+        Log_session(const Log_session &);
+        Log_session &operator = (Log_session &);
 };
 
 static Log_session *log(void *session)
@@ -51,13 +58,13 @@ bool Cai::Log::Client::initialized()
     return (bool)_session;
 }
 
-void Cai::Log::Client::initialize(void *env, const char *label, void (*event)(void))
+void Cai::Log::Client::initialize(void *env, const char *label, void (*event)(Cai::Log::Client *))
 {
     TLOG("env=", env, " label=", label);
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
     _session = _factory->create<Log_session>(
             *reinterpret_cast<Cai::Env *>(env)->env,
-            label, event);
+            label, event, this);
     if(_session){
         Genode::Signal_transmitter(log(_session)->_init).submit();
     }
