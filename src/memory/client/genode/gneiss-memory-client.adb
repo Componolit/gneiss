@@ -14,7 +14,7 @@ is
                                 Ev      :        System.Address) with
       Import,
       Convention    => C,
-      External_Name => "_ZN6Gneiss13Memory_Client10initializeEPNS_10CapabilityEPKcxPFvvE";
+      External_Name => "_ZN6Gneiss13Memory_Client10initializeEPNS_10CapabilityEPKcxPFvPS0_E";
 
    procedure Genode_Finalize (Session : in out Client_Session) with
       Import,
@@ -25,7 +25,7 @@ is
       SPARK_Mode => Off
    is
    begin
-      return Event'Address;
+      return Initialize_Event'Address;
    end Event_Address;
 
    procedure Initialize (Session : in out Client_Session;

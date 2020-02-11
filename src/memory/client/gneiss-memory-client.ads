@@ -11,7 +11,7 @@
 
 generic
    pragma Warnings (Off, "* is not referenced");
-   with procedure Event;
+   with procedure Initialize_Event (Session : in out Client_Session);
    with procedure Modify (Session : in out Client_Session;
                           Data    : in out Buffer);
    pragma Warnings (On, "* is not referenced");
