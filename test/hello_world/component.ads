@@ -7,7 +7,6 @@ package Component with
 is
 
    procedure Construct (Capability : Gneiss.Capability);
-   procedure Event;
    procedure Destruct;
 
    package Main is new Gneiss.Component (Construct, Destruct);

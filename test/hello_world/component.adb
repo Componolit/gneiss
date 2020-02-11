@@ -6,7 +6,9 @@ package body Component with
    SPARK_Mode
 is
 
-   package Log_Client is new Gneiss.Log.Client (Event);
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
+
+   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
 
    Cap : Gneiss.Capability;
    Log : Gneiss.Log.Client_Session;
@@ -18,21 +20,19 @@ is
       Log_Client.Initialize (Log, Cap, "log_hello_world");
    end Construct;
 
-   procedure Event
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
    is
    begin
-      case Gneiss.Log.Status (Log) is
+      case Gneiss.Log.Status (Session) is
          when Gneiss.Initialized =>
             Main.Vacate (Cap, Main.Success);
-            Log_Client.Info (Log, "Hello World!");
-            Log_Client.Warning (Log, "Hello World!");
-            Log_Client.Error (Log, "Hello World!");
-         when Gneiss.Pending =>
-            Log_Client.Initialize (Log, Cap, "log_hello_world");
-         when Gneiss.Uninitialized =>
+            Log_Client.Info (Session, "Hello World!");
+            Log_Client.Warning (Session, "Hello World!");
+            Log_Client.Error (Session, "Hello World!");
+         when others =>
             Main.Vacate (Cap, Main.Failure);
       end case;
-   end Event;
+   end Initialize_Log;
 
    procedure Destruct
    is
