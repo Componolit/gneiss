@@ -41,11 +41,9 @@ is
    --  Timer client session object
    type Client_Session is limited private;
 
-   --  Checks if session is initialized
-   --
-   --  @param C  Timer client session object
-   --  @return   True if session is initialized else False
-   function Initialized (C : Client_Session) return Boolean;
+   function Status (C : Client_Session) return Session_Status;
+
+   function Index (C : Client_Session) return Session_Index_Option;
 
 private
 

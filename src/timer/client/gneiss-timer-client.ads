@@ -10,6 +10,7 @@
 --
 
 generic
+   with procedure Initialize_Event (Session : in out Client_Session);
    with procedure Event;
 package Gneiss.Timer.Client with
    SPARK_Mode
@@ -20,7 +21,8 @@ is
    --  @param C    Timer client session object
    --  @param Cap  System capability
    procedure Initialize (C   : in out Client_Session;
-                         Cap :        Capability);
+                         Cap :        Capability;
+                         Idx :        Session_Index := 1);
 
    --  Returns a monotonic clock value
    --
@@ -31,7 +33,7 @@ is
    --  @return   Current clock value
    function Clock (C : Client_Session) return Time with
       Volatile_Function,
-      Pre => Initialized (C);
+      Pre => Status (C) = Initialized;
 
    --  Sets the timeout after which the Event procedure will be called
    --
@@ -45,14 +47,14 @@ is
    --  @param D  Timeout event duration
    procedure Set_Timeout (C : in out Client_Session;
                           D :        Duration) with
-      Pre  => Initialized (C)
+      Pre  => Status (C) = Initialized
               and then D > 0.0,
-      Post => Initialized (C);
+      Post => Status (C) = Initialized;
 
    --  Finalizes timer session
    --
    --  @param C  Timer client session object
    procedure Finalize (C : in out Client_Session) with
-      Post => not Initialized (C);
+      Post => Status (C) = Uninitialized;
 
 end Gneiss.Timer.Client;
