@@ -5,17 +5,12 @@ with Genode;
 package body Gneiss.Memory.Dispatcher with
    SPARK_Mode
 is
-
-   procedure Genode_Modify (Session : in out Server_Session;
-                            Ptr     :        System.Address;
-                            Size    :        Integer);
+   use type System.Address;
 
    procedure Genode_Dispatch (Session : in out Dispatcher_Session;
                               Cap     :        Dispatcher_Capability;
                               Name    :        Genode.Session_Label;
                               Label   :        Genode.Session_Label);
-
-   function Modify_Address return System.Address;
 
    function Dispatch_Address return System.Address;
 
@@ -29,12 +24,11 @@ is
 
    procedure Genode_Session_Initialize (Session  : in out Dispatcher_Session;
                                         Cap      :        Dispatcher_Capability;
-                                        Server_S : in out Server_Session;
-                                        Mod_Func :        System.Address) with
+                                        Server_S : in out Server_Session) with
       Import,
       Convention    => C,
       External_Name => "_ZN6Gneiss17Memory_Dispatcher18session_initializeE"
-                       & "PNS_28Memory_Dispatcher_CapabilityEPNS_13Memory_ServerEPFvS4_PviE";
+                       & "PNS_28Memory_Dispatcher_CapabilityEPNS_13Memory_ServerE";
 
    procedure Genode_Register (Session : in out Dispatcher_Session) with
       Import,
@@ -47,21 +41,23 @@ is
       Convention    => C,
       External_Name => "_ZN6Gneiss17Memory_Dispatcher6acceptEPNS_13Memory_ServerE";
 
-   procedure Genode_Cleanup (Session  : in out Dispatcher_Session;
-                             Cap      :        Dispatcher_Capability;
-                             Server_S : in out Server_Session) with
+   procedure Genode_Server_Finalize (Session : in out Server_Session) with
       Import,
       Convention    => C,
-      External_Name => "_ZN6Gneiss17Memory_Dispatcher7cleanupE"
-                       & "PNS_28Memory_Dispatcher_CapabilityEPNS_13Memory_ServerE";
+      External_Name => "_ZN6Gneiss13Memory_Server8finalizeEv";
 
-   procedure Genode_Modify (Session : in out Server_Session;
-                            Ptr     :        System.Address;
-                            Size    :        Integer)
+   function To_Ada (S : String) return String;
+
+   function To_Ada (S : String) return String
    is
+      Last : Natural := 0;
    begin
-      null;
-   end Genode_Modify;
+      for I in S'Range loop
+         exit when S (I) = ASCII.NUL;
+         Last := I;
+      end loop;
+      return S (S'First .. Last);
+   end To_Ada;
 
    procedure Genode_Dispatch (Session : in out Dispatcher_Session;
                               Cap     :        Dispatcher_Capability;
@@ -69,15 +65,8 @@ is
                               Label   :        Genode.Session_Label)
    is
    begin
-      null;
+      Dispatch (Session, Cap, To_Ada (Name), To_Ada (Label));
    end Genode_Dispatch;
-
-   function Modify_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Genode_Modify'Address;
-   end Modify_Address;
 
    function Dispatch_Address return System.Address with
       SPARK_Mode => Off
@@ -91,10 +80,15 @@ is
                          Cap     :        Capability;
                          Idx     :        Session_Index := 1)
    is
-      pragma Unreferenced (Idx);
    begin
       Genode_Initialize (Session, Cap, Dispatch_Address);
-      --  FIXME: initialization check and index
+      if
+         Session.Root /= System.Null_Address
+         and then Session.Dispatch /= System.Null_Address
+         and then Session.Env /= System.Null_Address
+      then
+         Session.Index := Session_Index_Option'(Valid => True, Value => Idx);
+      end if;
    end Initialize;
 
    procedure Register (Session : in out Dispatcher_Session)
@@ -105,17 +99,24 @@ is
 
    function Valid_Session_Request (Session : Dispatcher_Session;
                                    Cap     : Dispatcher_Capability) return Boolean is
-      (False);
+      (Cap.Session = System.Null_Address);
 
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
                                  Idx      :        Session_Index := 1)
    is
-      pragma Unreferenced (Idx);
    begin
-      Genode_Session_Initialize (Session, Cap, Server_S, Modify_Address);
-      --  FIXME: initialization check and index
+      Genode_Session_Initialize (Session, Cap, Server_S);
+      Server_S.Index := Session_Index_Option'(Valid => True, Value => Idx);
+      if not Initialized (Session) then
+         return;
+      end if;
+      Server_Instance.Initialize (Server_S);
+      if not Server_Instance.Ready (Server_S) then
+         Server_S.Index := Session_Index_Option'(Valid => False);
+         return;
+      end if;
    end Session_Initialize;
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
@@ -131,8 +132,12 @@ is
                               Cap      :        Dispatcher_Capability;
                               Server_S : in out Server_Session)
    is
+      pragma Unreferenced (Session);
    begin
-      Genode_Cleanup (Session, Cap, Server_S);
+      if Initialized (Server_S) and then Cap.Session = Server_S.Component then
+         Server_Instance.Finalize (Server_S);
+         Genode_Server_Finalize (Server_S);
+      end if;
    end Session_Cleanup;
 
 end Gneiss.Memory.Dispatcher;
