@@ -52,7 +52,7 @@ is
    type Server_Reg is array (Gneiss.Session_Index range <>) of Gneiss.Log.Server_Session;
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
-   procedure Event;
+   procedure Log_Event (Session : in out Gneiss.Log.Client_Session);
    procedure Write (Session : in out Gneiss.Log.Server_Session;
                     Data    :        String);
    procedure Initialize (Session : in out Gneiss.Log.Server_Session);
@@ -71,7 +71,7 @@ is
 
    procedure Flush (S : in out Server_Slot);
 
-   package Log_Client is new Gneiss.Log.Client (Event);
+   package Log_Client is new Gneiss.Log.Client (Log_Event);
    package Log_Server is new Gneiss.Log.Server (Write, Initialize, Finalize, Ready);
    package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
 
@@ -119,21 +119,17 @@ is
       Flush (Server_Data (I.Value));
    end;
 
-   procedure Event
+   procedure Log_Event (Session : in out Gneiss.Log.Client_Session)
    is
       use type Gneiss.Session_Status;
    begin
-      case Gneiss.Log.Status (Client) is
-         when Gneiss.Uninitialized =>
-            Main.Vacate (Capability, Main.Failure);
-         when Gneiss.Pending =>
-            Log_Client.Initialize (Client,
-                                   Capability,
-                                   "lolcat");
+      case Gneiss.Log.Status (Session) is
          when Gneiss.Initialized =>
             Log_Dispatcher.Register (Dispatcher);
+         when others =>
+            Main.Vacate (Capability, Main.Failure);
       end case;
-   end Event;
+   end Log_Event;
 
    procedure Destruct
    is
