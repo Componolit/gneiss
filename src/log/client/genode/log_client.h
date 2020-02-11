@@ -4,7 +4,7 @@
 
 #include <base/fixed_stdint.h>
 
-namespace Log{
+namespace Log {
     class Client
     {
         private:
@@ -13,7 +13,7 @@ namespace Log{
         public:
             Client();
             bool initialized();
-            void initialize(void *env, const char *label, void (*event)(void));
+            void initialize(void *env, const char *label, void (*event)(Log::Client *));
             void finalize();
             void write(const char *message);
             Genode::uint64_t maximum_message_length();

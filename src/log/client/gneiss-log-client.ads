@@ -10,7 +10,7 @@
 --
 
 generic
-   with procedure Event;
+   with procedure Initialize_Event (Session : in out Client_Session);
 package Gneiss.Log.Client with
    SPARK_Mode
 is

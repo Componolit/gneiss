@@ -36,7 +36,7 @@ is
       Cxx.Log.Client.Initialize (Session.Instance,
                                  Cap,
                                  C_Label'Address,
-                                 Event'Address);
+                                 Initialize_Event'Address);
       Session.Cursor := Session.Buffer'First;
       Session.Index  := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
