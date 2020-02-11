@@ -17,7 +17,7 @@ class Gneiss::Rom_Client
     private:
         Genode::uint32_t _index;
         Gneiss::Rom_Session *_rom;
-        void (*_event)(void);
+        void (*_event)(Gneiss::Rom_Client *);
         void (*_read)(Rom_Client *, void *, int);
 
         Rom_Client(Rom_Client const &);
@@ -71,7 +71,7 @@ void Gneiss::Rom_Client::initialize(Gneiss::Capability *cap, const char *label)
 void Gneiss::Rom_Client::event()
 {
     TLOG("");
-    _event();
+    _event(this);
 }
 
 void Gneiss::Rom_Client::update()
