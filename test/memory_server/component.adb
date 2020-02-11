@@ -61,8 +61,9 @@ is
    procedure Modify (Session : in out Memory.Server_Session;
                      Data    : in out String)
    is
+      pragma Unreferenced (Session);
    begin
-      null;
+      Data (Data'First .. Data'First + 11) := "Hello World!";
    end Modify;
 
    procedure Initialize (Session : in out Memory.Server_Session)
