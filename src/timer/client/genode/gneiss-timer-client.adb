@@ -6,14 +6,19 @@ package body Gneiss.Timer.Client
 is
 
    procedure Initialize (C   : in out Client_Session;
-                         Cap :        Capability) with
+                         Cap :        Capability;
+                         Idx :        Session_Index := 1) with
       SPARK_Mode => Off
    is
+      use type Cxx.Bool;
    begin
-      if Initialized (C) then
+      if Status (C) in Initialized | Pending then
          return;
       end if;
-      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address);
+      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address, Initialize_Event'Address);
+      if Cxx.Timer.Client.Initialized (C.Instance) = Cxx.Bool'Val (1) then
+         C.Instance.Index := Session_Index_Option'(Valid => True, Value => Idx);
+      end if;
    end Initialize;
 
    function Clock (C : Client_Session) return Time
@@ -32,7 +37,7 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if not Initialized (C) then
+      if Status (C) = Uninitialized then
          return;
       end if;
       Cxx.Timer.Client.Finalize (C.Instance);
