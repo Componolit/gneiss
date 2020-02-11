@@ -32,11 +32,9 @@ class Gneiss::Memory_Dispatcher
         void initialize(Gneiss::Capability *, void (*)(Gneiss::Memory_Dispatcher *,
                                                        Gneiss::Memory_Dispatcher_Capability *,
                                                        const char *, const char *));
-        void session_initialize(Gneiss::Memory_Dispatcher_Capability *, Gneiss::Memory_Server *,
-                                void(*)(Gneiss::Memory_Server *, void *, int));
+        void session_initialize(Gneiss::Memory_Dispatcher_Capability *, Gneiss::Memory_Server *);
         void register_service();
         void accept(Gneiss::Memory_Server *);
-        void cleanup(Gneiss::Memory_Dispatcher_Capability *, Gneiss::Memory_Server *);
 };
 
 class Gneiss::Memory_Root : public Genode::Root_component<Gneiss::Memory_Component>
@@ -55,6 +53,12 @@ class Gneiss::Memory_Root : public Genode::Root_component<Gneiss::Memory_Compone
 
     public:
         Memory_Root(Gneiss::Memory_Dispatcher *);
+};
+
+struct Gneiss::Memory_Dispatcher_Capability
+{
+    Gneiss::Memory_Component *session;
+    long long size;
 };
 
 #endif /* ifndef _GNEISS_MEMORY_DISPATCHER_H_ */
