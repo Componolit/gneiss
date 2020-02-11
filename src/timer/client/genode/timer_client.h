@@ -12,11 +12,12 @@ namespace Cai
         {
             private:
                 void *_session;
+                Genode::uint32_t _index;
 
             public:
                 Client();
                 bool initialized();
-                void initialize(void *capability, void *callback);
+                void initialize(void *capability, void *callback, void *);
                 Genode::uint64_t clock();
                 void set_timeout(Genode::uint64_t);
                 void finalize();

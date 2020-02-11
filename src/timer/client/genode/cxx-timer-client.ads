@@ -6,6 +6,7 @@ package Cxx.Timer.Client is
 
    type Class is limited record
       Session : Cxx.Void_Address;
+      Index   : Gneiss.Session_Index_Option;
    end record
    with Import, Convention => CPP;
 
@@ -21,11 +22,12 @@ package Cxx.Timer.Client is
 
    procedure Initialize (This : Class;
                          Cap  : Gneiss.Capability;
-                         Ev   : System.Address) with
+                         Ev   : System.Address;
+                         Init : System.Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Timer6Client10initializeEPvS2_";
+      External_Name => "_ZN3Cai5Timer6Client10initializeEPvS2_S2_";
 
    function Clock (This : Class) return Duration with
       Global        => null,

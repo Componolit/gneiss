@@ -8,7 +8,13 @@ is
 
    use type Cxx.Bool;
 
-   function Initialized (C : Client_Session) return Boolean is
-      (Cxx.Timer.Client.Initialized (C.Instance) = Cxx.Bool'Val (1));
+   function Status (C : Client_Session) return Gneiss.Session_Status is
+      (if Cxx.Timer.Client.Initialized (C.Instance) = Cxx.Bool'Val (1) then
+          (if C.Instance.Index.Valid then Gneiss.Initialized else Gneiss.Pending)
+       else
+          Gneiss.Uninitialized);
+
+   function Index (C : Client_Session) return Gneiss.Session_Index_Option is
+      (C.Instance.Index);
 
 end Gneiss.Timer;
