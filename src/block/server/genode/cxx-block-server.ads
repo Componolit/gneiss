@@ -11,7 +11,7 @@ is
       Block_Count           : Cxx.Void_Address;
       Block_Size            : Cxx.Void_Address;
       Writable              : Cxx.Void_Address;
-      Tag                   : Cxx.Genode.Uint32_T;
+      Tag                   : Gneiss.Session_Index_Option;
    end record
    with Import, Convention => CPP;
 

@@ -23,9 +23,6 @@ generic
    --  Buffer type to be used with all operations of this instance
    type Buffer is array (Buffer_Index range <>) of Byte;
 
-   --  Max 32bit session identifier
-   type Session_Id is (<>);
-
    --  Max 32bit request identifier
    type Request_Id is (<>);
 
@@ -160,20 +157,11 @@ is
    --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
 
-   --  Return True if C is initialized
-   --
-   --  @param C  Client session instance
-   --  @return   True if initialized
-   function Initialized (C : Client_Session) return Boolean with
+   function Status (Session : Client_Session) return Session_Status with
       Annotate => (GNATprove, Terminating);
 
-   --  Return session identifier
-   --
-   --  @param C  Client session instance
-   --  @return   Identifier passed on initialization
-   function Identifier (C : Client_Session) return Session_Id with
-      Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
+   function Index (Session : Client_Session) return Session_Index_Option with
+      Annotate => (GNATprove, Terminating);
 
    --  Check if the block device is writable
    --
@@ -181,7 +169,7 @@ is
    --  @return   True if the block client is writable
    function Writable (C : Client_Session) return Boolean with
       Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
+      Pre => Status (C) = Initialized;
 
    --  Get the total number of blocks of the device
    --
@@ -189,7 +177,7 @@ is
    --  @return   Number of blocks on the device
    function Block_Count (C : Client_Session) return Count with
       Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
+      Pre => Status (C) = Initialized;
 
    --  Get the block size in bytes
    --
@@ -197,18 +185,7 @@ is
    --  @return   Size of a single block in size
    function Block_Size (C : Client_Session) return Size with
       Annotate => (GNATprove, Terminating),
-      Pre => Initialized (C);
-
-   --  Helper function to check if the assigned session Id is valid
-   --
-   --  This property is also inherited by Initialized. Yet some callback procedures are called
-   --  before Initialized is true but still require a valid session Id. This property is necessary
-   --  but not sufficient for Initialized.
-   --
-   --  @param S  Server Session Instance
-   --  @return   True if the internal representation of the session id yields a valid Session_Id
-   function Valid (S : Server_Session) return Boolean with
-      Annotate => (GNATprove, Terminating);
+      Pre => Status (C) = Initialized;
 
    --  Check if S is initialized
    --
@@ -217,13 +194,8 @@ is
    function Initialized (S : Server_Session) return Boolean with
       Annotate => (GNATprove, Terminating);
 
-   --  Return session identifier
-   --
-   --  @param S  Server session instance
-   --  @return   Identifier passed on initialization
-   function Identifier (S : Server_Session) return Session_Id with
-      Annotate => (GNATprove, Terminating),
-      Pre => Valid (S);
+   function Index (Session : Server_Session) return Session_Index_Option with
+      Annotate => (GNATprove, Terminating);
 
    --  Checks if D is initialized
    --
@@ -232,13 +204,8 @@ is
    function Initialized (D : Dispatcher_Session) return Boolean with
       Annotate => (GNATprove, Terminating);
 
-   --  Return session identifier
-   --
-   --  @param D  Dispatcher session instance
-   --  @return   Identifier passed on initialization
-   function Identifier (D : Dispatcher_Session) return Session_Id with
-      Annotate => (GNATprove, Terminating),
-      Pre => Initialized (D);
+   function Index (Session : Dispatcher_Session) return Session_Index_Option with
+      Annotate => (GNATprove, Terminating);
 
    function Accepted (D : Dispatcher_Session) return Boolean with
       Ghost,

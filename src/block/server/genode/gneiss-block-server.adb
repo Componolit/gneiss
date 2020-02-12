@@ -8,7 +8,6 @@ use all type Cxx.Genode.Uint64_T;
 package body Gneiss.Block.Server with
    SPARK_Mode
 is
-   use type Cxx.Genode.Uint32_T;
 
    function Kind (R : Request) return Request_Kind is
       (case R.Request.Kind is

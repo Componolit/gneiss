@@ -10,7 +10,7 @@ is
    limited record
       Root    : Cxx.Void_Address;
       Handler : Cxx.Void_Address;
-      Tag     : Cxx.Genode.Uint32_T;
+      Tag     : Gneiss.Session_Index_Option;
    end record
    with Import, Convention => CPP;
 
