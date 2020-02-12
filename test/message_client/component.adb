@@ -1,4 +1,6 @@
 
+with Gneiss.Log;
+with Gneiss.Log.Client;
 with Gneiss.Message;
 with Gneiss.Message.Client;
 
@@ -6,37 +8,80 @@ package body Component with
    SPARK_Mode
 is
 
-   type Unsigned_Char is mod 2 ** 8;
-   type C_String is array (Positive range <>) of Unsigned_Char;
-   procedure Event;
+   subtype Message_Buffer is String (1 .. 128);
 
-   package Message is new Gneiss.Message (Positive, Unsigned_Char, C_String, 1, 128);
-   package Message_Client is new Message.Client (Event);
+   procedure Event;
+   function Null_Terminate (S : String) return String;
+
+   package Message is new Gneiss.Message (Message_Buffer);
+
+   procedure Initialize (Session : in out Message.Client_Session);
+   procedure Initialize (Session : in out Gneiss.Log.Client_Session);
+
+   package Message_Client is new Message.Client (Initialize, Event);
+   package Log_Client is new Gneiss.Log.Client (Initialize);
 
    Client     : Message.Client_Session;
-   Msg        : Message.Message_Buffer;
+   Log        : Gneiss.Log.Client_Session;
    Capability : Gneiss.Capability;
+
+   function Null_Terminate (S : String) return String
+   is
+      Last : Natural := S'First - 1;
+   begin
+      for I in S'Range loop
+         exit when S (I) = ASCII.NUL;
+         Last := Natural;
+      end loop;
+      return S (S'First .. Last);
+   end Null_Terminate;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;
-      Message_Client.Initialize (Client, Cap, "log");
+      Log_Client.Initialize (Log, Capability, "message");
    end Construct;
+
+   procedure Initialize (Session : in out Gneiss.Log.Client_Session)
+   is
+      use type Gneiss.Session_Status;
+   begin
+      if Gneiss.Log.Status (Session) = Gneiss.Initialized then
+         Message_Client.Initialize (Client, Capability, "log");
+      else
+         Main.Vacate (Capability, Main.Failure);
+      end if;
+   end Initialize;
+
+   procedure Initialize (Session : in out Message.Client_Session)
+   is
+      use type Gneiss.Session_Status;
+      Msg : Message_Buffer := (others => ASCII.NUL);
+   begin
+      if Message.Status (Session) = Gneiss.Initialized then
+         Log_Client.Info (Log, "Sending: " & Null_Terminate (Msg));
+         Msg (Msg'First .. Msg'First + 11) := "Hello World!";
+         Message_Client.Write (Session, Msg);
+      else
+         Main.Vacate (Capability, Main.Failure);
+      end if;
+   end Initialize;
 
    procedure Event
    is
+      use type Gneiss.Session_Status;
+      Msg : Message_Buffer;
    begin
-      case Message.Status (Client) is
-         when Gneiss.Initialized =>
-            Msg := (72, 101, 108, 108, 111, others => 0);
-            Message_Client.Write (Client, Msg);
-            Main.Vacate (Capability, Main.Success);
-         when Gneiss.Pending =>
-            Message_Client.Initialize (Client, Capability, "log");
-         when Gneiss.Uninitialized =>
-            Main.Vacate (Capability, Main.Failure);
-      end case;
+      if
+         Gneiss.Log.Status (Log) = Gneiss.Initialized
+         and then Message.Status (Client) = Gneiss.Initialized
+      then
+         while Message_Client.Available (Client) loop
+            Message_Client.Read (Client, Msg);
+            Log_Client.Info (Log, "Received: " & Null_Terminate (Msg));
+         end loop;
+      end if;
    end Event;
 
    procedure Destruct
