@@ -27,6 +27,10 @@ generic
    --
    --  @param S  Server session instance
    with procedure Finalize (Session : in out Server_Session);
+
+   with procedure Receive (Session : in out Server_Session;
+                           Data    :        Message_Buffer);
+
    --  Checks if the server implementation is ready
    --
    --  @param S  Server session instance
@@ -38,34 +42,14 @@ package Gneiss.Message.Server with
 is
    pragma Unevaluated_Use_Of_Old (Allow);
 
-   --  Check if message is available
-   --
-   --  @param Session  Server session instance
-   --  @return         True if message is available
-   function Available (Session : Server_Session) return Boolean with
-      Pre => Ready (Session)
-             and then Initialized (Session);
-
-   --  Write message
+   --  Send message
    --
    --  @param Session  Server session instance
    --  @param Data     Message
-   procedure Write (Session : in out Server_Session;
-                    Data    :        Message_Buffer) with
+   procedure Send (Session : in out Server_Session;
+                   Data    :        Message_Buffer) with
       Pre  => Ready (Session)
               and then Initialized (Session),
-      Post => Ready (Session)
-              and then Initialized (Session);
-
-   --  Read message
-   --
-   --  @param Session  Server session instance
-   --  @param Data     Message
-   procedure Read (Session : in out Server_Session;
-                   Data    :    out Message_Buffer) with
-      Pre  => Ready (Session)
-              and then Initialized (Session)
-              and then Available (Session),
       Post => Ready (Session)
               and then Initialized (Session);
 

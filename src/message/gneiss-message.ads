@@ -12,18 +12,11 @@
 private with Gneiss_Internal.Message;
 
 generic
-   type Buffer_Index is range <>;
-   type Byte is (<>);
-   type Buffer is array (Buffer_Index range <>) of Byte;
-   First  : Buffer_Index;
-   Length : Buffer_Index;
+   type Message_Buffer is private;
 package Gneiss.Message with
    SPARK_Mode
 is
-   pragma Compile_Time_Error (Byte'Size /= 8, "Byte size must be 8 bit");
-
-   --  Fixed size message buffer
-   subtype Message_Buffer is Buffer (First .. First + Length - 1);
+   pragma Compile_Time_Error (Message_Buffer'Size /= 128 * 8, "Buffer size must be 128 byte");
 
    --  Client, Server and Dispatcher session objects
    type Client_Session is limited private;
