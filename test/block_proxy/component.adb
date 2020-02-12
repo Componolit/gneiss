@@ -8,7 +8,6 @@ package body Component is
    --  Print the content of each Read and Write package seen
    Print_Content : constant Boolean := False;
 
-   use type Gneiss.Session_Status;
    use type Block.Request_Kind;
    use type Block.Request_Status;
 
@@ -24,9 +23,9 @@ package body Component is
    function Image is new Basalt.Strings_Generic.Image_Modular (Block.Id);
    function Image is new Basalt.Strings_Generic.Image_Ranged (Unsigned_Long);
 
-   procedure Initialize;
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
 
-   package Log_Client is new Gneiss.Log.Client (Initialize);
+   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -35,10 +34,10 @@ package body Component is
       Log_Client.Initialize (Log, Cap, "log_block_proxy");
    end Construct;
 
-   procedure Initialize
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
    is
    begin
-      case Gneiss.Log.Status (Log) is
+      case Gneiss.Log.Status (Session) is
          when Gneiss.Initialized =>
             if Block.Initialized (Dispatcher) then
                return;
@@ -48,14 +47,14 @@ package body Component is
                Block_Dispatcher.Register (Dispatcher);
             else
                Main.Vacate (Capability, Main.Failure);
-               Log_Client.Error (Log, "Failed to initialize Dispatcher");
+               Log_Client.Error (Session, "Failed to initialize Dispatcher");
             end if;
          when Gneiss.Pending =>
-            Log_Client.Initialize (Log, Capability, "log_block_proxy");
+            Log_Client.Initialize (Session, Capability, "log_block_proxy");
          when Gneiss.Uninitialized =>
             Main.Vacate (Capability, Main.Failure);
       end case;
-   end Initialize;
+   end Initialize_Log;
 
    procedure Destruct
    is
@@ -170,13 +169,13 @@ package body Component is
       Re : Block.Result;
    begin
       if
-         Block.Initialized (Client)
+         Block.Status (Client) = Gneiss.Initialized
          and then Initialized (Server)
          and then Block.Initialized (Server)
       then
          pragma Assert (Block.Initialized (Server));
          for I in Cache'Range loop
-            pragma Loop_Invariant (Block.Initialized (Client));
+            pragma Loop_Invariant (Block.Status (Client) = Gneiss.Initialized);
             pragma Loop_Invariant (Block.Initialized (Server));
             pragma Loop_Invariant (Initialized (Server));
             if Block_Server.Status (Cache (I).S) = Block.Raw then
@@ -274,18 +273,18 @@ package body Component is
                                 B :        Block.Byte_Length)
    is
    begin
-      if not Block.Initialized (Client) then
-         --  The client label of a proxy should be determined by a policy depending on the server label.
-         --  In this simple test the policy is hardcoded. If the server receives a connection request with
-         --  label "blockdev2" the client will use the label "blockdev1", otherwise it will use the label
-         --  provided by the server. This policy is to prevent the proxy to connect to itself on Muen.
-         if L = "blockdev2" then  --  Muen
-            Block_Client.Initialize (Client, Capability, "blockdev1", 42, B);
-         else  --  Genode
-            Block_Client.Initialize (Client, Capability, L, 42, B);
-         end if;
+      --  The client label of a proxy should be determined by a policy depending on the server label.
+      --  In this simple test the policy is hardcoded. If the server receives a connection request with
+      --  label "blockdev2" the client will use the label "blockdev1", otherwise it will use the label
+      --  provided by the server. This policy is to prevent the proxy to connect to itself on Muen.
+      --  XXX: this only works on Genode as the session is initialized synchronously after calling
+      --  Initialize. On other platforms there is currently no working semantic for lazy proxies.
+      if L = "blockdev2" then  --  Muen
+         Block_Client.Initialize (Client, Capability, "blockdev1", 42, B);
+      else  --  Genode
+         Block_Client.Initialize (Client, Capability, L, 42, B);
       end if;
-      if Block.Initialized (Client) and then not Initialized (S) then
+      if Block.Status (Client) = Gneiss.Initialized and then not Initialized (S) then
          Block_Client.Finalize (Client);
       end if;
    end Initialize_Server;
@@ -319,7 +318,7 @@ package body Component is
    end Writable;
 
    function Initialized (S : Block.Server_Session) return Boolean is
-      (Block.Initialized (Client)
+      (Block.Status (Client) = Gneiss.Initialized
        and then Block.Block_Size (Client) in 512 | 1024 | 2048 | 4096
        and then Block.Block_Count (Client) > 0
        and then Block.Block_Count (Client) < Block.Count'Last / (Block.Count (Block.Block_Size (Client)) / 512));
@@ -344,5 +343,11 @@ package body Component is
    begin
       D := (others => 0);
    end Read;
+
+   procedure Initialize_Block (Session : in out Block.Client_Session)
+   is
+   begin
+      null;
+   end Initialize_Block;
 
 end Component;

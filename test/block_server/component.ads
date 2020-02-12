@@ -19,7 +19,7 @@ is
    type Buffer is array (Unsigned_Long range <>) of Byte;
    type Request_Index is mod 2 ** 6;
 
-   package Block is new Gneiss.Block (Byte, Unsigned_Long, Buffer, Integer, Request_Index);
+   package Block is new Gneiss.Block (Byte, Unsigned_Long, Buffer, Request_Index);
 
    use type Block.Count;
    use type Block.Size;
