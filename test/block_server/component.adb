@@ -28,9 +28,9 @@ is
    Ready      : Boolean := False;
    Capability : Gneiss.Capability;
 
-   procedure Initialize;
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
 
-   package Log_Client is new Gneiss.Log.Client (Initialize);
+   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -39,37 +39,28 @@ is
       Log_Client.Initialize (Log, Cap, "log_block_server");
    end Construct;
 
-   procedure Initialize
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
    is
    begin
-      case Gneiss.Log.Status (Log) is
+      case Gneiss.Log.Status (Session) is
          when Gneiss.Initialized =>
-            if Block.Initialized (Dispatcher) then
-               return;
-            end if;
-            Block_Dispatcher.Initialize (Dispatcher, Capability, 42);
+            Block_Dispatcher.Initialize (Dispatcher, Capability);
             if Block.Initialized (Dispatcher) then
                Block_Dispatcher.Register (Dispatcher);
             else
-               Log_Client.Error (Log, "Failed to initialize dispatcher");
+               Log_Client.Error (Session, "Failed to initialize dispatcher");
                Main.Vacate (Capability, Main.Failure);
             end if;
-         when Gneiss.Pending =>
-            Log_Client.Initialize (Log, Capability, "log_block_server");
-         when Gneiss.Uninitialized =>
+         when others =>
             Main.Vacate (Capability, Main.Failure);
       end case;
-   end Initialize;
+   end Initialize_Log;
 
    procedure Destruct
    is
    begin
-      if Gneiss.Log.Status (Log) = Gneiss.Initialized then
-         Log_Client.Finalize (Log);
-      end if;
-      if Block.Initialized (Dispatcher) then
-         Block_Dispatcher.Finalize (Dispatcher);
-      end if;
+      Log_Client.Finalize (Log);
+      Block_Dispatcher.Finalize (Dispatcher);
    end Destruct;
 
    procedure Read (S : in out Block.Server_Session;
