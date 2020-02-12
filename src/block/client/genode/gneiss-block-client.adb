@@ -11,8 +11,6 @@ package body Gneiss.Block.Client with
    SPARK_Mode
 is
 
-   use type Cxx.Genode.Uint32_T;
-
    function Kind (R : Request) return Request_Kind is
       (case R.Packet.Opcode is
           when 0 => Read,
@@ -165,6 +163,7 @@ is
 
    function Event_Address return System.Address;
    function Crw_Address return System.Address;
+   function Init_Address return System.Address;
 
    function Event_Address return System.Address with
       SPARK_Mode => Off
@@ -180,19 +179,27 @@ is
       return Crw'Address;
    end Crw_Address;
 
+   function Init_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Initialize_Event'Address;
+   end Init_Address;
+
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Capability;
                          Path        :        String;
-                         Tag         :        Session_Id;
+                         Tag         :        Session_Index := 1;
                          Buffer_Size :        Byte_Length := 0)
    is
+      use type System.Address;
       C_Path : constant String := Path & Character'Val (0);
       subtype C_Path_String is String (1 .. C_Path'Length);
       subtype C_String is Cxx.Char_Array (1 .. C_Path'Length);
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String,
                                                             C_String);
    begin
-      if Initialized (C) then
+      if Status (C) in Initialized | Pending then
          return;
       end if;
       Cxx.Block.Client.Initialize (C.Instance,
@@ -200,16 +207,22 @@ is
                                    To_C_String (C_Path),
                                    Event_Address,
                                    Crw_Address,
+                                   Init_Address,
                                    Cxx.Genode.Uint64_T (Buffer_Size));
-      if Initialized (C) then
-         C.Instance.Tag := Session_Id'Pos (Tag);
+      if
+         C.Instance.Device /= System.Null_Address
+         and then C.Instance.Callback /= System.Null_Address
+         and then C.Instance.Write /= System.Null_Address
+         and then C.Instance.Env /= System.Null_Address
+      then
+         C.Instance.Tag := Session_Index_Option'(Valid => True, Value => Tag);
       end if;
    end Initialize;
 
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if not Initialized (C) then
+      if Status (C) = Uninitialized then
          return;
       end if;
       Cxx.Block.Client.Finalize (C.Instance);

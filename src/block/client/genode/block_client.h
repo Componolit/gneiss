@@ -15,10 +15,12 @@ namespace Block
             void *_callback; //procedure Event;
             void *_rw; //procedure Crw (Session, Kind, Start, Length, Data)
             void *_env; //Cai::Env
+            void *_init;
             Genode::uint32_t _tag;
 
         protected:
             void callback();
+            void init();
 
         public:
 
@@ -29,6 +31,7 @@ namespace Block
                     const char *device = nullptr,
                     void *callback = nullptr,
                     void *rw = nullptr,
+                    void *init = nullptr,
                     Genode::uint64_t buffer_size = 0);
             void finalize();
             void allocate_request (void *request,

@@ -31,21 +31,25 @@ class Block_session
         Genode::Allocator_avl _alloc;
         Block::Connection<> _block;
         Genode::Io_signal_handler<Cai::Block::Client> _event;
+        Genode::Signal_handler<Cai::Block::Client> _init;
     public:
         Block_session(
                 Genode::Env &env,
                 Genode::size_t size,
                 const char *device,
                 Cai::Block::Client *client,
-                void (Cai::Block::Client::*callback) ()) :
+                void (Cai::Block::Client::*callback) (),
+                void (Cai::Block::Client::*init) ()) :
             _heap(env.ram(), env.rm()),
             _alloc(&_heap),
             _block(env, &_alloc, size, device),
-            _event(env.ep(), *client, callback)
+            _event(env.ep(), *client, callback),
+            _init(env.ep(), *client, init)
         {
             TLOG("client=", client);
             _block.tx_channel()->sigh_ack_avail(_event);
             _block.tx_channel()->sigh_ready_to_submit(_event);
+            Genode::Signal_transmitter(_init).submit();
         }
 
         Genode::uint64_t available()
@@ -71,6 +75,7 @@ Cai::Block::Client::Client() :
     _callback(nullptr),
     _rw(nullptr),
     _env(nullptr),
+    _init(nullptr),
     _tag(0)
 {
     TLOG();
@@ -81,6 +86,7 @@ void Cai::Block::Client::initialize(
         const char *device,
         void *callback,
         void *rw,
+        void *init,
         Genode::uint64_t buffer_size)
 {
     TLOG("env=", env, " device=", device, " callback=", callback, " rw=", rw, " buffer_size=", buffer_size);
@@ -89,13 +95,15 @@ void Cai::Block::Client::initialize(
     _callback = callback;
     _rw = rw;
     _env = env;
+    _init = init;
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(env)->env);
     _device = _factory->create<Block_session>(
             *reinterpret_cast<Cai::Env *>(env)->env,
             buf_size,
             device ? device : default_device,
             this,
-            &Client::callback);
+            &Client::callback,
+            &Client::init);
     if(_device){
         _block_size = blk(_device)->info().block_size;
         _block_count = blk(_device)->info().block_count;
@@ -112,6 +120,7 @@ void Cai::Block::Client::finalize()
     _callback = nullptr;
     _rw = nullptr;
     _env = nullptr;
+    _init = nullptr;
 }
 
 void Cai::Block::Client::allocate_request (void *request,
@@ -211,4 +220,10 @@ void Cai::Block::Client::callback()
 {
     TLOG();
     Call(_callback);
+}
+
+
+void Cai::Block::Client::init()
+{
+    ((void (*)(Cai::Block::Client *))_init)(this);
 }
