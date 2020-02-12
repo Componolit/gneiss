@@ -1,7 +1,7 @@
 
 with System;
+with Gneiss;
 with Cxx;
-with Cxx.Genode;
 with Cxx.Block.Client;
 with Cxx.Block.Dispatcher;
 with Cxx.Block.Server;
@@ -17,13 +17,14 @@ package Gneiss_Internal.Block is
                                             Callback    => System.Null_Address,
                                             Write       => System.Null_Address,
                                             Env         => System.Null_Address,
-                                            Tag         => 0);
+                                            Init        => System.Null_Address,
+                                            Tag         => Gneiss.Session_Index_Option'(Valid => False));
    end record;
 
    type Dispatcher_Session is limited record
       Instance : Cxx.Block.Dispatcher.Class := (Root    => System.Null_Address,
                                                 Handler => System.Null_Address,
-                                                Tag     => 0);
+                                                Tag     => Gneiss.Session_Index_Option'(Valid => False));
    end record;
 
    type Server_Session is limited record
@@ -32,7 +33,7 @@ package Gneiss_Internal.Block is
                                             Block_Count => System.Null_Address,
                                             Block_Size  => System.Null_Address,
                                             Writable    => System.Null_Address,
-                                            Tag         => 0);
+                                            Tag         => Gneiss.Session_Index_Option'(Valid => False));
    end record;
 
    type Client_Request is limited record
@@ -42,19 +43,19 @@ package Gneiss_Internal.Block is
                                                         Tag          => 0,
                                                         Block_Number => 0,
                                                         Block_Count  => 0);
-      Status   : Request_Status      := Raw;
-      Session  : Cxx.Genode.Uint32_T := 0;
+      Status   : Request_Status                     := Raw;
+      Session  : Gneiss.Session_Index_Option        := Gneiss.Session_Index_Option'(Valid => False);
    end record;
 
    type Server_Request is limited record
-      Request  : Cxx.Block.Server.Request := (Kind         => 0,
-                                              Block_Number => 0,
-                                              Block_Count  => 0,
-                                              Success      => Cxx.Bool'Pos (0),
-                                              Offset       => 0,
-                                              Tag          => 0);
-      Status   : Request_Status;
-      Session  : Cxx.Genode.Uint32_T := 0;
+      Request  : Cxx.Block.Server.Request    := (Kind         => 0,
+                                                 Block_Number => 0,
+                                                 Block_Count  => 0,
+                                                 Success      => Cxx.Bool'Pos (0),
+                                                 Offset       => 0,
+                                                 Tag          => 0);
+      Status   : Request_Status              := Raw;
+      Session  : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
    end record;
 
    type Dispatcher_Capability is limited record

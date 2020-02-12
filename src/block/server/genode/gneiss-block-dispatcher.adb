@@ -1,6 +1,5 @@
 
 with System;
-with Cxx.Genode;
 with Cxx.Block.Dispatcher;
 with Cxx.Block.Server;
 use all type System.Address;
@@ -21,7 +20,7 @@ is
 
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Capability;
-                         Tag :        Session_Id)
+                         Tag :        Session_Index := 1)
    is
    begin
       if Initialized (D) then
@@ -29,7 +28,7 @@ is
       end if;
       Cxx.Block.Dispatcher.Initialize (D.Instance, Cap, Dispatch_Address);
       if Initialized (D) then
-         D.Instance.Tag := Session_Id'Pos (Tag);
+         D.Instance.Tag := Session_Index_Option'(Valid => True, Value => Tag);
       end if;
    end Initialize;
 
@@ -95,14 +94,14 @@ is
    procedure Session_Initialize (D : in out Dispatcher_Session;
                                  C :        Dispatcher_Capability;
                                  S : in out Server_Session;
-                                 I :        Session_Id)
+                                 I :        Session_Index := 1)
    is
       Label_Address : constant System.Address := Cxx.Block.Dispatcher.Label_Content (D.Instance, C.Instance);
       Label_Length  : constant Natural       := Natural (Cxx.Block.Dispatcher.Label_Length (D.Instance, C.Instance));
       Label : String (1 .. Label_Length) with
          Address => Label_Address;
    begin
-      S.Instance.Tag := Cxx.Genode.Uint32_T'Val (Session_Id'Pos (I) - Session_Id'Pos (Session_Id'First));
+      S.Instance.Tag := Session_Index_Option'(Valid => True, Value => I);
       if Label_Length = 0 then
          Serv.Initialize (S,
                           "",

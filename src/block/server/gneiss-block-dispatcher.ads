@@ -33,7 +33,7 @@ is
    --  @param Cap  System capability
    procedure Initialize (D   : in out Dispatcher_Session;
                          Cap :        Capability;
-                         Tag :        Session_Id);
+                         Tag :        Session_Index := 1);
 
    --  Register the server implementation Serv on the platform
    --
@@ -68,7 +68,7 @@ is
    procedure Session_Initialize (D : in out Dispatcher_Session;
                                  C :        Dispatcher_Capability;
                                  S : in out Server_Session;
-                                 I :        Session_Id) with
+                                 I :        Session_Index := 1) with
       Pre  => Initialized (D)
               and then Valid_Session_Request (D, C)
               and then not Serv.Ready (S)

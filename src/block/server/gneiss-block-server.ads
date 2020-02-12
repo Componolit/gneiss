@@ -266,7 +266,7 @@ private
 
    function Lemma_Ready (S : Server_Session) return Boolean is
       (Ready (S)) with
-      Pre => Valid (S);
+      Pre => Index (S).Valid;
 
    --  Return the block count of session S
    --
@@ -305,7 +305,7 @@ private
                                L :        String;
                                B :        Byte_Length) with
       Ghost,
-      Pre => Valid (S)
+      Pre => Index (S).Valid
              and then not Ready (S);
 
    pragma Annotate (GNATprove, False_Positive,
