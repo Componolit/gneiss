@@ -12,25 +12,26 @@ is
    use type Gneiss.Session_Status;
    type Request_Id is mod 8;
 
-   package Block is new Gneiss.Block (Character, Positive, String, Integer, Request_Id);
+   package Block is new Gneiss.Block (Character, Positive, String, Request_Id);
 
    procedure Write (C : in out Block.Client_Session;
                     R :        Request_Id;
                     D :    out String) with
-      Pre => Block.Initialized (C);
+      Pre => Block.Status (C) = Gneiss.Initialized;
 
    procedure Read (C : in out Block.Client_Session;
                    R :        Request_Id;
                    D :        String) with
-      Pre => Block.Initialized (C);
+      Pre => Block.Status (C) = Gneiss.Initialized;
 
-   procedure Initialize;
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
+   procedure Initialize_Block (Session : in out Block.Client_Session);
 
    function Image is new Basalt.Strings_Generic.Image_Ranged (Block.Count);
    function Image is new Basalt.Strings_Generic.Image_Ranged (Block.Size);
 
-   package Block_Client is new Block.Client (Run, Read, Write);
-   package Log_Client is new Gneiss.Log.Client (Initialize);
+   package Block_Client is new Block.Client (Initialize_Block, Run, Read, Write);
+   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
 
    type Request_Cache_Type is array (Request_Id'Range) of Block_Client.Request;
 
@@ -62,10 +63,10 @@ is
 
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
-      Pre  => Block.Initialized (Client)
+      Pre  => Block.Status (Client) = Gneiss.Initialized
               and then Gneiss.Log.Status (Log) = Gneiss.Initialized
               and then Operation in Block.Read .. Block.Write,
-      Post => Block.Initialized (Client)
+      Post => Block.Status (Client) = Gneiss.Initialized
               and then Gneiss.Log.Status (Log) = Gneiss.Initialized;
 
    procedure Write (C : in out Block.Client_Session;
@@ -146,7 +147,7 @@ is
                end case;
             end if;
 
-            pragma Loop_Invariant (Block.Initialized (Client));
+            pragma Loop_Invariant (Block.Status (Client) = Gneiss.Initialized);
             pragma Loop_Invariant (Gneiss.Log.Status (Log) = Gneiss.Initialized);
          end loop;
          Block_Client.Submit (Client);
@@ -175,46 +176,46 @@ is
       Log_Client.Initialize (Log, Cap, "log_block_client");
    end Construct;
 
-   procedure Initialize
+   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
    is
    begin
-      case Gneiss.Log.Status (Log) is
+      case Gneiss.Log.Status (Session) is
          when Gneiss.Initialized =>
-            if Block.Initialized (Client) then
-               return;
-            end if;
-            Log_Client.Info (Log, "Ada block test");
-            Block_Client.Initialize (Client, P_Cap, "/tmp/test_disk.img", 42);
-            if Block.Initialized (Client) then
-               --  FIXME: Calls of Image with explicit default parameters
-               --  Componolit/Workarounds#2
-               Log_Client.Info (Log, "Block device with "
-                                    & Image (Block.Block_Count (Client), 10, True)
-                                    & " blocks of size "
-                                    & Image (Block.Block_Size (Client), 10, True));
-               if Block.Writable (Client) then
-                  Run;
-               else
-                  Log_Client.Error (Log, "Block device not writable, cannot run test");
-                  Main.Vacate (P_Cap, Main.Failure);
-               end if;
-            else
-               Log_Client.Error (Log, "Failed to initialize Block session");
-               Main.Vacate (P_Cap, Main.Failure);
-            end if;
-         when Gneiss.Pending =>
-            Log_Client.Initialize (Log, P_Cap, "log_block_client");
-         when Gneiss.Uninitialized =>
+            Log_Client.Info (Session, "Ada block test");
+            Block_Client.Initialize (Client, P_Cap, "/tmp/test_disk.img");
+         when others =>
             Main.Vacate (P_Cap, Main.Failure);
       end case;
-   end Initialize;
+   end Initialize_Log;
+
+   procedure Initialize_Block (Session : in out Block.Client_Session)
+   is
+   begin
+      if Block.Status (Session) = Gneiss.Initialized then
+         --  FIXME: Calls of Image with explicit default parameters
+         --  Componolit/Workarounds#2
+         Log_Client.Info (Log, "Block device with "
+                              & Image (Block.Block_Count (Session), 10, True)
+                              & " blocks of size "
+                              & Image (Block.Block_Size (Session), 10, True));
+         if Block.Writable (Session) then
+            Run;
+         else
+            Log_Client.Error (Log, "Block device not writable, cannot run test");
+            Main.Vacate (P_Cap, Main.Failure);
+         end if;
+      else
+         Log_Client.Error (Log, "Failed to initialize Block session");
+         Main.Vacate (P_Cap, Main.Failure);
+      end if;
+   end Initialize_Block;
 
    procedure Run
    is
    begin
       if
          Gneiss.Log.Status (Log) = Gneiss.Initialized
-         and Block.Initialized (Client)
+         and Block.Status (Client) = Gneiss.Initialized
       then
          if not State_Finished (Write_State) then
             Log_Client.Info (Log, "Writing...");
