@@ -1,9 +1,13 @@
 
-with System;
 with Gneiss;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 
+generic
+   pragma Warnings (Off, "* is not referenced");
+   type Message_Buffer is private;
+   Null_Buffer : Message_Buffer;
+   pragma Warnings (On, "* is not referenced");
 package Gneiss_Internal.Message with
    SPARK_Mode
 is
@@ -37,24 +41,5 @@ is
       Client_Fd : Integer := -1;
       Server_Fd : Integer := -1;
    end record;
-
-   procedure Write (Fd   : Integer;
-                    Msg  : System.Address;
-                    Size : Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_message_write";
-
-   procedure Read (Fd   : Integer;
-                   Msg  : System.Address;
-                   Size : Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_message_read";
-
-   function Peek (Fd   : Integer) return Integer with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_message_peek";
 
 end Gneiss_Internal.Message;

@@ -39,7 +39,7 @@ is
       else
          Session.Index := Session_Index_Option'(Valid => False);
       end if;
-      Event;
+      Initialize_Event (Session);
    end Init;
 
    procedure Initialize (Session : in out Client_Session;

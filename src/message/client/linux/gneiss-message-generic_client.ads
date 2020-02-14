@@ -2,6 +2,7 @@
 with RFLX.Session;
 
 generic
+   with procedure Initialize_Event (Session : in out Client_Session);
    with procedure Event;
    Session_Type : RFLX.Session.Kind_Type;
 package Gneiss.Message.Generic_Client with

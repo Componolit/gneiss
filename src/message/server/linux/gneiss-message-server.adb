@@ -1,27 +1,16 @@
 
-with Gneiss_Internal.Message;
+with Gneiss_Internal.Message_Syscall;
 
 package body Gneiss.Message.Server with
    SPARK_Mode
 is
 
-   function Available (Session : Server_Session) return Boolean is
-      (Gneiss_Internal.Message.Peek (Session.Fd) >= Message_Buffer'Length);
-
-   procedure Write (Session : in out Server_Session;
-                    Data    :        Message_Buffer) with
+   procedure Send (Session : in out Server_Session;
+                   Data    :        Message_Buffer) with
       SPARK_Mode => Off
    is
    begin
-      Gneiss_Internal.Message.Write (Session.Fd, Data'Address, Data'Length);
-   end Write;
-
-   procedure Read (Session : in out Server_Session;
-                   Data    :    out Message_Buffer) with
-      SPARK_Mode => Off
-   is
-   begin
-      Gneiss_Internal.Message.Read (Session.Fd, Data'Address, Data'Length);
-   end Read;
+      Gneiss_Internal.Message_Syscall.Write (Session.Fd, Data'Address, Data'Size * 8);
+   end Send;
 
 end Gneiss.Message.Server;

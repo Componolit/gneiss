@@ -4,7 +4,7 @@ with Gneiss.Protocol;
 with Gneiss_Syscall;
 with Gneiss_Epoll;
 with Gneiss_Platform;
-with Gneiss_Internal.Message;
+with Gneiss_Internal.Message_Syscall;
 
 package body Gneiss.Message.Generic_Client with
    SPARK_Mode
@@ -61,7 +61,7 @@ is
          end if;
       end if;
       Session.Pending := False;
-      Event;
+      Initialize_Event (Session);
    end Init;
 
    C_Label : RFLX_String (1 .. 255);
@@ -105,14 +105,14 @@ is
    end Initialize;
 
    function Available (Session : Client_Session) return Boolean is
-      (Gneiss_Internal.Message.Peek (Session.File_Descriptor) >= Message_Buffer'Length);
+      (Gneiss_Internal.Message_Syscall.Peek (Session.File_Descriptor) >= Message_Buffer'Size * 8);
 
    procedure Write (Session : in out Client_Session;
                     Content :        Message_Buffer) with
       SPARK_Mode => Off
    is
    begin
-      Gneiss_Internal.Message.Write (Session.File_Descriptor, Content'Address, Content'Length);
+      Gneiss_Internal.Message_Syscall.Write (Session.File_Descriptor, Content'Address, Content'Size * 8);
    end Write;
 
    procedure Read (Session : in out Client_Session;
@@ -120,7 +120,7 @@ is
       SPARK_Mode => Off
    is
    begin
-      Gneiss_Internal.Message.Read (Session.File_Descriptor, Content'Address, Content'Length);
+      Gneiss_Internal.Message_Syscall.Read (Session.File_Descriptor, Content'Address, Content'Size * 8);
    end Read;
 
    procedure Finalize (Session : in out Client_Session)
