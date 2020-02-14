@@ -49,12 +49,6 @@ is
       Pre  => Initialized (Session),
       Post => Initialized (Session);
 
-   --  Finalizes session
-   --
-   --  @param Session  Dispatcher session instance
-   procedure Finalize (Session : in out Dispatcher_Session) with
-      Post => not Initialized (Session);
-
    --  Check if the passed dispatcher capability contains a valid session request
    --
    --  @param Session  Dispatcher session instance

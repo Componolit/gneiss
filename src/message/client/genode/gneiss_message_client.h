@@ -64,7 +64,7 @@ struct Gneiss::Message_Session_Client : Genode::Rpc_client<Gneiss::Message_Sessi
 
 struct Gneiss::Message_Connection : Genode::Connection<Gneiss::Message_Session>, Gneiss::Message_Session_Client
 {
-    enum { RAM_QUOTA = 4096 };
+    enum { RAM_QUOTA = 8192 };
 
     Genode::Signal_handler<Gneiss::Message_Connection> _init_sigh;
     Genode::Signal_handler<Gneiss::Message_Connection> _event_sigh;
