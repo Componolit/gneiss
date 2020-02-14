@@ -1,5 +1,4 @@
 
-with System;
 with Gneiss.Message;
 with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
@@ -8,16 +7,10 @@ package body Component with
    SPARK_Mode
 is
 
-   type Unsigned_Char is mod 2 ** 8;
-   type C_String is array (Positive range <>) of Unsigned_Char;
+   subtype Message_Buffer is String (1 .. 128);
+   Null_Buffer : constant Message_Buffer := (others => ASCII.NUL);
 
-   procedure Print_Message (Prefix : System.Address;
-                            Msg    : System.Address) with
-      Import,
-      Convention => C,
-      External_Name => "print_message";
-
-   package Message is new Gneiss.Message (Positive, Unsigned_Char, C_String, 1, 128);
+   package Message is new Gneiss.Message (Message_Buffer, Null_Buffer);
 
    type Server_Slot is record
       Ident : String (1 .. 513) := (others => ASCII.NUL);
@@ -27,11 +20,12 @@ is
    type Server_Reg is array (Gneiss.Session_Index range <>) of Message.Server_Session;
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
-   procedure Event;
-
    procedure Initialize (Session : in out Message.Server_Session);
 
    procedure Finalize (Session : in out Message.Server_Session);
+
+   procedure Recv (Session : in out Message.Server_Session;
+                   Data    :        Message_Buffer);
 
    function Ready (Session : Message.Server_Session) return Boolean;
 
@@ -40,23 +34,21 @@ is
                        Name     :        String;
                        Label    :        String);
 
-   package Message_Server is new Message.Server (Event, Initialize, Finalize, Ready);
+   package Message_Server is new Message.Server (Initialize, Finalize, Recv, Ready);
    package Message_Dispatcher is new Message.Dispatcher (Message_Server, Dispatch);
 
    Dispatcher  : Message.Dispatcher_Session;
    Capability  : Gneiss.Capability;
-   Buffer      : C_String (1 .. 129) := (others => 0);
    Servers     : Server_Reg (1 .. 2);
    Server_Data : Server_Meta (Servers'Range);
 
-   procedure Construct (Cap : Gns.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;
       Message_Dispatcher.Initialize (Dispatcher, Cap);
       if Message.Initialized (Dispatcher) then
          Message_Dispatcher.Register (Dispatcher);
-         null;
       else
          Main.Vacate (Capability, Main.Failure);
       end if;
@@ -65,23 +57,15 @@ is
    procedure Destruct
    is
    begin
-      Message_Dispatcher.Finalize (Dispatcher);
+      null;
    end Destruct;
 
-   procedure Event with
-      SPARK_Mode => Off
+   procedure Recv (Session : in out Message.Server_Session;
+                   Data    :        Message_Buffer)
    is
    begin
-      for I in Servers'Range loop
-         if
-            Message.Initialized (Servers (I))
-            and then Message_Server.Available (Servers (I))
-         then
-            Message_Server.Read (Servers (I), Buffer (1 .. 128));
-            Print_Message (Server_Data (I).Ident'Address, Buffer'Address);
-         end if;
-      end loop;
-   end Event;
+      Message_Server.Send (Session, Data);
+   end Recv;
 
    procedure Initialize (Session : in out Message.Server_Session)
    is

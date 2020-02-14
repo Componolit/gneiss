@@ -9,11 +9,12 @@ package body Component with
 is
 
    subtype Message_Buffer is String (1 .. 128);
+   Null_Buffer : constant Message_Buffer := (others => ASCII.NUL);
 
    procedure Event;
    function Null_Terminate (S : String) return String;
 
-   package Message is new Gneiss.Message (Message_Buffer);
+   package Message is new Gneiss.Message (Message_Buffer, Null_Buffer);
 
    procedure Initialize (Session : in out Message.Client_Session);
    procedure Initialize (Session : in out Gneiss.Log.Client_Session);
@@ -31,7 +32,7 @@ is
    begin
       for I in S'Range loop
          exit when S (I) = ASCII.NUL;
-         Last := Natural;
+         Last := I;
       end loop;
       return S (S'First .. Last);
    end Null_Terminate;
@@ -40,7 +41,7 @@ is
    is
    begin
       Capability := Cap;
-      Log_Client.Initialize (Log, Capability, "message");
+      Log_Client.Initialize (Log, Capability, "log_message");
    end Construct;
 
    procedure Initialize (Session : in out Gneiss.Log.Client_Session)
@@ -60,8 +61,8 @@ is
       Msg : Message_Buffer := (others => ASCII.NUL);
    begin
       if Message.Status (Session) = Gneiss.Initialized then
-         Log_Client.Info (Log, "Sending: " & Null_Terminate (Msg));
          Msg (Msg'First .. Msg'First + 11) := "Hello World!";
+         Log_Client.Info (Log, "Sending: " & Null_Terminate (Msg));
          Message_Client.Write (Session, Msg);
       else
          Main.Vacate (Capability, Main.Failure);
@@ -80,6 +81,7 @@ is
          while Message_Client.Available (Client) loop
             Message_Client.Read (Client, Msg);
             Log_Client.Info (Log, "Received: " & Null_Terminate (Msg));
+            Main.Vacate (Capability, Main.Success);
          end loop;
       end if;
    end Event;

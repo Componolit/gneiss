@@ -6,11 +6,9 @@ package Component with
    SPARK_Mode
 is
 
-   package Gns renames Gneiss;
-
-   procedure Construct (Cap : Gns.Capability);
+   procedure Construct (Cap : Gneiss.Capability);
    procedure Destruct;
 
-   package Main is new Gns.Component (Construct, Destruct);
+   package Main is new Gneiss.Component (Construct, Destruct);
 
 end Component;
