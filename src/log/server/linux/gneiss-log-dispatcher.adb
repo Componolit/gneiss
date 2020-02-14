@@ -4,7 +4,8 @@ with System;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss_Syscall;
-with Gneiss_Internal.Message;
+with Gneiss_Internal.Log;
+with Gneiss_Internal.Message_Syscall;
 
 package body Gneiss.Log.Dispatcher with
    SPARK_Mode
@@ -24,8 +25,8 @@ is
 
    procedure Read_Buffer (Session : in out Server_Session) with
       Pre =>  Initialized (Session)
-              and then Gneiss_Internal.Message.Peek (Session.Fd)
-                       >= Gneiss_Internal.Log.Message_Log.Message_Buffer'Length,
+              and then Gneiss_Internal.Message_Syscall.Peek (Session.Fd)
+                       >= Gneiss_Internal.Log.Message_Buffer'Length,
       Post => Initialized (Session)
               and then Session.Cursor = Session.Buffer'Last;
 
@@ -147,7 +148,7 @@ is
       SPARK_Mode => Off
    is
    begin
-      Gneiss_Internal.Message.Read (Session.Fd, Session.Buffer'Address, Session.Buffer'Length);
+      Gneiss_Internal.Message_Syscall.Read (Session.Fd, Session.Buffer'Address, Session.Buffer'Length);
       Session.Cursor := Session.Buffer'First;
    end Read_Buffer;
 

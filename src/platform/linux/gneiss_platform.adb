@@ -85,23 +85,20 @@ is
                               Cap     => S'Address);
    end Create_Initializer_Cap;
 
-   procedure Initializer_Call (Cap     : Initializer_Cap;
-                               Label   : String;
-                               Success : Boolean;
-                               Fd      : Integer)
+   procedure Call (Cap     : Initializer_Cap;
+                   Label   : String;
+                   Success : Boolean;
+                   Fd      : Integer)
    is
-      procedure Initializer (Ssn : in out Session_Type;
-                             Lbl :        String;
-                             Suc :        Boolean;
-                             Fdr :        Integer) with
+      procedure Initializer (Ssn : System.Address;
+                             Lbl : String;
+                             Suc : Boolean;
+                             Fdr : Integer) with
          Import,
          Address => Cap.Address;
-      Session : Session_Type with
-         Import,
-         Address => Cap.Cap;
    begin
-      Initializer (Session, Label, Success, Fd);
-   end Initializer_Call;
+      Initializer (Cap.Cap, Label, Success, Fd);
+   end Call;
 
    function Create_Register_Initializer_Cap return Register_Initializer_Cap with
       SPARK_Mode => Off
@@ -153,24 +150,21 @@ is
                              Cap     => S'Address);
    end Create_Dispatcher_Cap;
 
-   procedure Dispatcher_Call (Cap   :        Dispatcher_Cap;
-                              Name  :        String;
-                              Label :        String;
-                              Fd    : in out Gneiss_Syscall.Fd_Array;
-                              Num   :    out Natural)
+   procedure Call (Cap   :        Dispatcher_Cap;
+                   Name  :        String;
+                   Label :        String;
+                   Fd    : in out Gneiss_Syscall.Fd_Array;
+                   Num   :    out Natural)
    is
-      procedure Dispatch (S : in out Session_Type;
+      procedure Dispatch (S :        System.Address;
                           N :        String;
                           L :        String;
                           F : in out Gneiss_Syscall.Fd_Array;
                           C :    out Natural) with
          Import,
          Address => Cap.Address;
-      Session : Session_Type with
-         Import,
-         Address => Cap.Cap;
    begin
-      Dispatch (Session, Name, Label, Fd, Num);
-   end Dispatcher_Call;
+      Dispatch (Cap.Cap, Name, Label, Fd, Num);
+   end Call;
 
 end Gneiss_Platform;

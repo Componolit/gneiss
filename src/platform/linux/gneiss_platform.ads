@@ -56,12 +56,10 @@ is
    function Create_Initializer_Cap (S : Session_Type) return Initializer_Cap with
       Post => Is_Valid (Create_Initializer_Cap'Result);
 
-   generic
-      type Session_Type is limited private;
-   procedure Initializer_Call (Cap     : Initializer_Cap;
-                               Label   : String;
-                               Success : Boolean;
-                               Fd      : Integer) with
+   procedure Call (Cap     : Initializer_Cap;
+                   Label   : String;
+                   Success : Boolean;
+                   Fd      : Integer) with
       Pre => Is_Valid (Cap);
 
    generic
@@ -100,13 +98,11 @@ is
    function Create_Dispatcher_Cap (S : Session_Type) return Dispatcher_Cap with
       Post => Is_Valid (Create_Dispatcher_Cap'Result);
 
-   generic
-      type Session_Type is limited private;
-   procedure Dispatcher_Call (Cap   :        Dispatcher_Cap;
-                              Name  :        String;
-                              Label :        String;
-                              Fd    : in out Gneiss_Syscall.Fd_Array;
-                              Num   :    out Natural) with
+   procedure Call (Cap   :        Dispatcher_Cap;
+                   Name  :        String;
+                   Label :        String;
+                   Fd    : in out Gneiss_Syscall.Fd_Array;
+                   Num   :    out Natural) with
       Pre => Is_Valid (Cap);
 
 private

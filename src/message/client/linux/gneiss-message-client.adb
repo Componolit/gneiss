@@ -7,7 +7,7 @@ package body Gneiss.Message.Client with
 is
 
    package Message_Client is new Gneiss.Message.Generic_Client
-      (Event, RFLX.Session.Message);
+      (Initialize_Event, Event, RFLX.Session.Message);
 
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;

@@ -3,6 +3,7 @@ with System;
 with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss_Syscall;
+with Gneiss_Internal.Message_Syscall;
 with RFLX.Session;
 
 package body Gneiss.Message.Dispatcher with
@@ -13,11 +14,28 @@ is
    procedure Session_Event (Session : in out Server_Session);
    function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Server_Session, Session_Event);
 
+   function Available (Session : Server_Session) return Boolean is
+      (Gneiss_Internal.Message_Syscall.Peek (Session.Fd) >= Message_Buffer'Size * 8);
+
+   procedure Read (Session : in out Server_Session;
+                   Data    :    out Message_Buffer);
+
+   procedure Read (Session : in out Server_Session;
+                   Data    :    out Message_Buffer) with
+      SPARK_Mode => Off
+   is
+   begin
+      Gneiss_Internal.Message_Syscall.Read (Session.Fd, Data'Address, Data'Size * 8);
+   end Read;
+
    procedure Session_Event (Session : in out Server_Session)
    is
-      pragma Unreferenced (Session);
+      Buffer : Message_Buffer;
    begin
-      Server_Instance.Event;
+      if Available (Session) then
+         Read (Session, Buffer);
+         Server_Instance.Receive (Session, Buffer);
+      end if;
    end Session_Event;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;
@@ -76,12 +94,6 @@ is
                             Reg_Dispatcher_Cap (Session),
                             Ignore_Success);
    end Register;
-
-   procedure Finalize (Session : in out Dispatcher_Session)
-   is
-   begin
-      null;
-   end Finalize;
 
    function Valid_Session_Request (Session : Dispatcher_Session;
                                    Cap     : Dispatcher_Capability) return Boolean is
