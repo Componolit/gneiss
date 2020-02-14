@@ -13,6 +13,7 @@ private with Gneiss_Internal.Message;
 
 generic
    type Message_Buffer is private;
+   Null_Buffer : Message_Buffer;
 package Gneiss.Message with
    SPARK_Mode
 is
@@ -67,9 +68,11 @@ is
 
 private
 
-   type Client_Session is new Gneiss_Internal.Message.Client_Session;
-   type Server_Session is new Gneiss_Internal.Message.Server_Session;
-   type Dispatcher_Session is new Gneiss_Internal.Message.Dispatcher_Session;
-   type Dispatcher_Capability is new Gneiss_Internal.Message.Dispatcher_Capability;
+   package Internal is new Gneiss_Internal.Message (Message_Buffer, Null_Buffer);
+
+   type Client_Session is new Internal.Client_Session;
+   type Server_Session is new Internal.Server_Session;
+   type Dispatcher_Session is new Internal.Dispatcher_Session;
+   type Dispatcher_Capability is new Internal.Dispatcher_Capability;
 
 end Gneiss.Message;

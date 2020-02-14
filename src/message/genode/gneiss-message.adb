@@ -18,18 +18,22 @@ is
           Uninitialized);
 
    function Initialized (Session : Server_Session) return Boolean is
-      (False);
+      (Session.Component /= System.Null_Address
+       and then Session.Index.Valid);
 
    function Initialized (Session : Dispatcher_Session) return Boolean is
-      (False);
+      (Session.Root /= System.Null_Address
+       and then Session.Dispatch /= System.Null_Address
+       and then Session.Env /= System.Null_Address
+       and then Session.Index.Valid);
 
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
 
    function Index (Session : Server_Session) return Session_Index_Option is
-      (Session_Index_Option'(Valid => False));
+      (Session.Index);
 
    function Index (Session : Dispatcher_Session) return Session_Index_Option is
-      (Session_Index_Option'(Valid => False));
+      (Session.Index);
 
 end Gneiss.Message;
