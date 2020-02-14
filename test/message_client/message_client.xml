@@ -1,6 +1,8 @@
 <config>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
     <component name="message_client" file="libcomponent_message_client.so">
         <service name="Message" server="message_server"/>
+        <service name="Log" server="log_server"/>
     </component>
     <component name="message_server" file="libcomponent_message_server.so">
     </component>
