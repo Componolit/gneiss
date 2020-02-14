@@ -13,8 +13,6 @@ generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs each subprogram
 
-   --  Called when the status of the message channel changed
-   with procedure Event;
    --  Custom initialization for the server,
    --  automatically called by Gneiss.Block.Dispatcher.Session_Accept
    --
