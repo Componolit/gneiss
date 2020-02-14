@@ -1,8 +1,6 @@
 
 with Basalt.Queue;
 with Gneiss_Access;
-with Gneiss_Internal.Message;
-with Gneiss_Internal.Rom;
 with Gneiss.Protocol;
 with Gneiss_Platform;
 with Gneiss_Log;
@@ -155,10 +153,6 @@ is
    Read_Label       : String (1 .. 255) := (others => Character'First);
    Session          : constant Dummy_Session    := (null record);
    Event_Cap        : Gneiss_Platform.Event_Cap := Broker_Event_Cap (Session);
-
-   procedure Message_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Message.Client_Session);
-   procedure Message_Dispatcher is new Gneiss_Platform.Dispatcher_Call (Gneiss_Internal.Message.Dispatcher_Session);
-   procedure Rom_Initializer is new Gneiss_Platform.Initializer_Call (Gneiss_Internal.Rom.Client_Session);
 
    function Broker_Event_Address return System.Address with
       SPARK_Mode => Off
@@ -357,10 +351,8 @@ is
       for I of Initializers (Kind) loop
          if Gneiss_Platform.Is_Valid (I) then
             case Kind is
-               when RFLX.Session.Message | RFLX.Session.Log =>
-                  Message_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
-               when RFLX.Session.Rom =>
-                  Rom_Initializer (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
+               when RFLX.Session.Message | RFLX.Session.Log | RFLX.Session.Rom =>
+                  Gneiss_Platform.Call (I, Label, Fd (Fd'First) >= 0, Fd (Fd'First));
                when RFLX.Session.Memory =>
                   null;
             end case;
@@ -382,10 +374,10 @@ is
          Index : Positive := E.Name'First;
          Num   : Natural;
       begin
-         Message_Dispatcher (Services (Kind),
-                             E.Name (E.Name'First .. E.N_Last),
-                             E.Label (E.Label'First .. E.L_Last),
-                             Fd, Num);
+         Gneiss_Platform.Call (Services (Kind),
+                               E.Name (E.Name'First .. E.N_Last),
+                               E.Label (E.Label'First .. E.L_Last),
+                               Fd, Num);
          Accepted := Num > 0;
          if not Accepted then
             return;
