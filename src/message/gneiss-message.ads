@@ -17,7 +17,7 @@ generic
 package Gneiss.Message with
    SPARK_Mode
 is
-   --  pragma Compile_Time_Error (Message_Buffer'Size /= 128 * 8, "Buffer size must be 128 byte");
+   pragma Compile_Time_Error (Message_Buffer'Size /= 128 * 8, "Buffer size must be 128 byte");
 
    --  Client, Server and Dispatcher session objects
    type Client_Session is limited private;
