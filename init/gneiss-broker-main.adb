@@ -37,9 +37,7 @@ is
       Status           := 1;
       Conf.Load (Conf_Loc);
       Query := SXML.Query.Init (State.Xml);
-      if
-         not SXML.Query.Is_Open (Query, State.Xml)
-      then
+      if not SXML.Query.Is_Open (Query, State.Xml) then
          Gneiss_Log.Error ("Init failed");
          return;
       end if;
