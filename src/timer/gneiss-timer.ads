@@ -41,8 +41,16 @@ is
    --  Timer client session object
    type Client_Session is limited private;
 
+   --  Gets the sessions current status
+   --
+   --  @param Session  Client session
+   --  @return         Session status
    function Status (C : Client_Session) return Session_Status;
 
+   --  Get the sessions index
+   --
+   --  @param Session  Client session
+   --  @return         Index option that can be invalid
    function Index (C : Client_Session) return Session_Index_Option;
 
 private

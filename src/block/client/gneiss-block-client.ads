@@ -15,6 +15,9 @@ generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs this procedure
 
+   --  Initialization event handler
+   --
+   --  @param Session  Client session
    with procedure Initialize_Event (Session : in out Client_Session);
 
    --  Block client event handler
