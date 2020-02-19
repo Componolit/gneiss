@@ -12,7 +12,9 @@
 private with Gneiss_Internal.Message;
 
 generic
+   --  Opaque message buffer, size must be 128 byte
    type Message_Buffer is private;
+   --  Default message buffer value
    Null_Buffer : Message_Buffer;
 package Gneiss.Message with
    SPARK_Mode

@@ -11,7 +11,16 @@
 
 generic
    pragma Warnings (Off, "* is not referenced");
+
+   --  Initialization event handler
+   --
+   --  @param Session  Client session
    with procedure Initialize_Event (Session : in out Client_Session);
+
+   --  Read the ROM data
+   --
+   --  @param Session  Client session
+   --  @param Data     ROM contents
    with procedure Read (Session : in out Client_Session;
                         Data    :        Buffer);
    pragma Warnings (On, "* is not referenced");
@@ -19,14 +28,26 @@ package Gneiss.Rom.Client with
    SPARK_Mode
 is
 
+   --  Initialize client session
+   --
+   --  @param Session  Client session
+   --  @param Cap      System capability
+   --  @param Label    Session label
+   --  @param Idx      Session index
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Gneiss.Capability;
                          Label   :        String;
                          Idx     :        Session_Index := 1);
 
+   --  Update the rom and call Read
+   --
+   --  @param Session  Client session
    procedure Update (Session : in out Client_Session) with
       Pre => Status (Session) = Initialized;
 
+   --  Close the session
+   --
+   --  @param Session  Client session
    procedure Finalize (Session : in out Client_Session);
 
 end Gneiss.Rom.Client;

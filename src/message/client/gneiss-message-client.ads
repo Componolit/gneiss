@@ -10,7 +10,12 @@
 --
 
 generic
+   --  Initialization event
+   --
+   --  @param Session  Client session
    with procedure Initialize_Event (Session : in out Client_Session);
+
+   --  Message received event
    with procedure Event;
 package Gneiss.Message.Client with
    SPARK_Mode

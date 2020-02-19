@@ -63,8 +63,8 @@ is
    --
    --  @param D  Dispatcher session instance
    --  @param C  Unique capability for this session request
-   --  @param I  Server session instance to be initialized
-   --  @param T  Session Id to be given to server
+   --  @param S  Server session instance to be initialized
+   --  @param I  Session index to be given to server
    procedure Session_Initialize (D : in out Dispatcher_Session;
                                  C :        Dispatcher_Capability;
                                  S : in out Server_Session;
@@ -82,7 +82,7 @@ is
    --
    --  @param D  Dispatcher session instance
    --  @param C  Unique capability for this session request
-   --  @param I  Server session instance to handle client connection with
+   --  @param S  Server session instance to handle client connection with
    procedure Session_Accept (D : in out Dispatcher_Session;
                              C :        Dispatcher_Capability;
                              S : in out Server_Session) with
@@ -103,7 +103,7 @@ is
    --
    --  @param D  Dispatcher session instance
    --  @param C  Unique capability for this session request
-   --  @param I  Server session instance to check for removal
+   --  @param S  Server session instance to check for removal
    procedure Session_Cleanup (D : in out Dispatcher_Session;
                               C :        Dispatcher_Capability;
                               S : in out Server_Session) with
