@@ -18,6 +18,7 @@ generic
    --
    --  @param Session  Server session instance
    with procedure Initialize (Session : in out Server_Session);
+
    --  Custom finalization for the server
    --
    --  Is automatically called by Gneiss.Block.Dispatcher.Session_Cleanup
@@ -26,6 +27,10 @@ generic
    --  @param S  Server session instance
    with procedure Finalize (Session : in out Server_Session);
 
+   --  Called when a message is recieved
+   --
+   --  @param Session  Server session
+   --  @param Data     Received message
    with procedure Receive (Session : in out Server_Session;
                            Data    :        Message_Buffer);
 

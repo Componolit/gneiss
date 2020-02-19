@@ -157,9 +157,17 @@ is
    --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
 
+   --  Gets the sessions current status
+   --
+   --  @param Session  Client session
+   --  @return         Session status
    function Status (Session : Client_Session) return Session_Status with
       Annotate => (GNATprove, Terminating);
 
+   --  Get the sessions index
+   --
+   --  @param Session  Client session
+   --  @return         Index option that can be invalid
    function Index (Session : Client_Session) return Session_Index_Option with
       Annotate => (GNATprove, Terminating);
 
@@ -194,6 +202,10 @@ is
    function Initialized (S : Server_Session) return Boolean with
       Annotate => (GNATprove, Terminating);
 
+   --  Get the sessions index
+   --
+   --  @param Session  Server session
+   --  @return         Index option that can be invalid
    function Index (Session : Server_Session) return Session_Index_Option with
       Annotate => (GNATprove, Terminating);
 
@@ -204,6 +216,10 @@ is
    function Initialized (D : Dispatcher_Session) return Boolean with
       Annotate => (GNATprove, Terminating);
 
+   --  Get the sessions index
+   --
+   --  @param Session  Dispatcher session
+   --  @return         Index option that can be invalid
    function Index (Session : Dispatcher_Session) return Session_Index_Option with
       Annotate => (GNATprove, Terminating);
 

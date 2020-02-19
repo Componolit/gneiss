@@ -10,6 +10,9 @@
 --
 
 generic
+   --  Session initialization event
+   --
+   --  @param Session  Client session
    with procedure Initialize_Event (Session : in out Client_Session);
 package Gneiss.Log.Client with
    SPARK_Mode

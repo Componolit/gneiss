@@ -27,18 +27,35 @@ is
    --  This package must only be instantiated once
    pragma Warnings (Off, "all instances of");
 
+   --  Status of the component on exit
+   --
+   --  @value Success  The component exited successfully.
+   --  @value Failure  The component exited with an error.
    type Component_Status is (Success, Failure);
 
+   --  Initial entrypoint for every component, called once on component startup
+   --
+   --  @param Cap  System capability
    procedure Construct (Cap : Capability) with
       Export,
       Convention => C,
       External_Name => "componolit_interfaces_component_construct";
 
+   --  Exit method of a component.
+   --
+   --  This procedure is called once the platform decides to exit the component.
    procedure Destruct with
       Export,
       Convention => C,
       External_Name => "componolit_interfaces_component_destruct";
 
+   --  Signal component
+   --
+   --  This procedures signals the components desire to stop to the platform. It will always return
+   --  and after returning control to the platform it will decide if Destruct will be called.
+   --
+   --  @param Cap     System capability
+   --  @param Status  Component exit status
    procedure Vacate (Cap    : Capability;
                      Status : Component_Status) with
       Global => (In_Out => Platform);
