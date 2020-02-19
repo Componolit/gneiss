@@ -104,7 +104,7 @@ is
    --  @return   Request type
    function Kind (R : Request) return Request_Kind with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (R) = Pending;
+      Pre      => Status (R) = Pending;
 
    --  Get request start block
    --
@@ -112,7 +112,7 @@ is
    --  @return   First block id to be handled by this request
    function Start (R : Request) return Id with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (R) = Pending;
+      Pre      => Status (R) = Pending;
 
    --  Get request length in blocks
    --
@@ -120,7 +120,7 @@ is
    --  @return   Number of consecutive blocks handled by this request
    function Length (R : Request) return Count with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (R) = Pending;
+      Pre      => Status (R) = Pending;
 
    --  Check if a request is assigned to this session
    --
@@ -133,8 +133,8 @@ is
    function Assigned (S : Server_Session;
                       R : Request) return Boolean with
       Annotate => (GNATprove, Terminating),
-      Pre => Initialized (S)
-             and then Status (R) /= Raw;
+      Pre      => Initialized (S)
+                  and then Status (R) /= Raw;
 
    --  Process an incoming request
    --
