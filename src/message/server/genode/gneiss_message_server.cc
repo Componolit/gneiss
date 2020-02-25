@@ -37,6 +37,7 @@ void Gneiss::Message_Server::finalize()
 {
     TLOG("");
     _factory->destroy<Gneiss::Message_Component>(_component);
+    _component = nullptr;
 }
 
 Gneiss::Message_Component::Message_Component (Gneiss::Message_Server *server,

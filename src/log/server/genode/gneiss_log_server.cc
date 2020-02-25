@@ -2,6 +2,7 @@
 #include <base/env.h>
 #include <factory.h>
 #include <gneiss_log_server.h>
+#include <factory.h>
 
 //#define ENABLE_TRACE
 #include <trace.h>
@@ -14,14 +15,15 @@ Gneiss::Log_Server::Log_Server() :
     TLOG("");
 }
 
-void Gneiss::Log_Server::initialize(Gneiss::Log_Component *component,
+void Gneiss::Log_Server::initialize(Genode::Env *env,
                                     void(*write)(Gneiss::Log_Server *, const char *, int, int *))
 {
-    TLOG("component=", component, " write=", write);
-    if(!component || !write){
+    TLOG("env=", env, " write=", write);
+    if(!env || !write){
         return;
     }
-    _component = component;
+    check_factory(_factory, *env);
+    _component = _factory->create2<Gneiss::Log_Component>(this);
     _write = write;
 }
 
@@ -34,6 +36,7 @@ Gneiss::Log_Component *Gneiss::Log_Server::component()
 void Gneiss::Log_Server::finalize()
 {
     TLOG("");
+    _factory->destroy(_component);
     _component = nullptr;
     _write = nullptr;
 }

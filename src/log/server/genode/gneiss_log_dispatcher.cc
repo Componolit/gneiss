@@ -44,15 +44,13 @@ void Gneiss::Log_Dispatcher::session_initialize(Gneiss::Log_Dispatcher_Capabilit
                                                 void (*write)(Gneiss::Log_Server *, const char *, int, int*))
 {
     TLOG("server=", server, " write=", (void *)write);
-    check_factory(_factory, *_env);
-    server->initialize(_factory->create2<Gneiss::Log_Component>(server), write);
+    server->initialize(_env, write);
 }
 
 void Gneiss::Log_Dispatcher::cleanup(Gneiss::Log_Dispatcher_Capability *cap, Gneiss::Log_Server *server)
 {
     TLOG("cap=", cap, " server=", server);
     if(cap->session == server->component()){
-        _factory->destroy<Gneiss::Log_Component>(server->component());
         server->finalize();
     }
 }

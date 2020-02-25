@@ -26,7 +26,7 @@ class Gneiss::Log_Server
 
     public:
         Log_Server();
-        void initialize(Gneiss::Log_Component *, void(*)(Gneiss::Log_Server *, const char *, int, int *));
+        void initialize(Genode::Env *, void(*)(Gneiss::Log_Server *, const char *, int, int *));
         Gneiss::Log_Component *component();
         void finalize();
 };
