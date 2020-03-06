@@ -17,7 +17,7 @@ struct Gneiss::Message_Session : Genode::Session
 
     enum { CAP_QUOTA = 3 };
 
-    typedef struct Message_Buffer { unsigned char buf [128]; } Message_Buffer;
+    struct Message_Buffer { unsigned char buf [128]; };
 
     virtual void sigh(Genode::Signal_context_capability) = 0;
 

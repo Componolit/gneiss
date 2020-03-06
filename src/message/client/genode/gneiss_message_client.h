@@ -70,11 +70,15 @@ struct Gneiss::Message_Connection : Genode::Connection<Gneiss::Message_Session>,
     Genode::Signal_handler<Gneiss::Message_Connection> _event_sigh;
     Gneiss::Message_Client *_client;
 
-    Message_Connection(Genode::Env &, Genode::Session_label, Gneiss::Message_Client *);
-    void init();
-    void event();
+    Message_Connection(Genode::Env &, Genode::Session_label, Gneiss::Message_Client &);
+    Message_Connection(Genode::Env &, Genode::Session_label = "");
+
+    protected:
+        void init();
+        void event();
 
     private:
+        void dummy_event();
         Message_Connection(const Message_Connection &);
         Message_Connection &operator = (Message_Connection &);
 };
