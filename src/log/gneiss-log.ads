@@ -23,11 +23,11 @@ is
    --  Dispatcher capability used to enforce scope for dispatcher session procedures
    type Dispatcher_Capability is limited private;
 
-   --  Check initialization status
+   --  Check if session is initialized
    --
    --  @param Session  Client session instance
    --  @return         Initialization status
-   function Status (Session : Client_Session) return Session_Status;
+   function Initialized (Session : Client_Session) return Boolean;
 
    --  Check if session is initialized
    --
@@ -40,13 +40,6 @@ is
    --  @param Session  Server session instance
    --  @return         True if session is initialized
    function Initialized (Session : Server_Session) return Boolean;
-
-   --  Get the index value that has been set on initialization
-   --
-   --  @param Session  Client session instance
-   --  @return         Session index
-   function Index (Session : Client_Session) return Session_Index_Option with
-      Post => (Status (Session) = Uninitialized) = not Index'Result.Valid;
 
    --  Get the index value that has been set on initialization
    --

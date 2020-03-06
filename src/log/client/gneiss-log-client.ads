@@ -9,11 +9,6 @@
 --  GNU Affero General Public License version 3.
 --
 
-generic
-   --  Session initialization event
-   --
-   --  @param Session  Client session
-   with procedure Initialize_Event (Session : in out Client_Session);
 package Gneiss.Log.Client with
    SPARK_Mode
 is
@@ -26,14 +21,13 @@ is
    --  @param Idx     Session index
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
-                         Label   :        String;
-                         Idx     :        Session_Index := 1);
+                         Label   :        String);
 
    --  Finalize client session
    --
    --  @param Session  Client session instance
    procedure Finalize (Session : in out Client_Session) with
-      Post => Status (Session) = Uninitialized;
+      Post => not Initialized (Session);
 
    --  Print unformatted message
    --
@@ -41,8 +35,8 @@ is
    --  @param Msg      Message to print
    procedure Print (Session : in out Client_Session;
                     Msg     :        String) with
-      Pre  => Status (Session) = Initialized,
-      Post => Status (Session) = Initialized;
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
    --  Print info message
    --
@@ -52,8 +46,8 @@ is
    procedure Info (Session : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True) with
-      Pre  => Status (Session) = Initialized,
-      Post => Status (Session) = Initialized;
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
    --  Print warning message
    --
@@ -63,8 +57,8 @@ is
    procedure Warning (Session : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True) with
-      Pre  => Status (Session) = Initialized,
-      Post => Status (Session) = Initialized;
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
    --  Print error message
    --
@@ -74,14 +68,14 @@ is
    procedure Error (Session : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True) with
-      Pre  => Status (Session) = Initialized,
-      Post => Status (Session) = Initialized;
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
    --  Flush all messages to make sure they're printed
    --
    --  @param Session        Client session instance
    procedure Flush (Session : in out Client_Session) with
-      Pre  => Status (Session) = Initialized,
-      Post => Status (Session) = Initialized;
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
 end Gneiss.Log.Client;
