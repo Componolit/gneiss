@@ -1,54 +1,57 @@
 
-with Cxx;
-with Cxx.Log.Client;
+with System;
 with Basalt.Slicer;
 
 package body Gneiss.Log.Client with
    SPARK_Mode
 is
-   use type Cxx.Bool;
+
+   Maximum_Message_Length : constant Integer := 216;
 
    package String_Slicer is new Basalt.Slicer (Positive);
 
-   function Initialized (C : Cxx.Log.Client.Class) return Boolean is
-      (Cxx.Log.Client.Initialized (C) = Cxx.Bool'Val (1));
+   procedure Genode_Initialize (Session : in out Client_Session;
+                                Cap     :        Capability;
+                                Label   :        String) with
+      Import,
+      Convention    => C,
+      External_Name => "_ZN6Gneiss10Log_Client10initializeEPNS_10CapabilityEPKc";
 
-   procedure Write (C : Cxx.Log.Client.Class;
-                    M : String) with
-      Pre => Initialized (C)
-             and then M'Length > 0;
+   procedure Genode_Write (Session : in out Client_Session;
+                           Msg     :        String) with
+      Import,
+      Convention    => C,
+      External_Name => "_ZN6Gneiss10Log_Client5writeEPKc";
 
-   procedure C_Write (C : Cxx.Log.Client.Class;
-                      M : String) with
-      Pre => Initialized (C);
+   procedure Genode_Finalize (Session : in out Client_Session) with
+      Import,
+      Convention    => C,
+      External_Name => "_ZN6Gneiss10Log_Client8finalizeEv";
+
+   procedure Write (C : in out Client_Session;
+                    M :        String);
 
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
-                         Label   :        String;
-                         Idx     :        Session_Index := 1) with
+                         Label   :        String) with
       SPARK_Mode => Off
    is
-      C_Label : String := Label & Character'Val (0);
    begin
-      if Status (Session) = Initialized then
+      if Initialized (Session) then
          return;
       end if;
-      Cxx.Log.Client.Initialize (Session.Instance,
-                                 Cap,
-                                 C_Label'Address,
-                                 Initialize_Event'Address);
+      Genode_Initialize (Session, Cap, Label & ASCII.NUL);
       Session.Cursor := Session.Buffer'First;
-      Session.Index  := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
    procedure Finalize (Session : in out Client_Session)
    is
    begin
-      if Status (Session) = Uninitialized then
+      if not Initialized (Session) then
          return;
       end if;
-      Session.Index := Gneiss.Session_Index_Option'(Valid => False);
-      Cxx.Log.Client.Finalize (Session.Instance);
+      Genode_Finalize (Session);
+      Session.Session := System.Null_Address;
    end Finalize;
 
    Blue       : constant String    := Character'Val (8#33#) & "[34m";
@@ -101,7 +104,7 @@ is
    is
    begin
       if Session.Cursor > Session.Buffer'First then
-         Write (Session.Instance, Session.Buffer (Session.Buffer'First .. Session.Cursor - 1));
+         Write (Session, Session.Buffer (Session.Buffer'First .. Session.Cursor - 1));
       end if;
       Session.Cursor := Session.Buffer'First;
    end Flush;
@@ -115,7 +118,7 @@ is
       end if;
       if Msg'Length > Session.Buffer'Last - Session.Cursor then
          Flush (Session);
-         Write (Session.Instance, Msg);
+         Write (Session, Msg);
       else
          Session.Buffer (Session.Cursor .. Session.Cursor + Msg'Length - 1) := Msg;
          Session.Cursor := Session.Cursor + Msg'Length;
@@ -123,11 +126,10 @@ is
       end if;
    end Print;
 
-   procedure Write (C : Cxx.Log.Client.Class;
-                    M : String)
+   procedure Write (C : in out Client_Session;
+                    M :        String)
    is
-      Len    : constant Positive     := Positive (Cxx.Log.Client.Maximum_Message_Length (C));
-      Slicer : String_Slicer.Context := String_Slicer.Create (M'First, M'Last, Len);
+      Slicer : String_Slicer.Context := String_Slicer.Create (M'First, M'Last, Maximum_Message_Length);
       Slice  : String_Slicer.Slice;
    begin
       loop
@@ -135,19 +137,10 @@ is
          pragma Loop_Invariant (String_Slicer.Get_Range (Slicer).First = M'First);
          pragma Loop_Invariant (String_Slicer.Get_Range (Slicer).Last = M'Last);
          Slice := String_Slicer.Get_Slice (Slicer);
-         C_Write (C, M (Slice.First .. Slice.Last));
+         Genode_Write (C, M (Slice.First .. Slice.Last) & ASCII.NUL);
          exit when not String_Slicer.Has_Next (Slicer);
          String_Slicer.Next (Slicer);
       end loop;
    end Write;
-
-   procedure C_Write (C : Cxx.Log.Client.Class;
-                      M : String) with
-      SPARK_Mode => Off
-   is
-      C_Msg : String := M & ASCII.NUL;
-   begin
-      Cxx.Log.Client.Write (C, C_Msg'Address);
-   end C_Write;
 
 end Gneiss.Log.Client;
