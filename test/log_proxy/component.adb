@@ -52,7 +52,6 @@ is
    type Server_Reg is array (Gneiss.Session_Index range <>) of Gneiss.Log.Server_Session;
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
-   procedure Log_Event (Session : in out Gneiss.Log.Client_Session);
    procedure Write (Session : in out Gneiss.Log.Server_Session;
                     Data    :        String);
    procedure Initialize (Session : in out Gneiss.Log.Server_Session);
@@ -71,7 +70,6 @@ is
 
    procedure Flush (S : in out Server_Slot);
 
-   package Log_Client is new Gneiss.Log.Client (Log_Event);
    package Log_Server is new Gneiss.Log.Server (Write, Initialize, Finalize, Ready);
    package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
 
@@ -86,10 +84,12 @@ is
    begin
       Capability := Cap;
       Log_Dispatcher.Initialize (Dispatcher, Cap);
-      if Gneiss.Log.Initialized (Dispatcher) then
-         Log_Client.Initialize (Client,
-                                Capability,
-                                "lolcat");
+      Gneiss.Log.Client.Initialize (Client, Capability, "lolcat");
+      if
+         Gneiss.Log.Initialized (Dispatcher)
+         and then Gneiss.Log.Initialized (Client)
+      then
+            Log_Dispatcher.Register (Dispatcher);
       else
          Main.Vacate (Capability, Main.Failure);
       end if;
@@ -98,11 +98,10 @@ is
    procedure Write (Session : in out Gneiss.Log.Server_Session;
                     Data    :        String)
    is
-      use type Gneiss.Session_Status;
       I : constant Gneiss.Session_Index_Option := Gneiss.Log.Index (Session);
    begin
       if
-         Gneiss.Log.Status (Client) /= Gneiss.Initialized
+         not Gneiss.Log.Initialized (Client)
          or else I.Value not in Server_Data'Range
       then
          return;
@@ -119,22 +118,10 @@ is
       Flush (Server_Data (I.Value));
    end;
 
-   procedure Log_Event (Session : in out Gneiss.Log.Client_Session)
-   is
-      use type Gneiss.Session_Status;
-   begin
-      case Gneiss.Log.Status (Session) is
-         when Gneiss.Initialized =>
-            Log_Dispatcher.Register (Dispatcher);
-         when others =>
-            Main.Vacate (Capability, Main.Failure);
-      end case;
-   end Log_Event;
-
    procedure Destruct
    is
    begin
-      null;
+      Gneiss.Log.Client.Finalize (Client);
    end Destruct;
 
    procedure Initialize (Session : in out Gneiss.Log.Server_Session)
@@ -220,8 +207,8 @@ is
    is
    begin
       S.Buffer (S.Cursor + 1 .. S.Cursor + 4) := Reset;
-      Log_Client.Print (Client, S.Buffer (1 .. S.Cursor));
-      Log_Client.Flush (Client);
+      Gneiss.Log.Client.Print (Client, S.Buffer (1 .. S.Cursor));
+      Gneiss.Log.Client.Flush (Client);
       S.Cursor := 0;
       S.Flushed := True;
    end Flush;
