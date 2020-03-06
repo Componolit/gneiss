@@ -9,8 +9,6 @@ is
    type Client_Session is limited record
       Session : System.Address              := System.Null_Address;
       Index   : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Size    : Long_Integer                := 0;
-      Addr    : System.Address              := System.Null_Address;
    end record;
 
    type Server_Session is limited record

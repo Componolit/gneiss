@@ -21,6 +21,16 @@ is
       Convention    => C,
       External_Name => "_ZN6Gneiss13Memory_Client8finalizeEv";
 
+   function Address (Session : Client_Session) return System.Address with
+      Import,
+      Convention    => C,
+      External_Name => "_ZN6Gneiss13Memory_Client7addressEv";
+
+   function Size (Session : Client_Session) return Long_Integer with
+      Import,
+      Convention    => C,
+      External_Name => "_ZN6Gneiss13Memory_Client4sizeEv";
+
    function Event_Address return System.Address with
       SPARK_Mode => Off
    is
@@ -40,7 +50,7 @@ is
          return;
       end if;
       Genode_Initialize (Session, Cap, Label & ASCII.NUL, Size, Event_Address);
-      if Session.Session /= System.Null_Address and then Session.Addr /= System.Null_Address then
+      if Session.Session /= System.Null_Address then
          Session.Index := Session_Index_Option'(Valid => True, Value => Idx);
       end if;
    end Initialize;
@@ -49,9 +59,9 @@ is
    is
       Buf : Buffer (Buffer_Index'First ..
                     Buffer_Index'Val (Buffer_Index'Pos (Buffer_Index'First)
-                                      + Long_Integer'Pos (Session.Size) - 1)) with
+                                      + Long_Integer'Pos (Size (Session)) - 1)) with
          Import,
-         Address => Session.Addr;
+         Address => Address (Session);
    begin
       Modify (Session, Buf);
    end Modify;

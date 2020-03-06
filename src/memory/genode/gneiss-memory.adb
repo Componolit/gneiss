@@ -8,7 +8,6 @@ is
 
    function Status (Session : Client_Session) return Session_Status is
       (if Session.Session /= System.Null_Address
-          and then Session.Addr /= System.Null_Address
           and then Session.Index.Valid
        then
           Initialized
