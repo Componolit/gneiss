@@ -10,11 +10,6 @@
 --
 
 generic
-   --  Initialization event
-   --
-   --  @param Session  Client session
-   with procedure Initialize_Event (Session : in out Client_Session);
-
    --  Message received event
    with procedure Event;
 package Gneiss.Message.Client with
@@ -37,14 +32,14 @@ is
    --
    --  @param Session  Client session instance
    procedure Finalize (Session : in out Client_Session) with
-      Post => Status (Session) = Uninitialized;
+      Post => not Initialized (Session);
 
    --  Check if message is available
    --
    --  @param Session  Client session instance
    --  @return         True if message is available
    function Available (Session : Client_Session) return Boolean with
-      Pre => Status (Session) = Initialized;
+      Pre => Initialized (Session);
 
    --  Write message
    --
@@ -52,8 +47,8 @@ is
    --  @param Content  Message
    procedure Write (Session : in out Client_Session;
                     Content :        Message_Buffer) with
-      Pre  => Status (Session) = Initialized,
-      Post => Status (Session) = Initialized;
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
    --  Read message
    --
@@ -61,8 +56,8 @@ is
    --  @param Content  Message
    procedure Read (Session : in out Client_Session;
                    Content :    out Message_Buffer) with
-      Pre  => Status (Session) = Initialized
+      Pre  => Initialized (Session)
               and then Available (Session),
-      Post => Status (Session) = Initialized;
+      Post => Initialized (Session);
 
 end Gneiss.Message.Client;

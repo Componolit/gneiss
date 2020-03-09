@@ -6,7 +6,6 @@ package body Gneiss.Message.Client with
 is
 
    function Event_Address return System.Address;
-   function Init_Address return System.Address;
 
    function Event_Address return System.Address with
       SPARK_Mode => Off
@@ -14,13 +13,6 @@ is
    begin
       return Event'Address;
    end Event_Address;
-
-   function Init_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Initialize_Event'Address;
-   end Init_Address;
 
    procedure Genode_Initialize (Session : in out Client_Session;
                                 Cap     :        Capability;
@@ -58,26 +50,26 @@ is
    is
       use type System.Address;
    begin
+      if Initialized (Session) then
+         return;
+      end if;
       Session.Event := Event_Address;
-      Session.Init  := Init_Address;
       Genode_Initialize (Session, Cap, Label & ASCII.NUL);
       if Session.Connection /= System.Null_Address then
          Session.Index := Session_Index_Option'(Valid => True, Value => Idx);
       else
          Session.Event := System.Null_Address;
-         Session.Init  := System.Null_Address;
       end if;
    end Initialize;
 
    procedure Finalize (Session : in out Client_Session)
    is
    begin
-      if Status (Session) = Uninitialized then
+      if not Initialized (Session) then
          return;
       end if;
       Genode_Finalize(Session);
       Session.Connection := System.Null_Address;
-      Session.Init       := System.Null_Address;
       Session.Event      := System.Null_Address;
       Session.Index      := Session_Index_Option'(Valid => False);
    end Finalize;

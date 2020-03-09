@@ -34,7 +34,7 @@ is
    --
    --  @param Session  Client session instance
    --  @return         Initialization status
-   function Status (Session : Client_Session) return Session_Status;
+   function Initialized (Session : Client_Session) return Boolean;
 
    --  Check if session is initialized
    --
@@ -53,7 +53,7 @@ is
    --  @param Session  Client session instance
    --  @return         Session index
    function Index (Session : Client_Session) return Session_Index_Option with
-      Post => (Status (Session) in Initialized | Pending) = Index'Result.Valid;
+      Post => Initialized (Session) = Index'Result.Valid;
 
    --  Get the index value that has been set on initialization
    --

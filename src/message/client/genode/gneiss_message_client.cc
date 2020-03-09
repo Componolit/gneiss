@@ -8,8 +8,7 @@
 Gneiss::Message_Client::Message_Client() :
     _connection(nullptr),
     _index(0),
-    _event(nullptr),
-    _init(nullptr)
+    _event(nullptr)
 { }
 
 void Gneiss::Message_Client::initialize(Gneiss::Capability *capability, const char *label)
@@ -48,13 +47,11 @@ Gneiss::Message_Connection::Message_Connection(Genode::Env &env, Genode::Session
                                                      "ram_quota=%ld, cap_quota=%ld, label=\"%s\"",
                                                      RAM_QUOTA, CAP_QUOTA, label.string())),
     Gneiss::Message_Session_Client(cap()),
-    _init_sigh(env.ep(), *this, &Gneiss::Message_Connection::init),
     _event_sigh(env.ep(), *this, &Gneiss::Message_Connection::event),
     _client(&client)
 {
     TLOG("label=", label, " client=", client);
     sigh(_event_sigh);
-    Genode::Signal_transmitter(_init_sigh).submit();
 }
 
 Gneiss::Message_Connection::Message_Connection(Genode::Env &env, Genode::Session_label label) :
@@ -62,16 +59,9 @@ Gneiss::Message_Connection::Message_Connection(Genode::Env &env, Genode::Session
                                                      "ram_quota=%ld, cap_quota=%ld, label=\"%s\"",
                                                      RAM_QUOTA, CAP_QUOTA, label.string())),
     Gneiss::Message_Session_Client(cap()),
-    _init_sigh(env.ep(), *this, &Gneiss::Message_Connection::dummy_event),
     _event_sigh(env.ep(), *this, &Gneiss::Message_Connection::dummy_event),
     _client(nullptr)
 { }
-
-void Gneiss::Message_Connection::init()
-{
-    TLOG("");
-    _client->_init(_client);
-}
 
 void Gneiss::Message_Connection::event()
 {

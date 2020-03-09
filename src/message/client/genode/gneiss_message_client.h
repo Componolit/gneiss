@@ -24,7 +24,6 @@ class Gneiss::Message_Client
         Gneiss::Message_Connection *_connection;
         Genode::uint32_t _index;
         void (*_event)();
-        void (*_init)(Gneiss::Message_Client *);
 
     public:
         Message_Client();
@@ -66,7 +65,6 @@ struct Gneiss::Message_Connection : Genode::Connection<Gneiss::Message_Session>,
 {
     enum { RAM_QUOTA = 8192 };
 
-    Genode::Signal_handler<Gneiss::Message_Connection> _init_sigh;
     Genode::Signal_handler<Gneiss::Message_Connection> _event_sigh;
     Gneiss::Message_Client *_client;
 
@@ -74,7 +72,6 @@ struct Gneiss::Message_Connection : Genode::Connection<Gneiss::Message_Session>,
     Message_Connection(Genode::Env &, Genode::Session_label = "");
 
     protected:
-        void init();
         void event();
 
     private:

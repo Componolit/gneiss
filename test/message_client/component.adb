@@ -16,11 +16,7 @@ is
 
    package Message is new Gneiss.Message (Message_Buffer, Null_Buffer);
 
-   procedure Initialize (Session : in out Message.Client_Session);
-   procedure Initialize (Session : in out Gneiss.Log.Client_Session);
-
-   package Message_Client is new Message.Client (Initialize, Event);
-   package Log_Client is new Gneiss.Log.Client (Initialize);
+   package Message_Client is new Message.Client (Event);
 
    Client     : Message.Client_Session;
    Log        : Gneiss.Log.Client_Session;
@@ -39,48 +35,28 @@ is
 
    procedure Construct (Cap : Gneiss.Capability)
    is
-   begin
-      Capability := Cap;
-      Log_Client.Initialize (Log, Capability, "log_message");
-   end Construct;
-
-   procedure Initialize (Session : in out Gneiss.Log.Client_Session)
-   is
-      use type Gneiss.Session_Status;
-   begin
-      if Gneiss.Log.Status (Session) = Gneiss.Initialized then
-         Message_Client.Initialize (Client, Capability, "log");
-      else
-         Main.Vacate (Capability, Main.Failure);
-      end if;
-   end Initialize;
-
-   procedure Initialize (Session : in out Message.Client_Session)
-   is
-      use type Gneiss.Session_Status;
       Msg : Message_Buffer := (others => ASCII.NUL);
    begin
-      if Message.Status (Session) = Gneiss.Initialized then
+      Capability := Cap;
+      Gneiss.Log.Client.Initialize (Log, Capability, "log_message");
+      Message_Client.Initialize (Client, Capability, "log");
+      if Gneiss.Log.Initialized (Log) and Message.Initialized (Client) then
          Msg (Msg'First .. Msg'First + 11) := "Hello World!";
-         Log_Client.Info (Log, "Sending: " & Null_Terminate (Msg));
-         Message_Client.Write (Session, Msg);
+         Gneiss.Log.Client.Info (Log, "Sending: " & Null_Terminate (Msg));
+         Message_Client.Write (Client, Msg);
       else
          Main.Vacate (Capability, Main.Failure);
       end if;
-   end Initialize;
+   end Construct;
 
    procedure Event
    is
-      use type Gneiss.Session_Status;
       Msg : Message_Buffer;
    begin
-      if
-         Gneiss.Log.Status (Log) = Gneiss.Initialized
-         and then Message.Status (Client) = Gneiss.Initialized
-      then
+      if Gneiss.Log.Initialized (Log) and then Message.Initialized (Client) then
          while Message_Client.Available (Client) loop
             Message_Client.Read (Client, Msg);
-            Log_Client.Info (Log, "Received: " & Null_Terminate (Msg));
+            Gneiss.Log.Client.Info (Log, "Received: " & Null_Terminate (Msg));
             Main.Vacate (Capability, Main.Success);
          end loop;
       end if;
@@ -89,6 +65,7 @@ is
    procedure Destruct
    is
    begin
+      Gneiss.Log.Client.Finalize (Log);
       Message_Client.Finalize (Client);
    end Destruct;
 

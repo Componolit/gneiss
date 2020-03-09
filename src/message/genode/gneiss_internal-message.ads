@@ -16,7 +16,6 @@ is
       Connection : System.Address              := System.Null_Address;
       Index      : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
       Event      : System.Address              := System.Null_Address;
-      Init       : System.Address              := System.Null_Address;
    end record;
 
    type Server_Session is limited record
