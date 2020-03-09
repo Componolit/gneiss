@@ -25,7 +25,7 @@ class Gneiss::Memory_Client
 
     public:
         Memory_Client();
-        void initialize(Gneiss::Capability *, const char *, long long, void (*)(Gneiss::Memory_Client *));
+        void initialize(Gneiss::Capability *, const char *, long long);
         void *address();
         long long size();
         void finalize();
@@ -46,27 +46,18 @@ struct Gneiss::Memory_Connection : Genode::Connection<Gneiss::Memory_Session>, G
 {
     enum { RAM_QUOTA = 8 * 1024UL };
 
-    Genode::Signal_handler<Gneiss::Memory_Connection> _init;
-    Gneiss::Memory_Client *_client;
-    void (*_event)(Gneiss::Memory_Client *);
     void *_addr;
     Genode::size_t _size;
 
-    Memory_Connection(Genode::Env &, Genode::Session_label,
-                      long long, void (*)(Gneiss::Memory_Client *),
-                      Gneiss::Memory_Client &);
     Memory_Connection(Genode::Env &, Genode::size_t, Genode::Session_label = "");
+
     template <typename T>
     T *local_addr(){
         return reinterpret_cast<T *>(_addr);
     }
     Genode::size_t size();
 
-    protected:
-        void init();
-
     private:
-        void dummy_init();
         Memory_Connection(const Memory_Connection &);
         Memory_Connection &operator = (Memory_Connection &);
 };

@@ -10,14 +10,10 @@ is
 
    package Memory is new Gneiss.Memory (Character, Positive, String);
 
-   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
-   procedure Initialize_Memory (Session : in out Memory.Client_Session);
-
    procedure Modify (Session : in out Memory.Client_Session;
                      Data    : in out String);
 
-   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
-   package Memory_Client is new Memory.Client (Initialize_Memory, Modify);
+   package Memory_Client is new Memory.Client (Modify);
 
    Log        : Gneiss.Log.Client_Session;
    Mem        : Memory.Client_Session;
@@ -27,30 +23,14 @@ is
    is
    begin
       Capability := Cap;
-      Log_Client.Initialize (Log, Cap, "log_memory");
-   end Construct;
-
-   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
-   is
-      use type Gneiss.Session_Status;
-   begin
-      if Gneiss.Log.Status (Session) = Gneiss.Initialized then
-         Memory_Client.Initialize (Mem, Capability, "shared", 4096);
+      Gneiss.Log.Client.Initialize (Log, Capability, "log_memory");
+      Memory_Client.Initialize (Mem, Capability, "shared", 4096);
+      if Gneiss.Log.Initialized (Log) and Memory.Initialized (Mem) then
+         Memory_Client.Modify (Mem);
       else
          Main.Vacate (Capability, Main.Failure);
       end if;
-   end Initialize_Log;
-
-   procedure Initialize_Memory (Session : in out Memory.Client_Session)
-   is
-   begin
-      case Memory.Status (Session) is
-         when Gneiss.Initialized =>
-            Memory_Client.Modify (Session);
-         when others =>
-            Main.Vacate (Capability, Main.Failure);
-      end case;
-   end Initialize_Memory;
+   end Construct;
 
    procedure Modify (Session : in out Memory.Client_Session;
                      Data    : in out String)
@@ -62,7 +42,7 @@ is
          exit when Data (I) = ASCII.NUL;
          Last := I;
       end loop;
-      Log_Client.Info (Log, "Data: " & Data (Data'First .. Last));
+      Gneiss.Log.Client.Info (Log, "Data: " & Data (Data'First .. Last));
       Main.Vacate (Capability, Main.Success);
    end Modify;
 
@@ -70,7 +50,7 @@ is
    is
    begin
       Memory_Client.Finalize (Mem);
-      Log_Client.Finalize (Log);
+      Gneiss.Log.Client.Finalize (Log);
    end Destruct;
 
 end Component;

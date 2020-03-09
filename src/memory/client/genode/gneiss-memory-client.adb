@@ -5,16 +5,13 @@ package body Gneiss.Memory.Client with
    SPARK_Mode
 is
 
-   function Event_Address return System.Address;
-
    procedure Genode_Initialize (Session : in out Client_Session;
                                 Cap     :        Capability;
                                 Label   :        String;
-                                Size    :        Long_Integer;
-                                Ev      :        System.Address) with
+                                Size    :        Long_Integer) with
       Import,
       Convention    => C,
-      External_Name => "_ZN6Gneiss13Memory_Client10initializeEPNS_10CapabilityEPKcxPFvPS0_E";
+      External_Name => "_ZN6Gneiss13Memory_Client10initializeEPNS_10CapabilityEPKcx";
 
    procedure Genode_Finalize (Session : in out Client_Session) with
       Import,
@@ -31,13 +28,6 @@ is
       Convention    => C,
       External_Name => "_ZN6Gneiss13Memory_Client4sizeEv";
 
-   function Event_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Initialize_Event'Address;
-   end Event_Address;
-
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
@@ -46,10 +36,10 @@ is
    is
       use type System.Address;
    begin
-      if Status (Session) = Initialized or else Size < 0 then
+      if Initialized (Session) or else Size < 0 then
          return;
       end if;
-      Genode_Initialize (Session, Cap, Label & ASCII.NUL, Size, Event_Address);
+      Genode_Initialize (Session, Cap, Label & ASCII.NUL, Size);
       if Session.Session /= System.Null_Address then
          Session.Index := Session_Index_Option'(Valid => True, Value => Idx);
       end if;
