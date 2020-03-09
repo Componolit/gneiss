@@ -13,13 +13,6 @@ private with Gneiss_Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
-   --  Supress unreferenced warnings since not every platform needs this procedure
-
-   --  Initialization event handler
-   --
-   --  @param Session  Client session
-   with procedure Initialize_Event (Session : in out Client_Session);
-
    --  Block client event handler
    with procedure Event;
 
@@ -103,7 +96,7 @@ is
    function Assigned (C : Client_Session;
                       R : Request) return Boolean with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (C) = Initialized
+      Pre => Initialized (C)
              and then Status (R) /= Raw;
 
    --  Allocate request
@@ -127,9 +120,9 @@ is
                                L :        Count;
                                I :        Request_Id;
                                E :    out Result) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and Status (R) = Raw,
-      Post => Status (C) = Initialized
+      Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C)
@@ -142,10 +135,10 @@ is
    --  @param R  Request that shall be updated
    procedure Update_Request (C : in out Client_Session;
                              R : in out Request) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and then Status (R) = Pending
               and then Assigned (C, R),
-      Post => Status (C) = Initialized
+      Post => Initialized (C)
               and then Status (R) in Pending | Ok | Error
               and then Assigned (C, R)
               and then Writable (C)'Old    = Writable (C)
@@ -171,7 +164,7 @@ is
    --
    --  @param C  client instance
    procedure Finalize (C : in out Client_Session) with
-      Post => Status (C) = Uninitialized;
+      Post => not Initialized (C);
 
    --  Enqueue request
    --
@@ -182,10 +175,10 @@ is
    --  @param R  Request to enqueue
    procedure Enqueue (C : in out Client_Session;
                       R : in out Request) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and then Status (R) = Allocated
               and then Assigned (C, R),
-      Post => Status (C) = Initialized
+      Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C)
@@ -196,8 +189,8 @@ is
    --
    --  @param C  Client session instance
    procedure Submit (C : in out Client_Session) with
-      Pre  => Status (C) = Initialized,
-      Post => Status (C) = Initialized
+      Pre  => Initialized (C),
+      Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C);
@@ -208,11 +201,11 @@ is
    --  @param R  Request to read data from
    procedure Read (C : in out Client_Session;
                    R :        Request) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and then Status (R) = Ok
               and then Kind (R)   = Read
               and then Assigned (C, R),
-      Post => Status (C) = Initialized
+      Post => Initialized (C)
               and then Assigned (C, R)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
@@ -224,11 +217,11 @@ is
    --  @param R  Request to write data to
    procedure Write (C : in out Client_Session;
                     R :        Request) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and then Status (R) = Allocated
               and then Kind (R)   = Write
               and then Assigned (C, R),
-      Post => Status (C) = Initialized
+      Post => Initialized (C)
               and then Assigned (C, R)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
@@ -245,10 +238,10 @@ is
    --  @param R  Request to release
    procedure Release (C : in out Client_Session;
                       R : in out Request) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and then Status (R)  /= Raw
               and then Assigned (C, R),
-      Post => Status (C) = Initialized
+      Post => Initialized (C)
               and then Writable (C)'Old    = Writable (C)
               and then Block_Count (C)'Old = Block_Count (C)
               and then Block_Size (C)'Old  = Block_Size (C)
@@ -269,7 +262,7 @@ private
                          Req    :        Request_Id;
                          Data   :        Buffer) with
       Ghost,
-      Pre => Status (C) = Initialized;
+      Pre => Initialized (C);
 
    pragma Annotate (GNATprove, False_Positive,
                     "ghost procedure ""Lemma_Read"" cannot have non-ghost global output*",
@@ -286,7 +279,7 @@ private
                           Req    :        Request_Id;
                           Data   :    out Buffer) with
       Ghost,
-      Pre => Status (C) = Initialized;
+      Pre => Initialized (C);
 
    pragma Annotate (GNATprove, False_Positive,
                     "ghost procedure ""Lemma_Write"" cannot have non-ghost global output*",

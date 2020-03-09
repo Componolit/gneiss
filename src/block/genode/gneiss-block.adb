@@ -14,15 +14,12 @@ is
    -- Client --
    ------------
 
-   function Status (Session : Client_Session) return Session_Status is
-      (if Session.Instance.Device /= System.Null_Address
-          and then Session.Instance.Callback /= System.Null_Address
-          and then Session.Instance.Write /= System.Null_Address
-          and then Session.Instance.Env /= System.Null_Address
-       then
-          (if Session.Instance.Tag.Valid then Gneiss.Initialized else Gneiss.Pending)
-       else
-          Gneiss.Uninitialized);
+   function Initialized (Session : Client_Session) return Boolean is
+      (Session.Instance.Device /= System.Null_Address
+       and then Session.Instance.Callback /= System.Null_Address
+       and then Session.Instance.Write /= System.Null_Address
+       and then Session.Instance.Env /= System.Null_Address
+       and then Session.Instance.Tag.Valid);
 
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Instance.Tag);
