@@ -15,35 +15,28 @@ class Timer_Session
     private:
         Timer::Connection _timer;
         Timer::One_shot_timeout<Timer_Session> _timeout;
-        Genode::Signal_handler<Timer_Session> _init_sigh;
         Cai::Timer::Client *_client;
 
         void (*_callback)();
-        void (*_init)(Cai::Timer::Client *);
 
         void handle_event(Genode::Duration);
-        void handle_init();
 
         Timer_Session(const Timer_Session &);
         Timer_Session &operator = (Timer_Session &);
 
     public:
-        Timer_Session(Genode::Env &, void (*)(), void (*)(Cai::Timer::Client *), Cai::Timer::Client *);
+        Timer_Session(Genode::Env &, void (*)(), Cai::Timer::Client *);
         Timer::Connection &timer();
         void update_timeout(Genode::Microseconds);
 };
 
-Timer_Session::Timer_Session(Genode::Env &env, void (*callback)(),
-                             void (*init)(Cai::Timer::Client *), Cai::Timer::Client *client) :
+Timer_Session::Timer_Session(Genode::Env &env, void (*callback)(), Cai::Timer::Client *client) :
     _timer(env),
     _timeout(_timer, *this, &Timer_Session::handle_event),
-    _init_sigh(env.ep(), *this, &Timer_Session::handle_init),
     _client(client),
-    _callback(callback),
-    _init(init)
+    _callback(callback)
 {
     TLOG("callback=", callback);
-    Genode::Signal_transmitter(_init_sigh).submit();
 }
 
 Timer::Connection &Timer_Session::timer()
@@ -55,11 +48,6 @@ void Timer_Session::handle_event(Genode::Duration)
 {
     TLOG();
     _callback();
-}
-
-void Timer_Session::handle_init()
-{
-    _init(_client);
 }
 
 void Timer_Session::update_timeout(Genode::Microseconds d)
@@ -84,13 +72,12 @@ bool Cai::Timer::Client::initialized()
     return (bool)_session;
 }
 
-void Cai::Timer::Client::initialize(void *capability, void *callback, void *init)
+void Cai::Timer::Client::initialize(void *capability, void *callback)
 {
     TLOG("capability=", capability, "callback=", callback);
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(capability)->env);
     _session = _factory->create<Timer_Session>(*reinterpret_cast<Cai::Env *>(capability)->env,
                                                reinterpret_cast<void (*)()>(callback),
-                                               reinterpret_cast<void (*)(Cai::Timer::Client *)>(init),
                                                this);
 }
 

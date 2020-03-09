@@ -12,10 +12,10 @@ is
    is
       use type Cxx.Bool;
    begin
-      if Status (C) in Initialized | Pending then
+      if Initialized (C) then
          return;
       end if;
-      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address, Initialize_Event'Address);
+      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address);
       if Cxx.Timer.Client.Initialized (C.Instance) = Cxx.Bool'Val (1) then
          C.Instance.Index := Session_Index_Option'(Valid => True, Value => Idx);
       end if;
@@ -37,7 +37,7 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Status (C) = Uninitialized then
+      if not Initialized (C) then
          return;
       end if;
       Cxx.Timer.Client.Finalize (C.Instance);
