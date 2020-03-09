@@ -10,11 +10,6 @@
 --
 
 generic
-   --  Initialization event
-   --
-   --  @param Session  Client session
-   with procedure Initialize_Event (Session : in out Client_Session);
-
    --  Timer event
    with procedure Event;
 package Gneiss.Timer.Client with
@@ -38,7 +33,7 @@ is
    --  @return   Current clock value
    function Clock (C : Client_Session) return Time with
       Volatile_Function,
-      Pre => Status (C) = Initialized;
+      Pre => Initialized (C);
 
    --  Sets the timeout after which the Event procedure will be called
    --
@@ -52,14 +47,14 @@ is
    --  @param D  Timeout event duration
    procedure Set_Timeout (C : in out Client_Session;
                           D :        Duration) with
-      Pre  => Status (C) = Initialized
+      Pre  => Initialized (C)
               and then D > 0.0,
-      Post => Status (C) = Initialized;
+      Post => Initialized (C);
 
    --  Finalizes timer session
    --
    --  @param C  Timer client session object
    procedure Finalize (C : in out Client_Session) with
-      Post => Status (C) = Uninitialized;
+      Post => not Initialized (C);
 
 end Gneiss.Timer.Client;
