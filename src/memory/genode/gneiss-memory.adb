@@ -6,13 +6,9 @@ package body Gneiss.Memory with
 is
    use type System.Address;
 
-   function Status (Session : Client_Session) return Session_Status is
-      (if Session.Session /= System.Null_Address
-          and then Session.Index.Valid
-       then
-          Initialized
-       else
-          Uninitialized);
+   function Initialized (Session : Client_Session) return Boolean is
+      (Session.Session /= System.Null_Address
+       and then Session.Index.Valid);
 
    function Initialized (Session : Server_Session) return Boolean is
       (Session.Component /= System.Null_Address
