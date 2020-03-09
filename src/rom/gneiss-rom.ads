@@ -36,7 +36,7 @@ is
    --
    --  @param Session  Client session
    --  @return         Session status
-   function Status (Session : Client_Session) return Session_Status;
+   function Initialized (Session : Client_Session) return Boolean;
 
    --  Get the sessions index
    --
