@@ -160,8 +160,8 @@ is
    --  Gets the sessions current status
    --
    --  @param Session  Client session
-   --  @return         Session status
-   function Status (Session : Client_Session) return Session_Status with
+   --  @return         Session initialized
+   function Initialized (Session : Client_Session) return Boolean with
       Annotate => (GNATprove, Terminating);
 
    --  Get the sessions index
@@ -177,7 +177,7 @@ is
    --  @return   True if the block client is writable
    function Writable (C : Client_Session) return Boolean with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (C) = Initialized;
+      Pre => Initialized (C);
 
    --  Get the total number of blocks of the device
    --
@@ -185,7 +185,7 @@ is
    --  @return   Number of blocks on the device
    function Block_Count (C : Client_Session) return Count with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (C) = Initialized;
+      Pre => Initialized (C);
 
    --  Get the block size in bytes
    --
@@ -193,7 +193,7 @@ is
    --  @return   Size of a single block in size
    function Block_Size (C : Client_Session) return Size with
       Annotate => (GNATprove, Terminating),
-      Pre => Status (C) = Initialized;
+      Pre => Initialized (C);
 
    --  Check if S is initialized
    --

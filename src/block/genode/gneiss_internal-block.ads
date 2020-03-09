@@ -17,7 +17,6 @@ package Gneiss_Internal.Block is
                                             Callback    => System.Null_Address,
                                             Write       => System.Null_Address,
                                             Env         => System.Null_Address,
-                                            Init        => System.Null_Address,
                                             Tag         => Gneiss.Session_Index_Option'(Valid => False));
    end record;
 

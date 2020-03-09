@@ -9,7 +9,6 @@ package body Component with
   SPARK_Mode
 is
 
-   use type Gneiss.Session_Status;
    type Request_Id is mod 8;
 
    package Block is new Gneiss.Block (Character, Positive, String, Request_Id);
@@ -17,21 +16,17 @@ is
    procedure Write (C : in out Block.Client_Session;
                     R :        Request_Id;
                     D :    out String) with
-      Pre => Block.Status (C) = Gneiss.Initialized;
+      Pre => Block.Initialized (C);
 
    procedure Read (C : in out Block.Client_Session;
                    R :        Request_Id;
                    D :        String) with
-      Pre => Block.Status (C) = Gneiss.Initialized;
-
-   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
-   procedure Initialize_Block (Session : in out Block.Client_Session);
+      Pre => Block.Initialized (C);
 
    function Image is new Basalt.Strings_Generic.Image_Ranged (Block.Count);
    function Image is new Basalt.Strings_Generic.Image_Ranged (Block.Size);
 
-   package Block_Client is new Block.Client (Initialize_Block, Run, Read, Write);
-   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
+   package Block_Client is new Block.Client (Run, Read, Write);
 
    type Request_Cache_Type is array (Request_Id'Range) of Block_Client.Request;
 
@@ -63,11 +58,11 @@ is
 
    procedure Single (S         : in out State;
                      Operation :        Block.Request_Kind) with
-      Pre  => Block.Status (Client) = Gneiss.Initialized
-              and then Gneiss.Log.Status (Log) = Gneiss.Initialized
+      Pre  => Block.Initialized (Client)
+              and then Gneiss.Log.Initialized (Log)
               and then Operation in Block.Read .. Block.Write,
-      Post => Block.Status (Client) = Gneiss.Initialized
-              and then Gneiss.Log.Status (Log) = Gneiss.Initialized;
+      Post => Block.Initialized (Client)
+              and then Gneiss.Log.Initialized (Log);
 
    procedure Write (C : in out Block.Client_Session;
                     R :        Request_Id;
@@ -79,8 +74,8 @@ is
       if Block_Client.Status (Request_Cache (R)) not in Block.Raw | Block.Error then
          D := (others => Character'Val (33 + Integer (Block_Client.Start (Request_Cache (R)) mod 93)));
       else
-         if Gneiss.Log.Status (Log) = Gneiss.Initialized then
-            Log_Client.Warning (Log, "Failed to calculate content");
+         if Gneiss.Log.Initialized (Log) then
+            Gneiss.Log.Client.Warning (Log, "Failed to calculate content");
          end if;
          D := (others => Character'First);
       end if;
@@ -108,7 +103,7 @@ is
                         if Block_Client.Length (Request_Cache (I)) = 1 then
                            Block_Client.Read (Client, Request_Cache (I));
                         else
-                           Log_Client.Error (Log, "Read failed.");
+                           Gneiss.Log.Client.Error (Log, "Read failed.");
                         end if;
                         S.Acked := S.Acked + 1;
                      when others =>
@@ -116,7 +111,7 @@ is
                   end case;
                   Block_Client.Release (Client, Request_Cache (I));
                elsif Block_Client.Status (Request_Cache (I)) = Block.Error then
-                  Log_Client.Error (Log, "Request failed");
+                  Gneiss.Log.Client.Error (Log, "Request failed");
                   Block_Client.Release (Client, Request_Cache (I));
                end if;
             end if;
@@ -142,17 +137,17 @@ is
                   when Block.Retry | Block.Out_Of_Memory =>
                      null;
                   when Block.Unsupported =>
-                     Log_Client.Error (Log, "Cannot allocate request");
+                     Gneiss.Log.Client.Error (Log, "Cannot allocate request");
                      Main.Vacate (P_Cap, Main.Failure);
                end case;
             end if;
 
-            pragma Loop_Invariant (Block.Status (Client) = Gneiss.Initialized);
-            pragma Loop_Invariant (Gneiss.Log.Status (Log) = Gneiss.Initialized);
+            pragma Loop_Invariant (Block.Initialized (Client));
+            pragma Loop_Invariant (Gneiss.Log.Initialized (Log));
          end loop;
          Block_Client.Submit (Client);
       else
-         Log_Client.Error (Log, "Failed to send requests. Invalid block size.");
+         Gneiss.Log.Client.Error (Log, "Failed to send requests. Invalid block size.");
       end if;
    end Single;
 
@@ -163,9 +158,9 @@ is
       pragma Unreferenced (C);
       pragma Unreferenced (R);
    begin
-      if Gneiss.Log.Status (Log) = Gneiss.Initialized then
-         Log_Client.Info (Log, "Read succeeded:");
-         Log_Client.Info (Log, D);
+      if Gneiss.Log.Initialized (Log) then
+         Gneiss.Log.Client.Info (Log, "Read succeeded:");
+         Gneiss.Log.Client.Info (Log, D);
       end if;
    end Read;
 
@@ -173,59 +168,43 @@ is
    is
    begin
       P_Cap := Cap;
-      Log_Client.Initialize (Log, Cap, "log_block_client");
-   end Construct;
-
-   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
-   is
-   begin
-      case Gneiss.Log.Status (Session) is
-         when Gneiss.Initialized =>
-            Log_Client.Info (Session, "Ada block test");
-            Block_Client.Initialize (Client, P_Cap, "/tmp/test_disk.img");
-         when others =>
-            Main.Vacate (P_Cap, Main.Failure);
-      end case;
-   end Initialize_Log;
-
-   procedure Initialize_Block (Session : in out Block.Client_Session)
-   is
-   begin
-      if Block.Status (Session) = Gneiss.Initialized then
+      Gneiss.Log.Client.Initialize (Log, P_Cap, "log_block_client");
+      Block_Client.Initialize (Client, P_Cap, "/tmp/test_disk.img");
+      if Gneiss.Log.Initialized (Log) and then Block.Initialized (Client) then
+         Gneiss.Log.Client.Info (Log, "Ada block test");
          --  FIXME: Calls of Image with explicit default parameters
          --  Componolit/Workarounds#2
-         Log_Client.Info (Log, "Block device with "
-                              & Image (Block.Block_Count (Session), 10, True)
-                              & " blocks of size "
-                              & Image (Block.Block_Size (Session), 10, True));
-         if Block.Writable (Session) then
+         Gneiss.Log.Client.Info (Log, "Block device with "
+                                      & Image (Block.Block_Count (Client), 10, True)
+                                      & " blocks of size "
+                                      & Image (Block.Block_Size (Client), 10, True));
+         if Block.Writable (Client) then
             Run;
          else
-            Log_Client.Error (Log, "Block device not writable, cannot run test");
+            Gneiss.Log.Client.Error (Log, "Block device not writable, cannot run test");
             Main.Vacate (P_Cap, Main.Failure);
          end if;
       else
-         Log_Client.Error (Log, "Failed to initialize Block session");
          Main.Vacate (P_Cap, Main.Failure);
       end if;
-   end Initialize_Block;
+   end Construct;
 
    procedure Run
    is
    begin
       if
-         Gneiss.Log.Status (Log) = Gneiss.Initialized
-         and Block.Status (Client) = Gneiss.Initialized
+         Gneiss.Log.Initialized (Log)
+         and Block.Initialized (Client)
       then
          if not State_Finished (Write_State) then
-            Log_Client.Info (Log, "Writing...");
+            Gneiss.Log.Client.Info (Log, "Writing...");
             Single (Write_State, Block.Write);
          end if;
          if
             State_Finished (Write_State)
             and not State_Finished (Read_State)
          then
-            Log_Client.Info (Log, "Reading...");
+            Gneiss.Log.Client.Info (Log, "Reading...");
             Single (Read_State, Block.Read);
          end if;
          if
@@ -233,7 +212,7 @@ is
             and State_Finished (Read_State)
          then
             Main.Vacate (P_Cap, Main.Success);
-            Log_Client.Info (Log, "Test finished.");
+            Gneiss.Log.Client.Info (Log, "Test finished.");
          end if;
       end if;
    end Run;
@@ -242,7 +221,7 @@ is
    is
    begin
       Block_Client.Finalize (Client);
-      Log_Client.Finalize (Log);
+      Gneiss.Log.Client.Finalize (Log);
    end Destruct;
 
 end Component;

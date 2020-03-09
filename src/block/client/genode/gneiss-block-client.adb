@@ -163,7 +163,6 @@ is
 
    function Event_Address return System.Address;
    function Crw_Address return System.Address;
-   function Init_Address return System.Address;
 
    function Event_Address return System.Address with
       SPARK_Mode => Off
@@ -179,13 +178,6 @@ is
       return Crw'Address;
    end Crw_Address;
 
-   function Init_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Initialize_Event'Address;
-   end Init_Address;
-
    procedure Initialize (C           : in out Client_Session;
                          Cap         :        Capability;
                          Path        :        String;
@@ -199,7 +191,7 @@ is
       function To_C_String is new Ada.Unchecked_Conversion (C_Path_String,
                                                             C_String);
    begin
-      if Status (C) in Initialized | Pending then
+      if Initialized (C) then
          return;
       end if;
       Cxx.Block.Client.Initialize (C.Instance,
@@ -207,7 +199,6 @@ is
                                    To_C_String (C_Path),
                                    Event_Address,
                                    Crw_Address,
-                                   Init_Address,
                                    Cxx.Genode.Uint64_T (Buffer_Size));
       if
          C.Instance.Device /= System.Null_Address
@@ -222,7 +213,7 @@ is
    procedure Finalize (C : in out Client_Session)
    is
    begin
-      if Status (C) = Uninitialized then
+      if not Initialized (C) then
          return;
       end if;
       Cxx.Block.Client.Finalize (C.Instance);

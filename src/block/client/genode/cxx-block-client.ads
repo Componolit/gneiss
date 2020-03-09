@@ -21,7 +21,6 @@ is
       Callback    : Cxx.Void_Address;
       Write       : Cxx.Void_Address;
       Env         : Cxx.Void_Address;
-      Init        : Cxx.Void_Address;
       Tag         : Gneiss.Session_Index_Option;
    end record
    with Import, Convention => CPP;
@@ -41,12 +40,11 @@ is
                          Device      : Cxx.Char_Array;
                          Callback    : Cxx.Void_Address;
                          Rw          : Cxx.Void_Address;
-                         Init        : Cxx.Void_Address;
                          Buffer_Size : Cxx.Genode.Uint64_T) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client10initializeEPvPKcS2_S2_S2_y";
+      External_Name => "_ZN3Cai5Block6Client10initializeEPvPKcS2_S2_y";
 
    procedure Finalize (This : Class) with
       Global        => null,
