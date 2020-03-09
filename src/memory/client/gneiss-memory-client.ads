@@ -11,11 +11,6 @@
 
 generic
    pragma Warnings (Off, "* is not referenced");
-   --  Initialization event handler
-   --
-   --  @param Session  Client session
-   with procedure Initialize_Event (Session : in out Client_Session);
-
    --  Called to modify the shared memory buffer
    --
    --  @param Session  Client session
@@ -43,11 +38,12 @@ is
    --
    --  @param Session  Client session
    procedure Modify (Session : in out Client_Session) with
-      Pre => Status (Session) = Initialized;
+      Pre => Initialized (Session);
 
    --  Close session
    --
    --  @param Session  Client session
-   procedure Finalize (Session : in out Client_Session);
+   procedure Finalize (Session : in out Client_Session) with
+      Post => not Initialized (Session);
 
 end Gneiss.Memory.Client;

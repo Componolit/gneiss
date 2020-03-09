@@ -11,14 +11,11 @@ Gneiss::Memory_Client::Memory_Client() :
     _index(0)
 { }
 
-void Gneiss::Memory_Client::initialize(Gneiss::Capability *capability, const char *label, long long size, void(*event)(Gneiss::Memory_Client *))
+void Gneiss::Memory_Client::initialize(Gneiss::Capability *capability, const char *label, long long size)
 {
     TLOG("capability=", capability, " label=", Genode::Cstring(label), " size=", size, " event=", event);
     check_factory(_factory, *(capability->env));
-    _session = _factory->create2<Gneiss::Memory_Connection>(*(capability->env), label, size, event, *this);
-    if(_session){
-        Genode::Signal_transmitter(_session->_init).submit();
-    }
+    _session = _factory->create2<Gneiss::Memory_Connection>(*(capability->env), size, label);
 }
 
 void *Gneiss::Memory_Client::address()
@@ -38,47 +35,19 @@ void Gneiss::Memory_Client::finalize()
     _session = nullptr;
 }
 
-Gneiss::Memory_Connection::Memory_Connection(Genode::Env &env, Genode::Session_label label, long long size,
-                                             void (*event)(Gneiss::Memory_Client *),
-                                             Gneiss::Memory_Client &client) :
-    Genode::Connection<Gneiss::Memory_Session>(env, session(env.parent(),
-            "ram_quota=%ld, cap_quota=%ld, label=\"%s\", memory_size=%lld",
-            RAM_QUOTA + size, CAP_QUOTA, label.string(), size)),
-    Gneiss::Memory_Session_Client(cap()),
-    _init(env.ep(), *this, &Gneiss::Memory_Connection::init),
-    _client(&client),
-    _event(event),
-    _addr(env.rm().attach(dataspace())),
-    _size(size)
-{
-    TLOG("label=", label, " size=", size, " event=", event);
-    if(!_event){
-        throw 1;
-    }
-}
-
 Gneiss::Memory_Connection::Memory_Connection(Genode::Env &env, Genode::size_t size, Genode::Session_label label) :
     Genode::Connection<Gneiss::Memory_Session>(env, session(env.parent(),
             "ram_quota=%ld, cap_quota=%ld, label=\"%s\", memory_size=%lld",
             RAM_QUOTA + size, CAP_QUOTA, label.string(), size)),
     Gneiss::Memory_Session_Client(cap()),
-    _init(env.ep(), *this, &Gneiss::Memory_Connection::dummy_init),
-    _client(nullptr),
-    _event(nullptr),
     _addr(env.rm().attach(dataspace())),
     _size(size)
-{ }
+{
+    TLOG("size=", size, " label=", label);
+}
 
 Genode::size_t Gneiss::Memory_Connection::size()
 {
+    TLOG("");
     return _size;
 }
-
-void Gneiss::Memory_Connection::init()
-{
-    TLOG("");
-    _event(_client);
-}
-
-void Gneiss::Memory_Connection::dummy_init()
-{ }
