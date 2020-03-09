@@ -6,16 +6,10 @@ package body Gneiss.Message with
 is
    use type System.Address;
 
-   function Status (Session : Client_Session) return Session_Status is
-      (if
-          Session.Connection /= System.Null_Address
-          and then Session.Event /= System.Null_Address
-          and then Session.Init /= System.Null_Address
-          and then Session.Index.Valid
-       then
-          Initialized
-       else
-          Uninitialized);
+   function Initialized (Session : Client_Session) return Boolean is
+      (Session.Connection /= System.Null_Address
+       and then Session.Event /= System.Null_Address
+       and then Session.Index.Valid);
 
    function Initialized (Session : Server_Session) return Boolean is
       (Session.Component /= System.Null_Address
