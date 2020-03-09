@@ -8,14 +8,9 @@ with Basalt.Strings;
 package body Component with
    SPARK_Mode
 is
-   use type Gneiss.Session_Status;
-
-   procedure Initialize_Timer (Session : in out Gneiss.Timer.Client_Session);
-   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session);
    procedure Event;
 
-   package Timer_Client is new Gneiss.Timer.Client (Initialize_Timer, Event);
-   package Log_Client is new Gneiss.Log.Client (Initialize_Log);
+   package Timer_Client is new Gneiss.Timer.Client (Event);
 
    Log        : Gneiss.Log.Client_Session;
    Timer      : Gneiss.Timer.Client_Session;
@@ -25,43 +20,26 @@ is
    is
    begin
       Capability := Cap;
-      Log_Client.Initialize (Log, Cap, "log_timer");
-   end Construct;
-
-   procedure Initialize_Log (Session : in out Gneiss.Log.Client_Session)
-   is
-   begin
-      if Gneiss.Log.Status (Session) = Gneiss.Initialized then
-         Timer_Client.Initialize (Timer, Capability);
-      else
-         Main.Vacate (Capability, Main.Failure);
-      end if;
-   end Initialize_Log;
-
-   procedure Initialize_Timer (Session : in out Gneiss.Timer.Client_Session)
-   is
-   begin
-      if
-         Gneiss.Timer.Status (Session) = Gneiss.Initialized
-         and then Gneiss.Log.Status (Log) = Gneiss.Initialized
-      then
-         Timer_Client.Set_Timeout (Session, 60.0);
-         Timer_Client.Set_Timeout (Session, 1.5);
-               Log_Client.Info
+      Gneiss.Log.Client.Initialize (Log, Capability, "log_timer");
+      Timer_Client.Initialize (Timer, Capability);
+      if Gneiss.Log.Initialized (Log) and then Gneiss.Timer.Initialized (Timer) then
+         Timer_Client.Set_Timeout (Timer, 60.0);
+         Timer_Client.Set_Timeout (Timer, 1.5);
+               Gneiss.Log.Client.Info
                   (Log, "Time: " & Basalt.Strings.Image (Duration (Timer_Client.Clock (Timer))));
       else
          Main.Vacate (Capability, Main.Failure);
       end if;
-   end Initialize_Timer;
+   end Construct;
 
    procedure Event
    is
    begin
       if
-         Gneiss.Log.Status (Log) = Gneiss.Initialized
-         and Gneiss.Timer.Status (Timer) = Gneiss.Initialized
+         Gneiss.Log.Initialized (Log)
+         and Gneiss.Timer.Initialized (Timer)
       then
-         Log_Client.Info
+         Gneiss.Log.Client.Info
             (Log, "Time: " & Basalt.Strings.Image (Duration (Timer_Client.Clock (Timer))));
          Main.Vacate (Capability, Main.Success);
       else
@@ -73,7 +51,7 @@ is
    is
    begin
       Timer_Client.Finalize (Timer);
-      Log_Client.Finalize (Log);
+      Gneiss.Log.Client.Finalize (Log);
    end Destruct;
 
 end Component;

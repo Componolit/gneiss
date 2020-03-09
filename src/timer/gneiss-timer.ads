@@ -45,13 +45,13 @@ is
    --
    --  @param Session  Client session
    --  @return         Session status
-   function Status (C : Client_Session) return Session_Status;
+   function Initialized (Session : Client_Session) return Boolean;
 
    --  Get the sessions index
    --
    --  @param Session  Client session
    --  @return         Index option that can be invalid
-   function Index (C : Client_Session) return Session_Index_Option;
+   function Index (Session : Client_Session) return Session_Index_Option;
 
 private
 
