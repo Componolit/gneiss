@@ -8,8 +8,6 @@ with Gneiss.Block.Server;
 
 package Component is
 
-   use type Gneiss.Session_Status;
-
    procedure Construct (Cap : Gneiss.Capability);
    procedure Destruct;
 
@@ -25,19 +23,18 @@ package Component is
    use type Block.Count;
 
    procedure Event;
-   procedure Initialize_Block (Session : in out Block.Client_Session);
 
    procedure Write (C : in out Block.Client_Session;
                     I :        Request_Index;
                     D :    out Buffer) with
-      Pre => Block.Status (C) = Gneiss.Initialized;
+      Pre => Block.Initialized (C);
 
    procedure Read (C : in out Block.Client_Session;
                    I :        Request_Index;
                    D :        Buffer) with
-      Pre => Block.Status (C) = Gneiss.Initialized;
+      Pre => Block.Initialized (C);
 
-   package Block_Client is new Block.Client (Initialize_Block, Event, Read, Write);
+   package Block_Client is new Block.Client (Event, Read, Write);
 
    procedure Dispatch (I : in out Block.Dispatcher_Session;
                        C :        Block.Dispatcher_Capability) with
