@@ -1,7 +1,7 @@
 
 package Session is
 
-   type Action_Type is (Request, Confirm, Reject) with
+   type Action_Type is (Request, Confirm, Reject, Register) with
       Size => 8;
 
    type Kind_Type is (Message, Log, Memory, Rom) with
@@ -11,14 +11,22 @@ package Session is
 
    type Packet is
       message
-         Action         : Action_Type;
-         Kind           : Kind_Type;
-         Name_Length    : Length_Type;
-         Payload_Length : Length_Type
-            then Payload
-               with Length => (Payload_Length) * 8
-               if Name_Length <= Payload_Length;
-         Payload        : Payload;
+         Action       : Action_Type;
+         Kind         : Kind_Type;
+         Name_Length  : Length_Type
+            then Name
+               with Length => Name_Length * 8
+               if Name_Length > 0,
+            then Label_Length
+               if Name_Length = 0;
+         Name         : Payload;
+         Label_Length : Length_Type
+            then Label
+               with Length => Label_Length * 8
+               if Label_Length > 0,
+            then null
+               if Label_Length = 0;
+         Label        : Payload;
       end message;
 
 end Session;

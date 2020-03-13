@@ -17,29 +17,31 @@ is
       File_Descriptor : Integer                     := -1;
       Epoll_Fd        : Gneiss_Epoll.Epoll_Fd       := -1;
       Label           : Session_Label;
-      Pending         : Boolean                     := False;
       Index           : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
       Event_Cap       : Gneiss_Platform.Event_Cap;
    end record;
 
    type Server_Session is record
-      Fd    : Integer                     := -1;
-      Index : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      E_Cap : Gneiss_Platform.Event_Cap;
+      Fd       : Integer                     := -1;
+      Index    : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
+      Epoll_Fd : Gneiss_Epoll.Epoll_Fd       := -1;
+      E_Cap    : Gneiss_Platform.Event_Cap;
    end record;
 
    type Dispatcher_Session is record
-      Register_Service : Gneiss_Platform.Register_Service_Cap;
-      Client_Fd        : Integer                     := -1;
+      Broker_Fd        : Integer                     := -1;
       Accepted         : Boolean                     := False;
       Epoll_Fd         : Gneiss_Epoll.Epoll_Fd       := -1;
+      Dispatch_Fd      : Integer                     := -1;
       Index            : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
+      E_Cap            : Gneiss_Platform.Event_Cap;
    end record;
 
    type Dispatcher_Capability is limited record
-      Clean_Fd  : Integer := -1;
       Client_Fd : Integer := -1;
       Server_Fd : Integer := -1;
+      Name      : Session_Label;
+      Label     : Session_Label;
    end record;
 
 end Gneiss_Internal.Message;

@@ -8,7 +8,7 @@ package Gneiss.Broker.Message with
    SPARK_Mode
 is
 
-   procedure Read_Message (State  :        Broker_State;
+   procedure Read_Message (State  : in out Broker_State;
                            Index  :        Positive;
                            Buffer : in out RFLX.Types.Bytes_Ptr);
 
@@ -18,18 +18,18 @@ private
 
    function Convert_Message (S : String) return RFLX_String;
 
-   procedure Load_Message (State   : Broker_State;
-                           Index   : Positive;
-                           Context : RFLX.Session.Packet.Context;
-                           Fds     : Gneiss_Syscall.Fd_Array);
+   procedure Load_Message (State   : in out Broker_State;
+                           Index   :        Positive;
+                           Context :        RFLX.Session.Packet.Context;
+                           Fds     :        Gneiss_Syscall.Fd_Array);
 
-   procedure Handle_Message (State  : Broker_State;
-                             Source : Positive;
-                             Action : RFLX.Session.Action_Type;
-                             Kind   : RFLX.Session.Kind_Type;
-                             Name   : String;
-                             Label  : String;
-                             Fds    : Gneiss_Syscall.Fd_Array);
+   procedure Handle_Message (State  : in out Broker_State;
+                             Source :        Positive;
+                             Action :        RFLX.Session.Action_Type;
+                             Kind   :        RFLX.Session.Kind_Type;
+                             Name   :        String;
+                             Label  :        String;
+                             Fds    :        Gneiss_Syscall.Fd_Array);
 
    procedure Process_Request (State  : Broker_State;
                               Source : Positive;
@@ -55,6 +55,10 @@ private
                              Kind  : RFLX.Session.Kind_Type;
                              Name  : String;
                              Label : String);
+
+   procedure Process_Register (State  : in out Broker_State;
+                               Source :        Positive;
+                               Kind   :        RFLX.Session.Kind_Type);
 
    procedure Send_Request (Destination : Integer;
                            Kind        : RFLX.Session.Kind_Type;
