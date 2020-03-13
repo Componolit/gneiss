@@ -104,12 +104,12 @@ void gneiss_write_message(int sock, void *msg, size_t size, int *fd, int num)
         message.msg_control = 0;
         message.msg_controllen = 0;
     }
-    if(sendmsg(sock, &message, 0) < 0){
+    if(sendmsg(sock, &message, MSG_DONTWAIT) < 0){
         warn("sock=%d", sock);
     }
 }
 
-void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc)
+static void read_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc, int flags)
 {
     TRACE("sock=%d msg=%p size=%zu fd=%p num=%d length=%p trunc=%p\n", sock, msg, size, fd, num, length, trunc);
     ssize_t ssize;
@@ -150,6 +150,16 @@ void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int num, int
             && cmsg->cmsg_type == SCM_RIGHTS){
         memcpy(fd, CMSG_DATA(cmsg), min(sizeof(int) * num, cmsg->cmsg_len));
     }
+}
+
+void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc)
+{
+    read_message(sock, msg, size, fd, num, length, trunc, MSG_PEEK | MSG_TRUNC | MSG_DONTWAIT);
+}
+
+void gneiss_read_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc, int block)
+{
+    read_message(sock, msg, size, fd, num, length, trunc, MSG_TRUNC | (block ? 0 : MSG_DONTWAIT));
 }
 
 void gneiss_drop_message(int sock)

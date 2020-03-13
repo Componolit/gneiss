@@ -13,6 +13,8 @@ is
    function Valid_Fd (Efd : Epoll_Fd) return Boolean is
       (Efd >= 0);
 
+   type Event_Type is (Epoll_Ev, Epoll_Er);
+
    type Event is record
       Epoll_In        : Boolean;
       Epoll_Pri       : Boolean;
@@ -49,6 +51,9 @@ is
       Epoll_Oneshot   at 0 range 30 .. 30;
       Epoll_Et        at 0 range 31 .. 31;
    end record;
+
+   function Get_Type (E : Event) return Event_Type is
+      (if E.Epoll_Hup or else E.Epoll_Err or else E.Epoll_Rdhup then Epoll_Er else Epoll_Ev);
 
    procedure Create (Efd : out Epoll_Fd) with
       Import,

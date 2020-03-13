@@ -1,16 +1,21 @@
 
 with SXML;
 with SXML.Query;
+with RFLX.Session;
 
 package Gneiss.Broker with
    SPARK_Mode
 is
    use type SXML.Result_Type;
 
+   type Service_List is array (RFLX.Session.Kind_Type'Range) of Integer with
+      Default_Component_Value => -1;
+
    type Component_Definition is record
       Fd   : Integer               := -1;
       Node : SXML.Query.State_Type := SXML.Query.Initial_State;
       Pid  : Integer               := -1;
+      Serv : Service_List;
    end record;
 
    type Resource_Definition is record
