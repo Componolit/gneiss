@@ -54,6 +54,19 @@ is
       External_Name => "gneiss_write_message",
       Global        => (In_Out => Linux);
 
+   procedure Read_Message (Socket  :     Integer;
+                           Message :     System.Address;
+                           Size    :     Integer;
+                           Fds     : out Fd_Array;
+                           Num     :     Natural;
+                           Length  : out Integer;
+                           Trunc   : out Integer;
+                           Block   :     Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_read_message",
+      Global        => (In_Out => Linux);
+
    procedure Peek_Message (Socket  :     Integer;
                            Message :     System.Address;
                            Size    :     Integer;

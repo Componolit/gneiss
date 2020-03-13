@@ -7,19 +7,7 @@ is
    function Is_Valid (Cap : Event_Cap) return Boolean is
       (Cap.Address /= System.Null_Address and then Cap.Context /= System.Null_Address);
 
-   function Is_Valid (Cap : Initializer_Cap) return Boolean is
-      (Cap.Address /= System.Null_Address and then Cap.Cap /= System.Null_Address);
-
-   function Is_Valid (Cap : Dispatcher_Cap) return Boolean is
-      (Cap.Address /= System.Null_Address and then Cap.Cap /= System.Null_Address);
-
    function Is_Valid (Cap : Set_Status_Cap) return Boolean is
-      (Cap.Address /= System.Null_Address);
-
-   function Is_Valid (Cap : Register_Initializer_Cap) return Boolean is
-      (Cap.Address /= System.Null_Address);
-
-   function Is_Valid (Cap : Register_Service_Cap) return Boolean is
       (Cap.Address /= System.Null_Address);
 
    procedure Invalidate (Cap : in out Event_Cap)
@@ -29,20 +17,6 @@ is
       Cap.Context := System.Null_Address;
    end Invalidate;
 
-   procedure Invalidate (Cap : in out Initializer_Cap)
-   is
-   begin
-      Cap.Address := System.Null_Address;
-      Cap.Cap     := System.Null_Address;
-   end Invalidate;
-
-   procedure Invalidate (Cap : in out Dispatcher_Cap)
-   is
-   begin
-      Cap.Address := System.Null_Address;
-      Cap.Cap     := System.Null_Address;
-   end Invalidate;
-
    function Create_Event_Cap (C : Context) return Event_Cap with
       SPARK_Mode => Off
    is
@@ -50,14 +24,16 @@ is
       return Event_Cap'(Address => Event'Address, Context => C'Address);
    end Create_Event_Cap;
 
-   procedure Call (Cap : Event_Cap) with
+   procedure Call (Cap : Event_Cap;
+                   Ev  : Gneiss_Epoll.Event_Type) with
       SPARK_Mode => Off
    is
-      procedure Event (Context : System.Address) with
+      procedure Event (Context : System.Address;
+                       E       : Gneiss_Epoll.Event_Type) with
          Import,
          Address => Cap.Address;
    begin
-      Event (Cap.Context);
+      Event (Cap.Context, Ev);
    end Call;
 
    function Create_Set_Status_Cap return Set_Status_Cap with
@@ -75,96 +51,6 @@ is
          Address => Cap.Address;
    begin
       Set_Status (S);
-   end Call;
-
-   function Create_Initializer_Cap (S : Session_Type) return Initializer_Cap with
-      SPARK_Mode => Off
-   is
-   begin
-      return Initializer_Cap'(Address => Initializer'Address,
-                              Cap     => S'Address);
-   end Create_Initializer_Cap;
-
-   procedure Call (Cap     : Initializer_Cap;
-                   Label   : String;
-                   Success : Boolean;
-                   Fd      : Integer)
-   is
-      procedure Initializer (Ssn : System.Address;
-                             Lbl : String;
-                             Suc : Boolean;
-                             Fdr : Integer) with
-         Import,
-         Address => Cap.Address;
-   begin
-      Initializer (Cap.Cap, Label, Success, Fd);
-   end Call;
-
-   function Create_Register_Initializer_Cap return Register_Initializer_Cap with
-      SPARK_Mode => Off
-   is
-   begin
-      return Register_Initializer_Cap'(Address => Register'Address);
-   end Create_Register_Initializer_Cap;
-
-   procedure Call (Cap     :     Register_Initializer_Cap;
-                   I_Cap   :     Initializer_Cap;
-                   Kind    :     RFLX.Session.Kind_Type;
-                   Success : out Boolean)
-   is
-      procedure Register (K :     RFLX.Session.Kind_Type;
-                          I :     Initializer_Cap;
-                          S : out Boolean) with
-         Import,
-         Address => Cap.Address;
-   begin
-      Register (Kind, I_Cap, Success);
-   end Call;
-
-   function Create_Register_Service_Cap return Register_Service_Cap with
-      SPARK_Mode => Off
-   is
-   begin
-      return Register_Service_Cap'(Address => Register'Address);
-   end Create_Register_Service_Cap;
-
-   procedure Call (Cap     :     Register_Service_Cap;
-                   Kind    :     RFLX.Session.Kind_Type;
-                   D_Cap   :     Dispatcher_Cap;
-                   Success : out Boolean)
-   is
-      procedure Register (K :     RFLX.Session.Kind_Type;
-                          D :     Dispatcher_Cap;
-                          S : out Boolean) with
-         Import,
-         Address => Cap.Address;
-   begin
-      Register (Kind, D_Cap, Success);
-   end Call;
-
-   function Create_Dispatcher_Cap (S : Session_Type) return Dispatcher_Cap with
-      SPARK_Mode => Off
-   is
-   begin
-      return Dispatcher_Cap'(Address => Dispatch'Address,
-                             Cap     => S'Address);
-   end Create_Dispatcher_Cap;
-
-   procedure Call (Cap   :        Dispatcher_Cap;
-                   Name  :        String;
-                   Label :        String;
-                   Fd    : in out Gneiss_Syscall.Fd_Array;
-                   Num   :    out Natural)
-   is
-      procedure Dispatch (S :        System.Address;
-                          N :        String;
-                          L :        String;
-                          F : in out Gneiss_Syscall.Fd_Array;
-                          C :    out Natural) with
-         Import,
-         Address => Cap.Address;
-   begin
-      Dispatch (Cap.Cap, Name, Label, Fd, Num);
    end Call;
 
 end Gneiss_Platform;
