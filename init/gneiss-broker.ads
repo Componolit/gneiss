@@ -2,14 +2,20 @@
 with SXML;
 with SXML.Query;
 with RFLX.Session;
+with Gneiss_Epoll;
 
 package Gneiss.Broker with
    SPARK_Mode
 is
    use type SXML.Result_Type;
+   use type Gneiss_Epoll.Epoll_Fd;
 
-   type Service_List is array (RFLX.Session.Kind_Type'Range) of Integer with
-      Default_Component_Value => -1;
+   type Service_Entry is record
+      Broker : Integer := -1;
+      Disp   : Integer := -1;
+   end record;
+
+   type Service_List is array (RFLX.Session.Kind_Type'Range) of Service_Entry;
 
    type Component_Definition is record
       Fd   : Integer               := -1;
@@ -43,6 +49,7 @@ is
       Ghost;
 
    type Broker_State (Xml_Size : SXML.Index_Type; Reg_Size : Positive) is limited record
+      Epoll_Fd   : Gneiss_Epoll.Epoll_Fd              := -1;
       Xml        : SXML.Document_Type (1 .. Xml_Size) := (others => SXML.Null_Node);
       Components : Component_List (1 .. Reg_Size);
       Resources  : Resource_List (1 .. Reg_Size);

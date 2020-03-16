@@ -1,6 +1,7 @@
 
 with Gneiss.Main;
 with Gneiss_Log;
+with Gneiss_Epoll;
 with Gneiss_Syscall;
 with SXML.Parser;
 with Basalt.Strings;
@@ -12,8 +13,7 @@ is
    procedure Start_Components (State  : in out Broker_State;
                                Root   :        SXML.Query.State_Type;
                                Parent :    out Boolean;
-                               Status :    out Integer;
-                               Efd    : in out Gneiss_Epoll.Epoll_Fd)
+                               Status :    out Integer)
    is
       XML_Buf : String (1 .. 255);
       Pid     : Integer;
@@ -37,7 +37,7 @@ is
          if Result = SXML.Result_OK then
             Gneiss_Syscall.Socketpair (State.Components (Index).Fd, Fd);
             if State.Components (Index).Fd > -1 then
-               Gneiss_Epoll.Add (Efd, State.Components (Index).Fd, Index, Success);
+               Gneiss_Epoll.Add (State.Epoll_Fd, State.Components (Index).Fd, State.Components (Index).Fd, Success);
                Gneiss_Syscall.Fork (Pid);
                if Pid < 0 then
                   Gneiss_Log.Error ("Fork failed");
@@ -53,7 +53,7 @@ is
                   Gneiss_Log.Info ("Started " & XML_Buf (XML_Buf'First .. Last)
                                    & " with PID " & Basalt.Strings.Image (Pid));
                else --  Pid = 0, Child
-                  Gneiss_Syscall.Close (Integer (Efd));
+                  Gneiss_Syscall.Close (Integer (State.Epoll_Fd));
                   Load (State, Fd, Query, Status);
                   Parent := False;
                   return;

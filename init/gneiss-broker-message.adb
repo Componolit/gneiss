@@ -1,4 +1,5 @@
 
+with System;
 with Gneiss.Broker.Lookup;
 with Gneiss_Log;
 with Gneiss_Access;
@@ -6,8 +7,15 @@ with Gneiss_Access;
 package body Gneiss.Broker.Message with
    SPARK_Mode
 is
+   use type System.Address;
+   use type RFLX.Types.Bytes_Ptr;
+   use type RFLX.Types.Length;
 
    package Send_Buf is new Gneiss_Access (520);
+
+   function Buf_Address return System.Address with
+      Pre  => Send_Buf.Ptr /= null,
+      Post => Buf_Address'Result /= System.Null_Address;
 
    function Image (V : RFLX.Session.Kind_Type) return String is
       (case V is
@@ -15,6 +23,13 @@ is
          when RFLX.Session.Log     => "Log",
          when RFLX.Session.Memory  => "Memory",
          when RFLX.Session.Rom     => "Rom");
+
+   function Buf_Address return System.Address with
+      SPARK_Mode => Off
+   is
+   begin
+      return Send_Buf.Ptr.all'Address;
+   end Buf_Address;
 
    procedure Peek_Message (Socket    :     Integer;
                            Msg       : out RFLX.Types.Bytes;
@@ -31,6 +46,43 @@ is
       Field : String;
    procedure Set (Data : out RFLX.Types.Bytes);
 
+   procedure Setup_Service (State : in out Broker_State;
+                            Kind  :        RFLX.Session.Kind_Type;
+                            Index :        Positive);
+
+   procedure Send_Message (Destination : Integer;
+                           Action      : RFLX.Session.Action_Type;
+                           Kind        : RFLX.Session.Kind_Type;
+                           Name        : String;
+                           Label       : String;
+                           Fds         : Gneiss_Syscall.Fd_Array) with
+      Pre => Send_Buf.Ptr /= null,
+      Post => Send_Buf.Ptr /= null;
+
+   procedure Get (Data : RFLX.Types.Bytes)
+   is
+      I : Natural := Field'First;
+   begin
+      for J in Data'Range loop
+         Field (I) := Character'Val (RFLX.Types.Byte'Pos (Data (J)));
+         exit when I = Field'Last or else J = Data'Last;
+         I := I + 1;
+      end loop;
+      Last := I;
+   end Get;
+
+   procedure Set (Data : out RFLX.Types.Bytes)
+   is
+      I : Natural := Field'First;
+   begin
+      Data := (others => RFLX.Types.Byte'First);
+      for J in Data'Range loop
+         Data (J) := RFLX.Types.Byte'Val (Character'Pos (Field (I)));
+         exit when I = Field'Last or else J = Data'Last;
+         I := I + 1;
+      end loop;
+   end Set;
+
    procedure Peek_Message (Socket    :     Integer;
                            Msg       : out RFLX.Types.Bytes;
                            Last      : out RFLX.Types.Index;
@@ -38,7 +90,6 @@ is
                            Fd        : out Gneiss_Syscall.Fd_Array) with
       SPARK_Mode => Off
    is
-      use type RFLX.Types.Index;
       Trunc     : Integer;
       Length    : Integer;
    begin
@@ -51,36 +102,32 @@ is
       Last := (Msg'First + RFLX.Types.Index (Length)) - 1;
    end Peek_Message;
 
-   procedure Send_Message (Destination : Integer;
-                           Action      : RFLX.Session.Action_Type;
-                           Kind        : RFLX.Session.Kind_Type;
-                           Name        : String;
-                           Label       : String;
-                           Fds         : Gneiss_Syscall.Fd_Array);
-
-   procedure Get (Data : RFLX.Types.Bytes)
+   procedure Setup_Service (State : in out Broker_State;
+                            Kind  :        RFLX.Session.Kind_Type;
+                            Index :        Positive)
    is
-      I : Natural := Field'First;
+      Ignore_Success : Integer;
    begin
-      for C of Data loop
-         Field (I) := Character'Val (RFLX.Types.Byte'Pos (C));
-         exit when I = Field'Last;
-         I := I + 1;
-      end loop;
-      Last := I;
-   end Get;
-
-   procedure Set (Data : out RFLX.Types.Bytes)
-   is
-      I : Natural := Field'First;
-   begin
-      Data := (others => RFLX.Types.Byte'First);
-      for C of Data loop
-         C := RFLX.Types.Byte'Val (Character'Pos (Field (I)));
-         exit when I = Field'Last;
-         I := I + 1;
-      end loop;
-   end Set;
+      if
+         State.Components (Index).Serv (Kind).Broker > -1
+         and then State.Components (Index).Serv (Kind).Disp > -1
+      then
+         return;
+      end if;
+      Gneiss_Syscall.Socketpair (State.Components (Index).Serv (Kind).Broker,
+                                 State.Components (Index).Serv (Kind).Disp);
+      if
+         State.Components (Index).Serv (Kind).Broker < 0
+         or else State.Components (Index).Serv (Kind).Disp < 0
+      then
+         Gneiss_Log.Error ("Failed to create service fds");
+         Gneiss_Syscall.Close (State.Components (Index).Serv (Kind).Broker);
+         Gneiss_Syscall.Close (State.Components (Index).Serv (Kind).Disp);
+         return;
+      end if;
+      Gneiss_Epoll.Add (State.Epoll_Fd, State.Components (Index).Serv (Kind).Broker,
+                        State.Components (Index).Serv (Kind).Broker, Ignore_Success);
+   end Setup_Service;
 
    procedure Send_Message (Destination : Integer;
                            Action      : RFLX.Session.Action_Type;
@@ -99,11 +146,16 @@ is
       RFLX.Session.Packet.Set_Action (Context, Action);
       RFLX.Session.Packet.Set_Kind (Context, Kind);
       RFLX.Session.Packet.Set_Name_Length (Context, Name'Length);
-      Set_Name (Context);
+      if Name'Length > 0 then
+         Set_Name (Context);
+      end if;
       RFLX.Session.Packet.Set_Label_Length (Context, Label'Length);
-      Set_Label (Context);
+      if Label'Length > 0 then
+         Set_Label (Context);
+      end if;
+      RFLX.Session.Packet.Take_Buffer (Context, Send_Buf.Ptr);
       Gneiss_Syscall.Write_Message (Destination,
-                                    Send_Buf.Ptr.all'Address,
+                                    Buf_Address,
                                     4 + Name'Length + Label'Length,
                                     Fds, Fds'Length);
    end Send_Message;
@@ -119,18 +171,18 @@ is
       return R;
    end Convert_Message;
 
-   procedure Read_Message (State  : in out Broker_State;
-                           Index  :        Positive;
-                           Buffer : in out RFLX.Types.Bytes_Ptr)
+   procedure Read_Message (State    : in out Broker_State;
+                           Index    :        Positive;
+                           Filedesc :        Integer;
+                           Buffer   : in out RFLX.Types.Bytes_Ptr)
    is
-      use type RFLX.Types.Length;
       Truncated : Boolean;
       Context   : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
       Last      : RFLX.Types.Index;
       Fds       : Gneiss_Syscall.Fd_Array (1 .. 4);
    begin
-      Peek_Message (State.Components (Index).Fd, Buffer.all, Last, Truncated, Fds);
-      Gneiss_Syscall.Drop_Message (State.Components (Index).Fd);
+      Peek_Message (Filedesc, Buffer.all, Last, Truncated, Fds);
+      Gneiss_Syscall.Drop_Message (Filedesc);
       if Last < Buffer.all'First then
          pragma Warnings (Off, "unused assignment to ""Fd""");
          for Fd of Fds loop
@@ -232,11 +284,11 @@ is
       end case;
    end Handle_Message;
 
-   procedure Process_Request (State  : Broker_State;
-                              Source : Positive;
-                              Kind   : RFLX.Session.Kind_Type;
-                              Label  : String;
-                              Fds    : Gneiss_Syscall.Fd_Array)
+   procedure Process_Request (State  : in out Broker_State;
+                              Source :        Positive;
+                              Kind   :        RFLX.Session.Kind_Type;
+                              Label  :        String;
+                              Fds    :        Gneiss_Syscall.Fd_Array)
    is
       use type SXML.Query.State_Type;
       pragma Unreferenced (Fds);
@@ -274,7 +326,8 @@ is
          when RFLX.Session.Message | RFLX.Session.Log =>
             Process_Message_Request (Fds_Out, Valid);
             if Valid and then Destination in State.Components'Range then
-               Send_Request (State.Components (Destination).Fd,
+               Setup_Service (State, Kind, Destination);
+               Send_Request (State.Components (Destination).Serv (Kind).Broker,
                              Kind,
                              Source_Name (Source_Name'First .. Last),
                              Label,
@@ -375,14 +428,14 @@ is
                                Source :        Positive;
                                Kind   :        RFLX.Session.Kind_Type)
    is
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 2);
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 1);
    begin
-      Gneiss_Syscall.Socketpair (Fds (Fds'First), Fds (Fds'First + 1));
-      if (for all Fd of Fds => Fd > -1) then
-         State.Components (Source).Serv (Kind) := Fds (Fds'First + 1);
-         Send_Confirm (Source, Kind, "", Fds (Fds'First .. Fds'First));
+      Setup_Service (State, Kind, Source);
+      Fds := (1 => State.Components (Source).Serv (Kind).Disp);
+      if Fds (Fds'First) > -1 then
+         Send_Confirm (State.Components (Source).Fd, Kind, "", Fds);
       else
-         Send_Reject (Source, Kind, "");
+         Send_Reject (State.Components (Source).Fd, Kind, "");
       end if;
    end Process_Register;
 

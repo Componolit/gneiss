@@ -111,7 +111,7 @@ void gneiss_write_message(int sock, void *msg, size_t size, int *fd, int num)
 
 static void read_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc, int flags)
 {
-    TRACE("sock=%d msg=%p size=%zu fd=%p num=%d length=%p trunc=%p\n", sock, msg, size, fd, num, length, trunc);
+    TRACE("sock=%d msg=%p size=%zu fd=%p num=%d length=%p trunc=%p flags=%u\n", sock, msg, size, fd, num, length, trunc, flags);
     ssize_t ssize;
     struct msghdr message;
     struct iovec iov;
@@ -133,7 +133,7 @@ static void read_message(int sock, void *msg, size_t size, int *fd, int num, int
     for(int i = 0; i < num; i++){
         fd[i] = -1;
     }
-    *length = recvmsg(sock, &message, MSG_PEEK | MSG_TRUNC);
+    *length = recvmsg(sock, &message, flags);
     if(*length < 0){
         warn("sock=%d", sock);
         *length = 0;
@@ -154,11 +154,13 @@ static void read_message(int sock, void *msg, size_t size, int *fd, int num, int
 
 void gneiss_peek_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc)
 {
+    TRACE("\n");
     read_message(sock, msg, size, fd, num, length, trunc, MSG_PEEK | MSG_TRUNC | MSG_DONTWAIT);
 }
 
 void gneiss_read_message(int sock, void *msg, size_t size, int *fd, int num, int *length, int *trunc, int block)
 {
+    TRACE("\n");
     read_message(sock, msg, size, fd, num, length, trunc, MSG_TRUNC | (block ? 0 : MSG_DONTWAIT));
 }
 
