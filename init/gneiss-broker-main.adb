@@ -5,6 +5,7 @@ with Gneiss.Config;
 with Gneiss_Access;
 with Gneiss_Syscall;
 with Gneiss_Log;
+with Gneiss_Epoll;
 with Basalt.Strings;
 with SXML.Query;
 with RFLX.Types;
@@ -26,12 +27,32 @@ is
        and then Read_Buffer.Ptr.all'First = 1
        and then Read_Buffer.Ptr.all'Last = Buffer_Size);
 
+   function Get_Dest (B_State : Broker_State;
+                      Fd      : Integer) return Natural;
+
+   function Get_Dest (B_State : Broker_State;
+                      Fd      : Integer) return Natural
+   is
+   begin
+      if Fd < 0 then
+         return 0;
+      end if;
+      for I in B_State.Components'Range loop
+         if
+            B_State.Components (I).Fd = Fd
+            or else (for some S of B_State.Components (I).Serv => S.Broker = Fd)
+         then
+            return I;
+         end if;
+      end loop;
+      return 0;
+   end Get_Dest;
+
    procedure Construct (Conf_Loc :     String;
                         Status   : out Integer)
    is
       Query      : SXML.Query.State_Type;
       Parent     : Boolean;
-      Efd        : Gneiss_Epoll.Epoll_Fd;
    begin
       Gneiss_Log.Info ("Loading config from " & Conf_Loc);
       Status           := 1;
@@ -41,25 +62,25 @@ is
          Gneiss_Log.Error ("Init failed");
          return;
       end if;
-      Gneiss_Epoll.Create (Efd);
-      if not Gneiss_Epoll.Valid_Fd (Efd) then
+      Gneiss_Epoll.Create (State.Epoll_Fd);
+      if not Gneiss_Epoll.Valid_Fd (State.Epoll_Fd) then
          Status := 1;
          return;
       end if;
       Startup.Parse_Resources (State.Resources, State.Xml, Query);
-      Startup.Start_Components (State, Query, Parent, Status, Efd);
+      Startup.Start_Components (State, Query, Parent, Status);
       if Parent and then Valid_Read_Buffer then
-         Event_Loop (State, Status, Efd);
+         Event_Loop (State, Status);
       end if;
    end Construct;
 
    procedure Event_Loop (B_State : in out Broker_State;
-                         Status  :    out Integer;
-                         Efd     :        Gneiss_Epoll.Epoll_Fd)
+                         Status  :    out Integer)
    is
       XML_Buf : String (1 .. 255);
       Ev      : Gneiss_Epoll.Event;
       Index   : Integer;
+      Fd      : Integer;
       Success : Integer;
       Result  : SXML.Result_Type;
       Last    : Natural;
@@ -67,11 +88,12 @@ is
       Status := 1;
       loop
          pragma Loop_Invariant (Valid_Read_Buffer);
-         Gneiss_Epoll.Wait (Efd, Ev, Index);
+         Gneiss_Epoll.Wait (State.Epoll_Fd, Ev, Fd);
+         Index := Get_Dest (State, Fd);
          if Index in B_State.Components'Range and then B_State.Components (Index).Fd > -1 then
             SXML.Query.Attribute (B_State.Components (Index).Node, B_State.Xml, "name", Result, XML_Buf, Last);
             if Ev.Epoll_In then
-               Message.Read_Message (B_State, Index, Read_Buffer.Ptr);
+               Message.Read_Message (B_State, Index, Fd, Read_Buffer.Ptr);
             end if;
             if Ev.Epoll_Hup or else Ev.Epoll_Rdhup then
                Gneiss_Syscall.Waitpid (B_State.Components (Index).Pid, Success);
@@ -86,7 +108,7 @@ is
                                    & " exited with status "
                                    & Basalt.Strings.Image (Success));
                end if;
-               Gneiss_Epoll.Remove (Efd, B_State.Components (Index).Fd, Success);
+               Gneiss_Epoll.Remove (State.Epoll_Fd, B_State.Components (Index).Fd, Success);
                Gneiss_Syscall.Close (B_State.Components (Index).Fd);
                State.Components (Index).Node := SXML.Query.Init (B_State.Xml);
                State.Components (Index).Pid  := -1;

@@ -54,6 +54,7 @@ is
       then
          Fd := Fds (Fds'First);
       end if;
+      RFLX.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
    end Register;
 
    procedure Initialize (Cap   :     Capability;
@@ -86,7 +87,9 @@ is
       RFLX.Session.Packet.Set_Kind (Context, Kind);
       RFLX.Session.Packet.Set_Name_Length (Context, 0);
       RFLX.Session.Packet.Set_Label_Length (Context, RFLX.Session.Length_Type (Label'Length));
-      Set_Label_Payload (Context);
+      if Label'Length > 0 then
+         Set_Label_Payload (Context);
+      end if;
       RFLX.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
       Gneiss_Syscall.Write_Message (Cap.Broker_Fd,
                                     Buffer.Ptr.all'Address,
@@ -119,6 +122,7 @@ is
    is
       use type RFLX.Session.Action_Type;
       use type RFLX.Session.Kind_Type;
+      use type RFLX.Types.Length;
       Valid : Boolean := False;
       procedure Parse_Name (Data : RFLX.Types.Bytes);
       procedure Parse_Label (Data : RFLX.Types.Bytes);
@@ -126,9 +130,9 @@ is
       is
          Index : Natural := Name'First;
       begin
-         for C of Data loop
-            Name (Index) := Character'Val (RFLX.Types.Byte'Pos (C));
-            exit when Index = Name'Last;
+         for I in Data'Range loop
+            Name (Index) := Character'Val (RFLX.Types.Byte'Pos (Data (I)));
+            exit when Index = Name'Last or else I = Data'Last;
             Index := Index + 1;
          end loop;
          Name_Last := Index;
@@ -137,9 +141,9 @@ is
       is
          Index : Natural := Label'First;
       begin
-         for C of Data loop
-            Label (Index) := Character'Val (RFLX.Types.Byte'Pos (C));
-            exit when Index = Label'Last;
+         for I in Data'Range loop
+            Label (Index) := Character'Val (RFLX.Types.Byte'Pos (Data (I)));
+            exit when Index = Label'Last or else I = Data'Last;
             Index := Index + 1;
          end loop;
          Label_Last := Index;
@@ -225,7 +229,7 @@ is
          I : Positive := Label'First;
       begin
          for B of Buf loop
-            B := RFLX.Types.Byte'Val (Character'Pos (Name (I)));
+            B := RFLX.Types.Byte'Val (Character'Pos (Label (I)));
             if I < Label'Last then
                I := I + 1;
             end if;
@@ -239,9 +243,13 @@ is
       RFLX.Session.Packet.Set_Action (Context, Action);
       RFLX.Session.Packet.Set_Kind (Context, Kind);
       RFLX.Session.Packet.Set_Name_Length (Context, RFLX.Session.Length_Type (Name'Length));
+      if Name'Length > 0 then
+         Set_Name_Payload (Context);
+      end if;
       RFLX.Session.Packet.Set_Label_Length (Context, RFLX.Session.Length_Type (Label'Length));
-      Set_Name_Payload (Context);
-      Set_Label_Payload (Context);
+      if Label'Length > 0 then
+         Set_Label_Payload (Context);
+      end if;
       RFLX.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
       Gneiss_Syscall.Write_Message (Fd, Buffer.Ptr.all'Address,
                                     Name'Length + Label'Length + 4,

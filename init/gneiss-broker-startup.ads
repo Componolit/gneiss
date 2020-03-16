@@ -1,5 +1,4 @@
 
-with Gneiss_Epoll;
 with SXML;
 with SXML.Query;
 
@@ -10,8 +9,7 @@ is
    procedure Start_Components (State  : in out Broker_State;
                                Root   :        SXML.Query.State_Type;
                                Parent :    out Boolean;
-                               Status :    out Integer;
-                               Efd    : in out Gneiss_Epoll.Epoll_Fd);
+                               Status :    out Integer);
 
    procedure Parse (Data     :        String;
                     Document : in out SXML.Document_Type);
