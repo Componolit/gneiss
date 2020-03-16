@@ -8,9 +8,10 @@ package Gneiss.Broker.Message with
    SPARK_Mode
 is
 
-   procedure Read_Message (State  : in out Broker_State;
-                           Index  :        Positive;
-                           Buffer : in out RFLX.Types.Bytes_Ptr);
+   procedure Read_Message (State    : in out Broker_State;
+                           Index    :        Positive;
+                           Filedesc :        Integer;
+                           Buffer   : in out RFLX.Types.Bytes_Ptr);
 
 private
 
@@ -31,11 +32,11 @@ private
                              Label  :        String;
                              Fds    :        Gneiss_Syscall.Fd_Array);
 
-   procedure Process_Request (State  : Broker_State;
-                              Source : Positive;
-                              Kind   : RFLX.Session.Kind_Type;
-                              Label  : String;
-                              Fds    : Gneiss_Syscall.Fd_Array);
+   procedure Process_Request (State  : in out Broker_State;
+                              Source :        Positive;
+                              Kind   :        RFLX.Session.Kind_Type;
+                              Label  :        String;
+                              Fds    :        Gneiss_Syscall.Fd_Array);
 
    procedure Process_Message_Request (Fds   : out Gneiss_Syscall.Fd_Array;
                                       Valid : out Boolean);

@@ -17,7 +17,7 @@ project Init is
          for Languages use ("Ada");
          for Object_Dir use external ("CEMENT_OBJECT_DIR");
          for Main use ("main.adb");
-         for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/obj";
+         for Runtime ("Ada") use Gneiss_Root & "/ada-runtime/build/posix/obj";
       when others =>
          for Languages use ();
    end case;

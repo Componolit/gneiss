@@ -1,6 +1,4 @@
 
-private with Gneiss_Epoll;
-
 package Gneiss.Broker.Main with
    SPARK_Mode
 is
@@ -13,7 +11,6 @@ private
    procedure Parse (Data : String);
 
    procedure Event_Loop (B_State : in out Broker_State;
-                         Status  :    out Integer;
-                         Efd     :        Gneiss_Epoll.Epoll_Fd);
+                         Status  :    out Integer);
 
 end Gneiss.Broker.Main;

@@ -33,6 +33,7 @@ is
       Session.Label.Value
          (Session.Label.Value'First
           .. Session.Label.Value'First + Label'Length - 1) := Label;
+      Session.File_Descriptor := Fds (Fds'First);
    end Initialize;
 
    --------------
