@@ -57,9 +57,7 @@ is
             Session.Accepted := False;
             Platform_Client.Dispatch (Session.Dispatch_Fd,
                                       RFLX.Session.Log,
-                                      Name.Value, Name.Last,
-                                      Label.Value, Label.Last,
-                                      Fds);
+                                      Name, Label, Fds);
             Dispatch (Session,
                       Dispatcher_Capability'(Client_Fd => Fds (1),
                                              Server_Fd => Fds (2),
