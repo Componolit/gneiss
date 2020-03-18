@@ -74,33 +74,27 @@ is
    procedure Dispatch_Event (Session  : in out Dispatcher_Session;
                              Epoll_Ev :        Gneiss_Epoll.Event_Type)
    is
-      Fds        : Gneiss_Syscall.Fd_Array (1 .. 2);
-      Name       : String (1 .. 255);
-      Label      : String (1 .. 255);
-      Name_Last  : Natural;
-      Label_Last : Natural;
+      Fds   : Gneiss_Syscall.Fd_Array (1 .. 2);
+      Name  : Gneiss_Internal.Session_Label;
+      Label : Gneiss_Internal.Session_Label;
    begin
       case Epoll_Ev is
          when Gneiss_Epoll.Epoll_Ev =>
             Session.Accepted := False;
             Platform_Client.Dispatch (Session.Dispatch_Fd, RFLX.Session.Message,
-                                      Name, Name_Last,
-                                      Label, Label_Last,
-                                      Fds);
+                                      Name, Label, Fds);
             Dispatch (Session,
                       Dispatcher_Capability'(Client_Fd => Fds (1),
                                              Server_Fd => Fds (2),
-                                             Name      => Gneiss_Internal.Session_Label'(Value => Name,
-                                                                                         Last  => Name_Last),
-                                             Label     => Gneiss_Internal.Session_Label'(Value => Label,
-                                                                                         Last  => Label_Last)),
-                      Name (Name'First .. Name_Last),
-                      Label (Label'First .. Label_Last));
+                                             Name      => Name,
+                                             Label     => Label),
+                      Name.Value (Name.Value'First .. Name.Last),
+                      Label.Value (Label.Value'First .. Label.Last));
             if not Session.Accepted then
                Platform_Client.Reject (Session.Dispatch_Fd,
                                        RFLX.Session.Message,
-                                       Name (Name'First .. Name_Last),
-                                       Label (Label'First .. Label_Last));
+                                       Name.Value (Name.Value'First .. Name.Last),
+                                       Label.Value (Label.Value'First .. Label.Last));
             end if;
          when Gneiss_Epoll.Epoll_Er =>
             null;
