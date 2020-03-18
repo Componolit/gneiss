@@ -1,21 +1,12 @@
 
-with System;
 with Gneiss.Broker.Lookup;
+with Gneiss.Packet;
 with Gneiss_Log;
-with Gneiss_Access;
+with Gneiss_Internal;
 
 package body Gneiss.Broker.Message with
    SPARK_Mode
 is
-   use type System.Address;
-   use type RFLX.Types.Bytes_Ptr;
-   use type RFLX.Types.Length;
-
-   package Send_Buf is new Gneiss_Access (520);
-
-   function Buf_Address return System.Address with
-      Pre  => Send_Buf.Ptr /= null,
-      Post => Buf_Address'Result /= System.Null_Address;
 
    function Image (V : RFLX.Session.Kind_Type) return String is
       (case V is
@@ -24,50 +15,9 @@ is
          when RFLX.Session.Memory  => "Memory",
          when RFLX.Session.Rom     => "Rom");
 
-   function Buf_Address return System.Address with
-      SPARK_Mode => Off
-   is
-   begin
-      return Send_Buf.Ptr.all'Address;
-   end Buf_Address;
-
-   procedure Peek_Message (Socket    :     Integer;
-                           Msg       : out RFLX.Types.Bytes;
-                           Last      : out RFLX.Types.Index;
-                           Truncated : out Boolean;
-                           Fd        : out Gneiss_Syscall.Fd_Array);
-
    procedure Setup_Service (State : in out Broker_State;
                             Kind  :        RFLX.Session.Kind_Type;
                             Index :        Positive);
-
-   procedure Send_Message (Destination : Integer;
-                           Action      : RFLX.Session.Action_Type;
-                           Kind        : RFLX.Session.Kind_Type;
-                           Name        : String;
-                           Label       : String;
-                           Fds         : Gneiss_Syscall.Fd_Array) with
-      Pre => Send_Buf.Ptr /= null,
-      Post => Send_Buf.Ptr /= null;
-
-   procedure Peek_Message (Socket    :     Integer;
-                           Msg       : out RFLX.Types.Bytes;
-                           Last      : out RFLX.Types.Index;
-                           Truncated : out Boolean;
-                           Fd        : out Gneiss_Syscall.Fd_Array) with
-      SPARK_Mode => Off
-   is
-      Trunc     : Integer;
-      Length    : Integer;
-   begin
-      Gneiss_Syscall.Peek_Message (Socket, Msg'Address, Msg'Length, Fd, Fd'Length, Length, Trunc);
-      Truncated := Trunc = 1;
-      if Length < 1 then
-         Last := RFLX.Types.Index'First;
-         return;
-      end if;
-      Last := (Msg'First + RFLX.Types.Index (Length)) - 1;
-   end Peek_Message;
 
    procedure Setup_Service (State : in out Broker_State;
                             Kind  :        RFLX.Session.Kind_Type;
@@ -96,37 +46,6 @@ is
                         State.Components (Index).Serv (Kind).Broker, Ignore_Success);
    end Setup_Service;
 
-   procedure Send_Message (Destination : Integer;
-                           Action      : RFLX.Session.Action_Type;
-                           Kind        : RFLX.Session.Kind_Type;
-                           Name        : String;
-                           Label       : String;
-                           Fds         : Gneiss_Syscall.Fd_Array)
-   is
-      Context : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
-      procedure Convert_Name is new Send_Buf.Set (Name);
-      procedure Convert_Label is new Send_Buf.Set (Label);
-      procedure Set_Name is new RFLX.Session.Packet.Set_Name (Convert_Name);
-      procedure Set_Label is new RFLX.Session.Packet.Set_Label (Convert_Label);
-   begin
-      RFLX.Session.Packet.Initialize (Context, Send_Buf.Ptr);
-      RFLX.Session.Packet.Set_Action (Context, Action);
-      RFLX.Session.Packet.Set_Kind (Context, Kind);
-      RFLX.Session.Packet.Set_Name_Length (Context, Name'Length);
-      if Name'Length > 0 then
-         Set_Name (Context);
-      end if;
-      RFLX.Session.Packet.Set_Label_Length (Context, Label'Length);
-      if Label'Length > 0 then
-         Set_Label (Context);
-      end if;
-      RFLX.Session.Packet.Take_Buffer (Context, Send_Buf.Ptr);
-      Gneiss_Syscall.Write_Message (Destination,
-                                    Buf_Address,
-                                    4 + Name'Length + Label'Length,
-                                    Fds, Fds'Length);
-   end Send_Message;
-
    function Convert_Message (S : String) return RFLX_String
    is
       use type RFLX.Session.Length_Type;
@@ -140,83 +59,30 @@ is
 
    procedure Read_Message (State    : in out Broker_State;
                            Index    :        Positive;
-                           Filedesc :        Integer;
-                           Buffer   : in out RFLX.Types.Bytes_Ptr)
+                           Filedesc :        Integer)
    is
-      Truncated : Boolean;
-      Context   : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
-      Last      : RFLX.Types.Index;
-      Fds       : Gneiss_Syscall.Fd_Array (1 .. 4);
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 4);
+      Msg : Packet.Message;
    begin
-      Peek_Message (Filedesc, Buffer.all, Last, Truncated, Fds);
-      Gneiss_Syscall.Drop_Message (Filedesc);
-      if Last < Buffer.all'First then
-         pragma Warnings (Off, "unused assignment to ""Fd""");
-         for Fd of Fds loop
-            Gneiss_Syscall.Close (Fd);
-         end loop;
-         pragma Warnings (On, "unused assignment to ""Fd""");
-         Gneiss_Log.Warning ("Message too short, dropping");
-         return;
-      end if;
-      if Truncated or else Last > Buffer.all'Last then
-         pragma Warnings (Off, "unused assignment to ""Fd""");
-         for Fd of Fds loop
-            Gneiss_Syscall.Close (Fd);
-         end loop;
-         pragma Warnings (On, "unused assignment to ""Fd""");
-         Gneiss_Log.Warning ("Message too large, dropping");
-         return;
-      end if;
-      pragma Warnings (Off, "unused assignment to ""Ptr""");
-      RFLX.Session.Packet.Initialize (Context,
-                                      Buffer,
-                                      RFLX.Types.First_Bit_Index (Buffer.all'First),
-                                      RFLX.Types.Last_Bit_Index (Last));
-      pragma Warnings (On, "unused assignment to ""Ptr""");
-      RFLX.Session.Packet.Verify_Message (Context);
-      if RFLX.Session.Packet.Structural_Valid_Message (Context) then
-         Load_Message (State, Index, Context, Fds);
-      else
+      Packet.Receive (Filedesc, Msg, Fds, False);
+      if not Msg.Valid then
          Gneiss_Log.Warning ("Invalid message, dropping");
          pragma Warnings (Off, "unused assignment to ""Fd""");
          for Fd of Fds loop
-            Gneiss_Syscall.Close (Fd);
+            if Fd > -1 then
+               Gneiss_Syscall.Close (Fd);
+            end if;
          end loop;
          pragma Warnings (On, "unused assignment to ""Fd""");
-      end if;
-      pragma Warnings (Off, "unused assignment to ""Context""");
-      RFLX.Session.Packet.Take_Buffer (Context, Buffer);
-      pragma Warnings (On, "unused assignment to ""Context""");
-   end Read_Message;
-
-   procedure Load_Message (State   : in out Broker_State;
-                           Index   :        Positive;
-                           Context :        RFLX.Session.Packet.Context;
-                           Fds     :        Gneiss_Syscall.Fd_Array)
-   is
-      Load_Message_Name  : String (1 .. 255) := (others => Character'First);
-      Load_Message_Label : String (1 .. 255) := (others => Character'First);
-      Name_Last          : Natural           := 0;
-      Label_Last         : Natural           := 0;
-      procedure Load_Name is new Send_Buf.Get (Load_Message_Name, Name_Last);
-      procedure Load_Label is new Send_Buf.Get (Load_Message_Label, Label_Last);
-      procedure Get_Name is new RFLX.Session.Packet.Get_Name (Load_Name);
-      procedure Get_Label is new RFLX.Session.Packet.Get_Label (Load_Label);
-   begin
-      if RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Name) then
-         Get_Name (Context);
-      end if;
-      if RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Label) then
-         Get_Label (Context);
+         return;
       end if;
       Handle_Message (State, Index,
-                      RFLX.Session.Packet.Get_Action (Context),
-                      RFLX.Session.Packet.Get_Kind (Context),
-                      Load_Message_Name (Load_Message_Name'First .. Name_Last),
-                      Load_Message_Label (Load_Message_Label'First .. Label_Last),
+                      Msg.Action,
+                      Msg.Kind,
+                      Msg.Name.Value (Msg.Name.Value'First .. Msg.Name.Last),
+                      Msg.Label.Value (Msg.Label.Value'First .. Msg.Label.Last),
                       Fds);
-   end Load_Message;
+   end Read_Message;
 
    procedure Handle_Message (State  : in out Broker_State;
                              Source :        Positive;
@@ -412,8 +278,14 @@ is
                            Label       : String;
                            Fds         : Gneiss_Syscall.Fd_Array)
    is
+      S_Name  : Gneiss_Internal.Session_Label;
+      S_Label : Gneiss_Internal.Session_Label;
    begin
-      Send_Message (Destination, RFLX.Session.Request, Kind, Name, Label, Fds);
+      S_Name.Last := S_Name.Value'First + Name'Length - 1;
+      S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
+      S_Label.Last := S_Label.Value'First + Label'Length - 1;
+      S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
+      Packet.Send (Destination, RFLX.Session.Request, Kind, S_Name, S_Label, Fds);
    end Send_Request;
 
    procedure Send_Confirm (Destination : Integer;
@@ -421,17 +293,24 @@ is
                            Label       : String;
                            Fds         : Gneiss_Syscall.Fd_Array)
    is
+      S_Name  : Gneiss_Internal.Session_Label;
+      S_Label : Gneiss_Internal.Session_Label;
    begin
-      Send_Message (Destination, RFLX.Session.Confirm, Kind, "", Label, Fds);
+      S_Label.Last := S_Label.Value'First + Label'Length - 1;
+      S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
+      Packet.Send (Destination, RFLX.Session.Confirm, Kind, S_Name, S_Label, Fds);
    end Send_Confirm;
 
    procedure Send_Reject (Destination : Integer;
                           Kind        : RFLX.Session.Kind_Type;
                           Label       : String)
    is
-      Null_Fds : constant Gneiss_Syscall.Fd_Array (1 .. 0) := (others => -1);
+      S_Name  : Gneiss_Internal.Session_Label;
+      S_Label : Gneiss_Internal.Session_Label;
    begin
-      Send_Message (Destination, RFLX.Session.Reject, Kind, "", Label, Null_Fds);
+      S_Label.Last := S_Label.Value'First + Label'Length - 1;
+      S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
+      Packet.Send (Destination, RFLX.Session.Reject, Kind, S_Name, S_Label, (1 .. 0 => -1));
    end Send_Reject;
 
 end Gneiss.Broker.Message;

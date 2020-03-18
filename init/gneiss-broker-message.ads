@@ -1,8 +1,6 @@
 
-with RFLX.Types;
 private with Gneiss_Syscall;
 private with RFLX.Session;
-private with RFLX.Session.Packet;
 
 package Gneiss.Broker.Message with
    SPARK_Mode
@@ -10,19 +8,13 @@ is
 
    procedure Read_Message (State    : in out Broker_State;
                            Index    :        Positive;
-                           Filedesc :        Integer;
-                           Buffer   : in out RFLX.Types.Bytes_Ptr);
+                           Filedesc :        Integer);
 
 private
 
    type RFLX_String is array (RFLX.Session.Length_Type range <>) of Character;
 
    function Convert_Message (S : String) return RFLX_String;
-
-   procedure Load_Message (State   : in out Broker_State;
-                           Index   :        Positive;
-                           Context :        RFLX.Session.Packet.Context;
-                           Fds     :        Gneiss_Syscall.Fd_Array);
 
    procedure Handle_Message (State  : in out Broker_State;
                              Source :        Positive;
