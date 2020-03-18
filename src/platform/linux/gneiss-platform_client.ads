@@ -1,6 +1,7 @@
 
 with RFLX.Session;
 with Gneiss_Syscall;
+with Gneiss_Internal;
 
 package Gneiss.Platform_Client with
    SPARK_Mode
@@ -15,13 +16,11 @@ is
                          Fds   : out Gneiss_Syscall.Fd_Array;
                          Label :     String);
 
-   procedure Dispatch (Fd         :     Integer;
-                       Kind       :     RFLX.Session.Kind_Type;
-                       Name       : out String;
-                       Name_Last  : out Natural;
-                       Label      : out String;
-                       Label_Last : out Natural;
-                       Fds        : out Gneiss_Syscall.Fd_Array);
+   procedure Dispatch (Fd    :     Integer;
+                       Kind  :     RFLX.Session.Kind_Type;
+                       Name  : out Gneiss_Internal.Session_Label;
+                       Label : out Gneiss_Internal.Session_Label;
+                       Fds   : out Gneiss_Syscall.Fd_Array);
 
    procedure Confirm (Fd    : Integer;
                       Kind  : RFLX.Session.Kind_Type;
