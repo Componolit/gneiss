@@ -6,11 +6,10 @@ package body Gneiss.Rom with
 is
    use type System.Address;
 
-   function Status (Session : Client_Session) return Session_Status is
-      (if Session.Index.Valid then
-          (if Session.Fd >= 0 and then Session.Map /= System.Null_Address then Initialized else Pending)
-       else
-          Uninitialized);
+   function Initialized (Session : Client_Session) return Boolean is
+      (Session.Index.Valid
+       and then Session.Fd > -1
+       and then Session.Map /= System.Null_Address);
 
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
