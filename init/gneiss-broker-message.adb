@@ -37,15 +37,6 @@ is
                            Truncated : out Boolean;
                            Fd        : out Gneiss_Syscall.Fd_Array);
 
-   generic
-      Field : in out String;
-      Last  : in out Natural;
-   procedure Get (Data : RFLX.Types.Bytes);
-
-   generic
-      Field : String;
-   procedure Set (Data : out RFLX.Types.Bytes);
-
    procedure Setup_Service (State : in out Broker_State;
                             Kind  :        RFLX.Session.Kind_Type;
                             Index :        Positive);
@@ -58,30 +49,6 @@ is
                            Fds         : Gneiss_Syscall.Fd_Array) with
       Pre => Send_Buf.Ptr /= null,
       Post => Send_Buf.Ptr /= null;
-
-   procedure Get (Data : RFLX.Types.Bytes)
-   is
-      I : Natural := Field'First;
-   begin
-      for J in Data'Range loop
-         Field (I) := Character'Val (RFLX.Types.Byte'Pos (Data (J)));
-         exit when I = Field'Last or else J = Data'Last;
-         I := I + 1;
-      end loop;
-      Last := I;
-   end Get;
-
-   procedure Set (Data : out RFLX.Types.Bytes)
-   is
-      I : Natural := Field'First;
-   begin
-      Data := (others => RFLX.Types.Byte'First);
-      for J in Data'Range loop
-         Data (J) := RFLX.Types.Byte'Val (Character'Pos (Field (I)));
-         exit when I = Field'Last or else J = Data'Last;
-         I := I + 1;
-      end loop;
-   end Set;
 
    procedure Peek_Message (Socket    :     Integer;
                            Msg       : out RFLX.Types.Bytes;
@@ -137,8 +104,8 @@ is
                            Fds         : Gneiss_Syscall.Fd_Array)
    is
       Context : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
-      procedure Convert_Name is new Set (Name);
-      procedure Convert_Label is new Set (Label);
+      procedure Convert_Name is new Send_Buf.Set (Name);
+      procedure Convert_Label is new Send_Buf.Set (Label);
       procedure Set_Name is new RFLX.Session.Packet.Set_Name (Convert_Name);
       procedure Set_Label is new RFLX.Session.Packet.Set_Label (Convert_Label);
    begin
@@ -232,8 +199,8 @@ is
       Load_Message_Label : String (1 .. 255) := (others => Character'First);
       Name_Last          : Natural           := 0;
       Label_Last         : Natural           := 0;
-      procedure Load_Name is new Get (Load_Message_Name, Name_Last);
-      procedure Load_Label is new Get (Load_Message_Label, Label_Last);
+      procedure Load_Name is new Send_Buf.Get (Load_Message_Name, Name_Last);
+      procedure Load_Label is new Send_Buf.Get (Load_Message_Label, Label_Last);
       procedure Get_Name is new RFLX.Session.Packet.Get_Name (Load_Name);
       procedure Get_Label is new RFLX.Session.Packet.Get_Label (Load_Label);
    begin

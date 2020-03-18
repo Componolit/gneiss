@@ -64,18 +64,7 @@ is
    is
       use type RFLX.Session.Action_Type;
       use type RFLX.Session.Kind_Type;
-      procedure Set_Label (Buf : out RFLX.Types.Bytes);
-      procedure Set_Label (Buf : out RFLX.Types.Bytes)
-      is
-         I : Positive := Label'First;
-      begin
-         for B of Buf loop
-            B := RFLX.Types.Byte'Val (Character'Pos (Label (I)));
-            if I < Label'Last then
-               I := I + 1;
-            end if;
-         end loop;
-      end Set_Label;
+      procedure Set_Label is new Buffer.Set (Label);
       procedure Set_Label_Payload is new RFLX.Session.Packet.Set_Label (Set_Label);
       Context   : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
       Length    : Integer;
@@ -122,35 +111,12 @@ is
    is
       use type RFLX.Session.Action_Type;
       use type RFLX.Session.Kind_Type;
-      use type RFLX.Types.Length;
       Valid : Boolean := False;
-      procedure Parse_Name (Data : RFLX.Types.Bytes);
-      procedure Parse_Label (Data : RFLX.Types.Bytes);
-      procedure Parse_Name (Data : RFLX.Types.Bytes)
-      is
-         Index : Natural := Name'First;
-      begin
-         for I in Data'Range loop
-            Name (Index) := Character'Val (RFLX.Types.Byte'Pos (Data (I)));
-            exit when Index = Name'Last or else I = Data'Last;
-            Index := Index + 1;
-         end loop;
-         Name_Last := Index;
-      end Parse_Name;
-      procedure Parse_Label (Data : RFLX.Types.Bytes)
-      is
-         Index : Natural := Label'First;
-      begin
-         for I in Data'Range loop
-            Label (Index) := Character'Val (RFLX.Types.Byte'Pos (Data (I)));
-            exit when Index = Label'Last or else I = Data'Last;
-            Index := Index + 1;
-         end loop;
-         Label_Last := Index;
-      end Parse_Label;
       Context : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
       Length : Integer;
       Trunc : Integer;
+      procedure Parse_Name is new Buffer.Get (Name, Name_Last);
+      procedure Parse_Label is new Buffer.Get (Label, Label_Last);
       procedure Get_Name is new RFLX.Session.Packet.Get_Name (Parse_Name);
       procedure Get_Label is new RFLX.Session.Packet.Get_Label (Parse_Label);
    begin
@@ -211,31 +177,9 @@ is
                      Fds    : Gneiss_Syscall.Fd_Array)
    is
       use type RFLX.Types.Length;
-      procedure Set_Name (Buf : out RFLX.Types.Bytes);
-      procedure Set_Label (Buf : out RFLX.Types.Bytes);
-      procedure Set_Name (Buf : out RFLX.Types.Bytes)
-      is
-         I : Positive := Name'First;
-      begin
-         for B of Buf loop
-            B := RFLX.Types.Byte'Val (Character'Pos (Name (I)));
-            if I < Name'Last then
-               I := I + 1;
-            end if;
-         end loop;
-      end Set_Name;
-      procedure Set_Label (Buf : out RFLX.Types.Bytes)
-      is
-         I : Positive := Label'First;
-      begin
-         for B of Buf loop
-            B := RFLX.Types.Byte'Val (Character'Pos (Label (I)));
-            if I < Label'Last then
-               I := I + 1;
-            end if;
-         end loop;
-      end Set_Label;
       Context : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
+      procedure Set_Name is new Buffer.Set (Name);
+      procedure Set_Label is new Buffer.Set (Label);
       procedure Set_Name_Payload is new RFLX.Session.Packet.Set_Name (Set_Name);
       procedure Set_Label_Payload is new RFLX.Session.Packet.Set_Label (Set_Label);
    begin
