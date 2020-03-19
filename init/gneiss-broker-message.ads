@@ -38,6 +38,10 @@ private
                                   Fds         : out Gneiss_Syscall.Fd_Array;
                                   Valid       : out Boolean);
 
+   procedure Process_Memory_Request (Fds_In  :        Gneiss_Syscall.Fd_Array;
+                                     Fds_Out :    out Gneiss_Syscall.Fd_Array;
+                                     Valid   :    out Boolean);
+
    procedure Process_Confirm (State : Broker_State;
                               Kind  : RFLX.Session.Kind_Type;
                               Name  : String;
