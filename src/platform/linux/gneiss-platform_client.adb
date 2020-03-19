@@ -28,19 +28,24 @@ is
       Fd := Fds (Fds'First);
    end Register;
 
-   procedure Initialize (Cap   :     Capability;
-                         Kind  :     RFLX.Session.Kind_Type;
-                         Fds   : out Gneiss_Syscall.Fd_Array;
-                         Label :     String)
+   procedure Initialize (Cap   :        Capability;
+                         Kind  :        RFLX.Session.Kind_Type;
+                         Fds   : in out Gneiss_Syscall.Fd_Array;
+                         Label :        String)
    is
       use type RFLX.Session.Kind_Type;
       Name : Gneiss_Internal.Session_Label;
       Lbl  : Gneiss_Internal.Session_Label;
       Msg  : Packet.Message;
+      Last : Integer := Fds'First - 1;
    begin
+      for I in Fds'Range loop
+         exit when Fds (I) < 0;
+         Last := I;
+      end loop;
       Lbl.Last := Lbl.Value'First + Label'Length - 1;
       Lbl.Value (Lbl.Value'First .. Lbl.Last) := Label;
-      Packet.Send (Cap.Broker_Fd, RFLX.Session.Request, Kind, Name, Lbl, (1 .. 0 => -1));
+      Packet.Send (Cap.Broker_Fd, RFLX.Session.Request, Kind, Name, Lbl, Fds (Fds'First .. Last));
       Packet.Receive (Cap.Broker_Fd, Msg, Fds, True);
       if
          not Msg.Valid

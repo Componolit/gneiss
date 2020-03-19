@@ -1,0 +1,8 @@
+<config>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
+    <component name="memory_client" file="libcomponent_memory_client.so">
+        <service name="Memory" server="memory_server"/>
+        <service name="Log" server="log_server"/>
+    </component>
+    <component name="memory_server" file="libcomponent_memory_server.so"/>
+</config>
