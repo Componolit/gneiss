@@ -107,14 +107,12 @@ is
       Global        => (In_Out => Linux),
       Pre           => Path (Path'Last) = ASCII.NUL;
 
-   procedure Memfd_Create (Name :     String;
-                           Fd   : out Integer;
-                           Size :     Integer) with
+   procedure Memfd_Seal (Fd      :     Integer;
+                         Success : out Integer) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_memfd_create",
-      Global        => (In_Out => Linux),
-      Pre           => Name (Name'Last) = ASCII.NUL;
+      External_Name => "gneiss_memfd_seal",
+      Global        => (In_Out => Linux);
 
    function Stat_Size (Fd : Integer) return Integer with
       Import,

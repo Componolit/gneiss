@@ -1,7 +1,0 @@
-
-set timeout 10
-spawn ./build/init/init test/memory/memory.xml
-expect {
-    timeout { exit 1 }
-    "I: Component memory exited with status 0"
-}

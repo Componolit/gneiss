@@ -204,38 +204,23 @@ void gneiss_open(const char *path, int *fd, int writable)
     }
 }
 
-void gneiss_memfd_create(char *name, int *fd, int size)
+void gneiss_memfd_seal(int fd, int *success)
 {
-    TRACE("name=%s fd=%p size=%d\n", name, fd, size);
-    *fd = memfd_create(name, MFD_ALLOW_SEALING);
-    if(*fd < 0){
-        warn("name=%s", name);
-        return;
-    }
-    if(ftruncate(*fd, size) < 0){
-        warn("size=%d", size);
-        close(*fd);
-        *fd = -1;
-        return;
-    }
-    if(fcntl(*fd, F_ADD_SEALS, F_SEAL_SHRINK) < 0){
+    TRACE("fd=%d success=%p\n", fd, success);
+    *success = 0;
+    if(fcntl(fd, F_ADD_SEALS, F_SEAL_SHRINK) < 0){
         warn("F_SEAL_SHRINK");
-        close(*fd);
-        *fd = -1;
         return;
     }
-    if(fcntl(*fd, F_ADD_SEALS, F_SEAL_GROW) < 0){
+    if(fcntl(fd, F_ADD_SEALS, F_SEAL_GROW) < 0){
         warn("F_SEAL_GROW");
-        close(*fd);
-        *fd = -1;
         return;
     }
-    if(fcntl(*fd, F_ADD_SEALS, F_SEAL_SEAL) < 0){
+    if(fcntl(fd, F_ADD_SEALS, F_SEAL_SEAL) < 0){
         warn("F_SEAL_SEAL");
-        close(*fd);
-        *fd = -1;
         return;
     }
+    *success = 1;
 }
 
 int gneiss_fstat_size(int fd)

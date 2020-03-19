@@ -124,7 +124,6 @@ is
                               Fds    :        Gneiss_Syscall.Fd_Array)
    is
       use type SXML.Query.State_Type;
-      pragma Unreferenced (Fds);
       Serv_State  : SXML.Query.State_Type;
       Destination : Integer;
       Valid       : Boolean;
@@ -164,7 +163,7 @@ is
                              Kind,
                              Source_Name (Source_Name'First .. Last),
                              Label,
-                             Fds_Out (Fds_Out 'First .. Fds_Out'First + 1));
+                             Fds_Out (Fds_Out'First .. Fds_Out'First + 1));
             else
                Send_Reject (State.Components (Source).Fd, Kind, Label);
             end if;
@@ -180,12 +179,21 @@ is
                end if;
             end if;
          when RFLX.Session.Memory =>
-            Gneiss_Log.Warning ("Memory interface currently not supported");
-            Send_Reject (State.Components (Source).Fd, Kind, Label);
+            Process_Memory_Request (Fds, Fds_Out, Valid);
+            if Valid and then Destination in State.Components'Range then
+               Setup_Service (State, Kind, Destination);
+               Send_Request (State.Components (Destination).Serv (Kind).Broker,
+                             Kind,
+                             Source_Name (Source_Name'First .. Last),
+                             Label,
+                             Fds_Out (Fds_Out'First .. Fds_Out'First + 2));
+            else
+               Send_Reject (State.Components (Source).Fd, Kind, Label);
+            end if;
       end case;
    end Process_Request;
 
-   procedure Process_Message_Request (Fds : out Gneiss_Syscall.Fd_Array;
+   procedure Process_Message_Request (Fds   : out Gneiss_Syscall.Fd_Array;
                                       Valid : out Boolean)
    is
    begin
@@ -197,6 +205,32 @@ is
          Gneiss_Syscall.Close (Fds (Fds'First + 1));
       end if;
    end Process_Message_Request;
+
+   procedure Process_Memory_Request (Fds_In  :        Gneiss_Syscall.Fd_Array;
+                                     Fds_Out :    out Gneiss_Syscall.Fd_Array;
+                                     Valid   :    out Boolean)
+   is
+      Success : Integer;
+   begin
+      Valid   := False;
+      Fds_Out := (others => -1);
+      if Fds_In (Fds_In'First) < 0 then
+         return;
+      end if;
+      Fds_Out (Fds_Out'First + 2) := Fds_In (Fds_In'First);
+      Gneiss_Syscall.Memfd_Seal (Fds_Out (Fds_Out'First + 2), Success);
+      if Success /= 1 then
+         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 2));
+         return;
+      end if;
+      Gneiss_Syscall.Socketpair (Fds_Out (Fds_Out'First), Fds_Out (Fds_Out'First + 1));
+      Valid := Fds_Out (Fds_Out'First) > -1 and then Fds_Out (Fds_Out'First + 1) > -1;
+      if not Valid then
+         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First));
+         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 1));
+         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 2));
+      end if;
+   end Process_Memory_Request;
 
    procedure Process_Rom_Request (State       :     Broker_State;
                                   Serv_State  :     SXML.Query.State_Type;
@@ -226,14 +260,14 @@ is
       Lookup.Find_Component_By_Name (State, Name, Destination, Valid);
       if Valid then
          case Kind is
-            when RFLX.Session.Message | RFLX.Session.Log =>
+            when RFLX.Session.Message | RFLX.Session.Log | RFLX.Session.Memory =>
                if Fds (Fds'First) >= 0 then
                   Send_Confirm (State.Components (Destination).Fd, Kind, Label, Fds (Fds'First .. Fds'First));
                else
                   Gneiss_Log.Warning ("Invalid Fd, rejecting");
                   Send_Reject (State.Components (Destination).Fd, Kind, Label);
                end if;
-            when RFLX.Session.Rom | RFLX.Session.Memory =>
+            when RFLX.Session.Rom =>
                Gneiss_Log.Warning ("Unexpected confirm");
          end case;
       else

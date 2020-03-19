@@ -46,7 +46,6 @@ is
       Memory_Dispatcher.Initialize (Dispatcher, Cap);
       if Memory.Initialized (Dispatcher) then
          Memory_Dispatcher.Register (Dispatcher);
-         null;
       else
          Main.Vacate (Capability, Main.Failure);
       end if;

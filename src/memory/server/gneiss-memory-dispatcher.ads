@@ -89,7 +89,6 @@ is
               and then Server_Instance.Ready (Server_S)
               and then Initialized (Server_S);
 
-
    --  Garbage collects disconnected sessions
    --
    --  This procedure must only be used in Dispatch.
