@@ -14,7 +14,7 @@ is
                          Idx     :        Session_Index := 1)
    is
       use type System.Address;
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
    begin
       if Initialized (Session) then
          return;

@@ -20,7 +20,7 @@ is
                          Cap     :        Capability;
                          Label   :        String)
    is
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
    begin
       if Initialized (Session) or else Label'Length > 255 then
          return;
