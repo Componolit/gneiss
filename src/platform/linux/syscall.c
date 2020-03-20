@@ -9,6 +9,7 @@
 #include <sys/stat.h>
 #include <sys/fcntl.h>
 #include <sys/mman.h>
+#include <sys/timerfd.h>
 
 //#define ENABLE_TRACE
 #include <trace.h>
@@ -251,4 +252,13 @@ void gneiss_munmap(int fd, void **map)
         warn("fd=%d size=%d", fd, gneiss_fstat_size(fd));
     }
     *map = 0x0;
+}
+
+void gneiss_timerfd_create(int *fd)
+{
+    TRACE("fd=%p\n", fd);
+    *fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
+    if(*fd < 0){
+        warn("fd=%p", fd);
+    }
 }

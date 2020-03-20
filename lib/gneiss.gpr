@@ -34,7 +34,11 @@ project Gneiss is
                               "../src/memory/client",
                               "../src/memory/client/linux",
                               "../src/memory/server",
-                              "../src/memory/server/linux");
+                              "../src/memory/server/linux",
+                              "../src/timer",
+                              "../src/timer/linux",
+                              "../src/timer/client",
+                              "../src/timer/client/linux");
 
          for Create_Missing_Dirs use "True";
          for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss";
