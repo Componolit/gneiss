@@ -43,7 +43,7 @@ is
                          Label   :        String;
                          Idx     :        Session_Index := 1)
    is
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
       Success : Integer;
    begin
       if Initialized (Session) or else Session.Label.Value'Length < Label'Length then
