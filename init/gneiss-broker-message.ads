@@ -42,6 +42,9 @@ private
                                      Fds_Out :    out Gneiss_Syscall.Fd_Array;
                                      Valid   :    out Boolean);
 
+   procedure Process_Timer_Request (Fds   : out Gneiss_Syscall.Fd_Array;
+                                    Valid : out Boolean);
+
    procedure Process_Confirm (State : Broker_State;
                               Kind  : RFLX.Session.Kind_Type;
                               Name  : String;

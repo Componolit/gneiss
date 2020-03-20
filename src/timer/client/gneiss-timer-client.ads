@@ -20,9 +20,10 @@ is
    --
    --  @param C    Timer client session object
    --  @param Cap  System capability
-   procedure Initialize (C   : in out Client_Session;
-                         Cap :        Capability;
-                         Idx :        Session_Index := 1);
+   procedure Initialize (C     : in out Client_Session;
+                         Cap   :        Capability;
+                         Label :        String;
+                         Idx   :        Session_Index := 1);
 
    --  Returns a monotonic clock value
    --

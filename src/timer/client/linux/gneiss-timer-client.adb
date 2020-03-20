@@ -1,66 +1,110 @@
 
 with System;
+with Gneiss_Epoll;
+with Gneiss_Platform;
+with Gneiss_Syscall;
+with Gneiss.Platform_Client;
+with RFLX.Session;
 
-package body Gneiss.Timer.Client
+package body Gneiss.Timer.Client with
+   SPARK_Mode
 is
 
-   procedure Initialize (C   : in out Client_Session;
-                         Cap :        Gneiss.Types.Capability) with
+   function Event_Address (Session : Client_Session) return System.Address;
+   procedure Session_Event (Session  : in out Client_Session;
+                            Epoll_Ev :        Gneiss_Epoll.Event_Type);
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session, Session_Event);
+
+   procedure Timer_Set (Fd : Integer;
+                        D  : Duration) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_timer_set";
+
+   function Timer_Get (Fd : Integer) return Time with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_timer_get",
+      Volatile_Function;
+
+   procedure Timer_Read (Fd : Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_timer_read";
+
+   function Event_Address (Session : Client_Session) return System.Address with
       SPARK_Mode => Off
    is
-      procedure C_Initialize (Session    : in out System.Address;
-                              Capability :        Gneiss.Types.Capability;
-                              Callback   :        System.Address) with
-         Import,
-         Convention => C,
-         External_Name => "timer_client_initialize";
+   begin
+      return Session.E_Cap'Address;
+   end Event_Address;
+
+   procedure Session_Event (Session  : in out Client_Session;
+                            Epoll_Ev :        Gneiss_Epoll.Event_Type)
+   is
+   begin
+      case Epoll_Ev is
+         when Gneiss_Epoll.Epoll_Ev =>
+            Timer_Read (Session.Fd);
+            Event;
+         when Gneiss_Epoll.Epoll_Er =>
+            null;
+      end case;
+   end Session_Event;
+
+   procedure Initialize (C     : in out Client_Session;
+                         Cap   :        Capability;
+                         Label :        String;
+                         Idx   :        Session_Index := 1)
+   is
+      Fds     : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
+      Success : Integer;
    begin
       if Initialized (C) then
          return;
       end if;
-      C_Initialize (C.Instance, Cap, Event'Address);
+      Platform_Client.Initialize (Cap, RFLX.Session.Timer, Fds, Label);
+      if Fds (Fds'First) < 0 then
+         return;
+      end if;
+      C.E_Cap := Event_Cap (C);
+      Gneiss_Epoll.Add (Cap.Epoll_Fd, Fds (Fds'First), Event_Address (C), Success);
+      if Success < 0 then
+         Gneiss_Syscall.Close (Fds (Fds'First));
+         Gneiss_Platform.Invalidate (C.E_Cap);
+         return;
+      end if;
+      C.Fd    := Fds (Fds'First);
+      C.Epoll := Cap.Epoll_Fd;
+      C.Index := Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
-   function Clock (C : Client_Session) return Time with
-      SPARK_Mode => Off
+   function Clock (C : Client_Session) return Time
    is
-      pragma Unreferenced (C);
-      function C_Clock return Time with
-         Volatile_Function,
-         Import,
-         Convention    => C,
-         External_Name => "timer_client_clock",
-         Global        => null;
    begin
-      return C_Clock;
+      return Timer_Get (C.Fd);
    end Clock;
 
    procedure Set_Timeout (C : in out Client_Session;
                           D :        Duration)
    is
-      procedure C_Timeout (Session : System.Address;
-                           Dur     : Duration) with
-         Import,
-         Convention    => C,
-         External_Name => "timer_client_set_timeout",
-         Global        => null;
    begin
-      C_Timeout (C.Instance, D);
+      Timer_Set (C.Fd, D);
    end Set_Timeout;
 
    procedure Finalize (C : in out Client_Session)
    is
-      procedure C_Finalize (Session : in out System.Address) with
-         Import,
-         Convention    => C,
-         External_Name => "timer_client_finalize",
-         Global        => null;
+      use type Gneiss_Epoll.Epoll_Fd;
+      Ignore_Success : Integer;
    begin
       if not Initialized (C) then
          return;
       end if;
-      C_Finalize (C.Instance);
-      C.Instance := System.Null_Address;
+      Gneiss_Epoll.Remove (C.Epoll, C.Fd, Ignore_Success);
+      C.Epoll := -1;
+      Gneiss_Syscall.Close (C.Fd);
+      C.Index := Session_Index_Option'(Valid => False);
+      Gneiss_Platform.Invalidate (C.E_Cap);
    end Finalize;
 
 end Gneiss.Timer.Client;

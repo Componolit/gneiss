@@ -135,4 +135,10 @@ is
       External_Name => "gneiss_munmap",
       Global        => (In_Out => Linux);
 
+   procedure Timerfd_Create (Fd : out Integer) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_timerfd_create",
+      Global        => (In_Out => Linux);
+
 end Gneiss_Syscall;
