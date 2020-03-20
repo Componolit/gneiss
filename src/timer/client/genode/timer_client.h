@@ -17,7 +17,7 @@ namespace Cai
             public:
                 Client();
                 bool initialized();
-                void initialize(void *capability, void *callback);
+                void initialize(void *capability, void *callback, const char *label);
                 Genode::uint64_t clock();
                 void set_timeout(Genode::uint64_t);
                 void finalize();

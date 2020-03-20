@@ -25,13 +25,13 @@ class Timer_Session
         Timer_Session &operator = (Timer_Session &);
 
     public:
-        Timer_Session(Genode::Env &, void (*)(), Cai::Timer::Client *);
+        Timer_Session(Genode::Env &, void (*)(), Cai::Timer::Client *, const char *);
         Timer::Connection &timer();
         void update_timeout(Genode::Microseconds);
 };
 
-Timer_Session::Timer_Session(Genode::Env &env, void (*callback)(), Cai::Timer::Client *client) :
-    _timer(env),
+Timer_Session::Timer_Session(Genode::Env &env, void (*callback)(), Cai::Timer::Client *client, const char *label) :
+    _timer(env, label),
     _timeout(_timer, *this, &Timer_Session::handle_event),
     _client(client),
     _callback(callback)
@@ -72,13 +72,14 @@ bool Cai::Timer::Client::initialized()
     return (bool)_session;
 }
 
-void Cai::Timer::Client::initialize(void *capability, void *callback)
+void Cai::Timer::Client::initialize(void *capability, void *callback, const char *label)
 {
     TLOG("capability=", capability, "callback=", callback);
     check_factory(_factory, *reinterpret_cast<Cai::Env *>(capability)->env);
     _session = _factory->create<Timer_Session>(*reinterpret_cast<Cai::Env *>(capability)->env,
                                                reinterpret_cast<void (*)()>(callback),
-                                               this);
+                                               this,
+                                               label);
 }
 
 Genode::uint64_t Cai::Timer::Client::clock()
