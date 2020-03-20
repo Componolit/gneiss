@@ -5,17 +5,19 @@ with Cxx.Timer.Client;
 package body Gneiss.Timer.Client
 is
 
-   procedure Initialize (C   : in out Client_Session;
-                         Cap :        Capability;
-                         Idx :        Session_Index := 1) with
+   procedure Initialize (C     : in out Client_Session;
+                         Cap   :        Capability;
+                         Label :        String;
+                         Idx   :        Session_Index := 1) with
       SPARK_Mode => Off
    is
       use type Cxx.Bool;
+      C_Label : String := Label & ASCII.NUL;
    begin
       if Initialized (C) then
          return;
       end if;
-      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address);
+      Cxx.Timer.Client.Initialize (C.Instance, Cap, Event'Address, C_Label'Address);
       if Cxx.Timer.Client.Initialized (C.Instance) = Cxx.Bool'Val (1) then
          C.Instance.Index := Session_Index_Option'(Valid => True, Value => Idx);
       end if;
