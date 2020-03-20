@@ -1,0 +1,7 @@
+<config>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
+    <component name="timer" file="libcomponent_timer.so">
+        <service name="Log" server="log_server"/>
+        <service name="Timer"/>
+    </component>
+</config>

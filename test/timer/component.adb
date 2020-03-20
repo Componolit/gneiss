@@ -21,7 +21,7 @@ is
    begin
       Capability := Cap;
       Gneiss.Log.Client.Initialize (Log, Capability, "log_timer");
-      Timer_Client.Initialize (Timer, Capability);
+      Timer_Client.Initialize (Timer, Capability, "timer");
       if Gneiss.Log.Initialized (Log) and then Gneiss.Timer.Initialized (Timer) then
          Timer_Client.Set_Timeout (Timer, 60.0);
          Timer_Client.Set_Timeout (Timer, 1.5);

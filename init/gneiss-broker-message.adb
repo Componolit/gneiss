@@ -13,7 +13,8 @@ is
          when RFLX.Session.Message => "Message",
          when RFLX.Session.Log     => "Log",
          when RFLX.Session.Memory  => "Memory",
-         when RFLX.Session.Rom     => "Rom");
+         when RFLX.Session.Rom     => "Rom",
+         when RFLX.Session.Timer   => "Timer");
 
    procedure Setup_Service (State : in out Broker_State;
                             Kind  :        RFLX.Session.Kind_Type;
@@ -190,6 +191,13 @@ is
             else
                Send_Reject (State.Components (Source).Fd, Kind, Label);
             end if;
+         when RFLX.Session.Timer =>
+            Process_Timer_Request (Fds_Out, Valid);
+            if Valid then
+               Send_Confirm (State.Components (Source).Fd, Kind, Label, Fds_Out (Fds_Out'First .. Fds_Out'First));
+            else
+               Send_Reject (State.Components (Source).Fd, Kind, Label);
+            end if;
       end case;
    end Process_Request;
 
@@ -248,6 +256,14 @@ is
       Valid := Fds (Fds'First) > -1;
    end Process_Rom_Request;
 
+   procedure Process_Timer_Request (Fds   : out Gneiss_Syscall.Fd_Array;
+                                    Valid : out Boolean)
+   is
+   begin
+      Gneiss_Syscall.Timerfd_Create (Fds (Fds'First));
+      Valid := Fds (Fds'First) > -1;
+   end Process_Timer_Request;
+
    procedure Process_Confirm (State : Broker_State;
                               Kind  : RFLX.Session.Kind_Type;
                               Name  : String;
@@ -267,7 +283,7 @@ is
                   Gneiss_Log.Warning ("Invalid Fd, rejecting");
                   Send_Reject (State.Components (Destination).Fd, Kind, Label);
                end if;
-            when RFLX.Session.Rom =>
+            when RFLX.Session.Rom | RFLX.Session.Timer =>
                Gneiss_Log.Warning ("Unexpected confirm");
          end case;
       else
