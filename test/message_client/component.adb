@@ -12,7 +12,9 @@ is
    Null_Buffer : constant Message_Buffer := (others => ASCII.NUL);
 
    procedure Event;
-   function Null_Terminate (S : String) return String;
+   function Null_Terminate (S : String) return String with
+      Post => Null_Terminate'Result'First = S'First
+              and then Null_Terminate'Result'Length <= S'Length;
 
    package Message is new Gneiss.Message (Message_Buffer, Null_Buffer);
 
@@ -24,13 +26,13 @@ is
 
    function Null_Terminate (S : String) return String
    is
-      Last : Natural := S'First - 1;
    begin
       for I in S'Range loop
-         exit when S (I) = ASCII.NUL;
-         Last := I;
+         if S (I) = ASCII.NUL then
+            return S (S'First .. I - 1);
+         end if;
       end loop;
-      return S (S'First .. Last);
+      return S;
    end Null_Terminate;
 
    procedure Construct (Cap : Gneiss.Capability)
@@ -55,6 +57,8 @@ is
    begin
       if Gneiss.Log.Initialized (Log) and then Message.Initialized (Client) then
          while Message_Client.Available (Client) loop
+            pragma Loop_Invariant (Gneiss.Log.Initialized (Log));
+            pragma Loop_Invariant (Message.Initialized (Client));
             Message_Client.Read (Client, Msg);
             Gneiss.Log.Client.Info (Log, "Received: " & Null_Terminate (Msg));
             Main.Vacate (Capability, Main.Success);
