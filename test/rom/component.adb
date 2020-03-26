@@ -34,9 +34,16 @@ is
                    Data    :        String)
    is
       pragma Unreferenced (Session);
+      Prefix : constant String := "Rom content: ";
+      Last   : Integer;
    begin
+      if Data'Length < Positive'Last - Prefix'Length then
+         Last := Data'Last;
+      else
+         Last := Data'Last - Prefix'Length;
+      end if;
       if Gneiss.Log.Initialized (Log) then
-         Gneiss.Log.Client.Info (Log, "Rom content: " & Data);
+         Gneiss.Log.Client.Info (Log, Prefix & Data (Data'First .. Last));
          Main.Vacate (C, Main.Success);
       else
          Main.Vacate (C, Main.Failure);
