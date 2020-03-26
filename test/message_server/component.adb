@@ -20,19 +20,29 @@ is
    type Server_Reg is array (Gneiss.Session_Index range <>) of Message.Server_Session;
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
-   procedure Initialize (Session : in out Message.Server_Session);
+   procedure Initialize (Session : in out Message.Server_Session) with
+      Pre  => Message.Initialized (Session),
+      Post => Message.Initialized (Session);
 
-   procedure Finalize (Session : in out Message.Server_Session);
+   procedure Finalize (Session : in out Message.Server_Session) with
+      Pre  => Message.Initialized (Session),
+      Post => Message.Initialized (Session);
 
    procedure Recv (Session : in out Message.Server_Session;
-                   Data    :        Message_Buffer);
+                   Data    :        Message_Buffer) with
+      Pre  => Message.Initialized (Session)
+              and then Ready (Session),
+      Post => Message.Initialized (Session)
+              and then Ready (Session);
 
    function Ready (Session : Message.Server_Session) return Boolean;
 
    procedure Dispatch (Session  : in out Message.Dispatcher_Session;
                        Disp_Cap :        Message.Dispatcher_Capability;
                        Name     :        String;
-                       Label    :        String);
+                       Label    :        String) with
+      Pre  => Message.Initialized (Session),
+      Post => Message.Initialized (Session);
 
    package Message_Server is new Message.Server (Initialize, Finalize, Recv, Ready);
    package Message_Dispatcher is new Message.Dispatcher (Message_Server, Dispatch);
@@ -91,7 +101,14 @@ is
    begin
       if Message_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
          for I in Servers'Range loop
-            if not Ready (Servers (I)) then
+            if
+               not Ready (Servers (I))
+               and then not Message.Initialized (Servers (I))
+               and then Name'Length < Server_Data (I).Ident'Last
+               and then Label'Length < Server_Data (I).Ident'Last
+               and then Name'Length + Label'Length + 1 <= Server_Data (I).Ident'Last
+               and then Name'First < Positive'Last - Server_Data (I).Ident'Length
+            then
                Message_Dispatcher.Session_Initialize (Session, Disp_Cap, Servers (I), I);
                if Ready (Servers (I)) and then Message.Initialized (Servers (I)) then
                   Server_Data (I).Ident (1 .. Name'Length + Label'Length + 1) := Name & ":" & Label;
