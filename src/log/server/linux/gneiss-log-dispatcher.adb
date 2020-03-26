@@ -158,6 +158,7 @@ is
             end loop;
             if Session.Cursor > Session.Buffer'First then
                Server_Instance.Write (Session, Session.Buffer (Session.Buffer'First .. Session.Cursor));
+               --  FIXME: Copy buffer to fix aliasing
             end if;
          when Gneiss_Epoll.Epoll_Er =>
             Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.Fd, Ignore_Success);
