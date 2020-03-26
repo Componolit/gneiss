@@ -49,7 +49,8 @@ is
 
    procedure Modify (Session : in out Client_Session)
    is
-      B : Buffer (1 .. Buffer_Index (Gneiss_Syscall.Stat_Size (Session.Fd))) with
+      Last : constant Buffer_Index := Buffer_Index (Gneiss_Syscall.Stat_Size (Session.Fd));
+      B    : Buffer (1 .. Last) with
          Import,
          Address => Session.Map;
    begin
