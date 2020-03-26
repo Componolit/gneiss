@@ -18,18 +18,26 @@ is
    type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
 
    procedure Modify (Session : in out Memory.Server_Session;
-                     Data    : in out String);
+                     Data    : in out String) with
+      Pre  => Memory.Initialized (Session),
+      Post => Memory.Initialized (Session);
 
-   procedure Initialize (Session : in out Memory.Server_Session);
+   procedure Initialize (Session : in out Memory.Server_Session) with
+      Pre  => Memory.Initialized (Session),
+      Post => Memory.Initialized (Session);
 
-   procedure Finalize (Session : in out Memory.Server_Session);
+   procedure Finalize (Session : in out Memory.Server_Session) with
+      Pre  => Memory.Initialized (Session),
+      Post => Memory.Initialized (Session);
 
    function Ready (Session : Memory.Server_Session) return Boolean;
 
    procedure Dispatch (Session  : in out Memory.Dispatcher_Session;
                        Disp_Cap :        Memory.Dispatcher_Capability;
                        Name     :        String;
-                       Label    :        String);
+                       Label    :        String) with
+      Pre  => Memory.Initialized (Session),
+      Post => Memory.Initialized (Session);
 
    package Memory_Server is new Memory.Server (Modify, Initialize, Finalize, Ready);
    package Memory_Dispatcher is new Memory.Dispatcher (Memory_Server, Dispatch);
@@ -62,7 +70,9 @@ is
    is
       pragma Unreferenced (Session);
    begin
-      Data (Data'First .. Data'First + 11) := "Hello World!";
+      if Data'Length > 11 then
+         Data (Data'First .. Data'First + 11) := "Hello World!";
+      end if;
    end Modify;
 
    procedure Initialize (Session : in out Memory.Server_Session)
@@ -89,7 +99,14 @@ is
    begin
       if Memory_Dispatcher.Valid_Session_Request (Session, Disp_Cap) then
          for I in Servers'Range loop
-            if not Ready (Servers (I)) then
+            if
+               not Ready (Servers (I))
+               and then not Memory.Initialized (Servers (I))
+               and then Name'Length < Server_Data (I).Ident'Last
+               and then Label'Length < Server_Data (I).Ident'Last
+               and then Name'Length + Label'Length + 1 <= Server_Data (I).Ident'Last
+               and then Name'First < Integer'Last - Server_Data (I).Ident'Last
+            then
                Memory_Dispatcher.Session_Initialize (Session, Disp_Cap, Servers (I), I);
                if Ready (Servers (I)) and then Memory.Initialized (Servers (I)) then
                   Server_Data (I).Ident (1 .. Name'Length + Label'Length + 1) := Name & ":" & Label;
