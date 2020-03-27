@@ -70,9 +70,7 @@ is
          Gneiss_Log.Warning ("Invalid message, dropping");
          pragma Warnings (Off, "unused assignment to ""Fd""");
          for Fd of Fds loop
-            if Fd > -1 then
-               Gneiss_Syscall.Close (Fd);
-            end if;
+            Gneiss_Syscall.Close (Fd);
          end loop;
          pragma Warnings (On, "unused assignment to ""Fd""");
          return;
