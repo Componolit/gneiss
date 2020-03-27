@@ -1,5 +1,5 @@
 
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 with System;
 with Gneiss_Syscall;
 with Gneiss_Epoll;
@@ -49,7 +49,7 @@ is
       if Initialized (Session) or else Session.Label.Value'Length < Label'Length then
          return;
       end if;
-      Platform_Client.Initialize (Cap, RFLX.Session.Message, Fds, Label);
+      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Message, Fds, Label);
       if Fds (Fds'First) < 0 then
          return;
       end if;

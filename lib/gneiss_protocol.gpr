@@ -1,5 +1,5 @@
 
-project Gneiss_RFLX is
+project Gneiss_Protocol is
 
    Step := external ("CEMENT_BUILD_STEP");
 
@@ -7,12 +7,12 @@ project Gneiss_RFLX is
       when "prepare" =>
          for Languages use ("rflx");
          for Source_Dirs use ("../src/platform/linux");
-         for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss_rflx/generated";
+         for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss_protocol/generated";
       when "compile" =>
-         for Source_Dirs use (external ("CEMENT_LIB_OBJECT_DIR") & "gneiss_rflx/generated");
+         for Source_Dirs use (external ("CEMENT_LIB_OBJECT_DIR") & "gneiss_protocol/generated");
          for Languages use ("Ada");
-         for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss_rflx";
-         for Library_Name use "gneiss_rflx";
+         for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss_protocol";
+         for Library_Name use "gneiss_protocol";
          for Library_Dir use external ("CEMENT_LIBRARY_DIR");
          for Library_Kind use "static";
          for Excluded_Source_Files use ("session.ads");
@@ -22,6 +22,7 @@ project Gneiss_RFLX is
 
    package Compiler is
       for Default_Switches ("Ada") use ("-fPIC");
+      for Default_Switches ("rflx") use ("-p", "Gneiss_Protocol");
    end Compiler;
 
-end Gneiss_RFLX;
+end Gneiss_Protocol;

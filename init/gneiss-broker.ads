@@ -1,7 +1,7 @@
 
 with SXML;
 with SXML.Query;
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 with Gneiss_Epoll;
 
 package Gneiss.Broker with
@@ -15,7 +15,7 @@ is
       Disp   : Integer := -1;
    end record;
 
-   type Service_List is array (RFLX.Session.Kind_Type'Range) of Service_Entry;
+   type Service_List is array (Gneiss_Protocol.Session.Kind_Type'Range) of Service_Entry;
 
    type Component_Definition is record
       Fd   : Integer               := -1;

@@ -2,7 +2,7 @@
 with System;
 with Gneiss_Syscall;
 with Gneiss.Platform_Client;
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 
 package body Gneiss.Rom.Client with
    SPARK_Mode
@@ -19,7 +19,7 @@ is
       if Initialized (Session) then
          return;
       end if;
-      Platform_Client.Initialize (Cap, RFLX.Session.Rom, Fds, Label);
+      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Rom, Fds, Label);
       if Fds (Fds'First) < 0 then
          return;
       end if;
