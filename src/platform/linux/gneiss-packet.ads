@@ -1,5 +1,5 @@
 
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 with Gneiss_Internal;
 with Gneiss_Syscall;
 
@@ -10,8 +10,8 @@ is
    type Message (Valid : Boolean := False) is record
       case Valid is
          when True =>
-            Action : RFLX.Session.Action_Type;
-            Kind   : RFLX.Session.Kind_Type;
+            Action : Gneiss_Protocol.Session.Action_Type;
+            Kind   : Gneiss_Protocol.Session.Kind_Type;
             Name   : Gneiss_Internal.Session_Label;
             Label  : Gneiss_Internal.Session_Label;
          when False =>
@@ -20,8 +20,8 @@ is
    end record;
 
    procedure Send (Fd     : Integer;
-                   Action : RFLX.Session.Action_Type;
-                   Kind   : RFLX.Session.Kind_Type;
+                   Action : Gneiss_Protocol.Session.Action_Type;
+                   Kind   : Gneiss_Protocol.Session.Kind_Type;
                    Name   : Gneiss_Internal.Session_Label;
                    Label  : Gneiss_Internal.Session_Label;
                    Fds    : Gneiss_Syscall.Fd_Array) with

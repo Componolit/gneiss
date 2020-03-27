@@ -1,7 +1,7 @@
 
 with Gneiss_Access;
-with RFLX.Session.Packet;
-with RFLX.Types;
+with Gneiss_Protocol.Session.Packet;
+with Gneiss_Protocol.Types;
 
 package body Gneiss.Packet with
    SPARK_Mode
@@ -10,41 +10,41 @@ is
    package Buffer is new Gneiss_Access (1024);
 
    procedure Send (Fd     : Integer;
-                   Buf    : RFLX.Types.Bytes;
+                   Buf    : Gneiss_Protocol.Types.Bytes;
                    Length : Integer;
                    Fds    : Gneiss_Syscall.Fd_Array);
 
    procedure Recv (Fd     :     Integer;
-                   Buf    : out RFLX.Types.Bytes;
+                   Buf    : out Gneiss_Protocol.Types.Bytes;
                    Fds    : out Gneiss_Syscall.Fd_Array;
                    Block  :     Boolean);
 
    procedure Send (Fd     : Integer;
-                   Action : RFLX.Session.Action_Type;
-                   Kind   : RFLX.Session.Kind_Type;
+                   Action : Gneiss_Protocol.Session.Action_Type;
+                   Kind   : Gneiss_Protocol.Session.Kind_Type;
                    Name   : Gneiss_Internal.Session_Label;
                    Label  : Gneiss_Internal.Session_Label;
                    Fds    : Gneiss_Syscall.Fd_Array)
    is
-      use type RFLX.Types.Length;
+      use type Gneiss_Protocol.Types.Length;
       procedure Buffer_Name is new Buffer.Set (Name.Value (Name.Value'First .. Name.Last));
       procedure Buffer_Label is new Buffer.Set (Label.Value (Label.Value'First .. Label.Last));
-      procedure Set_Name is new RFLX.Session.Packet.Set_Name (Buffer_Name);
-      procedure Set_Label is new RFLX.Session.Packet.Set_Label (Buffer_Label);
-      Context : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
+      procedure Set_Name is new Gneiss_Protocol.Session.Packet.Set_Name (Buffer_Name);
+      procedure Set_Label is new Gneiss_Protocol.Session.Packet.Set_Label (Buffer_Label);
+      Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
    begin
-      RFLX.Session.Packet.Initialize (Context, Buffer.Ptr);
-      RFLX.Session.Packet.Set_Action (Context, Action);
-      RFLX.Session.Packet.Set_Kind (Context, Kind);
-      RFLX.Session.Packet.Set_Name_Length (Context, RFLX.Session.Length_Type (Name.Last));
+      Gneiss_Protocol.Session.Packet.Initialize (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.Packet.Set_Action (Context, Action);
+      Gneiss_Protocol.Session.Packet.Set_Kind (Context, Kind);
+      Gneiss_Protocol.Session.Packet.Set_Name_Length (Context, Gneiss_Protocol.Session.Length_Type (Name.Last));
       if Name.Last > 0 then
          Set_Name (Context);
       end if;
-      RFLX.Session.Packet.Set_Label_Length (Context, RFLX.Session.Length_Type (Label.Last));
+      Gneiss_Protocol.Session.Packet.Set_Label_Length (Context, Gneiss_Protocol.Session.Length_Type (Label.Last));
       if Label.Last > 0 then
          Set_Label (Context);
       end if;
-      RFLX.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
       Send (Fd, Buffer.Ptr.all,
             4 + Name.Last + Label.Last,
             Fds);
@@ -55,35 +55,35 @@ is
                       Fds   : out Gneiss_Syscall.Fd_Array;
                       Block :     Boolean)
    is
-      use type RFLX.Session.Length_Type;
-      Context : RFLX.Session.Packet.Context := RFLX.Session.Packet.Create;
-      Action  : RFLX.Session.Action_Type;
-      Kind    : RFLX.Session.Kind_Type;
+      use type Gneiss_Protocol.Session.Length_Type;
+      Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
+      Action  : Gneiss_Protocol.Session.Action_Type;
+      Kind    : Gneiss_Protocol.Session.Kind_Type;
       Name    : Gneiss_Internal.Session_Label;
       Label   : Gneiss_Internal.Session_Label;
       procedure Parse_Name is new Buffer.Get (Name.Value, Name.Last);
       procedure Parse_Label is new Buffer.Get (Label.Value, Label.Last);
-      procedure Get_Name is new RFLX.Session.Packet.Get_Name (Parse_Name);
-      procedure Get_Label is new RFLX.Session.Packet.Get_Label (Parse_Label);
+      procedure Get_Name is new Gneiss_Protocol.Session.Packet.Get_Name (Parse_Name);
+      procedure Get_Label is new Gneiss_Protocol.Session.Packet.Get_Label (Parse_Label);
    begin
       Msg := Message'(Valid => False);
       Recv (Fd, Buffer.Ptr.all, Fds, Block);
-      RFLX.Session.Packet.Initialize (Context, Buffer.Ptr);
-      RFLX.Session.Packet.Verify_Message (Context);
-      if not RFLX.Session.Packet.Structural_Valid_Message (Context) then
+      Gneiss_Protocol.Session.Packet.Initialize (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.Packet.Verify_Message (Context);
+      if not Gneiss_Protocol.Session.Packet.Structural_Valid_Message (Context) then
          return;
       end if;
-      Action := RFLX.Session.Packet.Get_Action (Context);
-      Kind := RFLX.Session.Packet.Get_Kind (Context);
+      Action := Gneiss_Protocol.Session.Packet.Get_Action (Context);
+      Kind := Gneiss_Protocol.Session.Packet.Get_Kind (Context);
       if
-         RFLX.Session.Packet.Get_Name_Length (Context) > 0
-         and then RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Name)
+         Gneiss_Protocol.Session.Packet.Get_Name_Length (Context) > 0
+         and then Gneiss_Protocol.Session.Packet.Present (Context, Gneiss_Protocol.Session.Packet.F_Name)
       then
          Get_Name (Context);
       end if;
       if
-         RFLX.Session.Packet.Get_Label_Length (Context) > 0
-         and then RFLX.Session.Packet.Present (Context, RFLX.Session.Packet.F_Label)
+         Gneiss_Protocol.Session.Packet.Get_Label_Length (Context) > 0
+         and then Gneiss_Protocol.Session.Packet.Present (Context, Gneiss_Protocol.Session.Packet.F_Label)
       then
          Get_Label (Context);
       end if;
@@ -92,11 +92,11 @@ is
                       Kind   => Kind,
                       Name   => Name,
                       Label  => Label);
-      RFLX.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
    end Receive;
 
    procedure Send (Fd     : Integer;
-                   Buf    : RFLX.Types.Bytes;
+                   Buf    : Gneiss_Protocol.Types.Bytes;
                    Length : Integer;
                    Fds    : Gneiss_Syscall.Fd_Array) with
       SPARK_Mode => Off
@@ -106,7 +106,7 @@ is
    end Send;
 
    procedure Recv (Fd     :     Integer;
-                   Buf    : out RFLX.Types.Bytes;
+                   Buf    : out Gneiss_Protocol.Types.Bytes;
                    Fds    : out Gneiss_Syscall.Fd_Array;
                    Block  :     Boolean)
    is

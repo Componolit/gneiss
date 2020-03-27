@@ -4,7 +4,7 @@ with Gneiss_Epoll;
 with Gneiss_Platform;
 with Gneiss_Syscall;
 with Gneiss.Platform_Client;
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 
 package body Gneiss.Timer.Client with
    SPARK_Mode
@@ -63,7 +63,7 @@ is
       if Initialized (C) then
          return;
       end if;
-      Platform_Client.Initialize (Cap, RFLX.Session.Timer, Fds, Label);
+      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Timer, Fds, Label);
       if Fds (Fds'First) < 0 then
          return;
       end if;

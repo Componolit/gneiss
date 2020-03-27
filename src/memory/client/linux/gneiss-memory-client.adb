@@ -2,7 +2,7 @@
 with System;
 with Gneiss_Syscall;
 with Gneiss.Platform_Client;
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 
 package body Gneiss.Memory.Client with
    SPARK_Mode
@@ -37,7 +37,7 @@ is
          return;
       end if;
       Fds (Fds'First) := Session.Fd;
-      Platform_Client.Initialize (Cap, RFLX.Session.Memory, Fds, Label);
+      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Memory, Fds, Label);
       if Fds (Fds'First) < 0 then
          Gneiss_Syscall.Munmap (Session.Fd, Session.Map);
          Gneiss_Syscall.Close (Session.Fd);

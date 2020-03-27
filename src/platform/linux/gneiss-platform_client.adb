@@ -6,17 +6,17 @@ package body Gneiss.Platform_Client with
 is
 
    procedure Register (Broker_Fd :     Integer;
-                       Kind      :     RFLX.Session.Kind_Type;
+                       Kind      :     Gneiss_Protocol.Session.Kind_Type;
                        Fd        : out Integer)
    is
-      use type RFLX.Session.Kind_Type;
+      use type Gneiss_Protocol.Session.Kind_Type;
       Fds   : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
       Name  : Gneiss_Internal.Session_Label;
       Label : Gneiss_Internal.Session_Label;
       Msg   : Packet.Message;
    begin
       Fd := -1;
-      Packet.Send (Broker_Fd, RFLX.Session.Register, Kind, Name, Label, (1 .. 0 => -1));
+      Packet.Send (Broker_Fd, Gneiss_Protocol.Session.Register, Kind, Name, Label, (1 .. 0 => -1));
       Packet.Receive (Broker_Fd, Msg, Fds, True);
       if
          not Msg.Valid
@@ -29,11 +29,11 @@ is
    end Register;
 
    procedure Initialize (Cap   :        Capability;
-                         Kind  :        RFLX.Session.Kind_Type;
+                         Kind  :        Gneiss_Protocol.Session.Kind_Type;
                          Fds   : in out Gneiss_Syscall.Fd_Array;
                          Label :        String)
    is
-      use type RFLX.Session.Kind_Type;
+      use type Gneiss_Protocol.Session.Kind_Type;
       Name : Gneiss_Internal.Session_Label;
       Lbl  : Gneiss_Internal.Session_Label;
       Msg  : Packet.Message;
@@ -45,7 +45,7 @@ is
       end loop;
       Lbl.Last := Lbl.Value'First + Label'Length - 1;
       Lbl.Value (Lbl.Value'First .. Lbl.Last) := Label;
-      Packet.Send (Cap.Broker_Fd, RFLX.Session.Request, Kind, Name, Lbl, Fds (Fds'First .. Last));
+      Packet.Send (Cap.Broker_Fd, Gneiss_Protocol.Session.Request, Kind, Name, Lbl, Fds (Fds'First .. Last));
       Packet.Receive (Cap.Broker_Fd, Msg, Fds, True);
       if
          not Msg.Valid
@@ -56,12 +56,12 @@ is
    end Initialize;
 
    procedure Dispatch (Fd    :     Integer;
-                       Kind  :     RFLX.Session.Kind_Type;
+                       Kind  :     Gneiss_Protocol.Session.Kind_Type;
                        Name  : out Gneiss_Internal.Session_Label;
                        Label : out Gneiss_Internal.Session_Label;
                        Fds   : out Gneiss_Syscall.Fd_Array)
    is
-      use type RFLX.Session.Kind_Type;
+      use type Gneiss_Protocol.Session.Kind_Type;
       Msg : Packet.Message;
    begin
       Packet.Receive (Fd, Msg, Fds, False);
@@ -73,7 +73,7 @@ is
    end Dispatch;
 
    procedure Confirm (Fd    : Integer;
-                      Kind  : RFLX.Session.Kind_Type;
+                      Kind  : Gneiss_Protocol.Session.Kind_Type;
                       Name  : String;
                       Label : String;
                       Fds   : Gneiss_Syscall.Fd_Array)
@@ -85,11 +85,11 @@ is
       S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
       S_Label.Last := S_Label.Value'First + Label'Last - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Fd, RFLX.Session.Confirm, Kind, S_Name, S_Label, Fds);
+      Packet.Send (Fd, Gneiss_Protocol.Session.Confirm, Kind, S_Name, S_Label, Fds);
    end Confirm;
 
    procedure Reject (Fd    : Integer;
-                     Kind  : RFLX.Session.Kind_Type;
+                     Kind  : Gneiss_Protocol.Session.Kind_Type;
                      Name  : String;
                      Label : String)
    is
@@ -100,7 +100,7 @@ is
       S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
       S_Label.Last := S_Label.Value'First + Label'Last - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Fd, RFLX.Session.Reject, Kind, S_Name, S_Label, (1 .. 0 => -1));
+      Packet.Send (Fd, Gneiss_Protocol.Session.Reject, Kind, S_Name, S_Label, (1 .. 0 => -1));
    end Reject;
 
 end Gneiss.Platform_Client;

@@ -1,6 +1,6 @@
 
 with "basalt";
-with "gneiss_rflx";
+with "gneiss_protocol";
 with "SXML";
 with "switches";
 

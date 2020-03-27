@@ -1,22 +1,22 @@
 
-with RFLX.Types;
+with Gneiss_Protocol.Types;
 
 generic
-   Length : RFLX.Types.Length;
+   Length : Gneiss_Protocol.Types.Length;
 package Gneiss_Access with
    SPARK_Mode,
    Elaborate_Body
 is
 
-   Ptr : RFLX.Types.Bytes_Ptr;
+   Ptr : Gneiss_Protocol.Types.Bytes_Ptr;
 
    generic
       Field : in out String;
       Last  : in out Natural;
-   procedure Get (Data : RFLX.Types.Bytes);
+   procedure Get (Data : Gneiss_Protocol.Types.Bytes);
 
    generic
       Field : String;
-   procedure Set (Data : out RFLX.Types.Bytes);
+   procedure Set (Data : out Gneiss_Protocol.Types.Bytes);
 
 end Gneiss_Access;
