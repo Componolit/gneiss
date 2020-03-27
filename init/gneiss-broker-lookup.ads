@@ -1,7 +1,7 @@
 
 with SXML;
 with SXML.Query;
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 
 package Gneiss.Broker.Lookup with
    SPARK_Mode
@@ -17,7 +17,7 @@ is
       Global => null;
 
    procedure Lookup_Request (State       :     Broker_State;
-                             Kind        :     RFLX.Session.Kind_Type;
+                             Kind        :     Gneiss_Protocol.Session.Kind_Type;
                              Service     :     SXML.Query.State_Type;
                              Destination : out Integer;
                              Found       : out Boolean) with

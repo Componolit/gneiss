@@ -2,7 +2,7 @@
 with Gneiss_Syscall;
 with Gneiss_Internal.Message_Syscall;
 with Gneiss.Platform_Client;
-with RFLX.Session;
+with Gneiss_Protocol.Session;
 
 package body Gneiss.Log.Client
 is
@@ -25,7 +25,7 @@ is
       if Initialized (Session) or else Label'Length > 255 then
          return;
       end if;
-      Platform_Client.Initialize (Cap, RFLX.Session.Log, Fds, Label);
+      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Log, Fds, Label);
       if Fds (Fds'First) < 0 then
          return;
       end if;

@@ -1,7 +1,7 @@
 
 with "switches";
 with "gneiss";
-with "gneiss_rflx";
+with "gneiss_protocol";
 with "basalt";
 with "SXML";
 
