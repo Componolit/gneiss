@@ -130,12 +130,12 @@ is
          return;
       end if;
       Put (Server_Data (I.Value), '[');
-      for C of Server_Data (I.Value).Ident (1 .. Server_Data (I.Value).Last) loop
+      for J in 1 .. Server_Data (I.Value).Last loop
          pragma Loop_Invariant (I.Value = I.Value'Loop_Entry);
          pragma Loop_Invariant (Gneiss.Log.Initialized (Client));
          pragma Loop_Invariant (I.Value in Server_Data'Range);
-         Put (Server_Data (I.Value), C);
-         --  FIXME: Failing array index check
+         Put (Server_Data (I.Value),
+              Server_Data (I.Value).Ident (J));
       end loop;
       Put (Server_Data (I.Value), ']');
       Put (Server_Data (I.Value), ' ');
