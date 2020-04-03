@@ -9,12 +9,26 @@ import logging
 import xml.etree.ElementTree as ET
 
 parser = argparse.ArgumentParser()
-parser.add_argument("config", help="gneiss config file")
-parser.add_argument("gneiss_root", help="gneiss repository")
-parser.add_argument("-b", "--build_dir", help="build directory", default="build")
-parser.add_argument("-r", "--root_fs", help="use separate rootfs", default="build")
 parser.add_argument("-v", "--verbose", help="verbose output", action="store_true")
-parser.add_argument("paths", help="component search paths", nargs="*")
+subparsers = parser.add_subparsers(dest='command')
+build_parser = subparsers.add_parser("build")
+build_parser.add_argument("config", help="gneiss config file")
+build_parser.add_argument("gneiss_root", help="gneiss repository")
+build_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
+build_parser.add_argument("-r", "--root_fs", help="use separate rootfs", default="build")
+build_parser.add_argument("paths", help="component search paths", nargs="*")
+edit_parser = subparsers.add_parser("edit")
+edit_parser.add_argument("project", help="GPR project file")
+edit_parser.add_argument("gneiss_root", help="gneiss repository")
+edit_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
+edit_parser.add_argument("paths", help="component search paths", nargs="*")
+prove_parser = subparsers.add_parser("prove")
+prove_parser.add_argument("project", help="GPR project file")
+prove_parser.add_argument("gneiss_root", help="gneiss repository")
+prove_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
+prove_parser.add_argument("-u", "--unit", help="ada unit")
+prove_parser.add_argument("-s", "--steps", help="prove steps", default="8000")
+prove_parser.add_argument("paths", help="component search paths", nargs="*")
 
 def get_component_name(libname):
     return libname[13:-3]
@@ -133,8 +147,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, logger, verbose
     extract_components(build_dir, libdir, components)
     logger.info("Finished.")
 
-def gpr_edit(name, root, build_dir, paths, logger):
-    logger.info("Editing...")
+def gpr_prepare(name, root, build_dir, paths):
     step_compile = ["-XCEMENT_BUILD_STEP=compile"]
     step_prepare = ["-XCEMENT_BUILD_STEP=prepare",
                     "--db", os.path.join(root, "gprconfig_db")]
@@ -152,12 +165,32 @@ def gpr_edit(name, root, build_dir, paths, logger):
     env["GPR_PROJECT_PATH_FILE"] = project_path_file
     gprbuild(["-p"] + args + step_prepare, env);
     gprbuild(["-p"] + args + step_compile, env);
+    return args, env, project_path_file
+
+
+def gpr_edit(name, root, build_dir, paths, logger):
+    logger.info("Editing...")
+    args, env, project_path_file = gpr_prepare(name, root, build_dir, paths)
     logger.debug(args)
     logger.debug(env["GPR_PROJECT_PATH_FILE"])
-    proc = subprocess.Popen(["gnatstudio"] + args + step_compile, env=env)
+    proc = subprocess.Popen(["gnatstudio"] + args + ["-XCEMENT_BUILD_STEP=compile"], env=env)
     logger.debug(f"Popen: {proc.args}")
     proc.communicate()
     os.remove(project_path_file)
+
+def gpr_prove(name, root, build_dir, paths, steps, unit, logger):
+    logger.info("Editing...")
+    args, env, project_path_file = gpr_prepare(name, root, build_dir, paths)
+    logger.debug(args)
+    logger.debug(env["GPR_PROJECT_PATH_FILE"])
+    args.extend(["-j0", f"--steps={steps}", "--checks-as-errors"])
+    if unit:
+        args.extend(["-u", unit])
+    proc = subprocess.Popen(["gnatprove"] + args + ["-XCEMENT_BUILD_STEP=compile"], env=env)
+    logger.debug(f"Popen: {proc.args}")
+    proc.communicate()
+    os.remove(project_path_file)
+    return proc.returncode
 
 if __name__ == "__main__":
     args = parser.parse_args(sys.argv[1:])
@@ -170,8 +203,8 @@ if __name__ == "__main__":
     gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
     logger.info("Gneiss root at " + gprargs[0])
     build_dir = os.path.abspath(args.build_dir)
-    root_dir = os.path.abspath(args.root_fs)
-    if args.config.endswith(".xml"):
+    if args.command == "build":
+        root_dir = os.path.abspath(args.root_fs)
         gpr_compile(args.config,
                     os.path.abspath(args.gneiss_root),
                     build_dir,
@@ -179,8 +212,10 @@ if __name__ == "__main__":
                     args.paths,
                     logger,
                     args.verbose)
-    elif args.config.endswith(".gpr"):
-        gpr_edit(args.config, os.path.abspath(args.gneiss_root), build_dir, args.paths, logger)
+    elif args.command == "edit":
+        gpr_edit(args.project, os.path.abspath(args.gneiss_root), build_dir, args.paths, logger)
+    elif args.command == "prove":
+        exit(gpr_prove(args.project, os.path.abspath(args.gneiss_root), build_dir, args.paths, args.steps, args.unit, logger))
     else:
-        logger.error("Unknown file type: " + args.config)
+        logger.error(f"Command {args.command} not implemented")
         exit(1)
