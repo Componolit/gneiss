@@ -1,10 +1,12 @@
 
 with Gneiss.Command_Line;
+with Gneiss.Broker;
 with Gneiss.Broker.Main;
 
-procedure Main
+procedure Main with
+   SPARK_Mode
 is
-   Status : Integer := 1;
+   Status : Gneiss.Broker.Return_Code := 1;
 begin
    case Gneiss.Command_Line.Argument_Count is
       when 1 =>
