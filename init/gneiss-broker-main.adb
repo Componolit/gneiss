@@ -4,7 +4,6 @@ with Gneiss.Broker.Message;
 with Gneiss.Config;
 with Gneiss_Syscall;
 with Gneiss_Log;
-with Gneiss_Epoll;
 with Basalt.Strings;
 with SXML.Query;
 
@@ -38,13 +37,13 @@ is
    end Get_Dest;
 
    procedure Construct (Conf_Loc :     String;
-                        Status   : out Integer)
+                        Status   : out Return_Code)
    is
       Query      : SXML.Query.State_Type;
       Parent     : Boolean;
    begin
       Gneiss_Log.Info ("Loading config from " & Conf_Loc);
-      Status           := 1;
+      Status := 1;
       Conf.Load (Conf_Loc);
       Query := SXML.Query.Init (State.Xml);
       if not SXML.Query.Is_Open (Query, State.Xml) then
@@ -57,6 +56,10 @@ is
          return;
       end if;
       Startup.Parse_Resources (State.Resources, State.Xml, Query);
+      State.Components := (others => (Fd   => -1,
+                                      Node => SXML.Query.Initial_State,
+                                      Pid  => -1,
+                                      Serv => (others => (others => -1))));
       Startup.Start_Components (State, Query, Parent, Status);
       if Parent then
          Event_Loop (State, Status);
@@ -64,7 +67,7 @@ is
    end Construct;
 
    procedure Event_Loop (B_State : in out Broker_State;
-                         Status  :    out Integer)
+                         Status  :    out Return_Code)
    is
       XML_Buf : String (1 .. 255);
       Ev      : Gneiss_Epoll.Event;
@@ -76,8 +79,10 @@ is
    begin
       Status := 1;
       loop
-         Gneiss_Epoll.Wait (State.Epoll_Fd, Ev, Fd);
-         Index := Get_Dest (State, Fd);
+         pragma Loop_Invariant (Is_Valid (B_State.Xml, B_State.Components));
+         pragma Loop_Invariant (Gneiss_Epoll.Valid_Fd (B_State.Epoll_Fd));
+         Gneiss_Epoll.Wait (B_State.Epoll_Fd, Ev, Fd);
+         Index := Get_Dest (B_State, Fd);
          if Index in B_State.Components'Range and then B_State.Components (Index).Fd > -1 then
             SXML.Query.Attribute (B_State.Components (Index).Node, B_State.Xml, "name", Result, XML_Buf, Last);
             if Ev.Epoll_In then
@@ -96,10 +101,10 @@ is
                                    & " exited with status "
                                    & Basalt.Strings.Image (Success));
                end if;
-               Gneiss_Epoll.Remove (State.Epoll_Fd, B_State.Components (Index).Fd, Success);
+               Gneiss_Epoll.Remove (B_State.Epoll_Fd, B_State.Components (Index).Fd, Success);
                Gneiss_Syscall.Close (B_State.Components (Index).Fd);
-               State.Components (Index).Node := SXML.Query.Init (B_State.Xml);
-               State.Components (Index).Pid  := -1;
+               B_State.Components (Index).Node := SXML.Query.Init (B_State.Xml);
+               B_State.Components (Index).Pid  := -1;
             end if;
          else
             Gneiss_Log.Warning ("Invalid index");

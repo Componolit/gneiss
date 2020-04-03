@@ -1,7 +1,6 @@
 
 with Gneiss.Main;
 with Gneiss_Log;
-with Gneiss_Epoll;
 with Gneiss_Syscall;
 with SXML.Parser;
 with Basalt.Strings;
@@ -13,7 +12,7 @@ is
    procedure Start_Components (State  : in out Broker_State;
                                Root   :        SXML.Query.State_Type;
                                Parent :    out Boolean;
-                               Status :    out Integer)
+                               Status :    out Return_Code)
    is
       XML_Buf : String (1 .. 255);
       Pid     : Integer;
@@ -27,10 +26,13 @@ is
       Status := 1;
       Parent := True;
       Query  := SXML.Query.Path (Root, State.Xml, "/config/component");
-      while SXML.Query.State_Result (Query) = SXML.Result_OK loop
+      while
+         SXML.Query.State_Result (Query) = SXML.Result_OK
+         and then SXML.Query.Is_Open (Query, State.Xml)
+      loop
          pragma Loop_Invariant (SXML.Query.Is_Valid (Query, State.Xml));
          pragma Loop_Invariant (Index in State.Components'Range);
-         pragma Loop_Invariant (SXML.Query.Is_Open (Query, State.Xml));
+         pragma Loop_Invariant (Gneiss_Epoll.Valid_Fd (State.Epoll_Fd));
          Query := SXML.Query.Find_Sibling (Query, State.Xml, "component");
          exit when SXML.Query.State_Result (Query) /= SXML.Result_OK;
          SXML.Query.Attribute (Query, State.Xml, "name", Result, XML_Buf, Last);
@@ -72,11 +74,17 @@ is
                               Document  :        SXML.Document_Type;
                               Root      :        SXML.Query.State_Type)
    is
-      Index   : Positive := Resources'First;
+      Index   : Integer := Resources'First;
       State   : SXML.Query.State_Type;
    begin
       State := SXML.Query.Path (Root, Document, "/config/resource");
-      while SXML.Query.State_Result (State) = SXML.Result_OK loop
+      while
+         SXML.Query.State_Result (State) = SXML.Result_OK
+         and then SXML.Query.Is_Open (State, Document)
+      loop
+         pragma Loop_Invariant (SXML.Query.State_Result (State) = SXML.Result_OK);
+         pragma Loop_Invariant (SXML.Query.Is_Valid (State, Document));
+         pragma Loop_Invariant (Index in Resources'Range);
          State := SXML.Query.Find_Sibling (State, Document, "resource");
          exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
          Resources (Index).Node := State;
@@ -89,7 +97,7 @@ is
    procedure Load (State : in out Broker_State;
                    Fd    :        Integer;
                    Comp  :        SXML.Query.State_Type;
-                   Ret   :    out Integer)
+                   Ret   :    out Return_Code)
    is
       Result         : SXML.Result_Type;
       Last           : Natural;
