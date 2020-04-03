@@ -8,7 +8,11 @@ is
 
    procedure Read_Message (State    : in out Broker_State;
                            Index    :        Positive;
-                           Filedesc :        Integer);
+                           Filedesc :        Integer) with
+      Pre  => Gneiss_Epoll.Valid_Fd (State.Epoll_Fd)
+              and then Is_Valid (State.Xml, State.Components),
+      Post => Gneiss_Epoll.Valid_Fd (State.Epoll_Fd)
+              and then Is_Valid (State.Xml, State.Components);
 
 private
 

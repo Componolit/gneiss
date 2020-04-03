@@ -55,4 +55,6 @@ is
       Resources  : Resource_List (1 .. Reg_Size);
    end record;
 
+   subtype Return_Code is Integer range 0 .. 255;
+
 end Gneiss.Broker;

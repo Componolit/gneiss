@@ -11,22 +11,29 @@ is
    use type Gneiss_Epoll.Epoll_Fd;
    use type System.Address;
 
-   procedure Event_Handler;
-   procedure Set_Status (S : Integer) with
-      Global => (Output => Component_Status);
-   function Set_Status_Cap is new Gneiss_Platform.Create_Set_Status_Cap (Set_Status);
-   procedure Construct (Symbol : System.Address;
-                        Cap    : Capability);
-   procedure Destruct (Symbol : System.Address);
-   procedure Call_Event (Fp : System.Address;
-                         Ev : Gneiss_Epoll.Event_Type);
+   subtype Status_Code is Integer range -1 .. 255;
 
    Running : constant Integer := -1;
    Success : constant Integer := 0;
    Failure : constant Integer := 1;
 
-   Component_Status : Integer               := Running;
+   Component_Status : Status_Code           := Running;
    Epoll_Fd         : Gneiss_Epoll.Epoll_Fd := -1;
+
+   procedure Event_Handler with
+      Pre  => Gneiss_Epoll.Valid_Fd (Epoll_Fd),
+      Post => Gneiss_Epoll.Valid_Fd (Epoll_Fd);
+   procedure Set_Status (S : Integer) with
+      Global => (Output => Component_Status);
+   function Set_Status_Cap is new Gneiss_Platform.Create_Set_Status_Cap (Set_Status);
+   procedure Construct (Symbol : System.Address;
+                        Cap    : Capability) with
+      Pre => Symbol /= System.Null_Address;
+   procedure Destruct (Symbol : System.Address) with
+      Pre => Symbol /= System.Null_Address;
+   procedure Call_Event (Fp : System.Address;
+                         Ev : Gneiss_Epoll.Event_Type) with
+      Pre => Fp /= System.Null_Address;
 
    function Create_Cap (Fd : Integer) return Capability is
       (Capability'(Broker_Fd            => Fd,
@@ -45,7 +52,7 @@ is
 
    procedure Run (Name   :     String;
                   Fd     :     Integer;
-                  Status : out Integer)
+                  Status : out Broker.Return_Code)
    is
       use type Gneiss.Linker.Dl_Handle;
       Handle        : Gneiss.Linker.Dl_Handle;
@@ -88,7 +95,9 @@ is
       Event     : Gneiss_Epoll.Event;
    begin
       Gneiss_Epoll.Wait (Epoll_Fd, Event, Event_Ptr);
-      Call_Event (Event_Ptr, Gneiss_Epoll.Get_Type (Event));
+      if Event_Ptr /= System.Null_Address then
+         Call_Event (Event_Ptr, Gneiss_Epoll.Get_Type (Event));
+      end if;
    end Event_Handler;
 
    procedure Set_Status (S : Integer)
