@@ -3,16 +3,16 @@ with System;
 with Gneiss_Syscall;
 
 package body Gneiss.Config with
-   SPARK_Mode => Off
+   SPARK_Mode
 is
 
    procedure Load (Location : String)
    is
       use type System.Address;
-      Fd : Integer;
+      Fd   : Integer;
       Addr : System.Address;
    begin
-      Gneiss_Syscall.Open (Location, Fd, 0);
+      Gneiss_Syscall.Open (Location & ASCII.NUL, Fd, 0);
       if Fd < 0 then
          return;
       end if;
@@ -22,7 +22,8 @@ is
          return;
       end if;
       declare
-         Data : String (1 .. Gneiss_Syscall.Stat_Size (Fd)) with
+         Size : constant Integer := Gneiss_Syscall.Stat_Size (Fd);
+         Data : String (1 .. Size) with
             Import,
             Address => Addr;
       begin

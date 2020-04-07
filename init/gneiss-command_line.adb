@@ -3,7 +3,7 @@ with System;
 with Gneiss.Libc;
 
 package body Gneiss.Command_Line with
-   SPARK_Mode
+   SPARK_Mode => Off
 is
 
    type Ptr_List is array (Natural range <>) of System.Address;
@@ -25,8 +25,7 @@ is
    function Argument_Count return Natural is
       (Argc);
 
-   function Argument (Number : Natural) return String with
-      SPARK_Mode => Off
+   function Argument (Number : Natural) return String
    is
       Arg : String (1 .. Libc.Strlen (Argvl (Number))) with
          Import,

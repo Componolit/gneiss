@@ -55,6 +55,8 @@ is
          Status := 1;
          return;
       end if;
+      State.Resources := (others => (Fd => -1,
+                                     Node => SXML.Query.Invalid_State));
       Startup.Parse_Resources (State.Resources, State.Xml, Query);
       State.Components := (others => (Fd   => -1,
                                       Node => SXML.Query.Initial_State,
@@ -80,12 +82,13 @@ is
       Status := 1;
       loop
          pragma Loop_Invariant (Is_Valid (B_State.Xml, B_State.Components));
+         pragma Loop_Invariant (Is_Valid (B_State.Xml, B_State.Resources));
          pragma Loop_Invariant (Gneiss_Epoll.Valid_Fd (B_State.Epoll_Fd));
          Gneiss_Epoll.Wait (B_State.Epoll_Fd, Ev, Fd);
          Index := Get_Dest (B_State, Fd);
          if Index in B_State.Components'Range and then B_State.Components (Index).Fd > -1 then
             SXML.Query.Attribute (B_State.Components (Index).Node, B_State.Xml, "name", Result, XML_Buf, Last);
-            if Ev.Epoll_In then
+            if Ev.Epoll_In and then Fd > -1 then
                Message.Read_Message (B_State, Index, Fd);
             end if;
             if Ev.Epoll_Hup or else Ev.Epoll_Rdhup then
@@ -101,7 +104,9 @@ is
                                    & " exited with status "
                                    & Basalt.Strings.Image (Success));
                end if;
-               Gneiss_Epoll.Remove (B_State.Epoll_Fd, B_State.Components (Index).Fd, Success);
+               if B_State.Components (Index).Fd > -1 then
+                  Gneiss_Epoll.Remove (B_State.Epoll_Fd, B_State.Components (Index).Fd, Success);
+               end if;
                Gneiss_Syscall.Close (B_State.Components (Index).Fd);
                B_State.Components (Index).Node := SXML.Query.Init (B_State.Xml);
                B_State.Components (Index).Pid  := -1;
