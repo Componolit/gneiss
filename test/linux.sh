@@ -10,12 +10,12 @@ make -C ada-runtime
 
 set -e
 
-./cement test/message_client/message_client.xml . lib test
-./cement test/hello_world/hello_world.xml . lib test
-./cement test/log_proxy/log_proxy.xml . lib test
-./cement test/rom/rom.xml . lib test
-./cement test/memory_client/memory_client.xml . lib test
-./cement test/timer/timer.xml . lib test
+./cement build test/message_client/message_client.xml . lib test
+./cement build test/hello_world/hello_world.xml . lib test
+./cement build test/log_proxy/log_proxy.xml . lib test
+./cement build test/rom/rom.xml . lib test
+./cement build test/memory_client/memory_client.xml . lib test
+./cement build test/timer/timer.xml . lib test
 
 export LD_LIBRARY_PATH=build/lib
 expect test/message_client/message_client.expect
