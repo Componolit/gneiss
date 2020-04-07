@@ -33,6 +33,9 @@ is
          pragma Loop_Invariant (SXML.Query.Is_Valid (Query, State.Xml));
          pragma Loop_Invariant (Index in State.Components'Range);
          pragma Loop_Invariant (Gneiss_Epoll.Valid_Fd (State.Epoll_Fd));
+         pragma Loop_Invariant (Is_Valid (State.Xml, State.Components));
+         pragma Loop_Invariant (Is_Valid (State.Xml, State.Resources));
+         pragma Loop_Invariant (Parent);
          Query := SXML.Query.Find_Sibling (Query, State.Xml, "component");
          exit when SXML.Query.State_Result (Query) /= SXML.Result_OK;
          SXML.Query.Attribute (Query, State.Xml, "name", Result, XML_Buf, Last);
@@ -85,6 +88,7 @@ is
          pragma Loop_Invariant (SXML.Query.State_Result (State) = SXML.Result_OK);
          pragma Loop_Invariant (SXML.Query.Is_Valid (State, Document));
          pragma Loop_Invariant (Index in Resources'Range);
+         pragma Loop_Invariant (Is_Valid (Document, Resources));
          State := SXML.Query.Find_Sibling (State, Document, "resource");
          exit when SXML.Query.State_Result (State) /= SXML.Result_OK;
          Resources (Index).Node := State;
