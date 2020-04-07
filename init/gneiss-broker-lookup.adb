@@ -19,6 +19,9 @@ is
          pragma Loop_Invariant (SXML.Query.Is_Valid (Query_State, Document));
          pragma Loop_Invariant (SXML.Query.Is_Open (Query_State, Document)
                                 or else SXML.Query.Is_Content (Query_State, Document));
+         pragma Loop_Invariant (Default_State = SXML.Query.Invalid_State
+                                or else (SXML.Query.State_Result (Default_State) = SXML.Result_OK
+                                         and then SXML.Query.Is_Valid (Default_State, Document)));
          Query_State := SXML.Query.Find_Sibling (Query_State, Document, "service", "name", Kind);
          exit when SXML.Query.State_Result (Query_State) /= SXML.Result_OK;
          SXML.Query.Attribute (Query_State, Document, "label", Result, Buffer, Last);
@@ -50,6 +53,7 @@ is
          return;
       end if;
       for I in State.Components'Range loop
+         pragma Loop_Invariant (not Valid);
          if State.Components (I).Fd > -1 then
             SXML.Query.Attribute (State.Components (I).Node, State.Xml, "name", Result, XML_Buf, Last);
             Valid := Result = SXML.Result_OK and then Compare (XML_Buf, Last, Name);

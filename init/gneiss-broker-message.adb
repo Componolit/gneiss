@@ -16,40 +16,44 @@ is
          when RFLX.Session.Rom     => "Rom",
          when RFLX.Session.Timer   => "Timer");
 
-   procedure Setup_Service (State : in out Broker_State;
+   procedure Setup_Service (State : in out Service_List;
                             Kind  :        RFLX.Session.Kind_Type;
-                            Index :        Positive);
+                            Efd   :        Gneiss_Epoll.Epoll_Fd;
+                            Valid :    out Boolean) with
+      Pre  => Gneiss_Epoll.Valid_Fd (Efd),
+      Post => (if Valid then (State (Kind).Broker > -1 and then State (Kind).Disp > -1));
 
-   procedure Setup_Service (State : in out Broker_State;
+   procedure Setup_Service (State : in out Service_List;
                             Kind  :        RFLX.Session.Kind_Type;
-                            Index :        Positive)
+                            Efd   :        Gneiss_Epoll.Epoll_Fd;
+                            Valid :    out Boolean)
    is
-      Ignore_Success : Integer;
+      Success : Integer;
    begin
-      if
-         State.Components (Index).Serv (Kind).Broker > -1
-         and then State.Components (Index).Serv (Kind).Disp > -1
-      then
+      Valid := False;
+      if State (Kind).Broker > -1 and then State (Kind).Disp > -1 then
+         Valid := True;
          return;
       end if;
-      Gneiss_Syscall.Socketpair (State.Components (Index).Serv (Kind).Broker,
-                                 State.Components (Index).Serv (Kind).Disp);
-      if
-         State.Components (Index).Serv (Kind).Broker < 0
-         or else State.Components (Index).Serv (Kind).Disp < 0
-      then
+      Gneiss_Syscall.Socketpair (State (Kind).Broker, State (Kind).Disp);
+      if State (Kind).Broker < 0 or else State (Kind).Disp < 0 then
          Gneiss_Log.Error ("Failed to create service fds");
-         Gneiss_Syscall.Close (State.Components (Index).Serv (Kind).Broker);
-         Gneiss_Syscall.Close (State.Components (Index).Serv (Kind).Disp);
+         Gneiss_Syscall.Close (State (Kind).Broker);
+         Gneiss_Syscall.Close (State (Kind).Disp);
          return;
       end if;
-      Gneiss_Epoll.Add (State.Epoll_Fd, State.Components (Index).Serv (Kind).Broker,
-                        State.Components (Index).Serv (Kind).Broker, Ignore_Success);
+      Gneiss_Epoll.Add (Efd, State (Kind).Broker, State (Kind).Broker, Success);
+      if Success /= 0 then
+         Gneiss_Log.Error ("Failed to register broker callback");
+         Gneiss_Syscall.Close (State (Kind).Broker);
+         Gneiss_Syscall.Close (State (Kind).Disp);
+         return;
+      end if;
+      Valid := True;
    end Setup_Service;
 
    function Convert_Message (S : String) return RFLX_String
    is
-      use type RFLX.Session.Length_Type;
       R : RFLX_String (1 .. RFLX.Session.Length_Type (S'Length));
    begin
       for I in R'Range loop
@@ -131,14 +135,14 @@ is
       Source_Name : String (1 .. 255);
       Last        : Natural;
       Result      : SXML.Result_Type;
-      Fds_Out     : Gneiss_Syscall.Fd_Array (1 .. 4) := (others => -1);
+      Fds_Out     : Gneiss_Syscall.Fd_Array (1 .. 4);
    begin
       if State.Components (Source).Fd < 0 then
          Gneiss_Log.Warning ("Cannot process invalid source");
          return;
       end if;
       Lookup.Match_Service (State.Xml, State.Components (Source).Node, Image (Kind), Label, Serv_State);
-      if Serv_State = SXML.Query.Invalid_State then
+      if Serv_State = SXML.Query.Invalid_State or else not SXML.Query.Is_Open (Serv_State, State.Xml) then
          Gneiss_Log.Error ("No service found");
          Send_Reject (State.Components (Source).Fd, Kind, Label);
          return;
@@ -157,17 +161,28 @@ is
       end if;
       case Kind is
          when RFLX.Session.Message | RFLX.Session.Log =>
-            Process_Message_Request (Fds_Out, Valid);
-            if Valid and then Destination in State.Components'Range then
-               Setup_Service (State, Kind, Destination);
-               Send_Request (State.Components (Destination).Serv (Kind).Broker,
-                             Kind,
-                             Source_Name (Source_Name'First .. Last),
-                             Label,
-                             Fds_Out (Fds_Out'First .. Fds_Out'First + 1));
-            else
+            if Destination not in State.Components'Range then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
+               return;
             end if;
+            Process_Message_Request (Fds_Out, Valid);
+            if not Valid then
+               Send_Reject (State.Components (Source).Fd, Kind, Label);
+               return;
+            end if;
+            Setup_Service (State.Components (Destination).Serv, Kind, State.Epoll_Fd, Valid);
+            if not Valid then
+               for Fd of Fds_Out loop
+                  Gneiss_Syscall.Close (Fd);
+               end loop;
+               Send_Reject (State.Components (Source).Fd, Kind, Label);
+               return;
+            end if;
+            Send_Request (State.Components (Destination).Serv (Kind).Broker,
+                          Kind,
+                          Source_Name (Source_Name'First .. Last),
+                          Label,
+                          Fds_Out (Fds_Out'First .. Fds_Out'First + 1));
          when RFLX.Session.Rom =>
             if Destination in State.Components'Range then
                Gneiss_Log.Warning ("Rom server currently not supported");
@@ -180,17 +195,28 @@ is
                end if;
             end if;
          when RFLX.Session.Memory =>
-            Process_Memory_Request (Fds, Fds_Out, Valid);
-            if Valid and then Destination in State.Components'Range then
-               Setup_Service (State, Kind, Destination);
-               Send_Request (State.Components (Destination).Serv (Kind).Broker,
-                             Kind,
-                             Source_Name (Source_Name'First .. Last),
-                             Label,
-                             Fds_Out (Fds_Out'First .. Fds_Out'First + 2));
-            else
+            if Destination not in State.Components'Range or else Fds'Length < 1 then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
+               return;
             end if;
+            Process_Memory_Request (Fds, Fds_Out, Valid);
+            if not Valid then
+               Send_Reject (State.Components (Source).Fd, Kind, Label);
+               return;
+            end if;
+            Setup_Service (State.Components (Destination).Serv, Kind, State.Epoll_Fd, Valid);
+            if not Valid then
+               for Fd of Fds_Out loop
+                  Gneiss_Syscall.Close (Fd);
+               end loop;
+               Send_Reject (State.Components (Source).Fd, Kind, Label);
+               return;
+            end if;
+            Send_Request (State.Components (Destination).Serv (Kind).Broker,
+                          Kind,
+                          Source_Name (Source_Name'First .. Last),
+                          Label,
+                          Fds_Out (Fds_Out'First .. Fds_Out'First + 2));
          when RFLX.Session.Timer =>
             Process_Timer_Request (Fds_Out, Valid);
             if Valid then
@@ -204,14 +230,17 @@ is
    procedure Process_Message_Request (Fds   : out Gneiss_Syscall.Fd_Array;
                                       Valid : out Boolean)
    is
+      Fd1 : Integer;
+      Fd2 : Integer;
    begin
       Fds := (others => -1);
-      Gneiss_Syscall.Socketpair (Fds (Fds'First), Fds (Fds'First + 1));
-      Valid := Fds (Fds'First) > -1 and then Fds (Fds'First + 1) > -1;
+      Gneiss_Syscall.Socketpair (Fd1, Fd2);
+      Valid := Fd1 > -1 and then Fd2 > -1;
       if not Valid then
-         Gneiss_Syscall.Close (Fds (Fds'First));
-         Gneiss_Syscall.Close (Fds (Fds'First + 1));
+         Gneiss_Syscall.Close (Fd1);
+         Gneiss_Syscall.Close (Fd2);
       end if;
+      Fds (Fds'First .. Fds'First + 1) := (Fd1, Fd2);
    end Process_Message_Request;
 
    procedure Process_Memory_Request (Fds_In  :        Gneiss_Syscall.Fd_Array;
@@ -219,6 +248,8 @@ is
                                      Valid   :    out Boolean)
    is
       Success : Integer;
+      Fd1     : Integer;
+      Fd2     : Integer;
    begin
       Valid   := False;
       Fds_Out := (others => -1);
@@ -231,7 +262,8 @@ is
          Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 2));
          return;
       end if;
-      Gneiss_Syscall.Socketpair (Fds_Out (Fds_Out'First), Fds_Out (Fds_Out'First + 1));
+      Gneiss_Syscall.Socketpair (Fd1, Fd2);
+      Fds_Out (Fds_Out'First .. Fds_Out'First + 1) := (Fd1, Fd2);
       Valid := Fds_Out (Fds_Out'First) > -1 and then Fds_Out (Fds_Out'First + 1) > -1;
       if not Valid then
          Gneiss_Syscall.Close (Fds_Out (Fds_Out'First));
@@ -260,6 +292,7 @@ is
                                     Valid : out Boolean)
    is
    begin
+      Fds := (others => -1);
       Gneiss_Syscall.Timerfd_Create (Fds (Fds'First));
       Valid := Fds (Fds'First) > -1;
    end Process_Timer_Request;
@@ -277,7 +310,7 @@ is
       if Valid then
          case Kind is
             when RFLX.Session.Message | RFLX.Session.Log | RFLX.Session.Memory =>
-               if Fds (Fds'First) >= 0 then
+               if Fds'Length > 0 and then Fds (Fds'First) >= 0 then
                   Send_Confirm (State.Components (Destination).Fd, Kind, Label, Fds (Fds'First .. Fds'First));
                else
                   Gneiss_Log.Warning ("Invalid Fd, rejecting");
@@ -311,11 +344,17 @@ is
                                Source :        Positive;
                                Kind   :        RFLX.Session.Kind_Type)
    is
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Fds   : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Valid : Boolean;
    begin
-      Setup_Service (State, Kind, Source);
+      pragma Assert (if State.Components (Source).Fd > -1
+                     then SXML.Query.State_Result (State.Components (Source).Node) = SXML.Result_OK
+                          and then SXML.Query.Is_Valid (State.Components (Source).Node, State.Xml)
+                          and then SXML.Query.Is_Open (State.Components (Source).Node, State.Xml));
+      Setup_Service (State.Components (Source).Serv, Kind, State.Epoll_Fd, Valid);
+      pragma Assert (Is_Valid (State.Xml, State.Components));
       Fds := (1 => State.Components (Source).Serv (Kind).Disp);
-      if Fds (Fds'First) > -1 then
+      if Valid then
          Send_Confirm (State.Components (Source).Fd, Kind, "", Fds);
       else
          Send_Reject (State.Components (Source).Fd, Kind, "");
