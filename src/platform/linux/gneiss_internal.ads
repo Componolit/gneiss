@@ -6,7 +6,8 @@ package Gneiss_Internal is
    type Session_Label is record
       Last  : Natural           := 0;
       Value : String (1 .. 255) := (others => Character'First);
-   end record;
+   end record with
+      Dynamic_Predicate => Last <= Value'Last;
 
    type Capability is record
       Broker_Fd            : Integer;

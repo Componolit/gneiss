@@ -14,9 +14,11 @@ is
       Pre  => Gneiss_Epoll.Valid_Fd (State.Epoll_Fd)
               and then SXML.Query.State_Result (Root) = SXML.Result_OK
               and then SXML.Query.Is_Valid (Root, State.Xml)
-              and then Is_Valid (State.Xml, State.Components),
+              and then Is_Valid (State.Xml, State.Components)
+              and then Is_Valid (State.Xml, State.Resources),
       Post => (if Parent then Gneiss_Epoll.Valid_Fd (State.Epoll_Fd)
-                              and then Is_Valid (State.Xml, State.Components));
+               and then Is_Valid (State.Xml, State.Components)
+               and then Is_Valid (State.Xml, State.Resources));
 
    procedure Parse (Data     :        String;
                     Document : in out SXML.Document_Type);
@@ -24,10 +26,12 @@ is
    procedure Parse_Resources (Resources : in out Resource_List;
                               Document  :        SXML.Document_Type;
                               Root      :        SXML.Query.State_Type) with
-      Pre => SXML.Query.State_Result (Root) = SXML.Result_OK
-             and then SXML.Query.Is_Valid (Root, Document)
-             and then SXML.Query.Is_Open (Root, Document)
-             and then Resources'Length > 0;
+      Pre  => SXML.Query.State_Result (Root) = SXML.Result_OK
+              and then SXML.Query.Is_Valid (Root, Document)
+              and then SXML.Query.Is_Open (Root, Document)
+              and then Resources'Length > 0
+              and then Is_Valid (Document, Resources),
+      Post => Is_Valid (Document, Resources);
 
 private
 
