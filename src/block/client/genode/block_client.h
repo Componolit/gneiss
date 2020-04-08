@@ -13,7 +13,7 @@ namespace Block
             Genode::uint64_t _block_size;
             void *_device; //Block_session in block_client.cc
             void *_callback; //procedure Event;
-            void *_rw; //procedure Crw (Session, Kind, Start, Length, Data)
+            void *_rw; //procedure Crw (Session, Kind, Start, Length, Data, Ctx)
             void *_env; //Cai::Env
             Genode::uint32_t _tag;
 
@@ -43,7 +43,7 @@ namespace Block
                                         int *success);
             void enqueue(void *request);
             void submit();
-            void read_write(void *request);
+            void read_write(void *request, void *context);
             void release(void *request);
             bool writable();
             Genode::uint64_t block_count();

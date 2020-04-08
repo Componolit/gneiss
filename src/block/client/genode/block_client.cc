@@ -167,16 +167,17 @@ void Cai::Block::Client::submit()
     TLOG();
 }
 
-void Cai::Block::Client::read_write(void *request)
+void Cai::Block::Client::read_write(void *request, void *context)
 {
     TLOG("request=", request);
     ::Block::Packet_descriptor *packet = reinterpret_cast<::Block::Packet_descriptor *>(request);
-    ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *))(_rw))(
+    ((void (*)(void *, int, unsigned long, Genode::uint64_t, void *, void *))(_rw))(
             (void *)this,
             static_cast<int>(packet->operation()),
             packet->tag().value,
             packet->block_count(),
-            blk(_device)->tx()->packet_content(*packet));
+            blk(_device)->tx()->packet_content(*packet),
+            context);
 }
 
 void Cai::Block::Client::release(void *request)

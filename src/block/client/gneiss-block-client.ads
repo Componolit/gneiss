@@ -13,6 +13,7 @@ private with Gneiss_Internal.Block;
 
 generic
    pragma Warnings (Off, "* is not referenced");
+   type Context is limited private;
    --  Block client event handler
    with procedure Event;
 
@@ -25,7 +26,8 @@ generic
    --  @param Data    Read data
    with procedure Read (C      : in out Client_Session;
                         Req    :        Request_Id;
-                        Data   :        Buffer);
+                        Data   :        Buffer;
+                        Ctx    : in out Context);
 
    --  Write procedure called when the platform required data to write
    --
@@ -36,7 +38,8 @@ generic
    --  @param Data    Data that will be written
    with procedure Write (C      : in out Client_Session;
                          Req    :        Request_Id;
-                         Data   :    out Buffer);
+                         Data   :    out Buffer
+                         Ctx    : in out Context);
    pragma Warnings (On, "* is not referenced");
 package Gneiss.Block.Client with
    SPARK_Mode
@@ -199,8 +202,9 @@ is
    --
    --  @param C  Client session instance
    --  @param R  Request to read data from
-   procedure Read (C : in out Client_Session;
-                   R :        Request) with
+   procedure Read (C   : in out Client_Session;
+                   R   :        Request;
+                   Ctx : in out Context) with
       Pre  => Initialized (C)
               and then Status (R) = Ok
               and then Kind (R)   = Read
@@ -215,8 +219,9 @@ is
    --
    --  @param C  Client session instance
    --  @param R  Request to write data to
-   procedure Write (C : in out Client_Session;
-                    R :        Request) with
+   procedure Write (C   : in out Client_Session;
+                    R   :        Request;
+                    Ctx : in out Context) with
       Pre  => Initialized (C)
               and then Status (R) = Allocated
               and then Kind (R)   = Write
@@ -260,7 +265,8 @@ private
    --  @param Data    Read data
    procedure Lemma_Read (C      : in out Client_Session;
                          Req    :        Request_Id;
-                         Data   :        Buffer) with
+                         Data   :        Buffer;
+                         Ctx    : in out Context) with
       Ghost,
       Pre => Initialized (C);
 
@@ -277,7 +283,8 @@ private
    --  @param Data    Data that will be written
    procedure Lemma_Write (C      : in out Client_Session;
                           Req    :        Request_Id;
-                          Data   :    out Buffer) with
+                          Data   :    out Buffer;
+                          Ctx    : in out Context) with
       Ghost,
       Pre => Initialized (C);
 

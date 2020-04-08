@@ -78,59 +78,67 @@ is
    procedure Async_Read (S : in out Server_Session;
                          R :        Request_Id;
                          D :        System.Address;
-                         L :        Buffer_Index);
+                         L :        Buffer_Index;
+                         C : in out Context);
 
    procedure Async_Read (S : in out Server_Session;
                          R :        Request_Id;
                          D :        System.Address;
-                         L :        Buffer_Index)
+                         L :        Buffer_Index;
+                         C : in out Context)
    is
       B : Buffer (1 .. L) with
          Import,
          Address => D;
    begin
-      Read (S, R, B);
+      Read (S, R, B, C);
    end Async_Read;
 
    procedure Async_Write (S : in out Server_Session;
                           R :        Request_Id;
                           D :        System.Address;
-                          L :        Buffer_Index);
+                          L :        Buffer_Index;
+                          C : in out Context);
 
    procedure Async_Write (S : in out Server_Session;
                           R :        Request_Id;
                           D :        System.Address;
-                          L :        Buffer_Index)
+                          L :        Buffer_Index;
+                          C : in out Context)
    is
       B : Buffer (1 .. L) with
          Import,
          Address => D;
    begin
-      Write (S, R, B);
+      Write (S, R, B, C);
    end Async_Write;
 
    procedure Read (S : in out Server_Session;
                    R :        Request;
-                   I :        Request_Id) with
+                   I :        Request_Id;
+                   C : in out Context) with
       SPARK_Mode => Off
    is
    begin
       Cxx.Block.Server.Read_Write (S.Instance,
                                    R.Request,
                                    Request_Id'Pos (I),
-                                   Async_Read'Address);
+                                   Async_Read'Address,
+                                   C'Address);
    end Read;
 
    procedure Write (S : in out Server_Session;
                     R :        Request;
-                    I :        Request_Id) with
+                    I :        Request_Id;
+                    C : in out Context) with
       SPARK_Mode => Off
    is
    begin
       Cxx.Block.Server.Read_Write (S.Instance,
                                    R.Request,
                                    Request_Id'Pos (I),
-                                   Async_Write'Address);
+                                   Async_Write'Address,
+                                   C'Address);
    end Write;
 
    procedure Acknowledge (S   : in out Server_Session;
@@ -167,18 +175,20 @@ is
 
    procedure Lemma_Read (S : in out Server_Session;
                          R :        Request_Id;
-                         D :    out Buffer)
+                         D :    out Buffer;
+                         C : in out Context)
    is
    begin
-      Read (S, R, D);
+      Read (S, R, D, C);
    end Lemma_Read;
 
    procedure Lemma_Write (S : in out Server_Session;
                           R :        Request_Id;
-                          D :        Buffer)
+                          D :        Buffer;
+                          C : in out Context)
    is
    begin
-      Write (S, R, D);
+      Write (S, R, D, C);
    end Lemma_Write;
 
 end Gneiss.Block.Server;

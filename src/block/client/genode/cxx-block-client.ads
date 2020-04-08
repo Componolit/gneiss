@@ -87,11 +87,12 @@ is
       External_Name => "_ZN3Cai5Block6Client6submitEv";
 
    procedure Read_Write (This :        Class;
-                         Req  :        Packet_Descriptor) with
+                         Req  :        Packet_Descriptor;
+                         Ctx  :        Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Client10read_writeEPv";
+      External_Name => "_ZN3Cai5Block6Client10read_writeEPvS2_";
 
    procedure Release (This : Class;
                       Req  : in out Packet_Descriptor) with

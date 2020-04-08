@@ -83,11 +83,12 @@ is
    procedure Read_Write (This   : Class;
                          Req    : Request;
                          Id     : Cxx.Genode.Uint32_T;
-                         Buffer : Cxx.Void_Address) with
+                         Buffer : Cxx.Void_Address;
+                         Ctx    : Cxx.Void_Address) with
       Global        => null,
       Import,
       Convention    => CPP,
-      External_Name => "_ZN3Cai5Block6Server10read_writeEPvjPFvS2_jS2_yE";
+      External_Name => "_ZN3Cai5Block6Server10read_writeEPvjPFvS2_jS2_yS2_ES2_";
 
    procedure Acknowledge (This   :        Class;
                           Req    : in out Request;

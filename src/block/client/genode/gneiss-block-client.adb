@@ -135,17 +135,19 @@ is
       end loop;
    end Update_Request;
 
-   procedure Crw (C : in out Client_Session;
-                  O :        Integer;
-                  T :        Cxx.Unsigned_Long;
-                  L :        Count;
-                  D :        System.Address);
+   procedure Crw (C   : in out Client_Session;
+                  O   :        Integer;
+                  T   :        Cxx.Unsigned_Long;
+                  L   :        Count;
+                  D   :        System.Address,
+                  Ctx : in out Context);
 
-   procedure Crw (C : in out Client_Session;
-                  O :        Integer;
-                  T :        Cxx.Unsigned_Long;
-                  L :        Count;
-                  D :        System.Address) with
+   procedure Crw (C   : in out Client_Session;
+                  O   :        Integer;
+                  T   :        Cxx.Unsigned_Long;
+                  L   :        Count;
+                  D   :        System.Address;
+                  Ctx : in out Context) with
       SPARK_Mode => Off
    is
       Data : Buffer (1 .. Block_Size (C) * L) with
@@ -153,9 +155,9 @@ is
    begin
       case O is
          when 1 =>
-            Write (C, Request_Id'Val (T), Data);
+            Write (C, Request_Id'Val (T), Data, Ctx);
          when 0 =>
-            Read (C, Request_Id'Val (T), Data);
+            Read (C, Request_Id'Val (T), Data, Ctx);
          when others =>
             null;
       end case;
@@ -233,18 +235,22 @@ is
       Cxx.Block.Client.Submit (C.Instance);
    end Submit;
 
-   procedure Read (C : in out Client_Session;
-                   R :        Request)
+   procedure Read (C   : in out Client_Session;
+                   R   :        Request;
+                   Ctx : in out Context) with
+      SPARK_Mode => Off
    is
    begin
-      Cxx.Block.Client.Read_Write (C.Instance, R.Packet);
+      Cxx.Block.Client.Read_Write (C.Instance, R.Packet, Ctx'Address);
    end Read;
 
-   procedure Write (C : in out Client_Session;
-                    R :        Request)
+   procedure Write (C   : in out Client_Session;
+                    R   :        Request;
+                    Ctx : in out Context) with
+      SPARK_Mode => Off
    is
    begin
-      Cxx.Block.Client.Read_Write (C.Instance, R.Packet);
+      Cxx.Block.Client.Read_Write (C.Instance, R.Packet, Ctx'Address);
    end Write;
 
    procedure Release (C : in out Client_Session;
@@ -257,18 +263,20 @@ is
 
    procedure Lemma_Read (C      : in out Client_Session;
                          Req    :        Request_Id;
-                         Data   :        Buffer)
+                         Data   :        Buffer;
+                         Ctx    : in out Context)
    is
    begin
-      Read (C, Req, Data);
+      Read (C, Req, Data, Ctx);
    end Lemma_Read;
 
    procedure Lemma_Write (C      : in out Client_Session;
                           Req    :        Request_Id;
-                          Data   :    out Buffer)
+                          Data   :    out Buffer;
+                          Ctx    : in out Context)
    is
    begin
-      Write (C, Req, Data);
+      Write (C, Req, Data, Ctx);
    end Lemma_Write;
 
 end Gneiss.Block.Client;

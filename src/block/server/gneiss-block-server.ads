@@ -14,6 +14,7 @@ private with Gneiss_Internal.Block;
 generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs each subprogram
+   type Context is limited private;
 
    --  Event handler, is called on received requests, ready queues, etc.
    with procedure Event;
@@ -69,7 +70,8 @@ generic
    --  @param Data    Data to read
    with procedure Read (S    : in out Server_Session;
                         Req  :        Request_Id;
-                        Data :    out Buffer);
+                        Data :    out Buffer;
+                        Ctx  : in out Context);
 
    --  Called when a write has been triggered and data to write is available
    --
@@ -80,7 +82,8 @@ generic
    --  @param Data    Data to write
    with procedure Write (S    : in out Server_Session;
                          Req  :        Request_Id;
-                         Data :        Buffer);
+                         Data :        Buffer;
+                         Ctx  : in out Context);
    pragma Warnings (On, "* is not referenced");
 package Gneiss.Block.Server with
    SPARK_Mode
@@ -162,7 +165,8 @@ is
    procedure Read (S : in out Server_Session;
                    R :        Request;
                    B :        Buffer;
-                   O :        Byte_Length) with
+                   O :        Byte_Length;
+                   C : in out Context) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
@@ -181,7 +185,8 @@ is
    --  @param I  Application defined identifier of the request
    procedure Read (S : in out Server_Session;
                    R :        Request;
-                   I :        Request_Id) with
+                   I :        Request_Id;
+                   C : in out Context) with
       Pre  => Ready (S)
               and then Initialized (S)
               and then Status (R) = Pending
@@ -333,7 +338,8 @@ private
    --  @param D  Data to read
    procedure Lemma_Read (S : in out Server_Session;
                          R :        Request_Id;
-                         D :    out Buffer) with
+                         D :    out Buffer;
+                         C : in out Context) with
       Ghost,
       Pre => Ready (S);
 
@@ -348,7 +354,8 @@ private
    --  @param D  Data to write
    procedure Lemma_Write (S : in out Server_Session;
                           R :        Request_Id;
-                          D :        Buffer) with
+                          D :        Buffer;
+                          C : in out Context) with
       Ghost,
       Pre => Ready (S);
 
