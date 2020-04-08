@@ -26,10 +26,9 @@ is
       Status := 1;
       Parent := True;
       Query  := SXML.Query.Path (Root, State.Xml, "/config/component");
-      while
-         SXML.Query.State_Result (Query) = SXML.Result_OK
-         and then SXML.Query.Is_Open (Query, State.Xml)
-      loop
+      while SXML.Query.State_Result (Query) = SXML.Result_OK loop
+         pragma Loop_Invariant (SXML.Query.Is_Open (Query, State.Xml)
+                                or else SXML.Query.Is_Content (Query, State.Xml));
          pragma Loop_Invariant (SXML.Query.Is_Valid (Query, State.Xml));
          pragma Loop_Invariant (Index in State.Components'Range);
          pragma Loop_Invariant (Gneiss_Epoll.Valid_Fd (State.Epoll_Fd));
@@ -37,7 +36,8 @@ is
          pragma Loop_Invariant (Is_Valid (State.Xml, State.Resources));
          pragma Loop_Invariant (Parent);
          Query := SXML.Query.Find_Sibling (Query, State.Xml, "component");
-         exit when SXML.Query.State_Result (Query) /= SXML.Result_OK;
+         exit when SXML.Query.State_Result (Query) /= SXML.Result_OK
+                   or else not SXML.Query.Is_Open (Query, State.Xml);
          SXML.Query.Attribute (Query, State.Xml, "name", Result, XML_Buf, Last);
          if Result = SXML.Result_OK then
             Gneiss_Syscall.Socketpair (State.Components (Index).Fd, Fd);
