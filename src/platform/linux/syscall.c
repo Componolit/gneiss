@@ -23,7 +23,7 @@ void gneiss_socketpair(int *fd1, int *fd2)
     int fds[2];
 
     if(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds) < 0){
-        warn("");
+        warn("%s: socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds=%p)", __func__, fds);
         *fd1 = -1;
         *fd2 = -1;
     }else{
@@ -36,7 +36,7 @@ void gneiss_fork(int *pid)
 {
     *pid = fork();
     if(*pid < 0){
-        warn("");
+        warn("%s: fork()", __func__);
     }
 }
 
@@ -47,7 +47,7 @@ void gneiss_close (int *fd)
     }
     TRACE("fd=%d\n", *fd);
     if(close(*fd)){
-        warn("fd=%d", *fd);
+        warn("%s: close(fd=%d)", __func__, *fd);
     }
     *fd = -1;
 }
@@ -55,7 +55,7 @@ void gneiss_close (int *fd)
 void gneiss_waitpid(int pid, int *status)
 {
     if(waitpid(pid, status, WNOHANG) < 0){
-        warn("pid=%d", pid);
+        warn("%s: waitpid(pid=%d, status=%p, WNOHANG)", __func__, pid, status);
     }
     *status = WEXITSTATUS(*status);
 }
@@ -64,7 +64,7 @@ void gneiss_dup(int oldfd, int *newfd)
 {
     *newfd = dup(oldfd);
     if(*newfd < 0){
-        warn("oldfd=%d", oldfd);
+        warn("%s: dup(oldfd=%d)", __func__, oldfd);
     }
 }
 
@@ -106,7 +106,7 @@ void gneiss_write_message(int sock, void *msg, size_t size, int *fd, int num)
         message.msg_controllen = 0;
     }
     if(sendmsg(sock, &message, MSG_DONTWAIT) < 0){
-        warn("sock=%d", sock);
+        warn("%s: sendmsg(sock=%d)", __func__, sock);
     }
 }
 
@@ -136,7 +136,7 @@ static void read_message(int sock, void *msg, size_t size, int *fd, int num, int
     }
     *length = recvmsg(sock, &message, flags);
     if(*length < 0){
-        warn("sock=%d", sock);
+        warn("%s: recvmsg(sock=%d, message=%p, flags=%d)", __func__, sock, &message, flags);
         *length = 0;
         return;
     }
@@ -186,7 +186,7 @@ void gneiss_drop_message(int sock)
     message.msg_control = cmsgu.control;
     message.msg_controllen = sizeof(cmsgu.control);
     if(recvmsg(sock, &message, MSG_TRUNC) < 0){
-        warn("sock=%d", sock);
+        warn("%s: recvmsg(sock=%d, message=%p, MSG_TRUNC)", __func__, sock, &message);
         return;
     }
 }
@@ -201,7 +201,7 @@ void gneiss_open(const char *path, int *fd, int writable)
     TRACE("path=%s fd=%p writable=%d\n", path, fd, writable);
     *fd = open(path, writable ? O_RDWR : O_RDONLY);
     if(*fd < 0){
-        warn("path=%s writable=%d", path, writable);
+        warn("%s: open(path=%s, writable=%d)", __func__, path, writable);
     }
 }
 
@@ -210,15 +210,15 @@ void gneiss_memfd_seal(int fd, int *success)
     TRACE("fd=%d success=%p\n", fd, success);
     *success = 0;
     if(fcntl(fd, F_ADD_SEALS, F_SEAL_SHRINK) < 0){
-        warn("F_SEAL_SHRINK");
+        warn("%s: fcntl(fd=%d, F_ADD_SEALS, F_SEAL_SHRINK)", __func__, fd);
         return;
     }
     if(fcntl(fd, F_ADD_SEALS, F_SEAL_GROW) < 0){
-        warn("F_SEAL_GROW");
+        warn("%s: fcntl(fd=%d, F_ADD_SEALS, F_SEAL_GROW)", __func__, fd);
         return;
     }
     if(fcntl(fd, F_ADD_SEALS, F_SEAL_SEAL) < 0){
-        warn("F_SEAL_SEAL");
+        warn("%s: fcntl(fd=%d, F_ADD_SEALS, F_SEAL_SEAL)", __func__, fd);
         return;
     }
     *success = 1;
@@ -229,7 +229,7 @@ int gneiss_fstat_size(int fd)
     TRACE("fd=%d\n", fd);
     struct stat st;
     if(fstat(fd, &st) < 0){
-        warn("fd=%d", fd);
+        warn("%s: fstat(fd=%d, st=%p)", __func__, fd, &st);
         return 0;
     }
     return st.st_size;
@@ -238,9 +238,10 @@ int gneiss_fstat_size(int fd)
 void gneiss_mmap(int fd, void **map, int writable)
 {
     TRACE("fd=%d *map=%p writable=%d\n", fd, *map, writable);
-    *map = mmap(0, gneiss_fstat_size(fd), writable ? PROT_READ | PROT_WRITE : PROT_READ, MAP_SHARED, fd, 0);
+    const int size = gneiss_fstat_size(fd);
+    *map = mmap(0, size, writable ? PROT_READ | PROT_WRITE : PROT_READ, MAP_SHARED, fd, 0);
     if(*map == MAP_FAILED){
-        warn("fd=%d writable=%d", fd, writable);
+        warn("%s: mmap(0, size=%d, writable=%d, MAP_SHARED, fd=%d, 0)", __func__, size, writable, fd);
         *map = 0x0;
     }
 }
@@ -248,8 +249,9 @@ void gneiss_mmap(int fd, void **map, int writable)
 void gneiss_munmap(int fd, void **map)
 {
     TRACE("fd=%d *map=%p\n", fd, *map);
-    if(munmap(*map, gneiss_fstat_size(fd)) < 0){
-        warn("fd=%d size=%d", fd, gneiss_fstat_size(fd));
+    const int size = gneiss_fstat_size(fd);
+    if(munmap(*map, size) < 0){
+        warn("%s: munmap(fd=%d size=%d)", __func__, fd, gneiss_fstat_size(fd));
     }
     *map = 0x0;
 }
@@ -259,6 +261,6 @@ void gneiss_timerfd_create(int *fd)
     TRACE("fd=%p\n", fd);
     *fd = timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK);
     if(*fd < 0){
-        warn("fd=%p", fd);
+        warn("%s: timerfd_create(CLOCK_MONOTONIC, TFD_NONBLOCK)", __func__);
     }
 }
