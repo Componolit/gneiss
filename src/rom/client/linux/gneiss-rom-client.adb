@@ -34,7 +34,8 @@ is
       Session.Label.Value (Session.Label.Value'First .. Session.Label.Last) := Label;
    end Initialize;
 
-   procedure Update (Session : in out Client_Session)
+   procedure Update (Session : in out Client_Session;
+                     Ctx     : in out Context)
    is
       Size  : constant Integer      := Gneiss_Syscall.Stat_Size (Session.Fd);
       First : constant Buffer_Index := Buffer_Index'First;
@@ -43,7 +44,7 @@ is
          Import,
          Address => Session.Map;
    begin
-      Read (Session, Buf);
+      Read (Session, Buf, Ctx);
    end Update;
 
    procedure Finalize (Session : in out Client_Session)

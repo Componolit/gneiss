@@ -11,12 +11,14 @@
 
 generic
    pragma Warnings (Off, "* is not referenced");
+   type Context is limited private;
    --  Read the ROM data
    --
    --  @param Session  Client session
    --  @param Data     ROM contents
    with procedure Read (Session : in out Client_Session;
-                        Data    :        Buffer);
+                        Data    :        Buffer;
+                        Ctx     : in out Context);
    pragma Warnings (On, "* is not referenced");
 package Gneiss.Rom.Client with
    SPARK_Mode
@@ -36,8 +38,14 @@ is
    --  Update the rom and call Read
    --
    --  @param Session  Client session
-   procedure Update (Session : in out Client_Session) with
-      Pre => Initialized (Session);
+   generic
+      with function Contract (Ctx : Context) return Boolean;
+   procedure Update (Session : in out Client_Session;
+                     Ctx     : in out Context) with
+      Pre  => Initialized (Session)
+              and then Contract (Ctx),
+      Post => Initialized (Session)
+              and then Contract (Ctx);
 
    --  Close the session
    --
