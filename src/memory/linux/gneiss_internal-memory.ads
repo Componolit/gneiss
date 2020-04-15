@@ -20,7 +20,6 @@ is
       Fd       : Integer                     := -1;
       Sigfd    : Integer                     := -1;
       Map      : System.Address              := System.Null_Address;
-      Epoll_Fd : Gneiss_Epoll.Epoll_Fd       := -1;
       E_Cap    : Gneiss_Platform.Event_Cap;
    end record;
 
@@ -37,6 +36,7 @@ is
       Memfd     : Integer := -1;
       Client_Fd : Integer := -1;
       Server_Fd : Integer := -1;
+      Clean_Fd  : Integer := -1;
       Name      : Session_Label;
       Label     : Session_Label;
    end record;

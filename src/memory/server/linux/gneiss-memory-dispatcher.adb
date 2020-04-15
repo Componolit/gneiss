@@ -12,13 +12,21 @@ is
    function Server_Event_Address (Session : Server_Session) return System.Address;
    function Dispatch_Event_Address (Session : Dispatcher_Session) return System.Address;
 
-   procedure Server_Event (Session  : in out Server_Session;
-                           Epoll_Ev :        Gneiss_Epoll.Event_Type);
-   procedure Dispatch_Event (Session  : in out Dispatcher_Session;
-                             Epoll_Ev :        Gneiss_Epoll.Event_Type);
+   procedure Server_Event (Session : in out Server_Session;
+                           Fd      :        Integer) is null;
+   procedure Dispatch_Event (Session : in out Dispatcher_Session;
+                             Fd      :        Integer);
+   procedure Dispatch_Error (Session : in out Dispatcher_Session;
+                             Fd      :        Integer);
 
-   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Server_Session, Server_Event);
-   function Dispatch_Cap is new Gneiss_Platform.Create_Event_Cap (Dispatcher_Session, Dispatch_Event);
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Server_Session,
+                                                               Dispatcher_Session,
+                                                               Server_Event,
+                                                               Dispatch_Event);
+   function Dispatch_Cap is new Gneiss_Platform.Create_Event_Cap (Dispatcher_Session,
+                                                                  Dispatcher_Session,
+                                                                  Dispatch_Event,
+                                                                  Dispatch_Error);
 
    function Server_Event_Address (Session : Server_Session) return System.Address with
       SPARK_Mode => Off
@@ -34,54 +42,53 @@ is
       return Session.E_Cap'Address;
    end Dispatch_Event_Address;
 
-   procedure Server_Event (Session  : in out Server_Session;
-                           Epoll_Ev :        Gneiss_Epoll.Event_Type)
+   procedure Dispatch_Event (Session : in out Dispatcher_Session;
+                             Fd      :        Integer)
    is
-      use type Gneiss_Epoll.Event_Type;
-      use type Gneiss_Epoll.Epoll_Fd;
-      Ignore_Success : Integer;
-   begin
-      if Epoll_Ev = Gneiss_Epoll.Epoll_Er then
-         Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.Sigfd, Ignore_Success);
-         Gneiss_Syscall.Close (Session.Sigfd);
-         Gneiss_Syscall.Close (Session.Fd);
-         Server_Instance.Finalize (Session);
-         Session.Index := Session_Index_Option'(Valid => False);
-         Session.Epoll_Fd := -1;
-         Gneiss_Platform.Invalidate (Session.E_Cap);
-      end if;
-   end Server_Event;
-
-   procedure Dispatch_Event (Session  : in out Dispatcher_Session;
-                             Epoll_Ev :        Gneiss_Epoll.Event_Type)
-   is
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 3);
-      Name : Gneiss_Internal.Session_Label;
+      Fds   : Gneiss_Syscall.Fd_Array (1 .. 3);
+      Name  : Gneiss_Internal.Session_Label;
       Label : Gneiss_Internal.Session_Label;
    begin
-      case Epoll_Ev is
-         when Gneiss_Epoll.Epoll_Ev =>
-            Session.Accepted := False;
-            Platform_Client.Dispatch (Session.Dispatch_Fd, RFLX.Session.Memory,
-                                      Name, Label, Fds);
-            Dispatch (Session,
-                      Dispatcher_Capability'(Memfd     => Fds (3),
-                                             Client_Fd => Fds (1),
-                                             Server_Fd => Fds (2),
-                                             Name      => Name,
-                                             Label     => Label),
-                      Name.Value (Name.Value'First .. Name.Last),
-                      Label.Value (Label.Value'First .. Label.Last));
-            if not Session.Accepted then
-               Platform_Client.Reject (Session.Dispatch_Fd,
-                                       RFLX.Session.Memory,
-                                       Name.Value (Name.Value'First .. Name.Last),
-                                       Label.Value (Label.Value'First .. Label.Last));
-            end if;
-         when Gneiss_Epoll.Epoll_Er =>
-            null;
-      end case;
+      if Fd = Session.Dispatch_Fd then
+         Session.Accepted := False;
+         Platform_Client.Dispatch (Session.Dispatch_Fd, RFLX.Session.Memory,
+                                   Name, Label, Fds);
+         Dispatch (Session,
+                   Dispatcher_Capability'(Memfd     => Fds (3),
+                                          Client_Fd => Fds (1),
+                                          Server_Fd => Fds (2),
+                                          Clean_Fd  => -1,
+                                          Name      => Name,
+                                          Label     => Label),
+                   Name.Value (Name.Value'First .. Name.Last),
+                   Label.Value (Label.Value'First .. Label.Last));
+         if not Session.Accepted then
+            Platform_Client.Reject (Session.Dispatch_Fd,
+                                    RFLX.Session.Memory,
+                                    Name.Value (Name.Value'First .. Name.Last),
+                                    Label.Value (Label.Value'First .. Label.Last));
+         end if;
+      else
+         Dispatch (Session,
+                   Dispatcher_Capability'(Memfd     => -1,
+                                          Client_Fd => -1,
+                                          Server_Fd => -1,
+                                          Clean_Fd  => -1,
+                                          Name      => Name,
+                                          Label     => Label),
+                   "", "");
+      end if;
    end Dispatch_Event;
+
+   procedure Dispatch_Error (Session : in out Dispatcher_Session;
+                             Fd      :        Integer)
+   is
+      Ignore_Success : Integer;
+   begin
+      if Fd = Session.Dispatch_Fd then
+         Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.Dispatch_Fd, Ignore_Success);
+      end if;
+   end Dispatch_Error;
 
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability;
@@ -90,7 +97,6 @@ is
    begin
       Session.Broker_Fd := Cap.Broker_Fd;
       Session.Epoll_Fd  := Cap.Epoll_Fd;
-      Session.E_Cap     := Dispatch_Cap (Session);
       Session.Index     := Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
@@ -100,6 +106,7 @@ is
    begin
       Platform_Client.Register (Session.Broker_Fd, RFLX.Session.Memory, Session.Dispatch_Fd);
       if Session.Dispatch_Fd > -1 then
+         Session.E_Cap := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
          Gneiss_Epoll.Add (Session.Epoll_Fd, Session.Dispatch_Fd,
                            Dispatch_Event_Address (Session), Ignore_Success);
       end if;
@@ -115,12 +122,10 @@ is
                                  Idx      :        Session_Index := 1)
    is
       use type System.Address;
-      use type Gneiss_Epoll.Epoll_Fd;
    begin
       Server_S.Sigfd    := Cap.Server_Fd;
       Server_S.Fd       := Cap.Memfd;
-      Server_S.Epoll_Fd := Session.Epoll_Fd;
-      Server_S.E_Cap    := Event_Cap (Server_S);
+      Server_S.E_Cap    := Event_Cap (Server_S, Session, Server_S.Sigfd);
       Server_S.Index    := Session_Index_Option'(Valid => True, Value => Idx);
       Gneiss_Syscall.Mmap (Server_S.Fd, Server_S.Map, 1);
       if Server_S.Map /= System.Null_Address then
@@ -128,7 +133,6 @@ is
       end if;
       if not Server_Instance.Ready (Server_S) or else Server_S.Map = System.Null_Address then
          Server_S.Index    := Session_Index_Option'(Valid => False);
-         Server_S.Epoll_Fd := -1;
          Server_S.Map      := System.Null_Address;
          Gneiss_Syscall.Close (Server_S.Fd);
          Gneiss_Syscall.Close (Server_S.Sigfd);
@@ -155,8 +159,16 @@ is
                               Cap      :        Dispatcher_Capability;
                               Server_S : in out Server_Session)
    is
+      Ignore_Success : Integer;
    begin
-      null;
+      if Cap.Clean_Fd > -1 and then Cap.Clean_Fd = Server_S.Sigfd then
+         Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Sigfd, Ignore_Success);
+         Gneiss_Syscall.Close (Server_S.Sigfd);
+         Gneiss_Syscall.Close (Server_S.Fd);
+         Server_Instance.Finalize (Server_S);
+         Server_S.Index := Session_Index_Option'(Valid => False);
+         Gneiss_Platform.Invalidate (Server_S.E_Cap);
+      end if;
    end Session_Cleanup;
 
 end Gneiss.Memory.Dispatcher;

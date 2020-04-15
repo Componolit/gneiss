@@ -11,9 +11,14 @@ package body Gneiss.Timer.Client with
 is
 
    function Event_Address (Session : Client_Session) return System.Address;
-   procedure Session_Event (Session  : in out Client_Session;
-                            Epoll_Ev :        Gneiss_Epoll.Event_Type);
-   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session, Session_Event);
+   procedure Session_Event (Session : in out Client_Session;
+                            Fd      :        Integer);
+   procedure Session_Error (Session : in out Client_Session;
+                            Fd      :        Integer) is null;
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session,
+                                                               Client_Session,
+                                                               Session_Event,
+                                                               Session_Error);
 
    procedure Timer_Set (Fd : Integer;
                         D  : Duration) with
@@ -39,17 +44,13 @@ is
       return Session.E_Cap'Address;
    end Event_Address;
 
-   procedure Session_Event (Session  : in out Client_Session;
-                            Epoll_Ev :        Gneiss_Epoll.Event_Type)
+   procedure Session_Event (Session : in out Client_Session;
+                            Fd      :        Integer)
    is
+      pragma Unreferenced (Fd);
    begin
-      case Epoll_Ev is
-         when Gneiss_Epoll.Epoll_Ev =>
-            Timer_Read (Session.Fd);
-            Event;
-         when Gneiss_Epoll.Epoll_Er =>
-            null;
-      end case;
+      Timer_Read (Session.Fd);
+      Event;
    end Session_Event;
 
    procedure Initialize (C     : in out Client_Session;
@@ -67,7 +68,7 @@ is
       if Fds (Fds'First) < 0 then
          return;
       end if;
-      C.E_Cap := Event_Cap (C);
+      C.E_Cap := Event_Cap (C, C, Fds (Fds'First));
       Gneiss_Epoll.Add (Cap.Epoll_Fd, Fds (Fds'First), Event_Address (C), Success);
       if Success < 0 then
          Gneiss_Syscall.Close (Fds (Fds'First));

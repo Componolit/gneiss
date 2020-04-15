@@ -34,7 +34,6 @@ is
    type Server_Session is limited record
       Fd       : Integer                     := -1;
       Index    : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Epoll_Fd : Gneiss_Epoll.Epoll_Fd       := -1;
       Buffer   : Message_Buffer              := Null_Buffer;
       Cursor   : Positive                    := 1;
       E_Cap    : Gneiss_Platform.Event_Cap;
@@ -43,6 +42,7 @@ is
    type Dispatcher_Capability is limited record
       Client_Fd : Integer := -1;
       Server_Fd : Integer := -1;
+      Clean_Fd  : Integer := -1;
       Name      : Session_Label;
       Label     : Session_Label;
    end record;

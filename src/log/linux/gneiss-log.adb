@@ -12,7 +12,6 @@ is
 
    function Initialized (Session : Dispatcher_Session) return Boolean is
       (Session.Broker_Fd > -1
-       and then Gneiss_Platform.Is_Valid (Session.E_Cap)
        and then Session.Epoll_Fd > -1
        and then Session.Index.Valid);
 

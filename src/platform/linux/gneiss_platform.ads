@@ -16,10 +16,15 @@ is
       Post => not Is_Valid (Cap);
 
    generic
-      type Context is limited private;
-      with procedure Event (Ctx : in out Context;
-                            Ev  :        Gneiss_Epoll.Event_Type);
-   function Create_Event_Cap (C : Context) return Event_Cap;
+      type Event_Context is limited private;
+      type Error_Context is limited private;
+      with procedure Event (Ctx : in out Event_Context;
+                            Fd  :        Integer);
+      with procedure Error (Ctx : in out Error_Context;
+                            Fd  :        Integer);
+   function Create_Event_Cap (Ev_Ctx : Event_Context;
+                              Er_Ctx : Error_Context;
+                              Fd     : Integer) return Event_Cap;
 
    procedure Call (Cap : Event_Cap;
                    Ev  : Gneiss_Epoll.Event_Type);
@@ -37,8 +42,11 @@ is
 private
 
    type Event_Cap is record
-      Address : System.Address := System.Null_Address;
-      Context : System.Address := System.Null_Address;
+      Event_Adr : System.Address := System.Null_Address;
+      Event_Ctx : System.Address := System.Null_Address;
+      Error_Adr : System.Address := System.Null_Address;
+      Error_Ctx : System.Address := System.Null_Address;
+      Fd        : Integer        := -1;
    end record;
 
    type Set_Status_Cap is record

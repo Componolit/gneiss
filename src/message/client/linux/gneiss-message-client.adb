@@ -13,10 +13,15 @@ is
 
    function Get_Event_Address (Session : Client_Session) return System.Address;
 
-   procedure Session_Event (Session  : in out Client_Session;
-                            Epoll_Ev :        Gneiss_Epoll.Event_Type);
+   procedure Session_Event (Session : in out Client_Session;
+                            Fd      :        Integer);
+   procedure Session_Error (Session : in out Client_Session;
+                            Fd      :        Integer) is null;
 
-   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session, Session_Event);
+   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session,
+                                                               Client_Session,
+                                                               Session_Event,
+                                                               Session_Error);
 
    function Get_Event_Address (Session : Client_Session) return System.Address with
       SPARK_Mode => Off
@@ -25,17 +30,13 @@ is
       return Session.Event_Cap'Address;
    end Get_Event_Address;
 
-   procedure Session_Event (Session  : in out Client_Session;
-                            Epoll_Ev :        Gneiss_Epoll.Event_Type)
+   procedure Session_Event (Session : in out Client_Session;
+                            Fd      :        Integer)
    is
       pragma Unreferenced (Session);
+      pragma Unreferenced (Fd);
    begin
-      case Epoll_Ev is
-         when Gneiss_Epoll.Epoll_Ev =>
-            Event;
-         when Gneiss_Epoll.Epoll_Er =>
-            null;
-      end case;
+      Event;
    end Session_Event;
 
    procedure Initialize (Session : in out Client_Session;
@@ -53,7 +54,7 @@ is
       if Fds (Fds'First) < 0 then
          return;
       end if;
-      Session.Event_Cap := Event_Cap (Session);
+      Session.Event_Cap := Event_Cap (Session, Session, Fds (Fds'First));
       Gneiss_Epoll.Add (Cap.Epoll_Fd, Fds (Fds'First), Get_Event_Address (Session), Success);
       if Success < 0 then
          Gneiss_Syscall.Close (Fds (Fds'First));
