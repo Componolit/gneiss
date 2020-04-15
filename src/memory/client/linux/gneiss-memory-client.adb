@@ -15,6 +15,25 @@ is
       Convention    => C,
       External_Name => "gneiss_memfd_create";
 
+   function Get_First (Length : Integer) return Buffer_Index;
+   function Get_Last (Length : Integer) return Buffer_Index;
+
+   function Get_First (Length : Integer) return Buffer_Index is
+      (if Length < 1 then Buffer_Index'First + 1 else Buffer_Index'First);
+
+   function Get_Last (Length : Integer) return Buffer_Index
+   is
+   begin
+      if Length < 1 then
+         return Buffer_Index'First;
+      end if;
+      if Long_Integer (Length) < Long_Integer (Buffer_Index'Last - Buffer_Index'First + 1) then
+         return Buffer_Index (Long_Integer (Buffer_Index'First) + Long_Integer (Length) - 1);
+      else
+         return Buffer_Index'Last;
+      end if;
+   end Get_Last;
+
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
@@ -22,7 +41,7 @@ is
                          Idx     :        Session_Index := 1)
    is
       use type System.Address;
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Fds : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
    begin
       if Initialized (Session) then
          return;
@@ -47,14 +66,17 @@ is
       Session.Index := Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
-   procedure Modify (Session : in out Client_Session)
+   procedure Modify (Session : in out Client_Session;
+                     Ctx     : in out Context)
    is
-      Last : constant Buffer_Index := Buffer_Index (Gneiss_Syscall.Stat_Size (Session.Fd));
-      B    : Buffer (1 .. Last) with
+      Length : constant Integer      := Gneiss_Syscall.Stat_Size (Session.Fd);
+      Last   : constant Buffer_Index := Get_Last (Length);
+      First  : constant Buffer_Index := Get_First (Length);
+      B      : Buffer (First .. Last) with
          Import,
          Address => Session.Map;
    begin
-      Modify (Session, B);
+      Generic_Modify (Session, B, Ctx);
    end Modify;
 
    procedure Finalize (Session : in out Client_Session)
