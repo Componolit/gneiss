@@ -45,7 +45,8 @@ is
       end if;
    end Initialize;
 
-   procedure Modify (Session : in out Client_Session)
+   procedure Modify (Session : in out Client_Session;
+                     Ctx     : in out Context)
    is
       Buf : Buffer (Buffer_Index'First ..
                     Buffer_Index'Val (Buffer_Index'Pos (Buffer_Index'First)
@@ -53,7 +54,7 @@ is
          Import,
          Address => Address (Session);
    begin
-      Modify (Session, Buf);
+      Generic_Modify (Session, Buf, Ctx);
    end Modify;
 
    procedure Finalize (Session : in out Client_Session)

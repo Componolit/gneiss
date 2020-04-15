@@ -10,34 +10,38 @@ is
 
    package Memory is new Gneiss.Memory (Character, Positive, String);
 
-   Log        : Gneiss.Log.Client_Session;
-   Mem        : Memory.Client_Session;
-   Capability : Gneiss.Capability;
+   Log     : Gneiss.Log.Client_Session;
+   Mem     : Memory.Client_Session;
 
    procedure Modify (Session : in out Memory.Client_Session;
-                     Data    : in out String) with
+                     Data    : in out String;
+                     Ctx     : in out Gneiss.Log.Client_Session) with
       Pre  => Memory.Initialized (Session)
-              and then Gneiss.Log.Initialized (Log),
+              and then Gneiss.Log.Initialized (Ctx),
       Post => Memory.Initialized (Session)
-              and then Gneiss.Log.Initialized (Log);
+              and then Gneiss.Log.Initialized (Ctx),
+      Global => null;
 
-   package Memory_Client is new Memory.Client (Modify);
+   package Memory_Client is new Memory.Client (Gneiss.Log.Client_Session, Modify);
+
+   procedure Modify is new Memory_Client.Modify (Gneiss.Log.Initialized);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
-      Capability := Cap;
-      Gneiss.Log.Client.Initialize (Log, Capability, "log_memory");
-      Memory_Client.Initialize (Mem, Capability, "shared", 4096);
+      Gneiss.Log.Client.Initialize (Log, Cap, "log_memory");
+      Memory_Client.Initialize (Mem, Cap, "shared", 4096);
       if Gneiss.Log.Initialized (Log) and Memory.Initialized (Mem) then
-         Memory_Client.Modify (Mem);
+         Modify (Mem, Log);
+         Main.Vacate (Cap, Main.Success);
       else
-         Main.Vacate (Capability, Main.Failure);
+         Main.Vacate (Cap, Main.Failure);
       end if;
    end Construct;
 
    procedure Modify (Session : in out Memory.Client_Session;
-                     Data    : in out String)
+                     Data    : in out String;
+                     Ctx     : in out Gneiss.Log.Client_Session)
    is
       pragma Unreferenced (Session);
       Prefix : constant String := "Data: ";
@@ -54,8 +58,7 @@ is
          Last := I;
          pragma Loop_Invariant (Last in Data'First .. Max);
       end loop;
-      Gneiss.Log.Client.Info (Log, Prefix & Data (Data'First .. Last));
-      Main.Vacate (Capability, Main.Success);
+      Gneiss.Log.Client.Info (Ctx, Prefix & Data (Data'First .. Last));
    end Modify;
 
    procedure Destruct

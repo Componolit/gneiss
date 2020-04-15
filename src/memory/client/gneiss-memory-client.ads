@@ -12,11 +12,12 @@
 generic
    pragma Warnings (Off, "* is not referenced");
    --  Called to modify the shared memory buffer
-   --
+   type Context is limited private;
    --  @param Session  Client session
    --  @param Data     Shared memory buffer
-   with procedure Modify (Session : in out Client_Session;
-                          Data    : in out Buffer);
+   with procedure Generic_Modify (Session : in out Client_Session;
+                                  Data    : in out Buffer;
+                                  Ctx     : in out Context);
    pragma Warnings (On, "* is not referenced");
 package Gneiss.Memory.Client with
    SPARK_Mode
@@ -37,8 +38,14 @@ is
    --  Access the shared memory buffer, this will call the passed Modify procedure
    --
    --  @param Session  Client session
-   procedure Modify (Session : in out Client_Session) with
-      Pre => Initialized (Session);
+   generic
+      with function Contract (Ctx : Context) return Boolean;
+   procedure Modify (Session : in out Client_Session;
+                     Ctx     : in out Context) with
+      Pre  => Initialized (Session)
+              and then Contract (Ctx),
+      Post => Initialized (Session)
+              and then Contract (Ctx);
 
    --  Close session
    --
