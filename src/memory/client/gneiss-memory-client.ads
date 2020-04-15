@@ -11,8 +11,9 @@
 
 generic
    pragma Warnings (Off, "* is not referenced");
-   --  Called to modify the shared memory buffer
    type Context is limited private;
+   --  Called to modify the shared memory buffer
+   --
    --  @param Session  Client session
    --  @param Data     Shared memory buffer
    with procedure Generic_Modify (Session : in out Client_Session;
