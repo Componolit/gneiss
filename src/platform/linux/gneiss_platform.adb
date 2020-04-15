@@ -5,7 +5,10 @@ is
    use type System.Address;
 
    function Is_Valid (Cap : Event_Cap) return Boolean is
-      (Cap.Address /= System.Null_Address and then Cap.Context /= System.Null_Address);
+      (Cap.Event_Adr /= System.Null_Address
+       and then Cap.Event_Ctx /= System.Null_Address
+       and then Cap.Error_Adr /= System.Null_Address
+       and then Cap.Error_Ctx /= System.Null_Address);
 
    function Is_Valid (Cap : Set_Status_Cap) return Boolean is
       (Cap.Address /= System.Null_Address);
@@ -13,15 +16,24 @@ is
    procedure Invalidate (Cap : in out Event_Cap)
    is
    begin
-      Cap.Address := System.Null_Address;
-      Cap.Context := System.Null_Address;
+      Cap.Event_Adr := System.Null_Address;
+      Cap.Event_Ctx := System.Null_Address;
+      Cap.Error_Adr := System.Null_Address;
+      Cap.Error_Ctx := System.Null_Address;
+      Cap.Fd        := -1;
    end Invalidate;
 
-   function Create_Event_Cap (C : Context) return Event_Cap with
+   function Create_Event_Cap (Ev_Ctx : Event_Context;
+                              Er_Ctx : Error_Context;
+                              Fd     : Integer) return Event_Cap with
       SPARK_Mode => Off
    is
    begin
-      return Event_Cap'(Address => Event'Address, Context => C'Address);
+      return Event_Cap'(Event_Adr => Event'Address,
+                        Event_Ctx => Ev_Ctx'Address,
+                        Error_Adr => Error'Address,
+                        Error_Ctx => Er_Ctx'Address,
+                        Fd        => Fd);
    end Create_Event_Cap;
 
    procedure Call (Cap : Event_Cap;
@@ -29,11 +41,20 @@ is
       SPARK_Mode => Off
    is
       procedure Event (Context : System.Address;
-                       E       : Gneiss_Epoll.Event_Type) with
+                       Fd      : Integer) with
          Import,
-         Address => Cap.Address;
+         Address => Cap.Event_Adr;
+      procedure Error (Context : System.Address;
+                       Fd      : Integer) with
+         Import,
+         Address => Cap.Error_Adr;
    begin
-      Event (Cap.Context, Ev);
+      case Ev is
+         when Gneiss_Epoll.Epoll_Ev =>
+            Event (Cap.Event_Ctx, Cap.Fd);
+         when Gneiss_Epoll.Epoll_Er =>
+            Error (Cap.Error_Ctx, Cap.Fd);
+      end case;
    end Call;
 
    function Create_Set_Status_Cap return Set_Status_Cap with
