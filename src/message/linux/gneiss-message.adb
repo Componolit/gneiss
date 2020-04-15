@@ -16,14 +16,12 @@ is
    function Initialized (Session : Server_Session) return Boolean is
       (Session.Fd >= 0
        and then Session.Index.Valid
-       and then Session.Epoll_Fd >= 0
        and then Gneiss_Platform.Is_Valid (Session.E_Cap));
 
    function Initialized (Session : Dispatcher_Session) return Boolean is
       (Session.Broker_Fd >= 0
        and then Session.Epoll_Fd >= 0
-       and then Session.Index.Valid
-       and then Gneiss_Platform.Is_Valid (Session.E_Cap));
+       and then Session.Index.Valid);
 
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
