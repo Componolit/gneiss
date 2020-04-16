@@ -31,10 +31,13 @@ is
                                                                   Dispatch_Error);
 
    function Available (Session : Server_Session) return Boolean is
-      (Gneiss_Internal.Message_Syscall.Peek (Session.Fd) >= Message_Buffer'Size * 8);
+      (Gneiss_Internal.Message_Syscall.Peek (Session.Fd) >= Message_Buffer'Size * 8) with
+         Pre => Initialized (Session);
 
    procedure Read (Session : in out Server_Session;
-                   Data    :    out Message_Buffer);
+                   Data    :    out Message_Buffer) with
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
 
    procedure Read (Session : in out Server_Session;
                    Data    :    out Message_Buffer) with
@@ -50,6 +53,9 @@ is
       pragma Unreferenced (Fd);
       Buffer : Message_Buffer;
    begin
+      if not Initialized (Session) then
+         return;
+      end if;
       if Available (Session) then
          Read (Session, Buffer);
          Server_Instance.Receive (Session, Buffer);
@@ -77,6 +83,9 @@ is
       Name  : Gneiss_Internal.Session_Label;
       Label : Gneiss_Internal.Session_Label;
    begin
+      if not Initialized (Session) then
+         return;
+      end if;
       if Fd = Session.Dispatch_Fd then
          Session.Accepted := False;
          Platform_Client.Dispatch (Session.Dispatch_Fd, RFLX.Session.Message,
@@ -111,7 +120,10 @@ is
    is
       Ignore_Success : Integer;
    begin
-      if Fd = Session.Dispatch_Fd then
+      if not Initialized (Session) then
+         return;
+      end if;
+      if Fd = Session.Dispatch_Fd and then Session.Registered then
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.Dispatch_Fd, Ignore_Success);
       end if;
    end Dispatch_Error;
@@ -132,7 +144,8 @@ is
    begin
       Platform_Client.Register (Session.Broker_Fd, RFLX.Session.Message, Session.Dispatch_Fd);
       if Session.Dispatch_Fd > -1 then
-         Session.E_Cap := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
+         Session.Registered := True;
+         Session.E_Cap      := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
          Gneiss_Epoll.Add (Session.Epoll_Fd, Session.Dispatch_Fd,
                            Dispatch_Event_Address (Session), Ignore_Success);
       end if;
@@ -145,14 +158,15 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
+                                 Ctx      : in out Server_Instance.Context;
                                  Idx      :        Session_Index := 1)
    is
    begin
       Server_S.Fd       := Cap.Server_Fd;
       Server_S.Index    := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Server_S.E_Cap    := Event_Cap (Server_S, Session, Server_S.Fd);
-      Server_Instance.Initialize (Server_S);
-      if not Server_Instance.Ready (Server_S) then
+      Server_Instance.Initialize (Server_S, Ctx);
+      if not Server_Instance.Ready (Server_S, Ctx) then
          Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
          Gneiss_Syscall.Close (Server_S.Fd);
          Gneiss_Platform.Invalidate (Server_S.E_Cap);
@@ -161,8 +175,10 @@ is
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
                              Cap      :        Dispatcher_Capability;
-                             Server_S : in out Server_Session)
+                             Server_S : in out Server_Session;
+                             Ctx      :        Server_Instance.Context)
    is
+      pragma Unreferenced (Ctx);
       Ignore_Success : Integer;
    begin
       Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Server_Event_Address (Server_S), Ignore_Success);
@@ -176,14 +192,15 @@ is
 
    procedure Session_Cleanup (Session  : in out Dispatcher_Session;
                               Cap      :        Dispatcher_Capability;
-                              Server_S : in out Server_Session)
+                              Server_S : in out Server_Session;
+                              Ctx      : in out Server_Instance.Context)
    is
       Ignore_Success : Integer;
    begin
-      if Cap.Clean_Fd > -1 and then Cap.Clean_Fd = Server_S.Fd then
+      if Cap.Clean_Fd > -1 and then Cap.Clean_Fd = Server_S.Fd and then Initialized (Server_S) then
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
+         Server_Instance.Finalize (Server_S, Ctx);
          Gneiss_Syscall.Close (Server_S.Fd);
-         Server_Instance.Finalize (Server_S);
          Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
          Gneiss_Platform.Invalidate (Server_S.E_Cap);
       end if;

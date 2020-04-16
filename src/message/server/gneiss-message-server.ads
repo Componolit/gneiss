@@ -12,12 +12,14 @@
 generic
    pragma Warnings (Off, "* is not referenced");
    --  Supress unreferenced warnings since not every platform needs each subprogram
+   type Context is limited private;
 
    --  Custom initialization for the server,
    --  automatically called by Gneiss.Block.Dispatcher.Session_Accept
    --
    --  @param Session  Server session instance
-   with procedure Initialize (Session : in out Server_Session);
+   with procedure Initialize (Session : in out Server_Session;
+                              Ctx     : in out Context);
 
    --  Custom finalization for the server
    --
@@ -25,7 +27,8 @@ generic
    --  when the connected client disconnects.
    --
    --  @param S  Server session instance
-   with procedure Finalize (Session : in out Server_Session);
+   with procedure Finalize (Session : in out Server_Session;
+                            Ctx     : in out Context);
 
    --  Called when a message is recieved
    --
@@ -38,7 +41,8 @@ generic
    --
    --  @param S  Server session instance
    --  @return   True if the server implementation is ready
-   with function Ready (Session : Server_Session) return Boolean;
+   with function Ready (Session : Server_Session;
+                        Ctx     : Context) return Boolean;
    pragma Warnings (On, "* is not referenced");
 package Gneiss.Message.Server with
    SPARK_Mode
@@ -50,10 +54,11 @@ is
    --  @param Session  Server session instance
    --  @param Data     Message
    procedure Send (Session : in out Server_Session;
-                   Data    :        Message_Buffer) with
-      Pre  => Ready (Session)
+                   Data    :        Message_Buffer;
+                   Ctx     :        Context) with
+      Pre  => Ready (Session, Ctx)
               and then Initialized (Session),
-      Post => Ready (Session)
+      Post => Ready (Session, Ctx)
               and then Initialized (Session);
 
 end Gneiss.Message.Server;
