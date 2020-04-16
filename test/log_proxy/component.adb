@@ -22,6 +22,10 @@ is
       Dynamic_Predicate => Last <= Ident'Last
                            and then Cursor <= Buffer'Last - 4;
 
+   subtype Server_Index is Gneiss.Session_Index range 1 .. 10;
+   type Server_Reg is array (Server_Index'Range) of Gneiss.Log.Server_Session;
+   type Server_Meta is array (Server_Index'Range) of Server_Slot;
+
    Color_Red     : constant String := Character'Val (8#33#) & "[31m";
    Color_Orange  : constant String := Character'Val (8#33#) & "[91m";
    Color_Yellow  : constant String := Character'Val (8#33#) & "[33m";
@@ -30,6 +34,12 @@ is
    Color_Blue    : constant String := Character'Val (8#33#) & "[34m";
    Color_Magenta : constant String := Character'Val (8#33#) & "[35m";
    Reset         : constant String := Character'Val (8#33#) & "[0m";
+
+   Dispatcher  : Gneiss.Log.Dispatcher_Session;
+   Capability  : Gneiss.Capability;
+   Servers     : Server_Reg;
+   Server_Data : Server_Meta;
+   Client      : Gneiss.Log.Client_Session;
 
    function Get_Color (C : Color) return String is
       (case C is
@@ -51,22 +61,23 @@ is
          when Blue    => Magenta,
          when Magenta => Red);
 
-   type Server_Reg is array (Gneiss.Session_Index range <>) of Gneiss.Log.Server_Session;
-   type Server_Meta is array (Gneiss.Session_Index range <>) of Server_Slot;
-
    pragma Warnings (Off, """Session"" is not modified");
    procedure Write (Session : in out Gneiss.Log.Server_Session;
                     Data    :        String) with
       Pre  => Gneiss.Log.Initialized (Session),
       Post => Gneiss.Log.Initialized (Session);
-   procedure Initialize (Session : in out Gneiss.Log.Server_Session) with
+   procedure Initialize (Session : in out Gneiss.Log.Server_Session;
+                         Context : in out Server_Meta) with
       Pre  => Gneiss.Log.Initialized (Session),
       Post => Gneiss.Log.Initialized (Session);
-   procedure Finalize (Session : in out Gneiss.Log.Server_Session) with
+   procedure Finalize (Session : in out Gneiss.Log.Server_Session;
+                       Context : in out Server_Meta) with
       Pre  => Gneiss.Log.Initialized (Session),
       Post => Gneiss.Log.Initialized (Session);
    pragma Warnings (Off, """Session"" is not modified");
-   function Ready (Session : Gneiss.Log.Server_Session) return Boolean;
+
+   function Ready (Session : Gneiss.Log.Server_Session;
+                   Context : Server_Meta) return Boolean;
    procedure Dispatch (Session : in out Gneiss.Log.Dispatcher_Session;
                        Cap     :        Gneiss.Log.Dispatcher_Capability;
                        Name    :        String;
@@ -92,14 +103,8 @@ is
       Post => Gneiss.Log.Initialized (Client)
               and then S.Cursor = 0;
 
-   package Log_Server is new Gneiss.Log.Server (Write, Initialize, Finalize, Ready);
+   package Log_Server is new Gneiss.Log.Server (Server_Meta, Write, Initialize, Finalize, Ready);
    package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
-
-   Dispatcher  : Gneiss.Log.Dispatcher_Session;
-   Capability  : Gneiss.Capability;
-   Servers     : Server_Reg (1 .. 2);
-   Server_Data : Server_Meta (Servers'Range);
-   Client      : Gneiss.Log.Client_Session;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -152,21 +157,23 @@ is
       Gneiss.Log.Client.Finalize (Client);
    end Destruct;
 
-   procedure Initialize (Session : in out Gneiss.Log.Server_Session)
+   procedure Initialize (Session : in out Gneiss.Log.Server_Session;
+                         Context : in out Server_Meta)
    is
       Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session).Value;
    begin
-      if Index in Server_Data'Range then
-         Server_Data (Index).Ready := True;
+      if Index in Context'Range then
+         Context (Index).Ready := True;
       end if;
    end Initialize;
 
-   procedure Finalize (Session : in out Gneiss.Log.Server_Session)
+   procedure Finalize (Session : in out Gneiss.Log.Server_Session;
+                       Context : in out Server_Meta)
    is
       Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session).Value;
    begin
-      if Index in Server_Data'Range then
-         Server_Data (Index).Ready := False;
+      if Index in Context'Range then
+         Context (Gneiss.Log.Index (Session).Value).Ready := False;
       end if;
    end Finalize;
 
@@ -180,33 +187,34 @@ is
          for I in Servers'Range loop
             pragma Loop_Invariant (Gneiss.Log.Initialized (Session));
             if
-               not Ready (Servers (I))
+               not Ready (Servers (I), Server_Data)
                and then not Gneiss.Log.Initialized (Servers (I))
                and then Name'Length <= Server_Data (I).Ident'Last
                and then Label'Length <= Server_Data (I).Ident'Last
                and then Name'Length + Label'Length + 1 <= Server_Data (I).Ident'Last
                and then Name'First < Positive'Last - Server_Data (I).Ident'Last
             then
-               Log_Dispatcher.Session_Initialize (Session, Cap, Servers (I), I);
-               if Ready (Servers (I)) and then Gneiss.Log.Initialized (Servers (I)) then
+               Log_Dispatcher.Session_Initialize (Session, Cap, Servers (I), Server_Data, I);
+               if Ready (Servers (I), Server_Data) and then Gneiss.Log.Initialized (Servers (I)) then
                   Server_Data (I).Last := Name'Length + Label'Length + 1;
                   Server_Data (I).Ident (Server_Data (I).Ident'First .. Server_Data (I).Last) := Name & ":" & Label;
-                  Log_Dispatcher.Session_Accept (Session, Cap, Servers (I));
+                  Log_Dispatcher.Session_Accept (Session, Cap, Servers (I), Server_Data);
                   exit;
                end if;
             end if;
          end loop;
       end if;
       for S of Servers loop
-         Log_Dispatcher.Session_Cleanup (Session, Cap, S);
+         Log_Dispatcher.Session_Cleanup (Session, Cap, S, Server_Data);
       end loop;
    end Dispatch;
 
-   function Ready (Session : Gneiss.Log.Server_Session) return Boolean is
+   function Ready (Session : Gneiss.Log.Server_Session;
+                   Context : Server_Meta) return Boolean is
       (if
           Gneiss.Log.Index (Session).Valid
-          and then Gneiss.Log.Index (Session).Value in Server_Data'Range
-       then Server_Data (Gneiss.Log.Index (Session).Value).Ready
+          and then Gneiss.Log.Index (Session).Value in Context'Range
+       then Context (Gneiss.Log.Index (Session).Value).Ready
        else False);
 
    procedure Put_Color (S : in out Server_Slot;
