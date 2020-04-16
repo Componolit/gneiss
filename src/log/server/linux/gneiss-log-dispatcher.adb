@@ -154,8 +154,9 @@ is
       pragma Assert (Server_S.Fd > -1);
       pragma Assert (Server_S.Index.Valid);
       pragma Assert (Gneiss_Platform.Is_Valid (Server_S.E_Cap));
-      pragma Assert (Initialized (Server_S)); --  FIXME: this assertion should prove,
-                                              --         it is equal to the three previous ones
+      pragma Assert (Initialized (Server_S));
+      --  FIXME: this assertion should prove,
+      --         it is equal to the three previous ones
       Server_Instance.Initialize (Server_S, Ctx);
       if not Server_Instance.Ready (Server_S, Ctx) then
          Gneiss_Syscall.Close (Server_S.Fd);
