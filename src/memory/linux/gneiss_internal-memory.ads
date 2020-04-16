@@ -29,6 +29,7 @@ is
       Epoll_Fd    : Gneiss_Epoll.Epoll_Fd       := -1;
       Dispatch_Fd : Integer                     := -1;
       Accepted    : Boolean                     := False;
+      Registered  : Boolean                     := False;
       E_Cap       : Gneiss_Platform.Event_Cap;
    end record;
 

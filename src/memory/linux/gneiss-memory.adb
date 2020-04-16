@@ -24,7 +24,8 @@ is
    function Initialized (Session : Dispatcher_Session) return Boolean is
       (Session.Index.Valid
        and then Session.Epoll_Fd > -1
-       and then Session.Broker_Fd > -1);
+       and then Session.Broker_Fd > -1
+       and then (if Session.Registered then Session.Dispatch_Fd > -1));
 
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);
