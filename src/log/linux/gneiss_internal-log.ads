@@ -29,6 +29,7 @@ is
       Epoll_Fd    : Gneiss_Epoll.Epoll_Fd       := -1;
       Index       : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
       Dispatch_Fd : Integer                     := -1;
+      Registered  : Boolean                     := False;
    end record;
 
    type Server_Session is limited record
