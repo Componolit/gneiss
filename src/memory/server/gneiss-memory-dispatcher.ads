@@ -66,10 +66,11 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
+                                 Ctx      : in out Server_Instance.Context;
                                  Idx      :        Session_Index := 1) with
       Pre  => Initialized (Session)
               and then Valid_Session_Request (Session, Cap)
-              and then not Server_Instance.Ready (Server_S)
+              and then not Server_Instance.Ready (Server_S, Ctx)
               and then not Initialized (Server_S),
       Post => Initialized (Session)
               and then Valid_Session_Request (Session, Cap);
@@ -80,13 +81,14 @@ is
    --  @param Server_S  Server session to accept the client request
    procedure Session_Accept (Session  : in out Dispatcher_Session;
                              Cap      :        Dispatcher_Capability;
-                             Server_S : in out Server_Session) with
+                             Server_S : in out Server_Session;
+                             Ctx      :        Server_Instance.Context) with
       Pre  => Initialized (Session)
               and then Valid_Session_Request (Session, Cap)
-              and then Server_Instance.Ready (Server_S)
+              and then Server_Instance.Ready (Server_S, Ctx)
               and then Initialized (Server_S),
       Post => Initialized (Session)
-              and then Server_Instance.Ready (Server_S)
+              and then Server_Instance.Ready (Server_S, Ctx)
               and then Initialized (Server_S);
 
    --  Garbage collects disconnected sessions
@@ -100,7 +102,8 @@ is
    --  @param S  Server session instance to check for removal
    procedure Session_Cleanup (Session  : in out Dispatcher_Session;
                               Cap      :        Dispatcher_Capability;
-                              Server_S : in out Server_Session) with
+                              Server_S : in out Server_Session;
+                              Ctx      : in out Server_Instance.Context) with
       Pre  => Initialized (Session),
       Post => Initialized (Session);
 
