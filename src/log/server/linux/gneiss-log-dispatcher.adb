@@ -61,8 +61,12 @@ is
       Name  : Gneiss_Internal.Session_Label;
       Label : Gneiss_Internal.Session_Label;
    begin
+      if not Initialized (Session) then
+         return;
+      end if;
       if Fd = Session.Dispatch_Fd then
          Session.Accepted := False;
+         pragma Assert (Initialized (Session));  --  FIXME: This check should succeed
          Platform_Client.Dispatch (Session.Dispatch_Fd,
                                    Gneiss_Protocol.Session.Log,
                                    Name, Label, Fds);
@@ -96,7 +100,10 @@ is
    is
       Ignore_Success : Integer;
    begin
-      if Fd = Session.Dispatch_Fd then
+      if not Initialized (Session) then
+         return;
+      end if;
+      if Fd = Session.Dispatch_Fd and then Session.Registered then
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Fd, Ignore_Success);
          Gneiss_Syscall.Close (Integer (Session.Epoll_Fd));
       end if;
@@ -116,12 +123,17 @@ is
    is
       Ignore_Success : Integer;
    begin
+      if Session.Registered then
+         return;
+      end if;
       Platform_Client.Register (Session.Broker_Fd, Gneiss_Protocol.Session.Log, Session.Dispatch_Fd);
       if Session.Dispatch_Fd > -1 then
-         Session.E_Cap := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
+         Session.Registered := True;
+         Session.E_Cap      := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
          Gneiss_Epoll.Add (Session.Epoll_Fd, Session.Dispatch_Fd,
                            Dispatch_Cap_Address (Session),
                            Ignore_Success);
+         pragma Assert (Initialized (Session));
       end if;
    end Register;
 
@@ -132,14 +144,21 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
+                                 Ctx      : in out Server_Instance.Context;
                                  Idx      :        Session_Index := 1)
    is
    begin
       Server_S.Fd    := Cap.Server_Fd;
       Server_S.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Server_S.E_Cap := Event_Cap (Server_S, Session, Server_S.Fd);
-      Server_Instance.Initialize (Server_S);
-      if not Server_Instance.Ready (Server_S) then
+      pragma Assert (Server_S.Fd > -1);
+      pragma Assert (Server_S.Index.Valid);
+      pragma Assert (Gneiss_Platform.Is_Valid (Server_S.E_Cap));
+      pragma Assert (Initialized (Server_S));
+      --  FIXME: this assertion should prove,
+      --         it is equal to the three previous ones
+      Server_Instance.Initialize (Server_S, Ctx);
+      if not Server_Instance.Ready (Server_S, Ctx) then
          Gneiss_Syscall.Close (Server_S.Fd);
          Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
          Gneiss_Platform.Invalidate (Server_S.E_Cap);
@@ -148,8 +167,10 @@ is
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
                              Cap      :        Dispatcher_Capability;
-                             Server_S : in out Server_Session)
+                             Server_S : in out Server_Session;
+                             Ctx      :        Server_Instance.Context)
    is
+      pragma Unreferenced (Ctx);
       Ignore_Success : Integer;
    begin
       Gneiss_Epoll.Add (Session.Epoll_Fd, Server_S.Fd, Event_Cap_Address (Server_S), Ignore_Success);
@@ -163,14 +184,15 @@ is
 
    procedure Session_Cleanup (Session  : in out Dispatcher_Session;
                               Cap      :        Dispatcher_Capability;
-                              Server_S : in out Server_Session)
+                              Server_S : in out Server_Session;
+                              Ctx      : in out Server_Instance.Context)
    is
       Ignore_Success : Integer;
    begin
       if Cap.Clean_Fd > -1 and then Cap.Clean_Fd = Server_S.Fd then
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
+         Server_Instance.Finalize (Server_S, Ctx);
          Gneiss_Syscall.Close (Server_S.Fd);
-         Server_Instance.Finalize (Server_S);
          Session.Index := Gneiss.Session_Index_Option'(Valid => False);
          Gneiss_Platform.Invalidate (Server_S.E_Cap);
       end if;
@@ -180,14 +202,19 @@ is
                             Fd      :        Integer)
    is
       pragma Unreferenced (Fd);
+      Write_Buf : Gneiss_Internal.Log.Message_Buffer;
    begin
+      if not Initialized (Session) then
+         return;
+      end if;
       Read_Buffer (Session);
       for I in Session.Buffer'Range loop
          exit when Session.Buffer (I) = ASCII.NUL;
          Session.Cursor := I;
       end loop;
       if Session.Cursor > Session.Buffer'First then
-         Server_Instance.Write (Session, Session.Buffer (Session.Buffer'First .. Session.Cursor));
+         Write_Buf := Session.Buffer;
+         Server_Instance.Write (Session, Write_Buf (Session.Buffer'First .. Session.Cursor));
          --  FIXME: Copy buffer to fix aliasing
       end if;
    end Session_Event;

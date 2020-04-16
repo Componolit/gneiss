@@ -46,14 +46,14 @@ is
    --  @param Session  Dispatcher session instance
    --  @return         Session index
    function Index (Session : Dispatcher_Session) return Session_Index_Option with
-      Post => Initialized (Session) = Index'Result.Valid;
+      Post => (if Initialized (Session) then Index'Result.Valid);
 
    --  Get the index value that has been set on initialization
    --
    --  @param Session  Server session instance
    --  @return         Session index
    function Index (Session : Server_Session) return Session_Index_Option with
-      Post => Initialized (Session) = Index'Result.Valid;
+      Post => (if Initialized (Session) then Index'Result.Valid);
 
 private
 

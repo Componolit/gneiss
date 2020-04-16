@@ -24,7 +24,8 @@ is
                             Fd  :        Integer);
    function Create_Event_Cap (Ev_Ctx : Event_Context;
                               Er_Ctx : Error_Context;
-                              Fd     : Integer) return Event_Cap;
+                              Fd     : Integer) return Event_Cap with
+      Post => Is_Valid (Create_Event_Cap'Result);
 
    procedure Call (Cap : Event_Cap;
                    Ev  : Gneiss_Epoll.Event_Type);
