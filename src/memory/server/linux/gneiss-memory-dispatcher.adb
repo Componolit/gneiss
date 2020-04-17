@@ -111,6 +111,9 @@ is
    is
       Ignore_Success : Integer;
    begin
+      if Session.Registered then
+         return;
+      end if;
       Platform_Client.Register (Session.Broker_Fd, Gneiss_Protocol.Session.Memory, Session.Dispatch_Fd);
       if Session.Dispatch_Fd > -1 then
          Session.Registered := True;

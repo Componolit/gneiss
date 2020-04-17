@@ -11,11 +11,12 @@ is
    procedure Event;
 
    package Gneiss_Log is new Gneiss.Log;
+   package Gneiss_Timer is new Gneiss.Timer;
    package Log_Client is new Gneiss_Log.Client;
-   package Timer_Client is new Gneiss.Timer.Client (Event);
+   package Timer_Client is new Gneiss_Timer.Client (Event);
 
    Log        : Gneiss_Log.Client_Session;
-   Timer      : Gneiss.Timer.Client_Session;
+   Timer      : Gneiss_Timer.Client_Session;
    Capability : Gneiss.Capability;
 
    procedure Construct (Cap : Gneiss.Capability)
@@ -24,7 +25,7 @@ is
       Capability := Cap;
       Log_Client.Initialize (Log, Capability, "log_timer");
       Timer_Client.Initialize (Timer, Capability, "timer");
-      if Gneiss_Log.Initialized (Log) and then Gneiss.Timer.Initialized (Timer) then
+      if Gneiss_Log.Initialized (Log) and then Gneiss_Timer.Initialized (Timer) then
          Timer_Client.Set_Timeout (Timer, 60.0);
          Timer_Client.Set_Timeout (Timer, 1.5);
                Log_Client.Info
@@ -39,7 +40,7 @@ is
    begin
       if
          Gneiss_Log.Initialized (Log)
-         and Gneiss.Timer.Initialized (Timer)
+         and Gneiss_Timer.Initialized (Timer)
       then
          Log_Client.Info
             (Log, "Time: " & Basalt.Strings.Image (Duration (Timer_Client.Clock (Timer))));

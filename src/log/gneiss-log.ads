@@ -11,6 +11,7 @@
 
 private with Gneiss_Internal.Log;
 
+--  WORKAROUND: Componolit/Workarounds#20
 generic
 package Gneiss.Log with
    SPARK_Mode
