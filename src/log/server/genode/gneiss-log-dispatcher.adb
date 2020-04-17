@@ -43,11 +43,10 @@ is
                        & "PNS_25Log_Dispatcher_CapabilityEPNS_10Log_ServerEPFvS4_PKciPiE";
 
    procedure Genode_Cleanup (Session  : in out Dispatcher_Session;
-                             Cap      :        Dispatcher_Capability;
                              Server_S : in out Server_Session) with
       Import,
       Convention    => CPP,
-      External_Name => "_ZN6Gneiss14Log_Dispatcher7cleanupEPNS_25Log_Dispatcher_CapabilityEPNS_10Log_ServerE";
+      External_Name => "_ZN6Gneiss14Log_Dispatcher7cleanupEPNS_10Log_ServerE";
 
    procedure Genode_Write (Session : in out Server_Session;
                            Data    :        System.Address;
@@ -127,40 +126,50 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
+                                 Ctx      : in out Server_Instance.Context;
                                  Idx      :        Session_Index := 1)
    is
    begin
       Server_S.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
-      Server_Instance.Initialize (Server_S);
-      if not Server_Instance.Ready (Server_S) then
-         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
-         return;
-      end if;
       Genode_Initialize_Session (Session, Cap, Server_S, Get_Write_Address);
       if not Initialized (Server_S) then
-         Server_Instance.Finalize (Server_S);
          Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
+      end if;
+      Server_Instance.Initialize (Server_S, Ctx);
+      if not Server_Instance.Ready (Server_S, Ctx) then
+         Genode_Cleanup (Session, Server_S);
+         Server_S.Index     := Gneiss.Session_Index_Option'(Valid => False);
+         Server_S.Component := System.Null_Address;
+         Server_S.Write     := System.Null_Address;
+         return;
       end if;
    end Session_Initialize;
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
                              Cap      :        Dispatcher_Capability;
-                             Server_S : in out Server_Session)
+                             Server_S : in out Server_Session;
+                             Ctx      :        Server_Instance.Context)
    is
       pragma Unreferenced (Cap);
+      pragma Unreferenced (Ctx);
    begin
       Genode_Accept (Session, Server_S);
    end Session_Accept;
 
    procedure Session_Cleanup (Session  : in out Dispatcher_Session;
                               Cap      :        Dispatcher_Capability;
-                              Server_S : in out Server_Session)
+                              Server_S : in out Server_Session;
+                              Ctx      : in out Server_Instance.Context)
    is
    begin
-      Genode_Cleanup (Session, Cap, Server_S);
-      if not Initialized (Server_S) then
-         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
+      if not Initialized (Server_S) or else Cap.Session /= Server_S.Component then
+         return;
       end if;
+      Server_Instance.Finalize (Server_S, Ctx);
+      Genode_Cleanup (Session, Server_S);
+      Server_S.Index     := Gneiss.Session_Index_Option'(Valid => False);
+      Server_S.Component := System.Null_Address;
+      Server_S.Write     := System.Null_Address;
    end Session_Cleanup;
 
 end Gneiss.Log.Dispatcher;

@@ -35,7 +35,7 @@ class Gneiss::Log_Dispatcher
                                 void (*write)(Gneiss::Log_Server *, const char *, int, int *));
         void register_service();
         void accept(Gneiss::Log_Server *);
-        void cleanup(Gneiss::Log_Dispatcher_Capability *, Gneiss::Log_Server *);
+        void cleanup(Gneiss::Log_Server *);
 };
 
 class Gneiss::Log_Root : public Genode::Root_component<Gneiss::Log_Component>

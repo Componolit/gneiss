@@ -16,7 +16,7 @@ class Gneiss::Rom_Client
     private:
         Genode::uint32_t _index;
         Genode::Attached_rom_dataspace *_rom;
-        void (*_read)(Rom_Client *, void *, int);
+        void (*_read)(Rom_Client *, void *, int, void *);
 
         Rom_Client(Rom_Client const &);
         Rom_Client & operator = (Rom_Client const &);
@@ -24,7 +24,7 @@ class Gneiss::Rom_Client
     public:
         Rom_Client();
         void initialize(Gneiss::Capability *, const char *);
-        void update();
+        void update(void *);
         void finalize();
 };
 
@@ -46,11 +46,11 @@ void Gneiss::Rom_Client::initialize(Gneiss::Capability *cap, const char *label)
     }
 }
 
-void Gneiss::Rom_Client::update()
+void Gneiss::Rom_Client::update(void *ctx)
 {
     TLOG("");
     _rom->update();
-    _read(this, _rom->local_addr<void>(), _rom->size());
+    _read(this, _rom->local_addr<void>(), _rom->size(), ctx);
 }
 
 void Gneiss::Rom_Client::finalize()
