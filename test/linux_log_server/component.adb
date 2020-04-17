@@ -7,6 +7,8 @@ package body Component with
    SPARK_Mode
 is
 
+   package Log is new Gneiss.Log;
+
    type Server_Slot is record
       Ident   : String (1 .. 513) := (others => ASCII.NUL);
       Last    : Natural           := 0;
@@ -15,50 +17,50 @@ is
    end record;
 
    subtype Server_Index is Gneiss.Session_Index range 1 .. 10;
-   type Server_Reg is array (Server_Index'Range) of Gneiss.Log.Server_Session;
+   type Server_Reg is array (Server_Index'Range) of Log.Server_Session;
    type Server_Meta is array (Server_Index'Range) of Server_Slot;
 
-   Dispatcher  : Gneiss.Log.Dispatcher_Session;
+   Dispatcher  : Log.Dispatcher_Session;
    Capability  : Gneiss.Capability;
    Servers     : Server_Reg;
    Server_Data : Server_Meta;
 
-   procedure Write (Session : in out Gneiss.Log.Server_Session;
+   procedure Write (Session : in out Log.Server_Session;
                     Data    :        String);
-   procedure Initialize (Session : in out Gneiss.Log.Server_Session;
+   procedure Initialize (Session : in out Log.Server_Session;
                          Context : in out Server_Meta);
-   procedure Finalize (Session : in out Gneiss.Log.Server_Session;
+   procedure Finalize (Session : in out Log.Server_Session;
                        Context : in out Server_Meta);
-   function Ready (Session : Gneiss.Log.Server_Session;
+   function Ready (Session : Log.Server_Session;
                    Context : Server_Meta) return Boolean;
-   procedure Dispatch (Session : in out Gneiss.Log.Dispatcher_Session;
-                       Cap     :        Gneiss.Log.Dispatcher_Capability;
+   procedure Dispatch (Session : in out Log.Dispatcher_Session;
+                       Cap     :        Log.Dispatcher_Capability;
                        Name    :        String;
                        Label   :        String);
 
-   package Log_Server is new Gneiss.Log.Server (Server_Meta, Write, Initialize, Finalize, Ready);
-   package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
+   package Log_Server is new Log.Server (Server_Meta, Write, Initialize, Finalize, Ready);
+   package Log_Dispatcher is new Log.Dispatcher (Log_Server, Dispatch);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;
       Log_Dispatcher.Initialize (Dispatcher, Cap);
-      if Gneiss.Log.Initialized (Dispatcher) then
+      if Log.Initialized (Dispatcher) then
          Log_Dispatcher.Register (Dispatcher);
       else
          Main.Vacate (Capability, Main.Failure);
       end if;
    end Construct;
 
-   procedure Write (Session : in out Gneiss.Log.Server_Session;
+   procedure Write (Session : in out Log.Server_Session;
                     Data    :        String)
    is
       procedure Put (C : Character) with
          Import,
          Convention    => C,
          External_Name => "put";
-      I : constant Gneiss.Session_Index_Option := Gneiss.Log.Index (Session);
+      I : constant Gneiss.Session_Index_Option := Log.Index (Session);
    begin
       if not I.Valid or else I.Value not in Server_Data'Range then
          return;
@@ -87,32 +89,32 @@ is
       null;
    end Destruct;
 
-   procedure Initialize (Session : in out Gneiss.Log.Server_Session;
+   procedure Initialize (Session : in out Log.Server_Session;
                          Context : in out Server_Meta)
    is
    begin
       if
-         Gneiss.Log.Index (Session).Valid
-         and then Gneiss.Log.Index (Session).Value in Context'Range
+         Log.Index (Session).Valid
+         and then Log.Index (Session).Value in Context'Range
       then
-         Context (Gneiss.Log.Index (Session).Value).Ready := True;
+         Context (Log.Index (Session).Value).Ready := True;
       end if;
    end Initialize;
 
-   procedure Finalize (Session : in out Gneiss.Log.Server_Session;
+   procedure Finalize (Session : in out Log.Server_Session;
                        Context : in out Server_Meta)
    is
    begin
       if
-         Gneiss.Log.Index (Session).Valid
-         and then Gneiss.Log.Index (Session).Value in Context'Range
+         Log.Index (Session).Valid
+         and then Log.Index (Session).Value in Context'Range
       then
-         Context (Gneiss.Log.Index (Session).Value).Ready := False;
+         Context (Log.Index (Session).Value).Ready := False;
       end if;
    end Finalize;
 
-   procedure Dispatch (Session : in out Gneiss.Log.Dispatcher_Session;
-                       Cap     :        Gneiss.Log.Dispatcher_Capability;
+   procedure Dispatch (Session : in out Log.Dispatcher_Session;
+                       Cap     :        Log.Dispatcher_Capability;
                        Name    :        String;
                        Label   :        String)
    is
@@ -121,7 +123,7 @@ is
          for I in Servers'Range loop
             if not Ready (Servers (I), Server_Data) then
                Log_Dispatcher.Session_Initialize (Session, Cap, Servers (I), Server_Data, I);
-               if Ready (Servers (I), Server_Data) and then Gneiss.Log.Initialized (Servers (I)) then
+               if Ready (Servers (I), Server_Data) and then Log.Initialized (Servers (I)) then
                   Server_Data (I).Last := Name'Length + Label'Length + 1;
                   Server_Data (I).Ident (1 .. Server_Data (I).Last) := Name & ":" & Label;
                   Log_Dispatcher.Session_Accept (Session, Cap, Servers (I), Server_Data);
@@ -135,12 +137,12 @@ is
       end loop;
    end Dispatch;
 
-   function Ready (Session : Gneiss.Log.Server_Session;
+   function Ready (Session : Log.Server_Session;
                    Context : Server_Meta) return Boolean is
       (if
-          Gneiss.Log.Index (Session).Valid
-          and then Gneiss.Log.Index (Session).Value in Context'Range
-       then Context (Gneiss.Log.Index (Session).Value).Ready
+          Log.Index (Session).Valid
+          and then Log.Index (Session).Value in Context'Range
+       then Context (Log.Index (Session).Value).Ready
        else False);
 
 end Component;

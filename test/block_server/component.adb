@@ -1,14 +1,18 @@
 
+with Gneiss.Log;
 with Gneiss.Log.Client;
 
 package body Component with
    SPARK_Mode
 is
+   package Gneiss_Log is new Gneiss.Log;
+   package Log_Client is new Gneiss_Log.Client;
+
    use type Block.Id;
    use type Block.Request_Status;
    use type Block.Request_Kind;
 
-   Log         : Gneiss.Log.Client_Session;
+   Log         : Gneiss_Log.Client_Session;
    Dispatcher  : Block.Dispatcher_Session;
    Server      : Block.Server_Session;
 
@@ -31,9 +35,9 @@ is
    is
    begin
       Capability := Cap;
-      Gneiss.Log.Client.Initialize (Log, Cap, "log_block_server");
+      Log_Client.Initialize (Log, Cap, "log_block_server");
       Block_Dispatcher.Initialize (Dispatcher, Capability);
-      if Gneiss.Log.Initialized (Log) and then Block.Initialized (Dispatcher) then
+      if Gneiss_Log.Initialized (Log) and then Block.Initialized (Dispatcher) then
          Block_Dispatcher.Register (Dispatcher);
       else
          Main.Vacate (Capability, Main.Failure);
@@ -43,7 +47,7 @@ is
    procedure Destruct
    is
    begin
-      Gneiss.Log.Client.Finalize (Log);
+      Log_Client.Finalize (Log);
       Block_Dispatcher.Finalize (Dispatcher);
    end Destruct;
 
@@ -178,10 +182,10 @@ is
       pragma Unreferenced (S);
       pragma Unreferenced (B);
    begin
-      if Gneiss.Log.Initialized (Log) then
-         Gneiss.Log.Client.Info (Log, "Server initialize with label: ");
-         Gneiss.Log.Client.Info (Log, L);
-         Gneiss.Log.Client.Info (Log, "Initialized");
+      if Gneiss_Log.Initialized (Log) then
+         Log_Client.Info (Log, "Server initialize with label: ");
+         Log_Client.Info (Log, L);
+         Log_Client.Info (Log, "Initialized");
          Ready := True;
       end if;
       Ram_Disk := (others => 0);

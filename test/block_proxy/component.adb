@@ -5,6 +5,9 @@ with Basalt.Strings_Generic;
 
 package body Component is
 
+   package Gneiss_Log is new Gneiss.Log;
+   package Log_Client is new Gneiss_Log.Client;
+
    --  Print the content of each Read and Write package seen
    Print_Content : constant Boolean := False;
 
@@ -17,7 +20,7 @@ package body Component is
 
    Capability : Gneiss.Capability;
 
-   Log : Gneiss.Log.Client_Session;
+   Log : Gneiss_Log.Client_Session;
 
    function Image is new Basalt.Strings_Generic.Image_Modular (Byte);
    function Image is new Basalt.Strings_Generic.Image_Modular (Block.Id);
@@ -27,9 +30,9 @@ package body Component is
    is
    begin
       Capability := Cap;
-      Gneiss.Log.Client.Initialize (Log, Cap, "log_block_proxy");
+      Log_Client.Initialize (Log, Cap, "log_block_proxy");
       Block_Dispatcher.Initialize (Dispatcher, Capability, 42);
-      if Gneiss.Log.Initialized (Log) and then Block.Initialized (Dispatcher) then
+      if Gneiss_Log.Initialized (Log) and then Block.Initialized (Dispatcher) then
          Block_Dispatcher.Register (Dispatcher);
       else
          Main.Vacate (Capability, Main.Failure);
@@ -39,7 +42,7 @@ package body Component is
    procedure Destruct
    is
    begin
-      Gneiss.Log.Client.Finalize (Log);
+      Log_Client.Finalize (Log);
       Block_Dispatcher.Finalize (Dispatcher);
    end Destruct;
 
@@ -56,7 +59,7 @@ package body Component is
    procedure Print_Buffer (I : Request_Index;
                            D : Buffer;
                            E : Boolean) with
-      Pre => Gneiss.Log.Initialized (Log)
+      Pre => Gneiss_Log.Initialized (Log)
              and then Block_Server.Status (Cache (I).S) = Block.Pending
              and then Block_Server.Kind (Cache (I).S) in Block.Read | Block.Write;
 
@@ -72,12 +75,12 @@ package body Component is
          return;
       end if;
       if Block_Server.Kind (Cache (I).S) = Block.Write then
-         Gneiss.Log.Client.Info (Log, "Write @ " & Image (Block_Server.Start (Cache (I).S)));
+         Log_Client.Info (Log, "Write @ " & Image (Block_Server.Start (Cache (I).S)));
       else
-         Gneiss.Log.Client.Info (Log, "Read @ " & Image (Block_Server.Start (Cache (I).S)));
+         Log_Client.Info (Log, "Read @ " & Image (Block_Server.Start (Cache (I).S)));
       end if;
       while J < D'Last and then D'Last - J > 16 loop
-         Gneiss.Log.Client.Info
+         Log_Client.Info
             (Log, Image (J - D'First, 16, False) & ": "
                   & Pad (Image (D (J), 16, False))      & Pad (Image (D (J + 1), 16, False)) & " "
                   & Pad (Image (D (J + 2), 16, False))  & Pad (Image (D (J + 3), 16, False)) & " "
