@@ -7,6 +7,7 @@ with Gneiss.Log.Dispatcher;
 package body Component with
    SPARK_Mode
 is
+   package Log is new Gneiss.Log;
 
    type Color is (Red, Orange, Yellow, Green, Cyan, Blue, Magenta);
 
@@ -23,7 +24,7 @@ is
                            and then Cursor <= Buffer'Last - 4;
 
    subtype Server_Index is Gneiss.Session_Index range 1 .. 10;
-   type Server_Reg is array (Server_Index'Range) of Gneiss.Log.Server_Session;
+   type Server_Reg is array (Server_Index'Range) of Log.Server_Session;
    type Server_Meta is array (Server_Index'Range) of Server_Slot;
 
    Color_Red     : constant String := Character'Val (8#33#) & "[31m";
@@ -35,11 +36,11 @@ is
    Color_Magenta : constant String := Character'Val (8#33#) & "[35m";
    Reset         : constant String := Character'Val (8#33#) & "[0m";
 
-   Dispatcher  : Gneiss.Log.Dispatcher_Session;
+   Dispatcher  : Log.Dispatcher_Session;
    Capability  : Gneiss.Capability;
    Servers     : Server_Reg;
    Server_Data : Server_Meta;
-   Client      : Gneiss.Log.Client_Session;
+   Client      : Log.Client_Session;
 
    function Get_Color (C : Color) return String is
       (case C is
@@ -62,59 +63,60 @@ is
          when Magenta => Red);
 
    pragma Warnings (Off, """Session"" is not modified");
-   procedure Write (Session : in out Gneiss.Log.Server_Session;
+   procedure Write (Session : in out Log.Server_Session;
                     Data    :        String) with
-      Pre  => Gneiss.Log.Initialized (Session),
-      Post => Gneiss.Log.Initialized (Session);
-   procedure Initialize (Session : in out Gneiss.Log.Server_Session;
+      Pre  => Log.Initialized (Session),
+      Post => Log.Initialized (Session);
+   procedure Initialize (Session : in out Log.Server_Session;
                          Context : in out Server_Meta) with
-      Pre  => Gneiss.Log.Initialized (Session),
-      Post => Gneiss.Log.Initialized (Session);
-   procedure Finalize (Session : in out Gneiss.Log.Server_Session;
+      Pre  => Log.Initialized (Session),
+      Post => Log.Initialized (Session);
+   procedure Finalize (Session : in out Log.Server_Session;
                        Context : in out Server_Meta) with
-      Pre  => Gneiss.Log.Initialized (Session),
-      Post => Gneiss.Log.Initialized (Session);
+      Pre  => Log.Initialized (Session),
+      Post => Log.Initialized (Session);
    pragma Warnings (Off, """Session"" is not modified");
 
-   function Ready (Session : Gneiss.Log.Server_Session;
+   function Ready (Session : Log.Server_Session;
                    Context : Server_Meta) return Boolean;
-   procedure Dispatch (Session : in out Gneiss.Log.Dispatcher_Session;
-                       Cap     :        Gneiss.Log.Dispatcher_Capability;
+   procedure Dispatch (Session : in out Log.Dispatcher_Session;
+                       Cap     :        Log.Dispatcher_Capability;
                        Name    :        String;
                        Label   :        String) with
-      Pre  => Gneiss.Log.Initialized (Session),
-      Post => Gneiss.Log.Initialized (Session);
+      Pre  => Log.Initialized (Session),
+      Post => Log.Initialized (Session);
 
    procedure Put_Color (S : in out Server_Slot;
                         C :        Character) with
-      Pre  => Gneiss.Log.Initialized (Client),
-      Post => Gneiss.Log.Initialized (Client);
+      Pre  => Log.Initialized (Client),
+      Post => Log.Initialized (Client);
 
    procedure Put (S : in out Server_Slot;
                   C :        Character) with
-      Pre  => Gneiss.Log.Initialized (Client),
-      Post => Gneiss.Log.Initialized (Client)
+      Pre  => Log.Initialized (Client),
+      Post => Log.Initialized (Client)
               and then (if S.Cursor'Old = S.Buffer'Last - 4
                         then S.Cursor = 1
                         else S.Cursor = S.Cursor'Old + 1);
 
    procedure Flush (S : in out Server_Slot) with
-      Pre  => Gneiss.Log.Initialized (Client),
-      Post => Gneiss.Log.Initialized (Client)
+      Pre  => Log.Initialized (Client),
+      Post => Log.Initialized (Client)
               and then S.Cursor = 0;
 
-   package Log_Server is new Gneiss.Log.Server (Server_Meta, Write, Initialize, Finalize, Ready);
-   package Log_Dispatcher is new Gneiss.Log.Dispatcher (Log_Server, Dispatch);
+   package Log_Client is new Log.Client;
+   package Log_Server is new Log.Server (Server_Meta, Write, Initialize, Finalize, Ready);
+   package Log_Dispatcher is new Log.Dispatcher (Log_Server, Dispatch);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;
       Log_Dispatcher.Initialize (Dispatcher, Cap);
-      Gneiss.Log.Client.Initialize (Client, Capability, "lolcat");
+      Log_Client.Initialize (Client, Capability, "lolcat");
       if
-         Gneiss.Log.Initialized (Dispatcher)
-         and then Gneiss.Log.Initialized (Client)
+         Log.Initialized (Dispatcher)
+         and then Log.Initialized (Client)
       then
             Log_Dispatcher.Register (Dispatcher);
       else
@@ -122,14 +124,14 @@ is
       end if;
    end Construct;
 
-   procedure Write (Session : in out Gneiss.Log.Server_Session;
+   procedure Write (Session : in out Log.Server_Session;
                     Data    :        String)
    is
       use type Gneiss.Session_Index;
-      I : constant Gneiss.Session_Index_Option := Gneiss.Log.Index (Session);
+      I : constant Gneiss.Session_Index_Option := Log.Index (Session);
    begin
       if
-         not Gneiss.Log.Initialized (Client)
+         not Log.Initialized (Client)
          or else I.Value not in Server_Data'Range
       then
          return;
@@ -137,7 +139,7 @@ is
       Put (Server_Data (I.Value), '[');
       for J in 1 .. Server_Data (I.Value).Last loop
          pragma Loop_Invariant (I.Value = I.Value'Loop_Entry);
-         pragma Loop_Invariant (Gneiss.Log.Initialized (Client));
+         pragma Loop_Invariant (Log.Initialized (Client));
          pragma Loop_Invariant (I.Value in Server_Data'Range);
          Put (Server_Data (I.Value),
               Server_Data (I.Value).Ident (J));
@@ -145,7 +147,7 @@ is
       Put (Server_Data (I.Value), ']');
       Put (Server_Data (I.Value), ' ');
       for Char of Data loop
-         pragma Loop_Invariant (Gneiss.Log.Initialized (Client));
+         pragma Loop_Invariant (Log.Initialized (Client));
          Put_Color (Server_Data (I.Value), Char);
       end loop;
       Flush (Server_Data (I.Value));
@@ -154,48 +156,48 @@ is
    procedure Destruct
    is
    begin
-      Gneiss.Log.Client.Finalize (Client);
+      Log_Client.Finalize (Client);
    end Destruct;
 
-   procedure Initialize (Session : in out Gneiss.Log.Server_Session;
+   procedure Initialize (Session : in out Log.Server_Session;
                          Context : in out Server_Meta)
    is
-      Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session).Value;
+      Index : constant Gneiss.Session_Index := Log.Index (Session).Value;
    begin
       if Index in Context'Range then
          Context (Index).Ready := True;
       end if;
    end Initialize;
 
-   procedure Finalize (Session : in out Gneiss.Log.Server_Session;
+   procedure Finalize (Session : in out Log.Server_Session;
                        Context : in out Server_Meta)
    is
-      Index : constant Gneiss.Session_Index := Gneiss.Log.Index (Session).Value;
+      Index : constant Gneiss.Session_Index := Log.Index (Session).Value;
    begin
       if Index in Context'Range then
-         Context (Gneiss.Log.Index (Session).Value).Ready := False;
+         Context (Log.Index (Session).Value).Ready := False;
       end if;
    end Finalize;
 
-   procedure Dispatch (Session : in out Gneiss.Log.Dispatcher_Session;
-                       Cap     :        Gneiss.Log.Dispatcher_Capability;
+   procedure Dispatch (Session : in out Log.Dispatcher_Session;
+                       Cap     :        Log.Dispatcher_Capability;
                        Name    :        String;
                        Label   :        String)
    is
    begin
       if Log_Dispatcher.Valid_Session_Request (Session, Cap) then
          for I in Servers'Range loop
-            pragma Loop_Invariant (Gneiss.Log.Initialized (Session));
+            pragma Loop_Invariant (Log.Initialized (Session));
             if
                not Ready (Servers (I), Server_Data)
-               and then not Gneiss.Log.Initialized (Servers (I))
+               and then not Log.Initialized (Servers (I))
                and then Name'Length <= Server_Data (I).Ident'Last
                and then Label'Length <= Server_Data (I).Ident'Last
                and then Name'Length + Label'Length + 1 <= Server_Data (I).Ident'Last
                and then Name'First < Positive'Last - Server_Data (I).Ident'Last
             then
                Log_Dispatcher.Session_Initialize (Session, Cap, Servers (I), Server_Data, I);
-               if Ready (Servers (I), Server_Data) and then Gneiss.Log.Initialized (Servers (I)) then
+               if Ready (Servers (I), Server_Data) and then Log.Initialized (Servers (I)) then
                   Server_Data (I).Last := Name'Length + Label'Length + 1;
                   Server_Data (I).Ident (Server_Data (I).Ident'First .. Server_Data (I).Last) := Name & ":" & Label;
                   Log_Dispatcher.Session_Accept (Session, Cap, Servers (I), Server_Data);
@@ -209,12 +211,12 @@ is
       end loop;
    end Dispatch;
 
-   function Ready (Session : Gneiss.Log.Server_Session;
+   function Ready (Session : Log.Server_Session;
                    Context : Server_Meta) return Boolean is
       (if
-          Gneiss.Log.Index (Session).Valid
-          and then Gneiss.Log.Index (Session).Value in Context'Range
-       then Context (Gneiss.Log.Index (Session).Value).Ready
+          Log.Index (Session).Valid
+          and then Log.Index (Session).Value in Context'Range
+       then Context (Log.Index (Session).Value).Ready
        else False);
 
    procedure Put_Color (S : in out Server_Slot;
@@ -233,7 +235,7 @@ is
             --  Separate declaration: non-scalar object declared before loop-invariant is not yet supported
          begin
             for H of Clr loop
-               pragma Loop_Invariant (Gneiss.Log.Initialized (Client));
+               pragma Loop_Invariant (Log.Initialized (Client));
                Put (S, H);
             end loop;
          end;
@@ -257,8 +259,8 @@ is
    is
    begin
       S.Buffer (S.Cursor + 1 .. S.Cursor + 4) := Reset;
-      Gneiss.Log.Client.Print (Client, S.Buffer (1 .. S.Cursor));
-      Gneiss.Log.Client.Flush (Client);
+      Log_Client.Print (Client, S.Buffer (1 .. S.Cursor));
+      Log_Client.Flush (Client);
       S.Cursor  := 0;
       S.Flushed := True;
    end Flush;
