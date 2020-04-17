@@ -48,13 +48,11 @@ void Gneiss::Log_Dispatcher::session_initialize(Gneiss::Log_Dispatcher_Capabilit
     server->initialize(_factory->create2<Gneiss::Log_Component>(server), write);
 }
 
-void Gneiss::Log_Dispatcher::cleanup(Gneiss::Log_Dispatcher_Capability *cap, Gneiss::Log_Server *server)
+void Gneiss::Log_Dispatcher::cleanup(Gneiss::Log_Server *server)
 {
-    TLOG("cap=", cap, " server=", server);
-    if(cap->session == server->component()){
-        _factory->destroy<Gneiss::Log_Component>(server->component());
-        server->finalize();
-    }
+    TLOG("server=", server);
+    _factory->destroy<Gneiss::Log_Component>(server->component());
+    server->finalize();
 }
 
 Gneiss::Log_Component *Gneiss::Log_Root::_create_session(const char *args)
