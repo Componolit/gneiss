@@ -133,7 +133,6 @@ is
          Gneiss_Epoll.Add (Session.Epoll_Fd, Session.Dispatch_Fd,
                            Dispatch_Cap_Address (Session),
                            Ignore_Success);
-         pragma Assert (Initialized (Session));
       end if;
    end Register;
 
@@ -151,12 +150,6 @@ is
       Server_S.Fd    := Cap.Server_Fd;
       Server_S.Index := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Server_S.E_Cap := Event_Cap (Server_S, Session, Server_S.Fd);
-      pragma Assert (Server_S.Fd > -1);
-      pragma Assert (Server_S.Index.Valid);
-      pragma Assert (Gneiss_Platform.Is_Valid (Server_S.E_Cap));
-      pragma Assert (Initialized (Server_S));
-      --  FIXME: this assertion should prove,
-      --         it is equal to the three previous ones
       Server_Instance.Initialize (Server_S, Ctx);
       if not Server_Instance.Ready (Server_S, Ctx) then
          Gneiss_Syscall.Close (Server_S.Fd);
@@ -189,7 +182,7 @@ is
    is
       Ignore_Success : Integer;
    begin
-      if Cap.Clean_Fd > -1 and then Cap.Clean_Fd = Server_S.Fd then
+      if Cap.Clean_Fd = Server_S.Fd and then Initialized (Server_S) then
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
          Server_Instance.Finalize (Server_S, Ctx);
          Gneiss_Syscall.Close (Server_S.Fd);
