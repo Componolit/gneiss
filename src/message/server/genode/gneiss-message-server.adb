@@ -9,8 +9,10 @@ is
       External_Name => "_ZN6Gneiss14Message_Server11send_signalEv";
 
    procedure Send (Session : in out Server_Session;
-                   Data    :        Message_Buffer)
+                   Data    :        Message_Buffer;
+                   Ctx     :        Context)
    is
+      pragma Unreferenced (Ctx);
    begin
       if Internal.Queue.Count (Session.Cache) < Internal.Queue.Size (Session.Cache) then
          Internal.Queue.Put (Session.Cache, Data);

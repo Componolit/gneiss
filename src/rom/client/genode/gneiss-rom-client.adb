@@ -12,10 +12,11 @@ is
       Convention    => C,
       External_Name => "_ZN6Gneiss10Rom_Client10initializeEPNS_10CapabilityEPKc";
 
-   procedure Genode_Update (Session : in out Client_Session) with
+   procedure Genode_Update (Session : in out Client_Session;
+                            Ctx     : in out Context) with
       Import,
       Convention    => C,
-      External_Name => "_ZN6Gneiss10Rom_Client6updateEv";
+      External_Name => "_ZN6Gneiss10Rom_Client6updateEPv";
 
    procedure Genode_Finalize (Session : in out Client_Session) with
       Import,
@@ -24,7 +25,8 @@ is
 
    procedure Genode_Read (Session : in out Client_Session;
                           Ptr     :        System.Address;
-                          Size    :        Integer);
+                          Size    :        Integer;
+                          Ctx     : in out Context);
 
    function Modify_Address return System.Address;
 
@@ -54,10 +56,11 @@ is
       end if;
    end Initialize;
 
-   procedure Update (Session : in out Client_Session)
+   procedure Update (Session : in out Client_Session;
+                     Ctx     : in out Context)
    is
    begin
-      Genode_Update (Session);
+      Genode_Update (Session, Ctx);
    end Update;
 
    procedure Finalize (Session : in out Client_Session)
@@ -74,7 +77,8 @@ is
 
    procedure Genode_Read (Session : in out Client_Session;
                           Ptr     :        System.Address;
-                          Size    :        Integer)
+                          Size    :        Integer;
+                          Ctx     : in out Context)
    is
       Buf : constant Buffer
          (Buffer_Index'First
@@ -82,7 +86,7 @@ is
             Import,
             Address => Ptr;
    begin
-      Read (Session, Buf);
+      Read (Session, Buf, Ctx);
    end Genode_Read;
 
 end Gneiss.Rom.Client;
