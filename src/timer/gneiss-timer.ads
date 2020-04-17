@@ -11,6 +11,8 @@
 
 private with Gneiss_Internal.Timer;
 
+--  WORKAROUND: Componolit/Workarounds#20
+generic
 package Gneiss.Timer with
    SPARK_Mode
 is
@@ -51,7 +53,8 @@ is
    --
    --  @param Session  Client session
    --  @return         Index option that can be invalid
-   function Index (Session : Client_Session) return Session_Index_Option;
+   function Index (Session : Client_Session) return Session_Index_Option with
+      Post => (if Initialized (Session) then Index'Result.Valid);
 
 private
 
