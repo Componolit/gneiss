@@ -11,6 +11,7 @@
 
 private with Gneiss_Internal.Log;
 
+generic
 package Gneiss.Log with
    SPARK_Mode
 is

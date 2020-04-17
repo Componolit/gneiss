@@ -7,8 +7,8 @@
 --
 --  This file is part of Gneiss, which is distributed under the terms of the
 --  GNU Affero General Public License version 3.
---
 
+generic
 package Gneiss.Log.Client with
    SPARK_Mode
 is

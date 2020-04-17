@@ -8,30 +8,32 @@ package body Component with
    SPARK_Mode
 is
 
+   package Gneiss_Log is new Gneiss.Log;
+   package Log_Client is new Gneiss_Log.Client;
    package Memory is new Gneiss.Memory (Character, Positive, String);
 
-   Log     : Gneiss.Log.Client_Session;
+   Log     : Gneiss_Log.Client_Session;
    Mem     : Memory.Client_Session;
 
    procedure Modify (Session : in out Memory.Client_Session;
                      Data    : in out String;
-                     Ctx     : in out Gneiss.Log.Client_Session) with
+                     Ctx     : in out Gneiss_Log.Client_Session) with
       Pre  => Memory.Initialized (Session)
-              and then Gneiss.Log.Initialized (Ctx),
+              and then Gneiss_Log.Initialized (Ctx),
       Post => Memory.Initialized (Session)
-              and then Gneiss.Log.Initialized (Ctx),
+              and then Gneiss_Log.Initialized (Ctx),
       Global => null;
 
-   package Memory_Client is new Memory.Client (Gneiss.Log.Client_Session, Modify);
+   package Memory_Client is new Memory.Client (Gneiss_Log.Client_Session, Modify);
 
-   procedure Modify is new Memory_Client.Modify (Gneiss.Log.Initialized);
+   procedure Modify is new Memory_Client.Modify (Gneiss_Log.Initialized);
 
    procedure Construct (Cap : Gneiss.Capability)
    is
    begin
-      Gneiss.Log.Client.Initialize (Log, Cap, "log_memory");
+      Log_Client.Initialize (Log, Cap, "log_memory");
       Memory_Client.Initialize (Mem, Cap, "shared", 4096);
-      if Gneiss.Log.Initialized (Log) and Memory.Initialized (Mem) then
+      if Gneiss_Log.Initialized (Log) and Memory.Initialized (Mem) then
          Modify (Mem, Log);
          Main.Vacate (Cap, Main.Success);
       else
@@ -41,7 +43,7 @@ is
 
    procedure Modify (Session : in out Memory.Client_Session;
                      Data    : in out String;
-                     Ctx     : in out Gneiss.Log.Client_Session)
+                     Ctx     : in out Gneiss_Log.Client_Session)
    is
       pragma Unreferenced (Session);
       Prefix : constant String := "Data: ";
@@ -58,14 +60,14 @@ is
          Last := I;
          pragma Loop_Invariant (Last in Data'First .. Max);
       end loop;
-      Gneiss.Log.Client.Info (Ctx, Prefix & Data (Data'First .. Last));
+      Log_Client.Info (Ctx, Prefix & Data (Data'First .. Last));
    end Modify;
 
    procedure Destruct
    is
    begin
       Memory_Client.Finalize (Mem);
-      Gneiss.Log.Client.Finalize (Log);
+      Log_Client.Finalize (Log);
    end Destruct;
 
 end Component;
