@@ -72,6 +72,9 @@ is
    is
       Ignore_Success : Integer;
    begin
+      if not Initialized (Session) then
+         return;
+      end if;
       Gneiss_Epoll.Remove (Session.Epoll_Fd, Session.File_Descriptor, Ignore_Success);
       Gneiss_Syscall.Close (Session.File_Descriptor);
       Gneiss_Platform.Invalidate (Session.Event_Cap);

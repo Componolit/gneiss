@@ -4,13 +4,21 @@ with Gneiss_Internal.Message_Syscall;
 with Gneiss.Platform_Client;
 with RFLX.Session;
 
-package body Gneiss.Log.Client
+package body Gneiss.Log.Client with
+   SPARK_Mode
 is
 
    procedure Prefix_Message (Session : in out Client_Session;
                              Prefix  :        String;
                              Msg     :        String;
-                             Newline :        Boolean);
+                             Newline :        Boolean) with
+      Pre  => Initialized (Session),
+      Post => Initialized (Session);
+
+   procedure Flush_Buffer (Session : in out Client_Session) with
+      Pre  => Initialized (Session),
+      Post => Initialized (Session)
+              and then Session.Cursor = 0;
 
    ----------------
    -- Initialize --
@@ -55,14 +63,20 @@ is
                     Msg     :        String)
    is
    begin
+      pragma Assert (Initialized (Session));
+      if Session.Cursor >= Session.Buffer'Last then
+         Flush_Buffer (Session);
+      end if;
       for C of Msg loop
+         pragma Loop_Invariant (Initialized (Session));
+         pragma Loop_Invariant (Session.Cursor < Session.Buffer'Last);
          Session.Cursor := Session.Cursor + 1;
          Session.Buffer (Session.Cursor) := C;
          if
             (C = ASCII.LF and then Session.Cursor < Session.Buffer'Last)
-            or else Session.Cursor = Session.Buffer'Last
+            or else Session.Cursor >= Session.Buffer'Last
          then
-            Flush (Session);
+            Flush_Buffer (Session);
          end if;
       end loop;
    end Print;
@@ -107,7 +121,7 @@ is
    -- Flush --
    -----------
 
-   procedure Flush (Session : in out Client_Session) with
+   procedure Flush_Buffer (Session : in out Client_Session) with
       SPARK_Mode => Off
    is
    begin
@@ -118,6 +132,12 @@ is
                                              Session.Buffer'Address,
                                              Session.Buffer'Length);
       Session.Cursor := 0;
+   end Flush_Buffer;
+
+   procedure Flush (Session : in out Client_Session)
+   is
+   begin
+      Flush_Buffer (Session);
    end Flush;
 
    procedure Prefix_Message (Session : in out Client_Session;

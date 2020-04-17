@@ -34,11 +34,9 @@ is
                                                                   Dispatch_Error);
 
    procedure Read_Buffer (Session : in out Server_Session) with
-      Pre =>  Initialized (Session)
-              and then Gneiss_Internal.Message_Syscall.Peek (Session.Fd)
-                       >= Gneiss_Internal.Log.Message_Buffer'Length,
+      Pre =>  Initialized (Session),
       Post => Initialized (Session)
-              and then Session.Cursor = Session.Buffer'Last;
+              and then Session.Cursor = Session.Buffer'First;
 
    function Event_Cap_Address (Session : Server_Session) return System.Address with
       SPARK_Mode => Off
@@ -186,7 +184,7 @@ is
          Gneiss_Epoll.Remove (Session.Epoll_Fd, Server_S.Fd, Ignore_Success);
          Server_Instance.Finalize (Server_S, Ctx);
          Gneiss_Syscall.Close (Server_S.Fd);
-         Session.Index := Gneiss.Session_Index_Option'(Valid => False);
+         Server_S.Index := Gneiss.Session_Index_Option'(Valid => False);
          Gneiss_Platform.Invalidate (Server_S.E_Cap);
       end if;
    end Session_Cleanup;
@@ -202,13 +200,13 @@ is
       end if;
       Read_Buffer (Session);
       for I in Session.Buffer'Range loop
+         pragma Loop_Invariant (Session.Cursor in Session.Buffer'Range);
          exit when Session.Buffer (I) = ASCII.NUL;
          Session.Cursor := I;
       end loop;
       if Session.Cursor > Session.Buffer'First then
          Write_Buf := Session.Buffer;
          Server_Instance.Write (Session, Write_Buf (Session.Buffer'First .. Session.Cursor));
-         --  FIXME: Copy buffer to fix aliasing
       end if;
    end Session_Event;
 
