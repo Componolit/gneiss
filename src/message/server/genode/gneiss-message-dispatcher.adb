@@ -133,6 +133,7 @@ is
    procedure Session_Initialize (Session  : in out Dispatcher_Session;
                                  Cap      :        Dispatcher_Capability;
                                  Server_S : in out Server_Session;
+                                 Ctx      : in out Server_Instance.Context;
                                  Idx      :        Session_Index := 1)
    is
       pragma Unreferenced (Cap);
@@ -140,8 +141,8 @@ is
       Genode_Initialize (Session, Server_S, Avail_Address, Recv_Address, Get_Address);
       if Server_S.Component /= System.Null_Address then
          Server_S.Index := Session_Index_Option'(Valid => True, Value => Idx);
-         Server_Instance.Initialize (Server_S);
-         if not Server_Instance.Ready (Server_S) then
+         Server_Instance.Initialize (Server_S, Ctx);
+         if not Server_Instance.Ready (Server_S, Ctx) then
             Genode_Finalize (Server_S);
             Server_S.Index := Session_Index_Option'(Valid => False);
          end if;
@@ -150,21 +151,24 @@ is
 
    procedure Session_Accept (Session  : in out Dispatcher_Session;
                              Cap      :        Dispatcher_Capability;
-                             Server_S : in out Server_Session)
+                             Server_S : in out Server_Session;
+                             Ctx      :        Server_Instance.Context)
    is
       pragma Unreferenced (Cap);
+      pragma Unreferenced (Ctx);
    begin
       Genode_Accept (Session, Server_S);
    end Session_Accept;
 
    procedure Session_Cleanup (Session  : in out Dispatcher_Session;
                               Cap      :        Dispatcher_Capability;
-                              Server_S : in out Server_Session)
+                              Server_S : in out Server_Session;
+                              Ctx      : in out Server_Instance.Context)
    is
       pragma Unreferenced (Session);
    begin
       if Initialized (Server_S) and then Cap.Session = Server_S.Component then
-         Server_Instance.Finalize (Server_S);
+         Server_Instance.Finalize (Server_S, Ctx);
          Genode_Finalize (Server_S);
          Server_S.Index := Session_Index_Option'(Valid => False);
       end if;
