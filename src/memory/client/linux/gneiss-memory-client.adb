@@ -43,7 +43,11 @@ is
       use type System.Address;
       Fds : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
    begin
-      if Initialized (Session) then
+      if
+         Initialized (Session)
+         or else Label'Length > 255
+         or else Label'First > Integer'Last - 255
+      then
          return;
       end if;
       Memfd_Create (Label & ASCII.NUL, Size, Session.Fd);

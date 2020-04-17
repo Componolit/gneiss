@@ -29,8 +29,10 @@ is
                      Data    : in out String;
                      Context : in out Server_Meta) with
       Pre  => Memory.Initialized (Session)
+              and then Ready (Session, Context)
               and then Contract (Context),
       Post => Memory.Initialized (Session)
+              and then Ready (Session, Context)
               and then Contract (Context);
 
    procedure Initialize (Session : in out Memory.Server_Session;
