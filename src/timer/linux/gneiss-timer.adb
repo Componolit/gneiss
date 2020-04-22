@@ -1,17 +1,15 @@
 
-with Gneiss_Epoll;
-with Gneiss_Platform;
+with Gneiss_Internal;
 
 package body Gneiss.Timer with
    SPARK_Mode
 is
-   use type Gneiss_Epoll.Epoll_Fd;
 
    function Initialized (Session : Client_Session) return Boolean is
-      (Session.Fd > -1
+      (Gneiss_Internal.Valid (Session.Fd)
        and then Session.Index.Valid
-       and then Gneiss_Platform.Is_Valid (Session.E_Cap)
-       and then Session.Epoll > -1);
+       and then Gneiss_Internal.Valid (Session.E_Cap)
+       and then Gneiss_Internal.Valid (Session.Epoll));
 
    function Index (Session : Client_Session) return Session_Index_Option is
       (Session.Index);

@@ -5,21 +5,21 @@ package Gneiss_Internal.Message_Syscall with
    SPARK_Mode
 is
 
-   procedure Write (Fd   : Integer;
+   procedure Write (Fd   : File_Descriptor;
                     Msg  : System.Address;
                     Size : Integer) with
       Import,
       Convention    => C,
       External_Name => "gneiss_message_write";
 
-   procedure Read (Fd   : Integer;
+   procedure Read (Fd   : File_Descriptor;
                    Msg  : System.Address;
                    Size : Integer) with
       Import,
       Convention    => C,
       External_Name => "gneiss_message_read";
 
-   function Peek (Fd   : Integer) return Integer with
+   function Peek (Fd   : File_Descriptor) return Integer with
       Import,
       Convention    => C,
       External_Name => "gneiss_message_peek";

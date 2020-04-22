@@ -1,16 +1,17 @@
 
-package body Gneiss_Platform with
-   SPARK_Mode
+package body Gneiss_Internal with
+   SPARK_Mode,
+   Refined_State => (Platform_State => null)
 is
    use type System.Address;
 
-   function Is_Valid (Cap : Event_Cap) return Boolean is
+   function Valid (Cap : Event_Cap) return Boolean is
       (Cap.Event_Adr /= System.Null_Address
        and then Cap.Event_Ctx /= System.Null_Address
        and then Cap.Error_Adr /= System.Null_Address
        and then Cap.Error_Ctx /= System.Null_Address);
 
-   function Is_Valid (Cap : Set_Status_Cap) return Boolean is
+   function Valid (Cap : Set_Status_Cap) return Boolean is
       (Cap.Address /= System.Null_Address);
 
    procedure Invalidate (Cap : in out Event_Cap)
@@ -25,7 +26,7 @@ is
 
    function Create_Event_Cap (Ev_Ctx : Event_Context;
                               Er_Ctx : Error_Context;
-                              Fd     : Integer) return Event_Cap with
+                              Fd     : File_Descriptor) return Event_Cap with
       SPARK_Mode => Off
    is
    begin
@@ -37,22 +38,22 @@ is
    end Create_Event_Cap;
 
    procedure Call (Cap : Event_Cap;
-                   Ev  : Gneiss_Epoll.Event_Type) with
+                   Ev  : Event_Type) with
       SPARK_Mode => Off
    is
       procedure Event (Context : System.Address;
-                       Fd      : Integer) with
+                       Fd      : File_Descriptor) with
          Import,
          Address => Cap.Event_Adr;
       procedure Error (Context : System.Address;
-                       Fd      : Integer) with
+                       Fd      : File_Descriptor) with
          Import,
          Address => Cap.Error_Adr;
    begin
       case Ev is
-         when Gneiss_Epoll.Epoll_Ev =>
+         when Epoll_Ev =>
             Event (Cap.Event_Ctx, Cap.Fd);
-         when Gneiss_Epoll.Epoll_Er =>
+         when Epoll_Er =>
             Error (Cap.Error_Ctx, Cap.Fd);
       end case;
    end Call;
@@ -74,4 +75,4 @@ is
       Set_Status (S);
    end Call;
 
-end Gneiss_Platform;
+end Gneiss_Internal;

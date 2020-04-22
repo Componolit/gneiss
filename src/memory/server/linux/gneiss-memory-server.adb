@@ -1,5 +1,5 @@
 
-with Gneiss_Syscall;
+with Gneiss_Internal.Syscall;
 
 package body Gneiss.Memory.Server with
    SPARK_Mode
@@ -27,7 +27,7 @@ is
    procedure Modify (Session : in out Server_Session;
                      Ctx     : in out Context)
    is
-      Length : constant Integer      := Gneiss_Syscall.Stat_Size (Session.Fd);
+      Length : constant Integer      := Gneiss_Internal.Syscall.Stat_Size (Session.Fd);
       Last   : constant Buffer_Index := Get_Last (Length);
       First  : constant Buffer_Index := Get_First (Length);
       B      : Buffer (First .. Last) with

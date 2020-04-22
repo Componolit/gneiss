@@ -1,23 +1,22 @@
 
-with Gneiss_Platform;
-with Gneiss_Epoll;
+with Gneiss_Internal;
 
 package body Gneiss.Log with
    SPARK_Mode
 is
 
    function Initialized (Session : Client_Session) return Boolean is
-      (Session.File_Descriptor > -1);
+      (Gneiss_Internal.Valid (Session.Fd));
 
    function Initialized (Session : Dispatcher_Session) return Boolean is
-      (Session.Broker_Fd > -1
-       and then Gneiss_Epoll.Valid_Fd (Session.Epoll_Fd)
+      (Gneiss_Internal.Valid (Session.Broker_Fd)
+       and then Gneiss_Internal.Valid (Session.Efd)
        and then Session.Index.Valid
-       and then (if Session.Registered then Session.Dispatch_Fd > -1));
+       and then (if Session.Registered then Gneiss_Internal.Valid (Session.Dispatch_Fd)));
 
    function Initialized (Session : Server_Session) return Boolean is
-      (Session.Fd >= 0
-       and then Gneiss_Platform.Is_Valid (Session.E_Cap)
+      (Gneiss_Internal.Valid (Session.Fd)
+       and then Gneiss_Internal.Valid (Session.E_Cap)
        and then Session.Index.Valid);
 
    function Index (Session : Dispatcher_Session) return Session_Index_Option is
