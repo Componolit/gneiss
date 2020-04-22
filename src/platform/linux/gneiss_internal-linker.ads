@@ -1,10 +1,8 @@
 
 with System;
 
-package Gneiss.Linker with
-   SPARK_Mode,
-   Abstract_State => Linux,
-   Initializes    => Linux
+package Gneiss_Internal.Linker with
+   SPARK_Mode
 is
 
    type Dl_Handle is private;
@@ -12,11 +10,11 @@ is
 
    procedure Open (File   :     String;
                    Handle : out Dl_Handle) with
-      Global => (In_Out => Linux);
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    function Symbol (Handle : Dl_Handle;
                     Name   : String) return System.Address with
-      Global => (Input => Linux),
+      Global => (Input => Gneiss_Internal.Platform_State),
       Pre    => Handle /= Invalid_Handle;
 
 private
@@ -25,4 +23,4 @@ private
 
    Invalid_Handle : constant Dl_Handle := Dl_Handle (System.Null_Address);
 
-end Gneiss.Linker;
+end Gneiss_Internal.Linker;

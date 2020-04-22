@@ -1,9 +1,9 @@
 
 with System;
-with Gneiss_Epoll;
-with Gneiss_Platform;
-with Gneiss_Syscall;
-with Gneiss.Platform_Client;
+with Gneiss_Internal;
+with Gneiss_Internal.Epoll;
+with Gneiss_Internal.Syscall;
+with Gneiss_Internal.Client;
 with Gneiss_Protocol.Session;
 
 package body Gneiss.Timer.Client with
@@ -12,27 +12,27 @@ is
 
    function Event_Address (Session : Client_Session) return System.Address;
    procedure Session_Event (Session : in out Client_Session;
-                            Fd      :        Integer);
+                            Fd      :        Gneiss_Internal.File_Descriptor);
    procedure Session_Error (Session : in out Client_Session;
-                            Fd      :        Integer) is null;
-   function Event_Cap is new Gneiss_Platform.Create_Event_Cap (Client_Session,
+                            Fd      :        Gneiss_Internal.File_Descriptor) is null;
+   function Event_Cap is new Gneiss_Internal.Create_Event_Cap (Client_Session,
                                                                Client_Session,
                                                                Session_Event,
                                                                Session_Error);
 
-   procedure Timer_Set (Fd : Integer;
+   procedure Timer_Set (Fd : Gneiss_Internal.File_Descriptor;
                         D  : Duration) with
       Import,
       Convention    => C,
       External_Name => "gneiss_timer_set";
 
-   function Timer_Get (Fd : Integer) return Time with
+   function Timer_Get (Fd : Gneiss_Internal.File_Descriptor) return Time with
       Import,
       Convention    => C,
       External_Name => "gneiss_timer_get",
       Volatile_Function;
 
-   procedure Timer_Read (Fd : Integer) with
+   procedure Timer_Read (Fd : Gneiss_Internal.File_Descriptor) with
       Import,
       Convention    => C,
       External_Name => "gneiss_timer_read";
@@ -45,7 +45,7 @@ is
    end Event_Address;
 
    procedure Session_Event (Session : in out Client_Session;
-                            Fd      :        Integer)
+                            Fd      :        Gneiss_Internal.File_Descriptor)
    is
       pragma Unreferenced (Fd);
    begin
@@ -58,25 +58,26 @@ is
                          Label :        String;
                          Idx   :        Session_Index := 1)
    is
-      Fds     : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
-      Success : Integer;
+      use type Gneiss_Internal.File_Descriptor;
+      Fds     : Gneiss_Internal.Fd_Array (1 .. 1) := (others => -1);
+      Success : Boolean;
    begin
       if Initialized (C) then
          return;
       end if;
-      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Timer, Fds, Label);
-      if Fds (Fds'First) < 0 then
+      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Timer, Fds, Label);
+      if not Gneiss_Internal.Valid (Fds (Fds'First)) then
          return;
       end if;
       C.E_Cap := Event_Cap (C, C, Fds (Fds'First));
-      Gneiss_Epoll.Add (Cap.Epoll_Fd, Fds (Fds'First), Event_Address (C), Success);
-      if Success < 0 then
-         Gneiss_Syscall.Close (Fds (Fds'First));
-         Gneiss_Platform.Invalidate (C.E_Cap);
+      Gneiss_Internal.Epoll.Add (Cap.Efd, Fds (Fds'First), Event_Address (C), Success);
+      if not Success then
+         Gneiss_Internal.Syscall.Close (Fds (Fds'First));
+         Gneiss_Internal.Invalidate (C.E_Cap);
          return;
       end if;
       C.Fd    := Fds (Fds'First);
-      C.Epoll := Cap.Epoll_Fd;
+      C.Epoll := Cap.Efd;
       C.Index := Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
@@ -95,17 +96,17 @@ is
 
    procedure Finalize (C : in out Client_Session)
    is
-      use type Gneiss_Epoll.Epoll_Fd;
-      Ignore_Success : Integer;
+      use type Gneiss_Internal.Epoll_Fd;
+      Ignore_Success : Boolean;
    begin
       if not Initialized (C) then
          return;
       end if;
-      Gneiss_Epoll.Remove (C.Epoll, C.Fd, Ignore_Success);
+      Gneiss_Internal.Epoll.Remove (C.Epoll, C.Fd, Ignore_Success);
       C.Epoll := -1;
-      Gneiss_Syscall.Close (C.Fd);
+      Gneiss_Internal.Syscall.Close (C.Fd);
       C.Index := Session_Index_Option'(Valid => False);
-      Gneiss_Platform.Invalidate (C.E_Cap);
+      Gneiss_Internal.Invalidate (C.E_Cap);
    end Finalize;
 
 end Gneiss.Timer.Client;

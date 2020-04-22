@@ -1,34 +1,66 @@
 
-with Gneiss_Access;
 with Gneiss_Protocol.Session.Packet;
-with Gneiss_Protocol.Types;
 
-package body Gneiss.Packet with
-   SPARK_Mode
+package body Gneiss_Internal.Packet with
+   SPARK_Mode,
+   Refined_State => (Packet_State => Buffer.Ptr)
 is
 
-   package Buffer is new Gneiss_Access (1024);
+   package Buffer with
+      SPARK_Mode
+   is
 
-   procedure Send (Fd     : Integer;
-                   Buf    : Gneiss_Protocol.Types.Bytes;
-                   Length : Integer;
-                   Fds    : Gneiss_Syscall.Fd_Array);
+      Ptr : Gneiss_Protocol.Types.Bytes_Ptr;
 
-   procedure Recv (Fd     :     Integer;
-                   Buf    : out Gneiss_Protocol.Types.Bytes;
-                   Fds    : out Gneiss_Syscall.Fd_Array;
-                   Block  :     Boolean);
+   end Buffer;
 
-   procedure Send (Fd     : Integer;
-                   Action : Gneiss_Protocol.Session.Action_Type;
-                   Kind   : Gneiss_Protocol.Session.Kind_Type;
-                   Name   : Gneiss_Internal.Session_Label;
-                   Label  : Gneiss_Internal.Session_Label;
-                   Fds    : Gneiss_Syscall.Fd_Array)
+   package body Buffer with
+      SPARK_Mode
+   is
+
+      Buf : aliased Gneiss_Protocol.Types.Bytes (1 .. 1024);
+
+   begin
+      pragma SPARK_Mode (Off);
+      Ptr := Buf'Unrestricted_Access;
+   end Buffer;
+
+   procedure Get (Data : Gneiss_Protocol.Types.Bytes)
    is
       use type Gneiss_Protocol.Types.Length;
-      procedure Buffer_Name is new Buffer.Set (Name.Value (Name.Value'First .. Name.Last));
-      procedure Buffer_Label is new Buffer.Set (Label.Value (Label.Value'First .. Label.Last));
+      I : Natural := Field'First;
+   begin
+      for J in Data'Range loop
+         Field (I) := Character'Val (Gneiss_Protocol.Types.Byte'Pos (Data (J)));
+         exit when I = Field'Last or else J = Data'Last;
+         I := I + 1;
+      end loop;
+      Last := I;
+   end Get;
+
+   procedure Set (Data : out Gneiss_Protocol.Types.Bytes)
+   is
+      use type Gneiss_Protocol.Types.Length;
+      I : Natural := Field'First;
+   begin
+      Data := (others => Gneiss_Protocol.Types.Byte'First);
+      for J in Data'Range loop
+         Data (J) := Gneiss_Protocol.Types.Byte'Val (Character'Pos (Field (I)));
+         exit when I = Field'Last or else J = Data'Last;
+         I := I + 1;
+      end loop;
+   end Set;
+
+   procedure Send (Fd     : File_Descriptor;
+                   Action : Gneiss_Protocol.Session.Action_Type;
+                   Kind   : Gneiss_Protocol.Session.Kind_Type;
+                   Name   : Session_Label;
+                   Label  : Session_Label;
+                   Fds    : Fd_Array)
+   is
+      use type Gneiss_Protocol.Types.Length;
+      procedure Buffer_Name is new Set (Name.Value (Name.Value'First .. Name.Last));
+      procedure Buffer_Label is new Set (Label.Value (Label.Value'First .. Label.Last));
       procedure Set_Name is new Gneiss_Protocol.Session.Packet.Set_Name (Buffer_Name);
       procedure Set_Label is new Gneiss_Protocol.Session.Packet.Set_Label (Buffer_Label);
       Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
@@ -50,23 +82,23 @@ is
             Fds);
    end Send;
 
-   procedure Receive (Fd    :     Integer;
-                      Msg   : out Message;
-                      Fds   : out Gneiss_Syscall.Fd_Array;
+   procedure Receive (Fd    :     File_Descriptor;
+                      Msg   : out Broker_Message;
+                      Fds   : out Fd_Array;
                       Block :     Boolean)
    is
       use type Gneiss_Protocol.Session.Length_Type;
       Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
       Action  : Gneiss_Protocol.Session.Action_Type;
       Kind    : Gneiss_Protocol.Session.Kind_Type;
-      Name    : Gneiss_Internal.Session_Label;
-      Label   : Gneiss_Internal.Session_Label;
-      procedure Parse_Name is new Buffer.Get (Name.Value, Name.Last);
-      procedure Parse_Label is new Buffer.Get (Label.Value, Label.Last);
+      Name    : Session_Label;
+      Label   : Session_Label;
+      procedure Parse_Name is new Get (Name.Value, Name.Last);
+      procedure Parse_Label is new Get (Label.Value, Label.Last);
       procedure Get_Name is new Gneiss_Protocol.Session.Packet.Get_Name (Parse_Name);
       procedure Get_Label is new Gneiss_Protocol.Session.Packet.Get_Label (Parse_Label);
    begin
-      Msg := Message'(Valid => False);
+      Msg := Broker_Message'(Valid => False);
       Recv (Fd, Buffer.Ptr.all, Fds, Block);
       Gneiss_Protocol.Session.Packet.Initialize (Context, Buffer.Ptr);
       Gneiss_Protocol.Session.Packet.Verify_Message (Context);
@@ -87,34 +119,34 @@ is
       then
          Get_Label (Context);
       end if;
-      Msg := Message'(Valid  => True,
-                      Action => Action,
-                      Kind   => Kind,
-                      Name   => Name,
-                      Label  => Label);
+      Msg := Broker_Message'(Valid  => True,
+                             Action => Action,
+                             Kind   => Kind,
+                             Name   => Name,
+                             Label  => Label);
       Gneiss_Protocol.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
    end Receive;
 
-   procedure Send (Fd     : Integer;
+   procedure Send (Fd     : File_Descriptor;
                    Buf    : Gneiss_Protocol.Types.Bytes;
                    Length : Integer;
-                   Fds    : Gneiss_Syscall.Fd_Array) with
+                   Fds    : Fd_Array) with
       SPARK_Mode => Off
    is
    begin
-      Gneiss_Syscall.Write_Message (Fd, Buf'Address, Length, Fds, Fds'Length);
+      Linux.Write_Message (Fd, Buf'Address, Length, Fds, Fds'Length);
    end Send;
 
-   procedure Recv (Fd     :     Integer;
+   procedure Recv (Fd     :     File_Descriptor;
                    Buf    : out Gneiss_Protocol.Types.Bytes;
-                   Fds    : out Gneiss_Syscall.Fd_Array;
+                   Fds    : out Fd_Array;
                    Block  :     Boolean)
    is
       Ignore_Trunc  : Integer;
       Ignore_Length : Integer;
    begin
-      Gneiss_Syscall.Read_Message (Fd, Buf'Address, Buf'Length, Fds, Fds'Length,
-                                   Ignore_Length, Ignore_Trunc, Boolean'Pos (Block));
+      Linux.Read_Message (Fd, Buf'Address, Buf'Length, Fds, Fds'Length,
+                          Ignore_Length, Ignore_Trunc, Boolean'Pos (Block));
    end Recv;
 
-end Gneiss.Packet;
+end Gneiss_Internal.Packet;

@@ -1,6 +1,6 @@
 
 with System;
-with Gneiss.Libc;
+with Gneiss_Internal.Libc;
 
 package body Gneiss.Command_Line with
    SPARK_Mode => Off
@@ -27,7 +27,7 @@ is
 
    function Argument (Number : Natural) return String
    is
-      Arg : String (1 .. Libc.Strlen (Argvl (Number))) with
+      Arg : String (1 .. Gneiss_Internal.Libc.Strlen (Argvl (Number))) with
          Import,
          Address => Argvl (Number);
    begin
