@@ -1,7 +1,5 @@
 
 with Gneiss;
-with Gneiss_Epoll;
-with Gneiss_Platform;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -11,36 +9,35 @@ generic
 package Gneiss_Internal.Message with
    SPARK_Mode
 is
-   use type Gneiss_Epoll.Epoll_Fd;
 
    type Client_Session is record
-      File_Descriptor : Integer                     := -1;
-      Epoll_Fd        : Gneiss_Epoll.Epoll_Fd       := -1;
-      Label           : Session_Label;
-      Index           : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Event_Cap       : Gneiss_Platform.Event_Cap;
+      Fd    : File_Descriptor             := -1;
+      Efd   : Epoll_Fd                    := -1;
+      Label : Session_Label;
+      Index : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
+      E_Cap : Event_Cap                   := Invalid_Event_Cap;
    end record;
 
    type Server_Session is record
-      Fd    : Integer                     := -1;
+      Fd    : File_Descriptor             := -1;
       Index : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      E_Cap : Gneiss_Platform.Event_Cap;
+      E_Cap : Event_Cap                   := Invalid_Event_Cap;
    end record;
 
    type Dispatcher_Session is record
-      Broker_Fd        : Integer                     := -1;
-      Accepted         : Boolean                     := False;
-      Epoll_Fd         : Gneiss_Epoll.Epoll_Fd       := -1;
-      Dispatch_Fd      : Integer                     := -1;
-      Index            : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Registered       : Boolean                     := False;
-      E_Cap            : Gneiss_Platform.Event_Cap;
+      Broker_Fd   : File_Descriptor             := -1;
+      Accepted    : Boolean                     := False;
+      Efd         : Epoll_Fd                    := -1;
+      Dispatch_Fd : File_Descriptor             := -1;
+      Index       : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
+      Registered  : Boolean                     := False;
+      E_Cap       : Event_Cap                   := Invalid_Event_Cap;
    end record;
 
    type Dispatcher_Capability is limited record
-      Client_Fd : Integer := -1;
-      Server_Fd : Integer := -1;
-      Clean_Fd  : Integer := -1;
+      Client_Fd : File_Descriptor := -1;
+      Server_Fd : File_Descriptor := -1;
+      Clean_Fd  : File_Descriptor := -1;
       Name      : Session_Label;
       Label     : Session_Label;
    end record;

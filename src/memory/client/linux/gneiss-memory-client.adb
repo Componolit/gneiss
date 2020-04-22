@@ -1,7 +1,8 @@
 
 with System;
-with Gneiss_Syscall;
-with Gneiss.Platform_Client;
+with Gneiss_Internal;
+with Gneiss_Internal.Syscall;
+with Gneiss_Internal.Client;
 with Gneiss_Protocol.Session;
 
 package body Gneiss.Memory.Client with
@@ -10,7 +11,7 @@ is
 
    procedure Memfd_Create (Name :     String;
                            Size :     Long_Integer;
-                           Fd   : out Integer) with
+                           Fd   : out Gneiss_Internal.File_Descriptor) with
       Import,
       Convention    => C,
       External_Name => "gneiss_memfd_create";
@@ -41,7 +42,8 @@ is
                          Idx     :        Session_Index := 1)
    is
       use type System.Address;
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 1) := (others => -1);
+      use type Gneiss_Internal.File_Descriptor;
+      Fds : Gneiss_Internal.Fd_Array (1 .. 1) := (others => -1);
    begin
       if
          Initialized (Session)
@@ -51,19 +53,19 @@ is
          return;
       end if;
       Memfd_Create (Label & ASCII.NUL, Size, Session.Fd);
-      if Session.Fd < 0 then
+      if not Gneiss_Internal.Valid (Session.Fd) then
          return;
       end if;
-      Gneiss_Syscall.Mmap (Session.Fd, Session.Map, 1);
+      Gneiss_Internal.Syscall.Mmap (Session.Fd, Session.Map, True);
       if Session.Map = System.Null_Address then
-         Gneiss_Syscall.Close (Session.Fd);
+         Gneiss_Internal.Syscall.Close (Session.Fd);
          return;
       end if;
       Fds (Fds'First) := Session.Fd;
-      Platform_Client.Initialize (Cap, Gneiss_Protocol.Session.Memory, Fds, Label);
+      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Memory, Fds, Label);
       if Fds (Fds'First) < 0 then
-         Gneiss_Syscall.Munmap (Session.Fd, Session.Map);
-         Gneiss_Syscall.Close (Session.Fd);
+         Gneiss_Internal.Syscall.Munmap (Session.Fd, Session.Map);
+         Gneiss_Internal.Syscall.Close (Session.Fd);
          return;
       end if;
       Session.Sigfd := Fds (Fds'First);
@@ -73,7 +75,7 @@ is
    procedure Modify (Session : in out Client_Session;
                      Ctx     : in out Context)
    is
-      Length : constant Integer      := Gneiss_Syscall.Stat_Size (Session.Fd);
+      Length : constant Integer      := Gneiss_Internal.Syscall.Stat_Size (Session.Fd);
       Last   : constant Buffer_Index := Get_Last (Length);
       First  : constant Buffer_Index := Get_First (Length);
       B      : Buffer (First .. Last) with
@@ -89,9 +91,9 @@ is
       if not Initialized (Session) then
          return;
       end if;
-      Gneiss_Syscall.Munmap (Session.Fd, Session.Map);
-      Gneiss_Syscall.Close (Session.Sigfd);
-      Gneiss_Syscall.Close (Session.Fd);
+      Gneiss_Internal.Syscall.Munmap (Session.Fd, Session.Map);
+      Gneiss_Internal.Syscall.Close (Session.Sigfd);
+      Gneiss_Internal.Syscall.Close (Session.Fd);
       Session.Index := Session_Index_Option'(Valid => False);
    end Finalize;
 

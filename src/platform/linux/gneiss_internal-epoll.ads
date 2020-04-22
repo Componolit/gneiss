@@ -1,19 +1,9 @@
 
 with System;
 
-package Gneiss_Epoll with
-   SPARK_Mode,
-   Abstract_State => Linux,
-   Initializes    => Linux,
-   Elaborate_Body
+package Gneiss_Internal.Epoll with
+   SPARK_Mode
 is
-
-   type Epoll_Fd is new Integer;
-
-   function Valid_Fd (Efd : Epoll_Fd) return Boolean is
-      (Efd >= 0);
-
-   type Event_Type is (Epoll_Ev, Epoll_Er);
 
    type Event is record
       Epoll_In        : Boolean;
@@ -56,59 +46,38 @@ is
       (if E.Epoll_Hup or else E.Epoll_Err or else E.Epoll_Rdhup then Epoll_Er else Epoll_Ev);
 
    procedure Create (Efd : out Epoll_Fd) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_epoll_create",
-      Global        => (In_Out => Linux);
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Add (Efd     :     Epoll_Fd;
-                  Fd      :     Integer;
+                  Fd      :     File_Descriptor;
                   Index   :     Integer;
-                  Success : out Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_epoll_add_fd",
-      Global        => (In_Out => Linux),
-      Pre           => Fd > -1
-                       and then Valid_Fd (Efd);
+                  Success : out Boolean) with
+      Pre    => Valid (Fd) and then Valid (Efd),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Add (Efd     :     Epoll_Fd;
-                  Fd      :     Integer;
+                  Fd      :     File_Descriptor;
                   Ptr     :     System.Address;
-                  Success : out Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_epoll_add_ptr",
-      Global        => (In_Out => Linux),
-      Pre           => Fd > -1
-                       and then Valid_Fd (Efd);
+                  Success : out Boolean) with
+      Pre    => Valid (Fd) and then Valid (Efd),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Remove (Efd     :     Epoll_Fd;
-                     Fd      :     Integer;
-                     Success : out Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_epoll_remove",
-      Global        => (In_Out => Linux),
-      Pre           => Fd > -1
-                       and then Valid_Fd (Efd);
+                     Fd      :     File_Descriptor;
+                     Success : out Boolean) with
+      Pre    => Valid (Fd) and then Valid (Efd),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Wait (Efd   :     Epoll_Fd;
                    Ev    : out Event;
                    Index : out Integer) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_epoll_wait_fd",
-      Global        => (In_Out => Linux),
-      Pre           => Valid_Fd (Efd);
+      Pre    => Valid (Efd),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
-   procedure Wait (Efd   :     Epoll_Fd;
-                   Ev    : out Event;
-                   Ptr   : out System.Address) with
-      Import,
-      Convention    => C,
-      External_Name => "gneiss_epoll_wait_ptr",
-      Global        => (In_Out => Linux),
-      Pre           => Valid_Fd (Efd);
+   procedure Wait (Efd :     Epoll_Fd;
+                   Ev  : out Event;
+                   Ptr : out System.Address) with
+      Pre    => Valid (Efd),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
-end Gneiss_Epoll;
+end Gneiss_Internal.Epoll;

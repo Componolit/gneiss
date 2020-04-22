@@ -1,7 +1,7 @@
 
 with SXML;
 with SXML.Query;
-with Gneiss_Epoll;
+with Gneiss_Internal;
 
 package Gneiss.Broker.Startup with
    SPARK_Mode
@@ -11,12 +11,12 @@ is
                                Root   :        SXML.Query.State_Type;
                                Parent :    out Boolean;
                                Status :    out Return_Code) with
-      Pre  => Gneiss_Epoll.Valid_Fd (State.Epoll_Fd)
+      Pre  => Gneiss_Internal.Valid (State.Epoll_Fd)
               and then SXML.Query.State_Result (Root) = SXML.Result_OK
               and then SXML.Query.Is_Valid (Root, State.Xml)
               and then Is_Valid (State.Xml, State.Components)
               and then Is_Valid (State.Xml, State.Resources),
-      Post => (if Parent then Gneiss_Epoll.Valid_Fd (State.Epoll_Fd)
+      Post => (if Parent then Gneiss_Internal.Valid (State.Epoll_Fd)
                and then Is_Valid (State.Xml, State.Components)
                and then Is_Valid (State.Xml, State.Resources));
 
@@ -36,7 +36,7 @@ is
 private
 
    procedure Load (State : in out Broker_State;
-                   Fd    :        Integer;
+                   Fd    :        Gneiss_Internal.File_Descriptor;
                    Comp  :        SXML.Query.State_Type;
                    Ret   :    out Return_Code) with
       Pre => SXML.Query.State_Result (Comp) = SXML.Result_OK

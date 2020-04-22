@@ -1,43 +1,41 @@
 
 with Gneiss;
 with System;
-with Gneiss_Epoll;
 
 package Gneiss_Internal.Memory with
    SPARK_Mode
 is
-   use type Gneiss_Epoll.Epoll_Fd;
 
    type Client_Session is limited record
       Index : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Fd    : Integer                     := -1;
-      Sigfd : Integer                     := -1;
+      Fd    : File_Descriptor             := -1;
+      Sigfd : File_Descriptor             := -1;
       Map   : System.Address              := System.Null_Address;
    end record;
 
    type Server_Session is limited record
       Index    : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Fd       : Integer                     := -1;
-      Sigfd    : Integer                     := -1;
+      Fd       : File_Descriptor             := -1;
+      Sigfd    : File_Descriptor             := -1;
       Map      : System.Address              := System.Null_Address;
-      E_Cap    : Gneiss_Platform.Event_Cap;
+      E_Cap    : Event_Cap                   := Invalid_Event_Cap;
    end record;
 
    type Dispatcher_Session is limited record
-      Broker_Fd   : Integer                     := -1;
+      Broker_Fd   : File_Descriptor             := -1;
       Index       : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Epoll_Fd    : Gneiss_Epoll.Epoll_Fd       := -1;
-      Dispatch_Fd : Integer                     := -1;
+      Efd         : Epoll_Fd                    := -1;
+      Dispatch_Fd : File_Descriptor             := -1;
       Accepted    : Boolean                     := False;
       Registered  : Boolean                     := False;
-      E_Cap       : Gneiss_Platform.Event_Cap;
+      E_Cap       : Event_Cap                   := Invalid_Event_Cap;
    end record;
 
    type Dispatcher_Capability is limited record
-      Memfd     : Integer := -1;
-      Client_Fd : Integer := -1;
-      Server_Fd : Integer := -1;
-      Clean_Fd  : Integer := -1;
+      Memfd     : File_Descriptor := -1;
+      Client_Fd : File_Descriptor := -1;
+      Server_Fd : File_Descriptor := -1;
+      Clean_Fd  : File_Descriptor := -1;
       Name      : Session_Label;
       Label     : Session_Label;
    end record;

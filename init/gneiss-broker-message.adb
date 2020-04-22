@@ -1,8 +1,9 @@
 
 with Gneiss.Broker.Lookup;
-with Gneiss.Packet;
-with Gneiss_Log;
-with Gneiss_Internal;
+with Gneiss_Internal.Print;
+with Gneiss_Internal.Client;
+with Gneiss_Internal.Syscall;
+with Gneiss_Internal.Epoll;
 
 package body Gneiss.Broker.Message with
    SPARK_Mode
@@ -18,43 +19,47 @@ is
 
    procedure Setup_Service (State : in out Service_List;
                             Kind  :        Gneiss_Protocol.Session.Kind_Type;
-                            Efd   :        Gneiss_Epoll.Epoll_Fd;
+                            Efd   :        Gneiss_Internal.Epoll_Fd;
                             Valid :    out Boolean) with
-      Pre  => Gneiss_Epoll.Valid_Fd (Efd),
-      Post => (if Valid then (State (Kind).Broker > -1 and then State (Kind).Disp > -1));
+      Pre  => Gneiss_Internal.Valid (Efd),
+      Post => (if Valid then (Gneiss_Internal.Valid (State (Kind).Broker)
+                              and then Gneiss_Internal.Valid (State (Kind).Disp)));
 
    procedure Setup_Service (State : in out Service_List;
                             Kind  :        Gneiss_Protocol.Session.Kind_Type;
-                            Efd   :        Gneiss_Epoll.Epoll_Fd;
+                            Efd   :        Gneiss_Internal.Epoll_Fd;
                             Valid :    out Boolean)
    is
-      Success : Integer;
    begin
       Valid := False;
-      if State (Kind).Broker > -1 and then State (Kind).Disp > -1 then
+      if
+         Gneiss_Internal.Valid (State (Kind).Broker)
+         and then Gneiss_Internal.Valid (State (Kind).Disp)
+      then
          Valid := True;
          return;
       end if;
-      Gneiss_Syscall.Socketpair (State (Kind).Broker, State (Kind).Disp);
-      if State (Kind).Broker < 0 or else State (Kind).Disp < 0 then
-         Gneiss_Log.Error ("Failed to create service fds");
-         Gneiss_Syscall.Close (State (Kind).Broker);
-         Gneiss_Syscall.Close (State (Kind).Disp);
+      Gneiss_Internal.Syscall.Socketpair (State (Kind).Broker, State (Kind).Disp);
+      if
+         not Gneiss_Internal.Valid (State (Kind).Broker)
+         or else not Gneiss_Internal.Valid (State (Kind).Disp)
+      then
+         Gneiss_Internal.Print.Error ("Failed to create service fds");
+         Gneiss_Internal.Syscall.Close (State (Kind).Broker);
+         Gneiss_Internal.Syscall.Close (State (Kind).Disp);
          return;
       end if;
-      Gneiss_Epoll.Add (Efd, State (Kind).Broker, State (Kind).Broker, Success);
-      if Success /= 0 then
-         Gneiss_Log.Error ("Failed to register broker callback");
-         Gneiss_Syscall.Close (State (Kind).Broker);
-         Gneiss_Syscall.Close (State (Kind).Disp);
-         return;
+      Gneiss_Internal.Epoll.Add (Efd, State (Kind).Broker, Integer (State (Kind).Broker), Valid);
+      if not Valid then
+         Gneiss_Internal.Print.Error ("Failed to register broker callback");
+         Gneiss_Internal.Syscall.Close (State (Kind).Broker);
+         Gneiss_Internal.Syscall.Close (State (Kind).Disp);
       end if;
-      Valid := True;
    end Setup_Service;
 
    function Convert_Message (S : String) return Gneiss_Protocol_String
    is
-      R : Gneiss_Protocol_String (1 .. RFLX.Session.Length_Type (S'Length));
+      R : Gneiss_Protocol_String (1 .. Gneiss_Protocol.Session.Length_Type (S'Length));
    begin
       for I in R'Range loop
          R (I) := S (S'First + Natural (I - R'First));
@@ -64,17 +69,17 @@ is
 
    procedure Read_Message (State    : in out Broker_State;
                            Index    :        Positive;
-                           Filedesc :        Integer)
+                           Filedesc :        Gneiss_Internal.File_Descriptor)
    is
-      Fds : Gneiss_Syscall.Fd_Array (1 .. 4);
-      Msg : Packet.Message;
+      Fds : Gneiss_Internal.Fd_Array (1 .. 4);
+      Msg : Gneiss_Internal.Broker_Message;
    begin
-      Packet.Receive (Filedesc, Msg, Fds, False);
+      Gneiss_Internal.Client.Receive (Filedesc, Msg, Fds, False);
       if not Msg.Valid then
-         Gneiss_Log.Warning ("Invalid message, dropping");
+         Gneiss_Internal.Print.Warning ("Invalid message, dropping");
          pragma Warnings (Off, "unused assignment to ""Fd""");
          for Fd of Fds loop
-            Gneiss_Syscall.Close (Fd);
+            Gneiss_Internal.Syscall.Close (Fd);
          end loop;
          pragma Warnings (On, "unused assignment to ""Fd""");
          return;
@@ -93,25 +98,25 @@ is
                              Kind   :        Gneiss_Protocol.Session.Kind_Type;
                              Name   :        String;
                              Label  :        String;
-                             Fds    :        Gneiss_Syscall.Fd_Array)
+                             Fds    :        Gneiss_Internal.Fd_Array)
    is
    begin
       case Action is
          when Gneiss_Protocol.Session.Request =>
             if Label'Length >= 256 then
-               Gneiss_Log.Warning ("Cannot process request");
+               Gneiss_Internal.Print.Warning ("Cannot process request");
                return;
             end if;
             Process_Request (State, Source, Kind, Label, Fds);
          when Gneiss_Protocol.Session.Confirm =>
             if Name'Length + Label'Length >= 256 then
-               Gneiss_Log.Warning ("Cannot process confirm");
+               Gneiss_Internal.Print.Warning ("Cannot process confirm");
                return;
             end if;
             Process_Confirm (State, Kind, Name, Label, Fds);
          when Gneiss_Protocol.Session.Reject =>
             if Name'Length + Label'Length >= 256 then
-               Gneiss_Log.Warning ("Cannot process reject");
+               Gneiss_Internal.Print.Warning ("Cannot process reject");
                return;
             end if;
             Process_Reject (State, Kind, Name, Label);
@@ -124,7 +129,7 @@ is
                               Source :        Positive;
                               Kind   :        Gneiss_Protocol.Session.Kind_Type;
                               Label  :        String;
-                              Fds    :        Gneiss_Syscall.Fd_Array)
+                              Fds    :        Gneiss_Internal.Fd_Array)
    is
       use type SXML.Query.State_Type;
       Serv_State  : SXML.Query.State_Type;
@@ -133,27 +138,27 @@ is
       Source_Name : String (1 .. 255);
       Last        : Natural;
       Result      : SXML.Result_Type;
-      Fds_Out     : Gneiss_Syscall.Fd_Array (1 .. 4);
+      Fds_Out     : Gneiss_Internal.Fd_Array (1 .. 4);
    begin
       if State.Components (Source).Fd < 0 then
-         Gneiss_Log.Warning ("Cannot process invalid source");
+         Gneiss_Internal.Print.Warning ("Cannot process invalid source");
          return;
       end if;
       Lookup.Match_Service (State.Xml, State.Components (Source).Node, Image (Kind), Label, Serv_State);
       if Serv_State = SXML.Query.Invalid_State or else not SXML.Query.Is_Open (Serv_State, State.Xml) then
-         Gneiss_Log.Error ("No service found");
+         Gneiss_Internal.Print.Error ("No service found");
          Send_Reject (State.Components (Source).Fd, Kind, Label);
          return;
       end if;
       Lookup.Lookup_Request (State, Kind, Serv_State, Destination, Valid);
       if not Valid then
-         Gneiss_Log.Error ("No service provider found");
+         Gneiss_Internal.Print.Error ("No service provider found");
          Send_Reject (State.Components (Source).Fd, Kind, Label);
          return;
       end if;
       SXML.Query.Attribute (State.Components (Source).Node, State.Xml, "name", Result, Source_Name, Last);
       if Result /= SXML.Result_OK then
-         Gneiss_Log.Error ("Failed to get source name");
+         Gneiss_Internal.Print.Error ("Failed to get source name");
          Send_Reject (State.Components (Source).Fd, Kind, Label);
          return;
       end if;
@@ -171,7 +176,7 @@ is
             Setup_Service (State.Components (Destination).Serv, Kind, State.Epoll_Fd, Valid);
             if not Valid then
                for Fd of Fds_Out loop
-                  Gneiss_Syscall.Close (Fd);
+                  Gneiss_Internal.Syscall.Close (Fd);
                end loop;
                Send_Reject (State.Components (Source).Fd, Kind, Label);
                return;
@@ -183,7 +188,7 @@ is
                           Fds_Out (Fds_Out'First .. Fds_Out'First + 1));
          when Gneiss_Protocol.Session.Rom =>
             if Destination in State.Components'Range then
-               Gneiss_Log.Warning ("Rom server currently not supported");
+               Gneiss_Internal.Print.Warning ("Rom server currently not supported");
             else
                Process_Rom_Request (State, Serv_State, Fds_Out, Valid);
                if Valid then
@@ -205,7 +210,7 @@ is
             Setup_Service (State.Components (Destination).Serv, Kind, State.Epoll_Fd, Valid);
             if not Valid then
                for Fd of Fds_Out loop
-                  Gneiss_Syscall.Close (Fd);
+                  Gneiss_Internal.Syscall.Close (Fd);
                end loop;
                Send_Reject (State.Components (Source).Fd, Kind, Label);
                return;
@@ -225,54 +230,54 @@ is
       end case;
    end Process_Request;
 
-   procedure Process_Message_Request (Fds   : out Gneiss_Syscall.Fd_Array;
+   procedure Process_Message_Request (Fds   : out Gneiss_Internal.Fd_Array;
                                       Valid : out Boolean)
    is
-      Fd1 : Integer;
-      Fd2 : Integer;
+      Fd1 : Gneiss_Internal.File_Descriptor;
+      Fd2 : Gneiss_Internal.File_Descriptor;
    begin
       Fds := (others => -1);
-      Gneiss_Syscall.Socketpair (Fd1, Fd2);
-      Valid := Fd1 > -1 and then Fd2 > -1;
+      Gneiss_Internal.Syscall.Socketpair (Fd1, Fd2);
+      Valid := Gneiss_Internal.Valid (Fd1) and then Gneiss_Internal.Valid (Fd2);
       if not Valid then
-         Gneiss_Syscall.Close (Fd1);
-         Gneiss_Syscall.Close (Fd2);
+         Gneiss_Internal.Syscall.Close (Fd1);
+         Gneiss_Internal.Syscall.Close (Fd2);
       end if;
       Fds (Fds'First .. Fds'First + 1) := (Fd1, Fd2);
    end Process_Message_Request;
 
-   procedure Process_Memory_Request (Fds_In  :        Gneiss_Syscall.Fd_Array;
-                                     Fds_Out :    out Gneiss_Syscall.Fd_Array;
+   procedure Process_Memory_Request (Fds_In  :        Gneiss_Internal.Fd_Array;
+                                     Fds_Out :    out Gneiss_Internal.Fd_Array;
                                      Valid   :    out Boolean)
    is
-      Success : Integer;
-      Fd1     : Integer;
-      Fd2     : Integer;
+      Fd1     : Gneiss_Internal.File_Descriptor;
+      Fd2     : Gneiss_Internal.File_Descriptor;
    begin
       Valid   := False;
       Fds_Out := (others => -1);
-      if Fds_In (Fds_In'First) < 0 then
+      if not Gneiss_Internal.Valid (Fds_In (Fds_In'First)) then
          return;
       end if;
       Fds_Out (Fds_Out'First + 2) := Fds_In (Fds_In'First);
-      Gneiss_Syscall.Memfd_Seal (Fds_Out (Fds_Out'First + 2), Success);
-      if Success /= 1 then
-         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 2));
+      Gneiss_Internal.Syscall.Memfd_Seal (Fds_Out (Fds_Out'First + 2), Valid);
+      if not Valid then
+         Gneiss_Internal.Syscall.Close (Fds_Out (Fds_Out'First + 2));
          return;
       end if;
-      Gneiss_Syscall.Socketpair (Fd1, Fd2);
+      Gneiss_Internal.Syscall.Socketpair (Fd1, Fd2);
       Fds_Out (Fds_Out'First .. Fds_Out'First + 1) := (Fd1, Fd2);
-      Valid := Fds_Out (Fds_Out'First) > -1 and then Fds_Out (Fds_Out'First + 1) > -1;
+      Valid := Gneiss_Internal.Valid (Fds_Out (Fds_Out'First))
+               and then Gneiss_Internal.Valid (Fds_Out (Fds_Out'First + 1));
       if not Valid then
-         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First));
-         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 1));
-         Gneiss_Syscall.Close (Fds_Out (Fds_Out'First + 2));
+         Gneiss_Internal.Syscall.Close (Fds_Out (Fds_Out'First));
+         Gneiss_Internal.Syscall.Close (Fds_Out (Fds_Out'First + 1));
+         Gneiss_Internal.Syscall.Close (Fds_Out (Fds_Out'First + 2));
       end if;
    end Process_Memory_Request;
 
    procedure Process_Rom_Request (State       :     Broker_State;
                                   Serv_State  :     SXML.Query.State_Type;
-                                  Fds         : out Gneiss_Syscall.Fd_Array;
+                                  Fds         : out Gneiss_Internal.Fd_Array;
                                   Valid       : out Boolean)
    is
       Buffer : String (1 .. 4096);
@@ -281,25 +286,25 @@ is
       Fds := (others => -1);
       Lookup.Find_Resource_Location (State, Serv_State, Buffer, Last, Valid);
       if Valid then
-         Gneiss_Syscall.Open (Buffer (Buffer'First .. Last) & ASCII.NUL, Fds (Fds'First), 0);
+         Gneiss_Internal.Syscall.Open (Buffer (Buffer'First .. Last) & ASCII.NUL, Fds (Fds'First), False);
       end if;
-      Valid := Fds (Fds'First) > -1;
+      Valid := Gneiss_Internal.Valid (Fds (Fds'First));
    end Process_Rom_Request;
 
-   procedure Process_Timer_Request (Fds   : out Gneiss_Syscall.Fd_Array;
+   procedure Process_Timer_Request (Fds   : out Gneiss_Internal.Fd_Array;
                                     Valid : out Boolean)
    is
    begin
       Fds := (others => -1);
-      Gneiss_Syscall.Timerfd_Create (Fds (Fds'First));
-      Valid := Fds (Fds'First) > -1;
+      Gneiss_Internal.Syscall.Timerfd_Create (Fds (Fds'First));
+      Valid := Gneiss_Internal.Valid (Fds (Fds'First));
    end Process_Timer_Request;
 
    procedure Process_Confirm (State : Broker_State;
                               Kind  : Gneiss_Protocol.Session.Kind_Type;
                               Name  : String;
                               Label : String;
-                              Fds   : Gneiss_Syscall.Fd_Array)
+                              Fds   : Gneiss_Internal.Fd_Array)
    is
       Destination : Positive;
       Valid       : Boolean;
@@ -311,14 +316,14 @@ is
                if Fds'Length > 0 and then Fds (Fds'First) >= 0 then
                   Send_Confirm (State.Components (Destination).Fd, Kind, Label, Fds (Fds'First .. Fds'First));
                else
-                  Gneiss_Log.Warning ("Invalid Fd, rejecting");
+                  Gneiss_Internal.Print.Warning ("Invalid Fd, rejecting");
                   Send_Reject (State.Components (Destination).Fd, Kind, Label);
                end if;
             when Gneiss_Protocol.Session.Rom | Gneiss_Protocol.Session.Timer =>
-               Gneiss_Log.Warning ("Unexpected confirm");
+               Gneiss_Internal.Print.Warning ("Unexpected confirm");
          end case;
       else
-         Gneiss_Log.Warning ("Failed to process confirm");
+         Gneiss_Internal.Print.Warning ("Failed to process confirm");
       end if;
    end Process_Confirm;
 
@@ -334,7 +339,7 @@ is
       if Valid then
          Send_Reject (State.Components (Destination).Fd, Kind, Label);
       else
-         Gneiss_Log.Warning ("Failed to process reject");
+         Gneiss_Internal.Print.Warning ("Failed to process reject");
       end if;
    end Process_Reject;
 
@@ -342,10 +347,10 @@ is
                                Source :        Positive;
                                Kind   :        Gneiss_Protocol.Session.Kind_Type)
    is
-      Fds   : Gneiss_Syscall.Fd_Array (1 .. 1);
+      Fds   : Gneiss_Internal.Fd_Array (1 .. 1);
       Valid : Boolean;
    begin
-      pragma Assert (if State.Components (Source).Fd > -1
+      pragma Assert (if Gneiss_Internal.Valid (State.Components (Source).Fd)
                      then SXML.Query.State_Result (State.Components (Source).Node) = SXML.Result_OK
                           and then SXML.Query.Is_Valid (State.Components (Source).Node, State.Xml)
                           and then SXML.Query.Is_Open (State.Components (Source).Node, State.Xml));
@@ -359,11 +364,11 @@ is
       end if;
    end Process_Register;
 
-   procedure Send_Request (Destination : Integer;
+   procedure Send_Request (Destination : Gneiss_Internal.File_Descriptor;
                            Kind        : Gneiss_Protocol.Session.Kind_Type;
                            Name        : String;
                            Label       : String;
-                           Fds         : Gneiss_Syscall.Fd_Array)
+                           Fds         : Gneiss_Internal.Fd_Array)
    is
       S_Name  : Gneiss_Internal.Session_Label;
       S_Label : Gneiss_Internal.Session_Label;
@@ -372,23 +377,23 @@ is
       S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
       S_Label.Last := S_Label.Value'First + Label'Length - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Destination, Gneiss_Protocol.Session.Request, Kind, S_Name, S_Label, Fds);
+      Gneiss_Internal.Client.Send (Destination, Gneiss_Protocol.Session.Request, Kind, S_Name, S_Label, Fds);
    end Send_Request;
 
-   procedure Send_Confirm (Destination : Integer;
+   procedure Send_Confirm (Destination : Gneiss_Internal.File_Descriptor;
                            Kind        : Gneiss_Protocol.Session.Kind_Type;
                            Label       : String;
-                           Fds         : Gneiss_Syscall.Fd_Array)
+                           Fds         : Gneiss_Internal.Fd_Array)
    is
       S_Name  : Gneiss_Internal.Session_Label;
       S_Label : Gneiss_Internal.Session_Label;
    begin
       S_Label.Last := S_Label.Value'First + Label'Length - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Destination, Gneiss_Protocol.Session.Confirm, Kind, S_Name, S_Label, Fds);
+      Gneiss_Internal.Client.Send (Destination, Gneiss_Protocol.Session.Confirm, Kind, S_Name, S_Label, Fds);
    end Send_Confirm;
 
-   procedure Send_Reject (Destination : Integer;
+   procedure Send_Reject (Destination : Gneiss_Internal.File_Descriptor;
                           Kind        : Gneiss_Protocol.Session.Kind_Type;
                           Label       : String)
    is
@@ -397,7 +402,9 @@ is
    begin
       S_Label.Last := S_Label.Value'First + Label'Length - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Destination, Gneiss_Protocol.Session.Reject, Kind, S_Name, S_Label, (1 .. 0 => -1));
+      Gneiss_Internal.Client.Send (Destination,
+                                   Gneiss_Protocol.Session.Reject,
+                                   Kind, S_Name, S_Label, (1 .. 0 => -1));
    end Send_Reject;
 
 end Gneiss.Broker.Message;

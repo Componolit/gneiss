@@ -1,7 +1,7 @@
 
-with Gneiss_Syscall;
+with Gneiss_Internal.Linux;
 
-package body Gneiss_Log with
+package body Gneiss_Internal.Print with
    SPARK_Mode
 is
 
@@ -13,19 +13,19 @@ is
    procedure Info (S : String)
    is
    begin
-      Gneiss_Syscall.Fputs ("I: " & S & Terminator);
+      Linux.Fputs ("I: " & S & Terminator);
    end Info;
 
    procedure Warning (S : String)
    is
    begin
-      Gneiss_Syscall.Fputs (Blue & "W: " & S & Reset & Terminator);
+      Linux.Fputs (Blue & "W: " & S & Reset & Terminator);
    end Warning;
 
    procedure Error (S : String)
    is
    begin
-      Gneiss_Syscall.Fputs (Red & "E: " & S & Reset & Terminator);
+      Linux.Fputs (Red & "E: " & S & Reset & Terminator);
    end Error;
 
-end Gneiss_Log;
+end Gneiss_Internal.Print;

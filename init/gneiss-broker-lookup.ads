@@ -2,6 +2,7 @@
 with SXML;
 with SXML.Query;
 with Gneiss_Protocol.Session;
+with Gneiss_Internal;
 
 package Gneiss.Broker.Lookup with
    SPARK_Mode
@@ -37,7 +38,7 @@ is
                                      Valid : out Boolean) with
       Pre    => Is_Valid (State.Xml, State.Components),
       Post   => (if Valid then (Index in State.Components'Range
-                 and then State.Components (Index).Fd > -1)),
+                 and then Gneiss_Internal.Valid (State.Components (Index).Fd))),
       Global => null;
 
    procedure Find_Resource_By_Name (State :     Broker_State;
