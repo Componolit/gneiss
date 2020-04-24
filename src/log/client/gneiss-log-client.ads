@@ -8,6 +8,8 @@
 --  This file is part of Gneiss, which is distributed under the terms of the
 --  GNU Affero General Public License version 3.
 
+with Gneiss_Internal;
+
 generic
 package Gneiss.Log.Client with
    SPARK_Mode
@@ -21,13 +23,15 @@ is
    --  @param Idx     Session index
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
-                         Label   :        String);
+                         Label   :        String) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Finalize client session
    --
    --  @param Session  Client session instance
    procedure Finalize (Session : in out Client_Session) with
-      Post => not Initialized (Session);
+      Post   => not Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Print unformatted message
    --
@@ -35,8 +39,9 @@ is
    --  @param Msg      Message to print
    procedure Print (Session : in out Client_Session;
                     Msg     :        String) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Print info message
    --
@@ -46,8 +51,9 @@ is
    procedure Info (Session : in out Client_Session;
                    Msg     :        String;
                    Newline :        Boolean := True) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Print warning message
    --
@@ -57,8 +63,9 @@ is
    procedure Warning (Session : in out Client_Session;
                       Msg     :        String;
                       Newline :        Boolean := True) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Print error message
    --
@@ -68,14 +75,16 @@ is
    procedure Error (Session : in out Client_Session;
                     Msg     :        String;
                     Newline :        Boolean := True) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Flush all messages to make sure they're printed
    --
    --  @param Session        Client session instance
    procedure Flush (Session : in out Client_Session) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Log.Client;
