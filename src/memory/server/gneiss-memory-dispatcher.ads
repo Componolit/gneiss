@@ -10,6 +10,7 @@
 --
 
 with Gneiss.Memory.Server;
+with Gneiss_Internal;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -40,14 +41,16 @@ is
    --  @param Idx      Session index
    procedure Initialize (Session : in out Dispatcher_Session;
                          Cap     :        Capability;
-                         Idx     :        Session_Index := 1);
+                         Idx     :        Session_Index := 1) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Register service to the platform, should be called when the component initialization is finished
    --
    --  @param Session  Dispatcher session
    procedure Register (Session : in out Dispatcher_Session) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Checks if a session request/dispatcher capability is valid
    --
@@ -56,7 +59,8 @@ is
    --  @return         True indicates that a client requested a connection
    function Valid_Session_Request (Session : Dispatcher_Session;
                                    Cap     : Dispatcher_Capability) return Boolean with
-      Pre => Initialized (Session);
+      Pre    => Initialized (Session),
+      Global => null;
 
    --  Initialize server session
    --  @param Session   Dispatcher session
@@ -68,12 +72,15 @@ is
                                  Server_S : in out Server_Session;
                                  Ctx      : in out Server_Instance.Context;
                                  Idx      :        Session_Index := 1) with
-      Pre  => Initialized (Session)
-              and then Valid_Session_Request (Session, Cap)
-              and then not Server_Instance.Ready (Server_S, Ctx)
-              and then not Initialized (Server_S),
-      Post => Initialized (Session)
-              and then Valid_Session_Request (Session, Cap);
+      Pre    => Initialized (Session)
+                and then Registered (Session)
+                and then Valid_Session_Request (Session, Cap)
+                and then not Server_Instance.Ready (Server_S, Ctx)
+                and then not Initialized (Server_S),
+      Post   => Initialized (Session)
+                and then Registered (Session)
+                and then Valid_Session_Request (Session, Cap),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Accept initialized server session
    --  @param Session   Dispatcher session
@@ -83,13 +90,16 @@ is
                              Cap      :        Dispatcher_Capability;
                              Server_S : in out Server_Session;
                              Ctx      :        Server_Instance.Context) with
-      Pre  => Initialized (Session)
-              and then Valid_Session_Request (Session, Cap)
-              and then Server_Instance.Ready (Server_S, Ctx)
-              and then Initialized (Server_S),
-      Post => Initialized (Session)
-              and then Server_Instance.Ready (Server_S, Ctx)
-              and then Initialized (Server_S);
+      Pre    => Initialized (Session)
+                and then Registered (Session)
+                and then Valid_Session_Request (Session, Cap)
+                and then Server_Instance.Ready (Server_S, Ctx)
+                and then Initialized (Server_S),
+      Post   => Initialized (Session)
+                and then Registered (Session)
+                and then Server_Instance.Ready (Server_S, Ctx)
+                and then Initialized (Server_S),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Garbage collects disconnected sessions
    --
@@ -104,7 +114,10 @@ is
                               Cap      :        Dispatcher_Capability;
                               Server_S : in out Server_Session;
                               Ctx      : in out Server_Instance.Context) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session)
+                and then Registered (Session),
+      Post   => Initialized (Session)
+                and then Registered (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Memory.Dispatcher;

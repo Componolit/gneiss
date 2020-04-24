@@ -1,13 +1,22 @@
 
 with Gneiss;
 with Gneiss.Component;
+with Gneiss_Internal;
 
 package Component with
-   SPARK_Mode
+SPARK_Mode,
+   Abstract_State => (Component_State, Platform_State),
+   Initializes    => (Platform_State, Main.Platform)
 is
 
-   procedure Construct (Cap : Gneiss.Capability);
-   procedure Destruct;
+   procedure Construct (Cap : Gneiss.Capability) with
+      Global => (Output => Component_State,
+                 In_Out => (Platform_State,
+                            Main.Platform,
+                            Gneiss_Internal.Platform_State));
+
+   procedure Destruct with
+      Global => null;
 
    package Main is new Gneiss.Component (Construct, Destruct);
 
