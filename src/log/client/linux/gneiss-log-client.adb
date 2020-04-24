@@ -1,4 +1,3 @@
-with Gneiss_Internal;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Message_Syscall;
 with Gneiss_Internal.Client;
@@ -16,9 +15,10 @@ is
       Post => Initialized (Session);
 
    procedure Flush_Buffer (Session : in out Client_Session) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session)
-              and then Session.Cursor = 0;
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session)
+                and then Session.Cursor = 0,
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    ----------------
    -- Initialize --

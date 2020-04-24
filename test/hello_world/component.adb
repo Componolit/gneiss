@@ -3,7 +3,9 @@ with Gneiss.Log;
 with Gneiss.Log.Client;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Platform_State  => Log,
+                     Component_State => Cap)
 is
 
    package Lg is new Gneiss.Log;
