@@ -30,7 +30,6 @@ is
       Efd         : Epoll_Fd                    := -1;
       Dispatch_Fd : File_Descriptor             := -1;
       Index       : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
-      Registered  : Boolean                     := False;
       E_Cap       : Event_Cap                   := Invalid_Event_Cap;
    end record;
 

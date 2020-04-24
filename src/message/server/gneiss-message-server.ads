@@ -8,6 +8,7 @@
 --  This file is part of Gneiss, which is distributed under the terms of the
 --  GNU Affero General Public License version 3.
 --
+with Gneiss_Internal;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -56,9 +57,10 @@ is
    procedure Send (Session : in out Server_Session;
                    Data    :        Message_Buffer;
                    Ctx     :        Context) with
-      Pre  => Ready (Session, Ctx)
-              and then Initialized (Session),
-      Post => Ready (Session, Ctx)
-              and then Initialized (Session);
+      Pre    => Ready (Session, Ctx)
+                and then Initialized (Session),
+      Post   => Ready (Session, Ctx)
+                and then Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Message.Server;

@@ -8,6 +8,7 @@
 --  This file is part of Gneiss, which is distributed under the terms of the
 --  GNU Affero General Public License version 3.
 --
+with Gneiss_Internal;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -55,6 +56,7 @@ is
               and then Contract (Ctx),
       Post => Initialized (Session)
               and then Ready (Session, Ctx)
-              and then Contract (Ctx);
+              and then Contract (Ctx),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Memory.Server;
