@@ -1,6 +1,5 @@
 
 with System;
-with Gneiss_Internal;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Client;
 with Gneiss_Protocol.Session;
@@ -14,7 +13,8 @@ is
                            Fd   : out Gneiss_Internal.File_Descriptor) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_memfd_create";
+      External_Name => "gneiss_memfd_create",
+      Global        => (In_Out => Gneiss_Internal.Platform_State);
 
    function Get_First (Length : Integer) return Buffer_Index;
    function Get_Last (Length : Integer) return Buffer_Index;
