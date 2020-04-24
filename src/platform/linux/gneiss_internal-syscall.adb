@@ -86,4 +86,11 @@ is
       Linux.Timerfd_Create (Fd);
    end Timerfd_Create;
 
+   procedure Modify_Platform with
+      SPARK_Mode => Off
+   is
+   begin
+      null;
+   end Modify_Platform;
+
 end Gneiss_Internal.Syscall;

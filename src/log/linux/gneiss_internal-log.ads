@@ -26,7 +26,6 @@ is
       Efd         : Epoll_Fd                    := -1;
       Index       : Gneiss.Session_Index_Option := Gneiss.Session_Index_Option'(Valid => False);
       Dispatch_Fd : File_Descriptor             := -1;
-      Registered  : Boolean                     := False;
    end record;
 
    type Server_Session is limited record

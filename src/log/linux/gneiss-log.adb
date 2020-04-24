@@ -11,8 +11,7 @@ is
    function Initialized (Session : Dispatcher_Session) return Boolean is
       (Gneiss_Internal.Valid (Session.Broker_Fd)
        and then Gneiss_Internal.Valid (Session.Efd)
-       and then Session.Index.Valid
-       and then (if Session.Registered then Gneiss_Internal.Valid (Session.Dispatch_Fd)));
+       and then Session.Index.Valid);
 
    function Initialized (Session : Server_Session) return Boolean is
       (Gneiss_Internal.Valid (Session.Fd)
@@ -24,5 +23,8 @@ is
 
    function Index (Session : Server_Session) return Session_Index_Option is
       (Session.Index);
+
+   function Registered (Session : Dispatcher_Session) return Boolean is
+      (Gneiss_Internal.Valid (Session.Dispatch_Fd));
 
 end Gneiss.Log;
