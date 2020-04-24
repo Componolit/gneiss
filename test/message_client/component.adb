@@ -5,7 +5,9 @@ with Gneiss.Message;
 with Gneiss.Message.Client;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Client, Log))
 is
 
    package Gneiss_Log is new Gneiss.Log;
@@ -14,10 +16,16 @@ is
    subtype Message_Buffer is String (1 .. 128);
    Null_Buffer : constant Message_Buffer := (others => ASCII.NUL);
 
-   procedure Event;
+   procedure Event with
+      Global => (Input  => Capability,
+                 In_Out => (Client, Log,
+                            Gneiss_Internal.Platform_State,
+                            Main.Platform));
+
    function Null_Terminate (S : String) return String with
-      Post => Null_Terminate'Result'First = S'First
-              and then Null_Terminate'Result'Length <= S'Length;
+      Post   => Null_Terminate'Result'First = S'First
+                and then Null_Terminate'Result'Length <= S'Length,
+      Global => null;
 
    package Message is new Gneiss.Message (Message_Buffer, Null_Buffer);
 

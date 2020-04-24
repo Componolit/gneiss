@@ -9,7 +9,8 @@ is
       (Gneiss_Internal.Valid (Session.Fd)
        and then Session.Index.Valid
        and then Gneiss_Internal.Valid (Session.Efd)
-       and then Gneiss_Internal.Valid (Session.E_Cap));
+       and then Gneiss_Internal.Valid (Session.E_Cap)
+       and then Message_Buffer'Size = 128 * 8);
 
    function Initialized (Session : Server_Session) return Boolean is
       (Gneiss_Internal.Valid (Session.Fd)

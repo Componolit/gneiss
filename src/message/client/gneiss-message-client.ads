@@ -9,6 +9,8 @@
 --  GNU Affero General Public License version 3.
 --
 
+with Gneiss_Internal;
+
 generic
    --  Message received event
    with procedure Event;
@@ -26,20 +28,23 @@ is
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
                          Label   :        String;
-                         Idx     :        Session_Index := 1);
+                         Idx     :        Session_Index := 1) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Finalize client session
    --
    --  @param Session  Client session instance
    procedure Finalize (Session : in out Client_Session) with
-      Post => not Initialized (Session);
+      Post   => not Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Check if message is available
    --
    --  @param Session  Client session instance
    --  @return         True if message is available
    function Available (Session : Client_Session) return Boolean with
-      Pre => Initialized (Session);
+      Pre    => Initialized (Session),
+      Global => (Input => Gneiss_Internal.Platform_State);
 
    --  Write message
    --
@@ -47,8 +52,9 @@ is
    --  @param Content  Message
    procedure Write (Session : in out Client_Session;
                     Content :        Message_Buffer) with
-      Pre  => Initialized (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Read message
    --
@@ -56,8 +62,9 @@ is
    --  @param Content  Message
    procedure Read (Session : in out Client_Session;
                    Content :    out Message_Buffer) with
-      Pre  => Initialized (Session)
-              and then Available (Session),
-      Post => Initialized (Session);
+      Pre    => Initialized (Session)
+                and then Available (Session),
+      Post   => Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Message.Client;
