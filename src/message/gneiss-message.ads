@@ -69,6 +69,14 @@ is
    function Index (Session : Dispatcher_Session) return Session_Index_Option with
       Post => (if Initialized (Session) then Index'Result.Valid);
 
+   --  Proof property that the dispatcher is registered on the platform
+   --
+   --  @param Session  Dispatcher session instance
+   --  @return         Dispatcher is registered on the platform
+   function Registered (Session : Dispatcher_Session) return Boolean with
+      Ghost,
+      Pre => Initialized (Session);
+
 private
 
    package Internal is new Gneiss_Internal.Message (Message_Buffer, Null_Buffer);
