@@ -41,7 +41,8 @@ is
              and (if Right < 0.0 then Left < Time'Last + Time (Right));
 
    --  Timer client session object
-   type Client_Session is limited private;
+   type Client_Session is limited private with
+      Default_Initial_Condition => True;
 
    --  Gets the sessions current status
    --

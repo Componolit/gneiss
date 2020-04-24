@@ -30,7 +30,8 @@ is
                               "Size of Element must be 8 bit");
 
    --  Client session type
-   type Client_Session is limited private;
+   type Client_Session is limited private with
+      Default_Initial_Condition => True;
 
    --  Gets the sessions current status
    --
