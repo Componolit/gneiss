@@ -5,7 +5,8 @@ with Gneiss.Memory;
 with Gneiss.Memory.Client;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Platform_State => (Log, Mem))
 is
 
    package Gneiss_Log is new Gneiss.Log;
@@ -18,11 +19,11 @@ is
    procedure Modify (Session : in out Memory.Client_Session;
                      Data    : in out String;
                      Ctx     : in out Gneiss_Log.Client_Session) with
-      Pre  => Memory.Initialized (Session)
-              and then Gneiss_Log.Initialized (Ctx),
-      Post => Memory.Initialized (Session)
-              and then Gneiss_Log.Initialized (Ctx),
-      Global => null;
+      Pre    => Memory.Initialized (Session)
+                and then Gneiss_Log.Initialized (Ctx),
+      Post   => Memory.Initialized (Session)
+                and then Gneiss_Log.Initialized (Ctx),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    package Memory_Client is new Memory.Client (Gneiss_Log.Client_Session, Modify);
 
