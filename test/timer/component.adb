@@ -6,9 +6,15 @@ with Gneiss.Timer.Client;
 with Basalt.Strings;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Log, Timer))
 is
-   procedure Event;
+   procedure Event with
+      Global => (In_Out => (Log,
+                            Gneiss_Internal.Platform_State,
+                            Main.Platform),
+                 Input  => (Capability, Timer));
 
    package Gneiss_Log is new Gneiss.Log;
    package Gneiss_Timer is new Gneiss.Timer;
