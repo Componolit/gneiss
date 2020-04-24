@@ -8,6 +8,7 @@
 --  This file is part of Gneiss, which is distributed under the terms of the
 --  GNU Affero General Public License version 3.
 --
+with Gneiss_Internal;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -34,7 +35,8 @@ is
                          Cap     :        Capability;
                          Label   :        String;
                          Size    :        Long_Integer;
-                         Idx     :        Session_Index := 1);
+                         Idx     :        Session_Index := 1) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Access the shared memory buffer, this will call the passed Modify procedure
    --
@@ -43,15 +45,17 @@ is
       with function Contract (Ctx : Context) return Boolean;
    procedure Modify (Session : in out Client_Session;
                      Ctx     : in out Context) with
-      Pre  => Initialized (Session)
-              and then Contract (Ctx),
-      Post => Initialized (Session)
-              and then Contract (Ctx);
+      Pre    => Initialized (Session)
+                and then Contract (Ctx),
+      Post   => Initialized (Session)
+                and then Contract (Ctx),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Close session
    --
    --  @param Session  Client session
    procedure Finalize (Session : in out Client_Session) with
-      Post => not Initialized (Session);
+      Post   => not Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Memory.Client;
