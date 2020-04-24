@@ -1,6 +1,5 @@
 
 with System;
-with Gneiss_Internal;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Client;
 with Gneiss_Protocol.Session;
@@ -8,6 +7,25 @@ with Gneiss_Protocol.Session;
 package body Gneiss.Rom.Client with
    SPARK_Mode
 is
+
+   function Get_First (Length : Integer) return Buffer_Index;
+   function Get_Last (Length : Integer) return Buffer_Index;
+
+   function Get_First (Length : Integer) return Buffer_Index is
+      (if Length < 1 then Buffer_Index'First + 1 else Buffer_Index'First);
+
+   function Get_Last (Length : Integer) return Buffer_Index
+   is
+   begin
+      if Length < 1 then
+         return Buffer_Index'First;
+      end if;
+      if Long_Integer (Length) < Long_Integer (Buffer_Index'Last - Buffer_Index'First + 1) then
+         return Buffer_Index (Long_Integer (Buffer_Index'First) + Long_Integer (Length) - 1);
+      else
+         return Buffer_Index'Last;
+      end if;
+   end Get_Last;
 
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Gneiss.Capability;
@@ -18,7 +36,7 @@ is
       use type Gneiss_Internal.File_Descriptor;
       Fds : Gneiss_Internal.Fd_Array (1 .. 1) := (others => -1);
    begin
-      if Initialized (Session) then
+      if Initialized (Session) or else Label'Length > 255 then
          return;
       end if;
       Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Rom, Fds, Label);
@@ -39,10 +57,10 @@ is
    procedure Update (Session : in out Client_Session;
                      Ctx     : in out Context)
    is
-      Size  : constant Integer      := Gneiss_Internal.Syscall.Stat_Size (Session.Fd);
-      First : constant Buffer_Index := Buffer_Index'First;
-      Last  : constant Buffer_Index := Buffer_Index (Long_Integer (First) + Long_Integer (Size - 1));
-      Buf   : Buffer (First .. Last) with
+      Length : constant Integer      := Gneiss_Internal.Syscall.Stat_Size (Session.Fd);
+      Last   : constant Buffer_Index := Get_Last (Length);
+      First  : constant Buffer_Index := Get_First (Length);
+      Buf    : Buffer (First .. Last) with
          Import,
          Address => Session.Map;
    begin

@@ -5,7 +5,9 @@ with Gneiss.Log;
 with Gneiss.Log.Client;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => C,
+                     Platform_State  => (Log, Config))
 is
 
    package Gneiss_Log is new Gneiss.Log;
@@ -19,8 +21,11 @@ is
    procedure Read (Session : in out Rom.Client_Session;
                    Data    :        String;
                    Ctx     : in out Gneiss_Log.Client_Session) with
-      Pre  => Gneiss_Log.Initialized (Ctx),
-      Post => Gneiss_Log.Initialized (Ctx);
+      Pre    => Rom.Initialized (Session)
+                and then Gneiss_Log.Initialized (Ctx),
+      Post   => Rom.Initialized (Session)
+                and then Gneiss_Log.Initialized (Ctx),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    package Rom_Client is new Rom.Client (Gneiss_Log.Client_Session, Read);
    procedure Update is new Rom_Client.Update (Gneiss_Log.Initialized);
