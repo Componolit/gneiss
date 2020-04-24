@@ -1,6 +1,6 @@
 
 set timeout 10
-spawn ./build/init/init test/log_proxy/log_proxy.xml
+spawn ./build/bin/core test/log_proxy/log_proxy.xml
 expect {
     timeout { exit 1 }
     "I: Component hello_world exited with status 0"
