@@ -5,7 +5,12 @@ with Gneiss.Log.Server;
 with Gneiss.Log.Dispatcher;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Dispatcher,
+                                         Servers,
+                                         Server_Data,
+                                         Client))
 is
    package Log is new Gneiss.Log;
 
@@ -50,7 +55,8 @@ is
          when Green   => Color_Green,
          when Cyan    => Color_Cyan,
          when Blue    => Color_Blue,
-         when Magenta => Color_Magenta);
+         when Magenta => Color_Magenta) with
+         Global => null;
 
    function Rainbow (C : Color) return Color is
       (case C is
@@ -60,49 +66,71 @@ is
          when Green   => Cyan,
          when Cyan    => Blue,
          when Blue    => Magenta,
-         when Magenta => Red);
+         when Magenta => Red) with
+         Global => null;
 
    pragma Warnings (Off, """Session"" is not modified");
+
    procedure Write (Session : in out Log.Server_Session;
                     Data    :        String) with
-      Pre  => Log.Initialized (Session),
-      Post => Log.Initialized (Session);
+      Pre    => Log.Initialized (Session),
+      Post   => Log.Initialized (Session),
+      Global => (In_Out => (Server_Data,
+                            Client,
+                            Gneiss_Internal.Platform_State));
+
    procedure Initialize (Session : in out Log.Server_Session;
                          Context : in out Server_Meta) with
-      Pre  => Log.Initialized (Session),
-      Post => Log.Initialized (Session);
+      Pre    => Log.Initialized (Session),
+      Post   => Log.Initialized (Session),
+      Global => null;
+
    procedure Finalize (Session : in out Log.Server_Session;
                        Context : in out Server_Meta) with
-      Pre  => Log.Initialized (Session),
-      Post => Log.Initialized (Session);
+      Pre    => Log.Initialized (Session),
+      Post   => Log.Initialized (Session),
+      Global => null;
+
    pragma Warnings (Off, """Session"" is not modified");
 
    function Ready (Session : Log.Server_Session;
-                   Context : Server_Meta) return Boolean;
+                   Context : Server_Meta) return Boolean with
+      Global => null;
+
    procedure Dispatch (Session : in out Log.Dispatcher_Session;
                        Cap     :        Log.Dispatcher_Capability;
                        Name    :        String;
                        Label   :        String) with
-      Pre  => Log.Initialized (Session),
-      Post => Log.Initialized (Session);
+      Pre    => Log.Initialized (Session)
+                and then Log.Registered (Session),
+      Post   => Log.Initialized (Session)
+                and then Log.Registered (Session),
+      Global => (In_Out => (Server_Data,
+                            Servers,
+                            Gneiss_Internal.Platform_State));
 
    procedure Put_Color (S : in out Server_Slot;
                         C :        Character) with
-      Pre  => Log.Initialized (Client),
-      Post => Log.Initialized (Client);
+      Pre    => Log.Initialized (Client),
+      Post   => Log.Initialized (Client),
+      Global => (In_Out => (Client,
+                            Gneiss_Internal.Platform_State));
 
    procedure Put (S : in out Server_Slot;
                   C :        Character) with
-      Pre  => Log.Initialized (Client),
-      Post => Log.Initialized (Client)
-              and then (if S.Cursor'Old = S.Buffer'Last - 4
-                        then S.Cursor = 1
-                        else S.Cursor = S.Cursor'Old + 1);
+      Pre    => Log.Initialized (Client),
+      Post   => Log.Initialized (Client)
+                and then (if S.Cursor'Old = S.Buffer'Last - 4
+                          then S.Cursor = 1
+                          else S.Cursor = S.Cursor'Old + 1),
+      Global => (In_Out => (Client,
+                            Gneiss_Internal.Platform_State));
 
    procedure Flush (S : in out Server_Slot) with
       Pre  => Log.Initialized (Client),
-      Post => Log.Initialized (Client)
-              and then S.Cursor = 0;
+      Post => Log.Initialized (Client) and then S.Cursor = 0,
+      Global => (In_Out => (Client,
+                            Gneiss_Internal.Platform_State));
 
    package Log_Client is new Log.Client;
    package Log_Server is new Log.Server (Server_Meta, Write, Initialize, Finalize, Ready);
@@ -188,6 +216,7 @@ is
       if Log_Dispatcher.Valid_Session_Request (Session, Cap) then
          for I in Servers'Range loop
             pragma Loop_Invariant (Log.Initialized (Session));
+            pragma Loop_Invariant (Log.Registered (Session));
             if
                not Ready (Servers (I), Server_Data)
                and then not Log.Initialized (Servers (I))

@@ -12,9 +12,11 @@ is
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Close (Fd : in out File_Descriptor) with
+      Post   => not Valid (Fd),
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Close (Fd : in out Epoll_Fd) with
+      Post   => not Valid (Fd),
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Waitpid (Pid    :     Integer;
@@ -56,6 +58,12 @@ is
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Timerfd_Create (Fd : out File_Descriptor) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
+
+   --  This is a dummy procedure to satisfy the global state change for
+   --  procedures that do not actually change the global state but are
+   --  annotated to do so. The annotation is requierd for platform independence.
+   procedure Modify_Platform with
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss_Internal.Syscall;

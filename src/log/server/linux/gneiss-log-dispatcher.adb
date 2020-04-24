@@ -1,7 +1,6 @@
 
 with Gneiss_Protocol.Session;
 with System;
-with Gneiss_Internal;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Syscall;
@@ -60,7 +59,7 @@ is
       Name  : Gneiss_Internal.Session_Label;
       Label : Gneiss_Internal.Session_Label;
    begin
-      if not Initialized (Session) then
+      if not Initialized (Session) or else not Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          return;
       end if;
       if Fd = Session.Dispatch_Fd then
@@ -102,7 +101,7 @@ is
       if not Initialized (Session) then
          return;
       end if;
-      if Fd = Session.Dispatch_Fd and then Session.Registered then
+      if Fd = Session.Dispatch_Fd and then Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          Gneiss_Internal.Epoll.Remove (Session.Efd, Fd, Ignore_Success);
          Gneiss_Internal.Syscall.Close (Session.Efd);
       end if;
@@ -116,18 +115,18 @@ is
       Session.Efd       := Cap.Efd;
       Session.Index     := Gneiss.Session_Index_Option'(Valid => True, Value => Idx);
       Session.Broker_Fd := Cap.Broker_Fd;
+      Gneiss_Internal.Syscall.Modify_Platform;
    end Initialize;
 
    procedure Register (Session : in out Dispatcher_Session)
    is
       Ignore_Success : Boolean;
    begin
-      if Session.Registered then
+      if Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          return;
       end if;
       Gneiss_Internal.Client.Register (Session.Broker_Fd, Gneiss_Protocol.Session.Log, Session.Dispatch_Fd);
       if Gneiss_Internal.Valid (Session.Dispatch_Fd) then
-         Session.Registered := True;
          Session.E_Cap      := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
          Gneiss_Internal.Epoll.Add (Session.Efd, Session.Dispatch_Fd,
                                     Dispatch_Cap_Address (Session),
