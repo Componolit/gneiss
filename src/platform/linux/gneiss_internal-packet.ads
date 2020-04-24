@@ -46,6 +46,7 @@ private
 
    procedure Recv (Fd     :     File_Descriptor;
                    Buf    : out Gneiss_Protocol.Types.Bytes;
+                   Length : out Gneiss_Protocol.Types.Length;
                    Fds    : out Fd_Array;
                    Block  :     Boolean) with
       Pre    => Valid (Fd),
