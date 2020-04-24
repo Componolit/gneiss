@@ -3,18 +3,19 @@ with Gneiss_Protocol.Session.Packet;
 
 package body Gneiss_Internal.Packet with
    SPARK_Mode,
-   Refined_State => (Packet_State => Buffer.Ptr)
+   Refined_State => (Packet_State => null)
 is
 
-   package Buffer with
+   generic
+   package Generic_Buffer with
       SPARK_Mode
    is
 
       Ptr : Gneiss_Protocol.Types.Bytes_Ptr;
 
-   end Buffer;
+   end Generic_Buffer;
 
-   package body Buffer with
+   package body Generic_Buffer with
       SPARK_Mode
    is
 
@@ -23,7 +24,7 @@ is
    begin
       pragma SPARK_Mode (Off);
       Ptr := Buf'Unrestricted_Access;
-   end Buffer;
+   end Generic_Buffer;
 
    procedure Get (Data : Gneiss_Protocol.Types.Bytes)
    is
@@ -59,6 +60,7 @@ is
                    Fds    : Fd_Array)
    is
       use type Gneiss_Protocol.Types.Length;
+      package Buffer is new Generic_Buffer;
       procedure Buffer_Name is new Set (Name.Value (Name.Value'First .. Name.Last));
       procedure Buffer_Label is new Set (Label.Value (Label.Value'First .. Label.Last));
       procedure Set_Name is new Gneiss_Protocol.Session.Packet.Set_Name (Buffer_Name);
@@ -88,6 +90,7 @@ is
                       Block :     Boolean)
    is
       use type Gneiss_Protocol.Session.Length_Type;
+      package Buffer is new Generic_Buffer;
       Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
       Action  : Gneiss_Protocol.Session.Action_Type;
       Kind    : Gneiss_Protocol.Session.Kind_Type;

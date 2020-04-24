@@ -10,6 +10,15 @@ make -C ada-runtime
 
 set -e
 
+./cement prove test/message_client.gpr . lib test -u component
+./cement prove test/message_server.gpr . lib test -u component
+./cement prove test/hello_world.gpr . lib test -u component
+./cement prove test/log_proxy.gpr . lib test -u component
+./cement prove test/rom.gpr . lib test -u component
+./cement prove test/memory_client.gpr . lib test -u component
+./cement prove test/memory_server.gpr . lib test -u component
+./cement prove test/timer.gpr . lib test -u component
+
 ./cement build test/message_client/message_client.xml . lib test
 ./cement build test/hello_world/hello_world.xml . lib test
 ./cement build test/log_proxy/log_proxy.xml . lib test
