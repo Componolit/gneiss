@@ -4,7 +4,11 @@ with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Dispatcher,
+                                         Servers,
+                                         Server_Data))
 is
 
    subtype Message_Buffer is String (1 .. 128);
@@ -23,28 +27,37 @@ is
 
    procedure Initialize (Session : in out Message.Server_Session;
                          Context : in out Server_Meta) with
-      Pre  => Message.Initialized (Session),
-      Post => Message.Initialized (Session);
+      Pre    => Message.Initialized (Session),
+      Post   => Message.Initialized (Session),
+      Global => null;
 
    procedure Finalize (Session : in out Message.Server_Session;
                        Context : in out Server_Meta) with
-      Pre  => Message.Initialized (Session),
-      Post => Message.Initialized (Session);
+      Pre    => Message.Initialized (Session),
+      Post   => Message.Initialized (Session),
+      Global => null;
 
    procedure Recv (Session : in out Message.Server_Session;
                    Data    :        Message_Buffer) with
-      Pre  => Message.Initialized (Session),
-      Post => Message.Initialized (Session);
+      Pre    => Message.Initialized (Session),
+      Post   => Message.Initialized (Session),
+      Global => (Input  => Server_Data,
+                 In_Out => Gneiss_Internal.Platform_State);
 
    function Ready (Session : Message.Server_Session;
-                   Context : Server_Meta) return Boolean;
+                   Context : Server_Meta) return Boolean with
+      Global => null;
 
    procedure Dispatch (Session  : in out Message.Dispatcher_Session;
                        Disp_Cap :        Message.Dispatcher_Capability;
                        Name     :        String;
                        Label    :        String) with
-      Pre  => Message.Initialized (Session),
-      Post => Message.Initialized (Session);
+      Pre    => Message.Initialized (Session)
+                and then Message.Registered (Session),
+      Post   => Message.Initialized (Session)
+                and then Message.Registered (Session),
+      Global => (In_Out => (Server_Data, Servers,
+                            Gneiss_Internal.Platform_State));
 
    package Message_Server is new Message.Server (Server_Meta, Initialize, Finalize, Recv, Ready);
    package Message_Dispatcher is new Message.Dispatcher (Message_Server, Dispatch);
