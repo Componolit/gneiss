@@ -73,6 +73,14 @@ is
    --  @return         Index option that can be invalid
    function Index (Session : Dispatcher_Session) return Session_Index_Option;
 
+   --  Proof property that the dispatcher is registered on the platform
+   --
+   --  @param Session  Dispatcher session instance
+   --  @return         Dispatcher is registered on the platform
+   function Registered (Session : Dispatcher_Session) return Boolean with
+      Ghost,
+      Pre => Initialized (Session);
+
 private
 
    type Client_Session is new Gneiss_Internal.Memory.Client_Session;
