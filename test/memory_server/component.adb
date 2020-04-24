@@ -4,7 +4,11 @@ with Gneiss.Memory.Dispatcher;
 with Gneiss.Memory.Server;
 
 package body Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Dispatcher,
+                                         Servers,
+                                         Server_Data))
 is
 
    package Memory is new Gneiss.Memory (Character, Positive, String);
@@ -28,32 +32,40 @@ is
    procedure Modify (Session : in out Memory.Server_Session;
                      Data    : in out String;
                      Context : in out Server_Meta) with
-      Pre  => Memory.Initialized (Session)
-              and then Ready (Session, Context)
-              and then Contract (Context),
-      Post => Memory.Initialized (Session)
-              and then Ready (Session, Context)
-              and then Contract (Context);
+      Pre    => Memory.Initialized (Session)
+                and then Ready (Session, Context)
+                and then Contract (Context),
+      Post   => Memory.Initialized (Session)
+                and then Ready (Session, Context)
+                and then Contract (Context),
+      Global => null;
 
    procedure Initialize (Session : in out Memory.Server_Session;
                          Context : in out Server_Meta) with
-      Pre  => Memory.Initialized (Session),
-      Post => Memory.Initialized (Session);
+      Pre    => Memory.Initialized (Session),
+      Post   => Memory.Initialized (Session),
+      Global => null;
 
    procedure Finalize (Session : in out Memory.Server_Session;
                        Context : in out Server_Meta) with
-      Pre  => Memory.Initialized (Session),
-      Post => Memory.Initialized (Session);
+      Pre    => Memory.Initialized (Session),
+      Post   => Memory.Initialized (Session),
+      Global => null;
 
    function Ready (Session : Memory.Server_Session;
-                   Context : Server_Meta) return Boolean;
+                   Context : Server_Meta) return Boolean with
+      Global => null;
 
    procedure Dispatch (Session  : in out Memory.Dispatcher_Session;
                        Disp_Cap :        Memory.Dispatcher_Capability;
                        Name     :        String;
                        Label    :        String) with
-      Pre  => Memory.Initialized (Session),
-      Post => Memory.Initialized (Session);
+      Pre    => Memory.Initialized (Session)
+                and then Memory.Registered (Session),
+      Post   => Memory.Initialized (Session)
+                and then Memory.Registered (Session),
+      Global => (In_Out => (Servers, Server_Data,
+                            Gneiss_Internal.Platform_State));
 
    package Memory_Server is new Memory.Server (Server_Meta, Modify, Initialize, Finalize, Ready);
    package Memory_Dispatcher is new Memory.Dispatcher (Memory_Server, Dispatch);

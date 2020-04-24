@@ -34,6 +34,7 @@ is
          Import,
          Address => Session.Map;
    begin
+      Gneiss_Internal.Syscall.Modify_Platform;
       Generic_Modify (Session, B, Ctx);
    end Modify;
 
