@@ -8,6 +8,7 @@
 --  This file is part of Gneiss, which is distributed under the terms of the
 --  GNU Affero General Public License version 3.
 --
+with Gneiss_Internal;
 
 generic
    --  Timer event
@@ -23,7 +24,8 @@ is
    procedure Initialize (C     : in out Client_Session;
                          Cap   :        Capability;
                          Label :        String;
-                         Idx   :        Session_Index := 1);
+                         Idx   :        Session_Index := 1) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Returns a monotonic clock value
    --
@@ -34,7 +36,8 @@ is
    --  @return   Current clock value
    function Clock (C : Client_Session) return Time with
       Volatile_Function,
-      Pre => Initialized (C);
+      Pre    => Initialized (C),
+      Global => (Input => Gneiss_Internal.Platform_State);
 
    --  Sets the timeout after which the Event procedure will be called
    --
@@ -48,14 +51,16 @@ is
    --  @param D  Timeout event duration
    procedure Set_Timeout (C : in out Client_Session;
                           D :        Duration) with
-      Pre  => Initialized (C)
-              and then D > 0.0,
-      Post => Initialized (C);
+      Pre    => Initialized (C)
+                and then D > 0.0,
+      Post   => Initialized (C),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    --  Finalizes timer session
    --
    --  @param C  Timer client session object
    procedure Finalize (C : in out Client_Session) with
-      Post => not Initialized (C);
+      Post   => not Initialized (C),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Timer.Client;
