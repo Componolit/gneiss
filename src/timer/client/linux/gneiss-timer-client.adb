@@ -1,6 +1,5 @@
 
 with System;
-with Gneiss_Internal;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Client;
@@ -24,18 +23,21 @@ is
                         D  : Duration) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_timer_set";
+      External_Name => "gneiss_timer_set",
+      Global        => (In_Out => Gneiss_Internal.Platform_State);
 
    function Timer_Get (Fd : Gneiss_Internal.File_Descriptor) return Time with
       Import,
       Convention    => C,
       External_Name => "gneiss_timer_get",
+      Global        => (Input => Gneiss_Internal.Platform_State),
       Volatile_Function;
 
    procedure Timer_Read (Fd : Gneiss_Internal.File_Descriptor) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_timer_read";
+      External_Name => "gneiss_timer_read",
+      Global        => (In_Out => Gneiss_Internal.Platform_State);
 
    function Event_Address (Session : Client_Session) return System.Address with
       SPARK_Mode => Off
@@ -81,7 +83,9 @@ is
       C.Index := Session_Index_Option'(Valid => True, Value => Idx);
    end Initialize;
 
-   function Clock (C : Client_Session) return Time
+   function Clock (C : Client_Session) return Time with
+      SPARK_Mode => Off
+      --  Clock is not recognized as volatile even though Timer_Get is
    is
    begin
       return Timer_Get (C.Fd);
