@@ -30,9 +30,14 @@ is
                               "Size of Element must be 8 bit");
 
    --  Session types
-   type Client_Session is limited private;
-   type Server_Session is limited private;
-   type Dispatcher_Session is limited private;
+   type Client_Session is limited private with
+      Default_Initial_Condition => True;
+
+   type Server_Session is limited private with
+      Default_Initial_Condition => True;
+
+   type Dispatcher_Session is limited private with
+      Default_Initial_Condition => True;
 
    --  Dispatcher capability, used to enforce scope for dispatcher procedures
    type Dispatcher_Capability is limited private;

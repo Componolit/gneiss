@@ -183,7 +183,7 @@ def gpr_prove(name, root, build_dir, paths, steps, unit, logger):
     args, env, project_path_file = gpr_prepare(name, root, build_dir, paths)
     logger.debug(args)
     logger.debug(env["GPR_PROJECT_PATH_FILE"])
-    args.extend(["-j0", f"--steps={steps}", "--checks-as-errors"])
+    args.extend(["-j0", f"--steps={steps}", "--checks-as-errors", "--prover=cvc4,z3,altergo"])
     if unit:
         args.extend(["-u", unit])
     proc = subprocess.Popen(["gnatprove"] + args + ["-XCEMENT_BUILD_STEP=compile"], env=env)
