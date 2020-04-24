@@ -16,6 +16,7 @@ build_parser.add_argument("config", help="gneiss config file")
 build_parser.add_argument("gneiss_root", help="gneiss repository")
 build_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
 build_parser.add_argument("-r", "--root_fs", help="use separate rootfs", default="build")
+build_parser.add_argument("-p", "--platform", help="target platform", default="linux")
 build_parser.add_argument("paths", help="component search paths", nargs="*")
 edit_parser = subparsers.add_parser("edit")
 edit_parser.add_argument("project", help="GPR project file")
@@ -33,13 +34,13 @@ prove_parser.add_argument("paths", help="component search paths", nargs="*")
 def get_component_name(libname):
     return libname[13:-3]
 
-def build_init(root, outdir, default_args, logger):
-    args = default_args + ["-P", "init",
+def build_init(root, outdir, default_args, platform, logger):
+    args = default_args + ["-P", f"core",
             "-aP", root,
-            "-aP", root + "/init",
+            "-aP", root + f"/src/core/{platform}",
             "-aP", root + "/lib",
             "-XGNEISS_ROOT=" + root,
-            "-XCEMENT_OBJECT_DIR=" + os.path.join(outdir, "init"),
+            "-XCEMENT_OBJECT_DIR=" + os.path.join(outdir, f"core_{platform}"),
             "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(outdir, "libobjects/"),
             "-XCEMENT_LIBRARY_DIR=" + os.path.join(outdir, "libs")]
     logger.debug(args)
@@ -65,12 +66,12 @@ def find(name, path):
         if name in files:
             return os.path.join(root, name)
 
-def extract_init(build_dir, target_dir):
+def extract_init(build_dir, target_dir, platform):
     try:
         os.mkdir(target_dir)
     except FileExistsError:
         pass
-    shutil.copy2(find("init", os.path.join(build_dir, "init")), target_dir)
+    shutil.copy2(find("core", os.path.join(build_dir, f"core_{platform}")), target_dir)
 
 def extract_components(build_dir, target_dir, components):
     try:
@@ -91,15 +92,15 @@ def get_component_files(xml_file):
             raise ValueError(c)
     return components
 
-def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, logger, verbose):
+def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose):
     logger.info("Compiling...")
     components = get_component_files(config)
     logger.info("Preparing init...")
     default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(gneiss_root, "gprconfig_db")]
     if args.verbose:
         default_args.append("-v")
-    if build_init(gneiss_root, build_dir, default_args, logger) > 0:
-        logger.error("Preparation of init failed")
+    if build_init(gneiss_root, build_dir, default_args, platform, logger) > 0:
+        logger.error("Preparation of core failed")
         exit(1)
     for c in components:
         logger.info("Preparing " + c + "...")
@@ -115,7 +116,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, logger, verbose
     default_args = ["-p", "-XCEMENT_BUILD_STEP=compile"]
     if verbose:
         default_args.append("-v")
-    if build_init(gneiss_root, build_dir, default_args, logger) > 0:
+    if build_init(gneiss_root, build_dir, default_args, platform, logger) > 0:
         logger.error("Compilation of init failed")
         exit(1)
     for c in components:
@@ -143,7 +144,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, logger, verbose
         os.mkdir(libdir)
     except FileExistsError:
         pass
-    extract_init(build_dir, bindir)
+    extract_init(build_dir, bindir, platform)
     extract_components(build_dir, libdir, components)
     logger.info("Finished.")
 
@@ -210,6 +211,7 @@ if __name__ == "__main__":
                     build_dir,
                     root_dir,
                     args.paths,
+                    args.platform,
                     logger,
                     args.verbose)
     elif args.command == "edit":

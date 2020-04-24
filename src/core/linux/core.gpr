@@ -5,7 +5,7 @@ with "gneiss_protocol";
 with "basalt";
 with "SXML";
 
-project Init is
+project Core is
 
    Gneiss_Root := external ("GNEISS_ROOT", ".");
    Step := external ("CEMENT_BUILD_STEP");
@@ -13,7 +13,7 @@ project Init is
    case Step is
       when "compile" =>
          for Create_Missing_Dirs use "True";
-         for Source_Dirs use (Gneiss_Root & "/init");
+         for Source_Dirs use (Gneiss_Root & "/src/core/linux");
          for Languages use ("Ada");
          for Object_Dir use external ("CEMENT_OBJECT_DIR");
          for Main use ("main.adb");
@@ -26,7 +26,7 @@ project Init is
       case Step is
          when "compile" =>
             for Global_Configuration_Pragmas use Gneiss_Root & "/spark.adc";
-            for Executable ("main.adb") use "init";
+            for Executable ("main.adb") use "core";
          when others =>
             null;
       end case;
@@ -40,4 +40,4 @@ project Init is
       for Required_Switches use ("-lpthread", "-lrt", "-ldl");
    end Linker;
 
-end Init;
+end Core;
