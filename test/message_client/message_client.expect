@@ -1,6 +1,6 @@
 
 set timeout 10
-spawn ./build/bin/init test/message_client/message_client.xml
+spawn ./build/bin/core test/message_client/message_client.xml
 expect {
     timeout { exit 1 }
     "I: Component message_client exited with status 0"

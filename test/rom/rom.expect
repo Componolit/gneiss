@@ -3,7 +3,7 @@ set timeout 10
 set fp [open "/tmp/test.conf" w+]
 puts $fp "Hello World!"
 close $fp
-spawn ./build/init/init test/rom/rom.xml
+spawn ./build/bin/core test/rom/rom.xml
 expect {
     timeout { exit 1 }
     "I: Component rom exited with status 0"

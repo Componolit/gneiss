@@ -1,6 +1,6 @@
 
 set timeout 10
-spawn ./build/init/init test/hello_world/hello_world.xml
+spawn ./build/bin/core test/hello_world/hello_world.xml
 expect {
     timeout { exit 1 }
     "I: Component hello_world exited with status 0"
