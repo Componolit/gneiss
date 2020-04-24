@@ -89,6 +89,7 @@ is
                       Fds   : out Fd_Array;
                       Block :     Boolean)
    is
+      use type Gneiss_Protocol.Types.Length;
       use type Gneiss_Protocol.Session.Length_Type;
       package Buffer is new Generic_Buffer;
       Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
@@ -96,13 +97,17 @@ is
       Kind    : Gneiss_Protocol.Session.Kind_Type;
       Name    : Session_Label;
       Label   : Session_Label;
+      Length  : Gneiss_Protocol.Types.Length;
       procedure Parse_Name is new Get (Name.Value, Name.Last);
       procedure Parse_Label is new Get (Label.Value, Label.Last);
       procedure Get_Name is new Gneiss_Protocol.Session.Packet.Get_Name (Parse_Name);
       procedure Get_Label is new Gneiss_Protocol.Session.Packet.Get_Label (Parse_Label);
    begin
       Msg := Broker_Message'(Valid => False);
-      Recv (Fd, Buffer.Ptr.all, Fds, Block);
+      Recv (Fd, Buffer.Ptr.all, Length, Fds, Block);
+      if Length = 0 then --  EOF
+         return;
+      end if;
       Gneiss_Protocol.Session.Packet.Initialize (Context, Buffer.Ptr);
       Gneiss_Protocol.Session.Packet.Verify_Message (Context);
       if not Gneiss_Protocol.Session.Packet.Structural_Valid_Message (Context) then
@@ -142,14 +147,16 @@ is
 
    procedure Recv (Fd     :     File_Descriptor;
                    Buf    : out Gneiss_Protocol.Types.Bytes;
+                   Length : out Gneiss_Protocol.Types.Length;
                    Fds    : out Fd_Array;
                    Block  :     Boolean)
    is
-      Ignore_Trunc  : Integer;
-      Ignore_Length : Integer;
+      Ignore_Trunc : Integer;
+      Len          : Integer;
    begin
       Linux.Read_Message (Fd, Buf'Address, Buf'Length, Fds, Fds'Length,
-                          Ignore_Length, Ignore_Trunc, Boolean'Pos (Block));
+                          Len, Ignore_Trunc, Boolean'Pos (Block));
+      Length := (if Len > 0 then Gneiss_Protocol.Types.Length (Len) else 0);
    end Recv;
 
 end Gneiss_Internal.Packet;
