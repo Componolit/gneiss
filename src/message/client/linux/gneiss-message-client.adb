@@ -1,7 +1,6 @@
 
 with System;
 with Gneiss_Protocol.Session;
-with Gneiss_Internal;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
@@ -48,7 +47,11 @@ is
       Fds     : Gneiss_Internal.Fd_Array (1 .. 1) := (others => -1);
       Success : Boolean;
    begin
-      if Initialized (Session) or else Session.Label.Value'Length < Label'Length then
+      if
+         Initialized (Session)
+         or else Session.Label.Value'Length < Label'Length
+         or else Message_Buffer'Size /= 128 * 8
+      then
          return;
       end if;
       Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Message, Fds, Label);
