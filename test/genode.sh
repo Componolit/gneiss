@@ -4,10 +4,10 @@ set -e
 cd /genode
 git remote add jklmnn https://github.com/jklmnn/genode.git
 git fetch jklmnn
-git checkout b0d01103e20981d64a81b8494359c9606017e4bf
+git checkout 738b55ec140863660c247ed01fce12e26fac44e0
 git clone https://github.com/Componolit/genode-componolit.git /genode/repos/componolit
 cd /genode/repos/componolit
-git checkout cbb52b2139cfaf5afcccc1ec5c64a01fafe0250a
+git checkout 7f85fcdce498b45a4936e5ff914491b76c9cce0d
 rm -rf /genode/repos/componolit/modules/gneiss
 ln -fs /gneiss /genode/repos/componolit/modules/gneiss
 git submodule update --init --recursive modules/basalt
