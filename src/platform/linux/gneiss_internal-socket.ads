@@ -3,7 +3,7 @@ with Gneiss_Protocol.Session;
 with Gneiss_Protocol.Types;
 with Gneiss_Internal.Linux;
 
-private package Gneiss_Internal.Packet with
+private package Gneiss_Internal.Socket with
    SPARK_Mode,
    Abstract_State => (Packet_State with Part_Of => Gneiss_Internal.Platform_State)
 is
@@ -52,4 +52,4 @@ private
       Pre    => Valid (Fd),
       Global => (In_Out => Linux.Linux_State);
 
-end Gneiss_Internal.Packet;
+end Gneiss_Internal.Socket;
