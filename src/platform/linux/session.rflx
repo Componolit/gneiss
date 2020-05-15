@@ -4,12 +4,12 @@ package Session is
    type Action_Type is (Request, Confirm, Reject, Register) with
       Size => 8;
 
-   type Kind_Type is (Message, Log, Memory, Rom, Timer) with
+   type Kind_Type is (Message, Log, Memory, Rom, Timer, Packet) with
       Size => 8;
 
    type Length_Type is mod 2 ** 8;
 
-   type Packet is
+   type PDU is
       message
          Action       : Action_Type;
          Kind         : Kind_Type;
