@@ -1,4 +1,4 @@
-with Gneiss_Internal.Packet;
+with Gneiss_Internal.Socket;
 
 package body Gneiss_Internal.Client with
    SPARK_Mode
@@ -15,8 +15,8 @@ is
       Msg   : Broker_Message;
    begin
       Fd := -1;
-      Packet.Send (Broker_Fd, Gneiss_Protocol.Session.Register, Kind, Name, Label, (1 .. 0 => -1));
-      Packet.Receive (Broker_Fd, Msg, Fds, True);
+      Socket.Send (Broker_Fd, Gneiss_Protocol.Session.Register, Kind, Name, Label, (1 .. 0 => -1));
+      Socket.Receive (Broker_Fd, Msg, Fds, True);
       if
          not Msg.Valid
          or else not Valid (Fds (Fds'First))
@@ -44,8 +44,8 @@ is
       end loop;
       Lbl.Last := Lbl.Value'First + Label'Length - 1;
       Lbl.Value (Lbl.Value'First .. Lbl.Last) := Label;
-      Packet.Send (Broker_Fd, Gneiss_Protocol.Session.Request, Kind, Name, Lbl, Fds (Fds'First .. Last));
-      Packet.Receive (Broker_Fd, Msg, Fds, True);
+      Socket.Send (Broker_Fd, Gneiss_Protocol.Session.Request, Kind, Name, Lbl, Fds (Fds'First .. Last));
+      Socket.Receive (Broker_Fd, Msg, Fds, True);
       if not Msg.Valid or else Msg.Kind /= Kind then
          Fds := (others => -1);
       end if;
@@ -60,7 +60,7 @@ is
       use type Gneiss_Protocol.Session.Kind_Type;
       Msg : Broker_Message;
    begin
-      Packet.Receive (Fd, Msg, Fds, False);
+      Socket.Receive (Fd, Msg, Fds, False);
       if not Msg.Valid or else Msg.Kind /= Kind then
          Fds := (others => -1);
       end if;
@@ -81,7 +81,7 @@ is
       S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
       S_Label.Last := S_Label.Value'First + Label'Last - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Fd, Gneiss_Protocol.Session.Confirm, Kind, S_Name, S_Label, Fds);
+      Socket.Send (Fd, Gneiss_Protocol.Session.Confirm, Kind, S_Name, S_Label, Fds);
    end Confirm;
 
    procedure Reject (Fd    : File_Descriptor;
@@ -96,7 +96,7 @@ is
       S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
       S_Label.Last := S_Label.Value'First + Label'Last - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Packet.Send (Fd, Gneiss_Protocol.Session.Reject, Kind, S_Name, S_Label, (1 .. 0 => -1));
+      Socket.Send (Fd, Gneiss_Protocol.Session.Reject, Kind, S_Name, S_Label, (1 .. 0 => -1));
    end Reject;
 
    procedure Send (Fd     : File_Descriptor;
@@ -107,7 +107,7 @@ is
                    Fds    : Fd_Array)
    is
    begin
-      Packet.Send (Fd, Action, Kind, Name, Label, Fds);
+      Socket.Send (Fd, Action, Kind, Name, Label, Fds);
    end Send;
 
    procedure Receive (Fd    :     File_Descriptor;
@@ -116,7 +116,7 @@ is
                       Block :     Boolean)
    is
    begin
-      Packet.Receive (Fd, Msg, Fds, Block);
+      Socket.Receive (Fd, Msg, Fds, Block);
    end Receive;
 
 end Gneiss_Internal.Client;

@@ -1,7 +1,7 @@
 
 with Gneiss_Protocol.Session.Packet;
 
-package body Gneiss_Internal.Packet with
+package body Gneiss_Internal.Socket with
    SPARK_Mode,
    Refined_State => (Packet_State => null)
 is
@@ -159,4 +159,4 @@ is
       Length := (if Len > 0 then Gneiss_Protocol.Types.Length (Len) else 0);
    end Recv;
 
-end Gneiss_Internal.Packet;
+end Gneiss_Internal.Socket;
