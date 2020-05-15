@@ -15,7 +15,8 @@ is
          when Gneiss_Protocol.Session.Log     => "Log",
          when Gneiss_Protocol.Session.Memory  => "Memory",
          when Gneiss_Protocol.Session.Rom     => "Rom",
-         when Gneiss_Protocol.Session.Timer   => "Timer");
+         when Gneiss_Protocol.Session.Timer   => "Timer",
+         when Gneiss_Protocol.Session.Packet  => "Packet");
 
    procedure Setup_Service (State : in out Service_List;
                             Kind  :        Gneiss_Protocol.Session.Kind_Type;
@@ -163,7 +164,10 @@ is
          return;
       end if;
       case Kind is
-         when Gneiss_Protocol.Session.Message | Gneiss_Protocol.Session.Log =>
+         when Gneiss_Protocol.Session.Message
+            | Gneiss_Protocol.Session.Log
+            | Gneiss_Protocol.Session.Packet
+            =>
             if Destination not in State.Components'Range then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
                return;
@@ -312,7 +316,11 @@ is
       Lookup.Find_Component_By_Name (State, Name, Destination, Valid);
       if Valid then
          case Kind is
-            when Gneiss_Protocol.Session.Message | Gneiss_Protocol.Session.Log | Gneiss_Protocol.Session.Memory =>
+            when Gneiss_Protocol.Session.Message
+               | Gneiss_Protocol.Session.Log
+               | Gneiss_Protocol.Session.Memory
+               | Gneiss_Protocol.Session.Packet
+               =>
                if Fds'Length > 0 and then Fds (Fds'First) >= 0 then
                   Send_Confirm (State.Components (Destination).Fd, Kind, Label, Fds (Fds'First .. Fds'First));
                else
