@@ -16,23 +16,20 @@ components correctly.
 Gneiss is a SPARK library providing a component-based systems abstraction for
 trusted components. Its main design goals are portability, performance and
 verifiability. Components built against the library can be compiled for the
-[Genode OS Framework](https://genode.org), the [Muen Separation Kernel](https://muen.sk)
-and Linux without modification. Only a minimal runtime such as our
-[ada-runtime](https://github.com/Componolit/ada-runtime) is required. To enable
-high-performance implementations, Gneiss imposes a fully asynchronous
-programming style where all work is done inside event handlers. All language
-constructs used in Gneiss can be analyzed by the SPARK proof tools to
-facilitate formally verified components.
+[Genode OS Framework](https://genode.org) and Linux without modification.
+Only a minimal runtime such as our [ada-runtime](https://github.com/Componolit/ada-runtime)
+is required. To enable high-performance implementations,
+Gneiss imposes a fully asynchronous programming style where all work
+is done inside event handlers. All language constructs used in Gneiss can
+be analyzed by the SPARK proof tools to facilitate formally verified components.
 
 ## Architecture
 
 The library is comprised of two parts: a platform independent interface and a
 platform implementation. The interface consists mostly of specifications that
-define the API and the SPARK contracts. It also contains utilities such as a
-custom `Image` function since this is not part of the runtime. The platform
-implementation is required to implement those specs with platform specific
-mechanisms. This can either be a native Ada platform or a binding to a
-different language.
+define the API and the SPARK contracts. The platform implementation is required
+to implement those specs with platform specific mechanisms. This can either
+be a native Ada platform or a binding to a different language.
 
 Interfaces are implemented as regular or generic packages. Since components
 built with Gneiss use an asynchronous approach most interfaces trigger
@@ -58,15 +55,15 @@ procedure. This must only be done once per component. An empty component looks
 as follows:
 
 ```Ada
-with Componolit.Gneiss.Types;
-with Componolit.Gneiss.Component;
+with Gneiss;
+with Gneiss.Component;
 
 package Component is
 
-   procedure Construct (Cap : Componolit.Gneiss.Types.Capability);
+   procedure Construct (Cap : Gneiss.Capability);
    procedure Destruct;
 
-   package Main is new Componolit.Gneiss.Component (Construct, Destruct);
+   package Main is new Gneiss.Component (Construct, Destruct);
 
 end Component;
 ```
@@ -78,52 +75,49 @@ capability is required to initialize clients or register servers. The procedure
 `Destruct` is called when the platform decides to stop the component and allows
 it to finalize component state. As a convention the components main package is
 always called `Component` and it must contain an instance of the generic
-package `Componolit.Gneiss.Component` that is named `Main`.
+package `Gneiss.Component` that is named `Main`.
 
 The simplest interfaces are used like regular libraries. An example is the
 `Log` client that provides standard logging facilities. A hello world with the
 component described above looks as follows
 
 ```Ada
-with Componolit.Gneiss.Log;
-with Componolit.Gneiss.Log.Client;
+with Gneiss.Log;
+with Gneiss.Log.Client;
 
 package body Component is
 
-   Log : Componolit.Gneiss.Log.Client_Session;
+   package Log is new Gneiss.Log;
+   package Log_Client is new Log.Client;
 
-   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
+   Client : Gneiss.Log.Client_Session;
+
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
-      if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "channel1");
-      end if;
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Info (Log, "Hello World!");
-         Componolit.Gneiss.Log.Client.Warning (Log, "Hello World!");
-         Componolit.Gneiss.Log.Client.Error (Log, "Hello World!");
-        Main.Vacate (Cap, Main.Success);
+      Log_Client.Initialize (Client, Cap, "channel1");
+      if Log.Initialized (Client) then
+         Log_Client.Info (Client, "Hello World!");
+         Log_Client.Warning (Client, "Hello World!");
+         Log_Client.Error (Client, "Hello World!");
+         Main.Vacate (Cap, Main.Success);
       else
-        Main.Vacate (Cap, Main.Failure);
+         Main.Vacate (Cap, Main.Failure);
       end if;
    end Construct;
 
    procedure Destruct
    is
    begin
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Finalize (Log);
-      end if;
+      Log_Client.Finalize (Client);
    end Destruct;
 
 end Component;
 ```
 
-In `Construct` the component checks if the log session `Log` is already
-initialized and initializes it if that is not the case. Initializing a session
-that has already been set up could lead to crashes or memory leaks on the
-platform. Since the initialization can fail it checks again if it succeeded.
-If this is the case it prints "Hello World!" as an info, warning and error
+In `Construct` the component initializes the log session. Since the
+initialization can fail it checks again if it succeeded. If this is
+the case it prints "Hello World!" as an info, warning and error
 message.
 
 The component then calls `Vacate` to tell the platform that it has finished its
@@ -157,36 +151,33 @@ requires a single callback procedure that is called after a previously
 specified time. The package spec is the same as in the previous example.
 
 ```Ada
-with Componolit.Gneiss.Log;
-with Componolit.Gneiss.Log.Client;
-with Componolit.Gneiss.Timer;
-with Componolit.Gneiss.Timer.Client;
+with Gneiss.Log;
+with Gneiss.Log.Client;
+with Gneiss.Timer;
+with Gneiss.Timer.Client;
 
 package body Component is
 
-   Log        : Componolit.Gneiss.Log.Client_Session;
-   Timer      : Componolit.Gneiss.Timer.Client_Session;
-   Capability : Componolit.Gneiss.Types.Capability;
+   Gneiss_Log   : Gneiss.Log.Client_Session;
+   Gneiss_Timer : Gneiss.Timer.Client_Session;
+   Capability   : Gneiss.Capability;
 
    procedure Event;
 
-   package Timer_Client is new Componolit.Gneiss.Timer.Client (Event);
+   package Log_Client is new Gneiss_Log.Client;
+   package Timer_Client is new Gneiss_Timer.Client (Event);
 
-   procedure Construct (Cap : Componolit.Gneiss.Types.Capability)
+   procedure Construct (Cap : Gneiss.Capability)
    is
    begin
       Capability := Cap;
-      if not Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Initialize (Log, Cap, "Timer");
-      end if;
-      if not Componolit.Gneiss.Timer.Initialized (Timer) then
-         Timer_Client.Initialize (Timer, Cap);
-      end if;
+      Log_Client.Initialize (Log, Cap, "Timer");
+      Timer_Client.Initialize (Timer, Cap);
       if
-         Componolit.Gneiss.Log.Initialized (Log)
-         and then Componolit.Timer.Initialized (Timer)
+         Gneiss_Log.Initialized (Log)
+         and then Gneiss.Timer.Initialized (Timer)
       then
-         Componolit.Gneiss.Log.Client.Info (Log, "Start!");
+         Log_Client.Info (Log, "Start!");
          Timer_Client.Set_Timeout (Timer, 60.0);
       else
          Main.Vacate (Cap, Main.Failure);
@@ -197,10 +188,10 @@ package body Component is
    is
    begin
       if
-         Componolit.Gneiss.Log.Initialized (Log)
-         and then Componolit.Gneiss.Timer.Initialized (Timer)
+         Gneiss_Log.Initialized (Log)
+         and then Gneiss_Timer.Initialized (Timer)
       then
-         Componolit.Gneiss.Log.Client.Info ("60s passed!");
+         Log_Client.Info ("60s passed!");
          Main.Vacate (Capability, Main.Success);
       else
          Main.Vacate (Capability, Main.Failure);
@@ -210,25 +201,19 @@ package body Component is
    procedure Destruct
    is
    begin
-      if Componolit.Gneiss.Log.Initialized (Log) then
-         Componolit.Gneiss.Log.Client.Finalize (Log);
-      end if;
-      if Componolit.Gneiss.Timer.Initialized (Timer) then
-         Timer_Client.Finalize (Timer);
-      end if;
+      Componolit.Gneiss.Log.Client.Finalize (Log);
+      Timer_Client.Finalize (Timer);
    end Destruct;
 
 end Component;
 ```
 
 The usage of the log session here is equivalent to the first example. Also the
-initialization of the timer session is similar. The main difference is that the
-`Timer.Client` package is a generic that needs to be instantiated with a
-procedure. When `Set_Timeout` is called on this instance a timeout is set on
-the platform. The platform will then call the `Event` procedure when this
-timeout triggers. Since the `Event` procedure has no arguments and can be used
-in multiple contexts no preconditions can be set. This requires an
-initialization check of the timer session.
+initialization of the timer session is similar. When `Set_Timeout` is called
+on the timer a timeout is set on the platform. The platform will then call
+the `Event` procedure when this timeout triggers. Since the `Event` procedure
+has no arguments and can be used in multiple contexts no preconditions can be
+set. This requires an initialization check of the timer session.
 
 Some interfaces need more than a simple event callback and require additional
 interface specific procedures or functions as generic arguments. These more
@@ -244,17 +229,18 @@ object which then must be kept somewhere to be used in other contexts.
 
 The generic approach to implement a new platform is to create a new directory
 in `platform` and provide bodies for all specs in the `src` directory. Some of
-those specs have private parts that include `Internal` packages and rename
+those specs have private parts that include `Gneiss_Internal` packages and rename
 their types. Those are platform-specific types and their declaration together
-with the according `Internal` package spec need to be provided. Platform
+with the according `Gneiss_Internal` package spec need to be provided. Platform
 specific types can be anything, as they're private to all components.
 
 The log client for example consists of two (in this example simplified) specs:
 
 ```Ada
-private with Componolit.Gneiss.Internal.Log;
+private with Gneiss_Internal.Log;
 
-package Componolit.Gneiss.Log is
+generic
+package Gneiss.Log is
 
    type Client_Session is limited private;
 
@@ -262,18 +248,17 @@ package Componolit.Gneiss.Log is
 
 private
 
-   type Client_Session is new Componolit.Gneiss.Internal.Log.Client_Session;
+   type Client_Session is new Gneiss_Internal.Log.Client_Session;
 
-end Componolit.Gneiss.Log;
+end Gneiss.Log;
 ```
 
 ```Ada
-with Componolit.Gneiss.Types;
-
-package Componolit.Gneiss.Log.Client is
+generic
+package Gneiss.Log.Client is
 
    procedure Initialize (C     : in out Client_Session;
-                         Cap   :        Componolit.Gneiss.Types.Capability;
+                         Cap   :        Capability;
                          Label :        String) with
       Pre => not Initialized (C);
 
@@ -282,7 +267,7 @@ package Componolit.Gneiss.Log.Client is
       Pre  => Initialized (C),
       Post => Initialized (C);
 
-end Componolit.Gneiss.Log.Client;
+end Gneiss.Log.Client;
 ```
 
 The client session is a limited private type that can neither be assigned nor
@@ -300,13 +285,13 @@ a pointer to the actual string object:
 ```Ada
 with System;
 
-package Componolit.Gneiss.Internal.Log is
+package Gneiss_Internal.Log is
 
    type Client_Session is limited record
       Label : System.Address := System.Null_Address;
    end record;
 
-end Componolit.Gneiss.Internal.Log;
+end Gneiss_Internal.Log;
 ```
 
 As the session type is limited and has no initialization operation it requires
@@ -353,10 +338,10 @@ in C.
 ```Ada
 with System;
 
-package body Componolit.Gneiss.Log.Client is
+package body Gneiss.Log.Client is
 
    procedure Initialize (C     : in out Client_Session;
-                         Cap   :        Componolit.Gneiss.Types.Capability;
+                         Cap   :        Capability;
                          Label :        String)
    is
       procedure C_Initialize (C_Client : in out Client_Session;
@@ -382,7 +367,7 @@ package body Componolit.Gneiss.Log.Client is
       C_Info (C, C_Msg'Address);
    end Info;
 
-end Componolit.Gneiss.Log.Client;
+end Gneiss.Log.Client;
 ```
 
 In the package body the C functions are imported. The `Client_Session` can be
@@ -401,17 +386,73 @@ fixed it needs to be a expression function to get into the proof context:
 ```Ada
 with System;
 
-package body Componolit.Gneiss.Log is
+package body Gneiss.Log is
 
    use type System.Address;
 
    function Initialized (C : Client_Session) return Boolean is
       (C.Label /= System.Null_Address);
 
-end Componolit.Gneiss.Log;
+end Gneiss.Log;
 ```
 
 The initialization checks if `Label` is a valid address. This ensures that all
 procedures that have an `Initialized` precondition can safely use the label.
 It also makes sure that if `malloc` fails in C the session will not be
 initialized.
+
+##  Buildsystem
+
+Gneiss aims to integrate into the existing build systems of the supported platforms.
+On Genode Gneiss components can be built with the native build system. On Linux there
+is no build system that allows defining and building systems.
+
+### Cement
+
+The Cement build system allows designing and building Gneiss systems that run on Linux either
+in a GNU userspace or directly on the kernel. A system consists of a core component that
+is executed with a configuration. The configuration declares the components and their communication
+channels. A component is compiled into a shared object that is loaded by the core component and
+then forks into its own process.
+
+The build configuration is done in XML. The example for a hello world system looks as follows:
+
+```XML
+<config>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
+    <component name="hello_world" file="libcomponent_hello_world.so">
+        <service name="Log" server="log_server"/>
+    </component>
+</config>
+```
+
+The `hello_world` component that is implemented by `libcomponent_hello_world.so` is allowed to
+communicate via a `Log` session to the `log_server` which then prints its outputs to the
+terminal. To compile this system `cement` can be called with
+
+```
+$ cd /path/to/gneiss
+$ ./cement build -b build test/hello_world/hello_world.xml . test init lib
+```
+
+Core is built in `build/bin` and the components are built in `build/lib`.
+To run the system add the components that are shared libraries to the
+preload path and run core with the build configuration.
+
+```
+$ export LD_LIBRARY_PATH=build/lib
+$ ./build/bin/core test/hello_world/hello_world.xml
+```
+
+The resulting output will be:
+
+```
+I: Loading config from test/hello_world/hello_world.xml
+I: Started log_server with PID 19294
+I: Started hello_world with PID 19295
+[hello_world:log_hello_world] Info: Hello World!
+[hello_world:log_hello_world] Warning: Hello World!
+[hello_world:log_hello_world] Error: Hello World!
+[hello_world:log_hello_world] Info: Destructing...
+I: Component hello_world exited with status 0
+```
