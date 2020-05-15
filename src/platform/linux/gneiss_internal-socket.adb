@@ -1,5 +1,5 @@
 
-with Gneiss_Protocol.Session.Packet;
+with Gneiss_Protocol.Session.PDU;
 
 package body Gneiss_Internal.Socket with
    SPARK_Mode,
@@ -63,22 +63,22 @@ is
       package Buffer is new Generic_Buffer;
       procedure Buffer_Name is new Set (Name.Value (Name.Value'First .. Name.Last));
       procedure Buffer_Label is new Set (Label.Value (Label.Value'First .. Label.Last));
-      procedure Set_Name is new Gneiss_Protocol.Session.Packet.Set_Name (Buffer_Name);
-      procedure Set_Label is new Gneiss_Protocol.Session.Packet.Set_Label (Buffer_Label);
-      Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
+      procedure Set_Name is new Gneiss_Protocol.Session.PDU.Set_Name (Buffer_Name);
+      procedure Set_Label is new Gneiss_Protocol.Session.PDU.Set_Label (Buffer_Label);
+      Context : Gneiss_Protocol.Session.PDU.Context := Gneiss_Protocol.Session.PDU.Create;
    begin
-      Gneiss_Protocol.Session.Packet.Initialize (Context, Buffer.Ptr);
-      Gneiss_Protocol.Session.Packet.Set_Action (Context, Action);
-      Gneiss_Protocol.Session.Packet.Set_Kind (Context, Kind);
-      Gneiss_Protocol.Session.Packet.Set_Name_Length (Context, Gneiss_Protocol.Session.Length_Type (Name.Last));
+      Gneiss_Protocol.Session.PDU.Initialize (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.PDU.Set_Action (Context, Action);
+      Gneiss_Protocol.Session.PDU.Set_Kind (Context, Kind);
+      Gneiss_Protocol.Session.PDU.Set_Name_Length (Context, Gneiss_Protocol.Session.Length_Type (Name.Last));
       if Name.Last > 0 then
          Set_Name (Context);
       end if;
-      Gneiss_Protocol.Session.Packet.Set_Label_Length (Context, Gneiss_Protocol.Session.Length_Type (Label.Last));
+      Gneiss_Protocol.Session.PDU.Set_Label_Length (Context, Gneiss_Protocol.Session.Length_Type (Label.Last));
       if Label.Last > 0 then
          Set_Label (Context);
       end if;
-      Gneiss_Protocol.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.PDU.Take_Buffer (Context, Buffer.Ptr);
       Send (Fd, Buffer.Ptr.all,
             4 + Name.Last + Label.Last,
             Fds);
@@ -92,7 +92,7 @@ is
       use type Gneiss_Protocol.Types.Length;
       use type Gneiss_Protocol.Session.Length_Type;
       package Buffer is new Generic_Buffer;
-      Context : Gneiss_Protocol.Session.Packet.Context := Gneiss_Protocol.Session.Packet.Create;
+      Context : Gneiss_Protocol.Session.PDU.Context := Gneiss_Protocol.Session.PDU.Create;
       Action  : Gneiss_Protocol.Session.Action_Type;
       Kind    : Gneiss_Protocol.Session.Kind_Type;
       Name    : Session_Label;
@@ -100,30 +100,30 @@ is
       Length  : Gneiss_Protocol.Types.Length;
       procedure Parse_Name is new Get (Name.Value, Name.Last);
       procedure Parse_Label is new Get (Label.Value, Label.Last);
-      procedure Get_Name is new Gneiss_Protocol.Session.Packet.Get_Name (Parse_Name);
-      procedure Get_Label is new Gneiss_Protocol.Session.Packet.Get_Label (Parse_Label);
+      procedure Get_Name is new Gneiss_Protocol.Session.PDU.Get_Name (Parse_Name);
+      procedure Get_Label is new Gneiss_Protocol.Session.PDU.Get_Label (Parse_Label);
    begin
       Msg := Broker_Message'(Valid => False);
       Recv (Fd, Buffer.Ptr.all, Length, Fds, Block);
       if Length = 0 then --  EOF
          return;
       end if;
-      Gneiss_Protocol.Session.Packet.Initialize (Context, Buffer.Ptr);
-      Gneiss_Protocol.Session.Packet.Verify_Message (Context);
-      if not Gneiss_Protocol.Session.Packet.Structural_Valid_Message (Context) then
+      Gneiss_Protocol.Session.PDU.Initialize (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.PDU.Verify_Message (Context);
+      if not Gneiss_Protocol.Session.PDU.Structural_Valid_Message (Context) then
          return;
       end if;
-      Action := Gneiss_Protocol.Session.Packet.Get_Action (Context);
-      Kind := Gneiss_Protocol.Session.Packet.Get_Kind (Context);
+      Action := Gneiss_Protocol.Session.PDU.Get_Action (Context);
+      Kind := Gneiss_Protocol.Session.PDU.Get_Kind (Context);
       if
-         Gneiss_Protocol.Session.Packet.Get_Name_Length (Context) > 0
-         and then Gneiss_Protocol.Session.Packet.Present (Context, Gneiss_Protocol.Session.Packet.F_Name)
+         Gneiss_Protocol.Session.PDU.Get_Name_Length (Context) > 0
+         and then Gneiss_Protocol.Session.PDU.Present (Context, Gneiss_Protocol.Session.PDU.F_Name)
       then
          Get_Name (Context);
       end if;
       if
-         Gneiss_Protocol.Session.Packet.Get_Label_Length (Context) > 0
-         and then Gneiss_Protocol.Session.Packet.Present (Context, Gneiss_Protocol.Session.Packet.F_Label)
+         Gneiss_Protocol.Session.PDU.Get_Label_Length (Context) > 0
+         and then Gneiss_Protocol.Session.PDU.Present (Context, Gneiss_Protocol.Session.PDU.F_Label)
       then
          Get_Label (Context);
       end if;
@@ -132,7 +132,7 @@ is
                              Kind   => Kind,
                              Name   => Name,
                              Label  => Label);
-      Gneiss_Protocol.Session.Packet.Take_Buffer (Context, Buffer.Ptr);
+      Gneiss_Protocol.Session.PDU.Take_Buffer (Context, Buffer.Ptr);
    end Receive;
 
    procedure Send (Fd     : File_Descriptor;
