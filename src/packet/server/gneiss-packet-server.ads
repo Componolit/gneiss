@@ -9,6 +9,14 @@ generic
    with procedure Event;
    with function Ready (Session : Server_Session;
                         Ctx     : Context) return Boolean;
+   with procedure Generic_Update (Session : in out Server_Session;
+                                  Idx     :        Descriptor_Index;
+                                  Buf     :    out Buffer;
+                                  Ctx     : in out Context);
+   with procedure Generic_Read (Session : in out Server_Session;
+                                Idx     :        Descriptor_Index;
+                                Buf     :        Buffer;
+                                Ctx     : in out Context);
    pragma Warnings (Off, "* is not referenced");
 package Gneiss.Packet.Server with
    SPARK_Mode
