@@ -1,5 +1,8 @@
 with Gneiss;
+with System;
 
+generic
+   type Descriptor_Index is range <>;
 package Gneiss_Internal.Packet with
    SPARK_Mode
 is
@@ -35,7 +38,10 @@ is
    end record;
 
    type Descriptor is limited record
-      null;
+      Addr     : System.Address   := System.Null_Address;
+      Size     : Natural          := 0;
+      Index    : Descriptor_Index := Descriptor_Index'First;
+      Writable : Boolean          := False;
    end record;
 
 end Gneiss_Internal.Packet;
