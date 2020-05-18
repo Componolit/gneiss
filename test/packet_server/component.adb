@@ -89,19 +89,23 @@ is
    is
    begin
       for S of Servers loop
-         for I in Descs'Range loop
-            Server_Data.Last := 0;
-            if not Packet_Server.Allocated (S, Descs (I), Server_Data) then
-               Packet_Server.Receive (S, Descs (I), I, Server_Data);
+         if Packet.Initialized (S) then
+            for I in Descs'Range loop
+               Server_Data.Last := 0;
+               if not Packet_Server.Allocated (S, Descs (I), Server_Data) then
+                  Packet_Server.Receive (S, Descs (I), I, Server_Data);
+                  exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
+                  Packet_Server.Read (S, Descs (I), Server_Data);
+                  Packet_Server.Free (S, Descs (I), Server_Data);
+                  exit when Server_Data.Last < Server_Data.Buf'First;
+                  Packet_Server.Allocate (S, Descs (I),
+                                          Server_Data.Last - Server_Data.Buf'First - 1, I, Server_Data);
+               end if;
                exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
-               Packet_Server.Read (S, Descs (I), Server_Data);
-               Packet_Server.Free (S, Descs (I), Server_Data);
-               Packet_Server.Allocate (S, Descs (I), Server_Data.Last - (Server_Data.Buf'First - 1), I, Server_Data);
-            end if;
-            exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
-            Packet_Server.Update (S, Descs (I), Server_Data);
-            Packet_Server.Send (S, Descs (I), Server_Data);
-         end loop;
+               Packet_Server.Update (S, Descs (I), Server_Data);
+               Packet_Server.Send (S, Descs (I), Server_Data);
+            end loop;
+         end if;
       end loop;
    end Event;
 

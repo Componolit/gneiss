@@ -53,10 +53,12 @@ is
 
 private
 
-   type Client_Session is new Gneiss_Internal.Packet.Client_Session;
-   type Server_Session is new Gneiss_Internal.Packet.Server_Session;
-   type Dispatcher_Session is new Gneiss_Internal.Packet.Dispatcher_Session;
-   type Dispatcher_Capability is new Gneiss_Internal.Packet.Dispatcher_Capability;
-   type Descriptor is new Gneiss_Internal.Packet.Descriptor;
+   package Internal is new Gneiss_Internal.Packet (Descriptor_Index);
+
+   type Client_Session is new Internal.Client_Session;
+   type Server_Session is new Internal.Server_Session;
+   type Dispatcher_Session is new Internal.Dispatcher_Session;
+   type Dispatcher_Capability is new Internal.Dispatcher_Capability;
+   type Descriptor is new Internal.Descriptor;
 
 end Gneiss.Packet;

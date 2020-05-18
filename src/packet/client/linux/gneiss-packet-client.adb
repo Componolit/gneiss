@@ -4,10 +4,13 @@ with Gneiss_Protocol.Session;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Syscall;
+with Gneiss_Internal.Packet_Session;
 
 package body Gneiss.Packet.Client with
    SPARK_Mode
 is
+
+   use type System.Address;
 
    function Get_Event_Address (Session : Client_Session) return System.Address;
 
@@ -80,26 +83,35 @@ is
 
    function Allocated (Session : Client_Session;
                        Desc    : Descriptor) return Boolean is
-      (False);
+      (Desc.Addr /= System.Null_Address);
 
    function Writable (Session : Client_Session;
                       Desc    : Descriptor) return Boolean is
-      (False);
+      (Desc.Writable);
 
    procedure Allocate (Session : in out Client_Session;
                        Desc    : in out Descriptor;
                        Size    :        Buffer_Index;
                        Idx     :        Descriptor_Index)
    is
+      pragma Unreferenced (Session);
    begin
-      null;
+      if Buffer_Index'Pos (Size) < Natural'Pos (Natural'Last) then
+         Desc.Size := Natural (Size);
+      else
+         Desc.Size := Natural'Last;
+      end if;
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Allocate (Desc.Addr, Desc.Size);
+      Desc.Writable := True;
+      Desc.Index    := Idx;
    end Allocate;
 
    procedure Send (Session : in out Client_Session;
                    Desc    : in out Descriptor)
    is
    begin
-      null;
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Send (Session.Fd, Desc.Addr, Desc.Size);
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Free (Desc.Addr);
    end Send;
 
    procedure Receive (Session : in out Client_Session;
@@ -107,7 +119,9 @@ is
                       Idx     :        Descriptor_Index)
    is
    begin
-      null;
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Receive (Session.Fd, Desc.Addr, Desc.Size);
+      Desc.Writable := False;
+      Desc.Index    := Idx;
    end Receive;
 
    procedure Update (Session : in out Client_Session;
@@ -129,8 +143,9 @@ is
    procedure Free (Session : in out Client_Session;
                    Desc    : in out Descriptor)
    is
+      pragma Unreferenced (Session);
    begin
-      null;
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Free (Desc.Addr);
    end Free;
 
 end Gneiss.Packet.Client;
