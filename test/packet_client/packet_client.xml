@@ -1,0 +1,9 @@
+<config>
+    <component name="log_server" file="libcomponent_linux_log_server.so"/>
+    <component name="packet_client" file="libcomponent_packet_client.so">
+        <service name="Packet" server="packet_server"/>
+        <service name="Log" server="log_server"/>
+    </component>
+    <component name="packet_server" file="libcomponent_packet_server.so">
+    </component>
+</config>

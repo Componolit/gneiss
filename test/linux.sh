@@ -18,6 +18,8 @@ set -e
 ./cement prove test/memory_client.gpr . lib test -u component
 ./cement prove test/memory_server.gpr . lib test -u component
 ./cement prove test/timer.gpr . lib test -u component
+#./cement prove test/packet_client.gpr . lib test -u component
+#./cement prove test/packet_server.gpr . lib test -u component
 
 ./cement build test/message_client/message_client.xml . lib test
 ./cement build test/hello_world/hello_world.xml . lib test
@@ -25,6 +27,7 @@ set -e
 ./cement build test/rom/rom.xml . lib test
 ./cement build test/memory_client/memory_client.xml . lib test
 ./cement build test/timer/timer.xml . lib test
+./cement build test/packet_client/packet_client.xml . lib test
 
 export LD_LIBRARY_PATH=build/lib
 expect test/message_client/message_client.expect
@@ -33,3 +36,4 @@ expect test/log_proxy/log_proxy.expect
 expect test/rom/rom.expect
 expect test/memory_client/memory_client.expect
 expect test/timer/timer.expect
+expect test/packet_client/packet_client.expect
