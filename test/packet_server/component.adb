@@ -23,7 +23,8 @@ is
 
    type Server_Meta is record
       Slots : Server_Slots;
-      Descs : Descriptors;
+      Buf   : String (1 .. 512);
+      Last  : Natural;
    end record;
 
    procedure Update (Session : in out Packet.Server_Session;
@@ -70,6 +71,7 @@ is
    Capability  : Gneiss.Capability;
    Servers     : Server_Reg;
    Server_Data : Server_Meta;
+   Descs       : Descriptors;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -86,7 +88,21 @@ is
    procedure Event
    is
    begin
-      null;
+      for S of Servers loop
+         for I in Descs'Range loop
+            Server_Data.Last := 0;
+            if not Packet_Server.Allocated (S, Descs (I), Server_Data) then
+               Packet_Server.Receive (S, Descs (I), I, Server_Data);
+               exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
+               Packet_Server.Read (S, Descs (I), Server_Data);
+               Packet_Server.Free (S, Descs (I), Server_Data);
+               Packet_Server.Allocate (S, Descs (I), Server_Data.Last - (Server_Data.Buf'First - 1), I, Server_Data);
+            end if;
+            exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
+            Packet_Server.Update (S, Descs (I), Server_Data);
+            Packet_Server.Send (S, Descs (I), Server_Data);
+         end loop;
+      end loop;
    end Event;
 
    procedure Update (Session : in out Packet.Server_Session;
@@ -94,8 +110,19 @@ is
                      Buf     :    out String;
                      Ctx     : in out Server_Meta)
    is
+      pragma Unreferenced (Session);
+      pragma Unreferenced (Idx);
+      Length : constant Natural := Ctx.Last - (Ctx.Buf'First - 1);
    begin
-      null;
+      Buf := (others => Character'First);
+      if Ctx.Last < Ctx.Buf'First then
+         return;
+      end if;
+      if Buf'Length <= Length then
+         Buf := Ctx.Buf (Ctx.Buf'First .. Ctx.Buf'First + Buf'Length - 1);
+      else
+         Buf (Buf'First .. Buf'First + Length - 1) := Ctx.Buf (Ctx.Buf'First .. Ctx.Last);
+      end if;
    end Update;
 
    procedure Read (Session : in out Packet.Server_Session;
@@ -103,8 +130,16 @@ is
                    Buf     :        String;
                    Ctx     : in out Server_Meta)
    is
+      pragma Unreferenced (Session);
+      pragma Unreferenced (Idx);
    begin
-      null;
+      if Buf'Length <= Ctx.Buf'Length then
+         Ctx.Last := Ctx.Buf'First + Buf'Length - 1;
+         Ctx.Buf (Ctx.Buf'First .. Ctx.Last) := Buf;
+      else
+         Ctx.Last := Ctx.Buf'Last;
+         Ctx.Buf := Buf (Buf'First .. Buf'First + Ctx.Buf'Length - 1);
+      end if;
    end Read;
 
    procedure Destruct
