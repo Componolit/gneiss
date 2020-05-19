@@ -80,7 +80,7 @@ is
                    Dispatcher_Capability'(Memfd     => -1,
                                           Client_Fd => -1,
                                           Server_Fd => -1,
-                                          Clean_Fd  => -1,
+                                          Clean_Fd  => Fd,
                                           Name      => Name,
                                           Label     => Label),
                    "", "");
@@ -110,7 +110,7 @@ is
          return;
       end if;
       Session.Broker_Fd := Cap.Broker_Fd;
-      Session.Efd  := Cap.Efd;
+      Session.Efd       := Cap.Efd;
       Session.Index     := Session_Index_Option'(Valid => True, Value => Idx);
       Gneiss_Internal.Syscall.Modify_Platform;
    end Initialize;
