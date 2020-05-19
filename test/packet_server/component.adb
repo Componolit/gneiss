@@ -99,7 +99,7 @@ is
                   Packet_Server.Free (S, Descs (I), Server_Data);
                   exit when Server_Data.Last < Server_Data.Buf'First;
                   Packet_Server.Allocate (S, Descs (I),
-                                          Server_Data.Last - Server_Data.Buf'First - 1, I, Server_Data);
+                                          Server_Data.Last - Server_Data.Buf'First + 1, I, Server_Data);
                end if;
                exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
                Packet_Server.Update (S, Descs (I), Server_Data);
