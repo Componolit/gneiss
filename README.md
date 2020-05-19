@@ -404,13 +404,13 @@ initialized.
 ##  Buildsystem
 
 Gneiss aims to integrate into the existing build systems of the supported platforms.
-On Genode Gneiss components can be built with the native build system. On Linux there
-is no build system that allows defining and building systems.
+On Genode Gneiss components can be built with the native build system. On Linux we chose
+a custom approach that fits our use case.
 
 ### Cement
 
 The Cement build system allows designing and building Gneiss systems that run on Linux either
-in a GNU userspace or directly on the kernel. A system consists of a core component that
+in a GNU userspace or as init process. A system consists of a core component that
 is executed with a configuration. The configuration declares the components and their communication
 channels. A component is compiled into a shared object that is loaded by the core component and
 then forks into its own process.
@@ -434,6 +434,10 @@ terminal. To compile this system `cement` can be called with
 $ cd /path/to/gneiss
 $ ./cement build -b build test/hello_world/hello_world.xml . test init lib
 ```
+
+The arguments after the configuration file are the directory where the Gneiss
+repository is located and the directories that contain the project files for the
+components and libraries.
 
 Core is built in `build/bin` and the components are built in `build/lib`.
 To run the system add the components that are shared libraries to the
