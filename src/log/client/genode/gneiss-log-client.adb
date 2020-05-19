@@ -33,8 +33,7 @@ is
 
    procedure Initialize (Session : in out Client_Session;
                          Cap     :        Capability;
-                         Label   :        String) with
-      SPARK_Mode => Off
+                         Label   :        String)
    is
    begin
       if Initialized (Session) then

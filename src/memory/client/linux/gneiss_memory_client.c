@@ -20,6 +20,5 @@ void gneiss_memfd_create(const char *name, unsigned long long size, int *fd)
         warn("name=%s size=%llu fd=%p\n", name, size, fd);
         close(*fd);
         *fd = -1;
-        return;
     }
 }
