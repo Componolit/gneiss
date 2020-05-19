@@ -30,6 +30,6 @@ is
    function Index (Session : Dispatcher_Session) return Session_Index_Option is
       (Session.Index);
 
-   function Registered (Session : Dispatcher_Session) return Boolean is (True);
+   function Registered (Session : Dispatcher_Session) return Boolean is (False);
 
 end Gneiss.Memory;
