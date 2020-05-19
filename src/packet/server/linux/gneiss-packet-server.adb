@@ -1,11 +1,15 @@
 with System;
 with Gneiss_Internal.Packet_Session;
+with Gneiss_Internal.Util;
 
 package body Gneiss.Packet.Server with
    SPARK_Mode
 is
 
    use type System.Address;
+
+   function Get_First is new Gneiss_Internal.Util.Get_First (Buffer_Index);
+   function Get_Last is new Gneiss_Internal.Util.Get_Last (Buffer_Index);
 
    function Allocated (Session : Server_Session;
                        Desc    : Descriptor;
@@ -62,16 +66,26 @@ is
                      Desc    :        Descriptor;
                      Ctx     : in out Context)
    is
+      First : constant Buffer_Index := Get_First (Desc.Size);
+      Last  : constant Buffer_Index := Get_Last (Desc.Size);
+      B     : Buffer (First .. Last) with
+         Import,
+         Address => Desc.Addr;
    begin
-      null;
+      Generic_Update (Session, Desc.Index, B, Ctx);
    end Update;
 
    procedure Read (Session : in out Server_Session;
                    Desc    :        Descriptor;
                    Ctx     : in out Context)
    is
+      First : constant Buffer_Index := Get_First (Desc.Size);
+      Last  : constant Buffer_Index := Get_Last (Desc.Size);
+      B     : Buffer (First .. Last) with
+         Import,
+         Address => Desc.Addr;
    begin
-      null;
+      Generic_Read (Session, Desc.Index, B, Ctx);
    end Read;
 
    procedure Free (Session : in out Server_Session;
