@@ -62,6 +62,7 @@ is
          if not Packet_Client.Allocated (Client, Descs (I)) then
             Packet_Client.Receive (Client, Descs (I), I);
             exit when not Packet_Client.Allocated (Client, Descs (I));
+            Main.Vacate (Capability, Main.Success);
             Packet_Client.Read (Client, Descs (I), Log);
             Packet_Client.Free (Client, Descs (I));
          end if;
@@ -81,6 +82,7 @@ is
       if Buf'Length >= 12 then
          Buf (Buf'First .. Buf'First + 11) := "Hello World!";
       end if;
+      Log_Client.Info (Ctx, "Packet sent: " & Buf);
    end Update;
 
    procedure Read (Session : in out Packet.Client_Session;
@@ -91,7 +93,7 @@ is
       pragma Unreferenced (Session);
       pragma Unreferenced (Idx);
    begin
-      Log_Client.Info (Ctx, "Packet: " & Buf);
+      Log_Client.Info (Ctx, "Packet received: " & Buf);
    end Read;
 
    procedure Destruct

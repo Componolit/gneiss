@@ -76,7 +76,7 @@ is
                    Label.Value (Label.Value'First .. Label.Last));
          if not Session.Accepted then
             Gneiss_Internal.Client.Reject (Session.Dispatch_Fd,
-                                           Gneiss_Protocol.Session.Message,
+                                           Gneiss_Protocol.Session.Packet,
                                            Name.Value (Name.Value'First .. Name.Last),
                                            Label.Value (Label.Value'First .. Label.Last));
          end if;
@@ -170,7 +170,7 @@ is
                                       Cap.Name.Value (Cap.Name.Value'First .. Cap.Name.Last),
                                       Cap.Label.Value (Cap.Label.Value'First .. Cap.Label.Last),
                                       (1 => Cap.Client_Fd));
-      Session.Accepted := False;
+      Session.Accepted := True;
    end Session_Accept;
 
    procedure Session_Cleanup (Session  : in out Dispatcher_Session;
