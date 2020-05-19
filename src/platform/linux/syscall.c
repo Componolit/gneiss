@@ -187,7 +187,6 @@ void gneiss_drop_message(int sock)
     message.msg_controllen = sizeof(cmsgu.control);
     if(recvmsg(sock, &message, MSG_TRUNC) < 0){
         warn("%s: recvmsg(sock=%d, message=%p, MSG_TRUNC)", __func__, sock, &message);
-        return;
     }
 }
 
