@@ -97,14 +97,14 @@ is
                Gneiss_Internal.Syscall.Waitpid (B_State.Components (Index).Pid, Exit_Status);
                if Result = SXML.Result_OK then
                   Gneiss_Internal.Print.Info ("Component "
-                                   & XML_Buf (XML_Buf'First .. Last)
-                                   & " exited with status "
-                                   & Basalt.Strings.Image (Exit_Status));
+                                              & XML_Buf (XML_Buf'First .. Last)
+                                              & " exited with status "
+                                              & Basalt.Strings.Image (Exit_Status));
                else
                   Gneiss_Internal.Print.Info ("Component PID "
-                                   & Basalt.Strings.Image (B_State.Components (Index).Pid)
-                                   & " exited with status "
-                                   & Basalt.Strings.Image (Exit_Status));
+                                              & Basalt.Strings.Image (B_State.Components (Index).Pid)
+                                              & " exited with status "
+                                              & Basalt.Strings.Image (Exit_Status));
                end if;
                if Gneiss_Internal.Valid (B_State.Components (Index).Fd) then
                   Gneiss_Internal.Epoll.Remove (B_State.Epoll_Fd, B_State.Components (Index).Fd, Ignore_Success);

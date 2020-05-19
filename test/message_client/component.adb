@@ -22,9 +22,9 @@ is
                             Gneiss_Internal.Platform_State,
                             Main.Platform));
 
-   function Null_Terminate (S : String) return String with
-      Post   => Null_Terminate'Result'First = S'First
-                and then Null_Terminate'Result'Length <= S'Length,
+   function Strip (S : String) return String with
+      Post   => Strip'Result'First = S'First
+                and then Strip'Result'Length <= S'Length,
       Global => null;
 
    package Message is new Gneiss.Message (Message_Buffer, Null_Buffer);
@@ -35,7 +35,7 @@ is
    Log        : Gneiss_Log.Client_Session;
    Capability : Gneiss.Capability;
 
-   function Null_Terminate (S : String) return String
+   function Strip (S : String) return String
    is
    begin
       for I in S'Range loop
@@ -44,7 +44,7 @@ is
          end if;
       end loop;
       return S;
-   end Null_Terminate;
+   end Strip;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -55,7 +55,7 @@ is
       Message_Client.Initialize (Client, Capability, "log");
       if Gneiss_Log.Initialized (Log) and Message.Initialized (Client) then
          Msg (Msg'First .. Msg'First + 11) := "Hello World!";
-         Log_Client.Info (Log, "Sending: " & Null_Terminate (Msg));
+         Log_Client.Info (Log, "Sending: " & Strip (Msg));
          Message_Client.Write (Client, Msg);
       else
          Main.Vacate (Capability, Main.Failure);
@@ -71,7 +71,7 @@ is
             pragma Loop_Invariant (Gneiss_Log.Initialized (Log));
             pragma Loop_Invariant (Message.Initialized (Client));
             Message_Client.Read (Client, Msg);
-            Log_Client.Info (Log, "Received: " & Null_Terminate (Msg));
+            Log_Client.Info (Log, "Received: " & Strip (Msg));
             Main.Vacate (Capability, Main.Success);
          end loop;
       end if;

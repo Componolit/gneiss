@@ -260,8 +260,8 @@ is
          Flush (S);
       else
          declare
+            -- WORKAROUND: Componolit/Workarounds#25
             Clr : constant String := Get_Color (S.Hue);
-            --  Separate declaration: non-scalar object declared before loop-invariant is not yet supported
          begin
             for H of Clr loop
                pragma Loop_Invariant (Log.Initialized (Client));

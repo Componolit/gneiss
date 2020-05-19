@@ -105,6 +105,10 @@ is
                                            Label.Value (Label.Value'First .. Label.Last));
          end if;
       else
+         --  If Fd /= Dispatch_Fd a server session has been closed by a client. So
+         --  Dispatch will be called with an invalid capability that carries the
+         --  file descriptor as Clean_Fd which is then used to clean up the disconnected
+         --  session in Session_Cleanup.
          Dispatch (Session,
                    Dispatcher_Capability'(Client_Fd => -1,
                                           Server_Fd => -1,
