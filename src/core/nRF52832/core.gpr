@@ -30,7 +30,7 @@ project Core is
       for Program_Host use "172.22.1.121:3333";
       for Communication_Protocol use "remote";
       for Connection_Tool use "openocd";
-      for Connection_Config_File use "nrf52832.cfg";
+      for Connection_Config_File use "nRF52DK.cfg";
    end Ide;
 
 end Core;
