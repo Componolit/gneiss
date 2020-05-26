@@ -11,6 +11,8 @@ is
 
 private
 
+   function String_Address (S : String) return System.Address;
+
    type CONFIG_Parity is (Excluded, Included) with
      Size => 3;
 
