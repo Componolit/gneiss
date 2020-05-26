@@ -21,7 +21,7 @@ private
       HWFC   : Boolean;
       PARITY : CONFIG_Parity;
    end record with
-   Size => 32;
+     Size => 32;
 
    for Reg_CONFIG use record
       HWFC at 0 range 0 .. 0;
@@ -33,6 +33,16 @@ private
 
    for PSEL_TXD_Connect use (Connected    => 0,
                              Disconnected => 1);
+   --  UARTE
+   type Reg_PSELTXD is record
+      PIN : GPIO.Pin;
+   end record with
+     Size => 32;
+
+   --  UARTE
+   for Reg_PSELTXD use record
+      PIN at 0 range 0 .. 4;
+   end record;
 
    type Reg_PSEL_TXD is record
       PIN     : GPIO.Pin;
@@ -45,11 +55,12 @@ private
       CONNECT at 0 range 31 .. 31;
    end record;
 
-   type ENABLE_Enable is (Disabled, Enabled) with
+   type ENABLE_Enable is (Disabled, Enabled_UART, Enabled_UARTE) with
      Size => 4;
 
    for ENABLE_Enable use (Disabled => 0,
-                          Enabled  => 8);
+                          Enabled_UART  => 4,
+                          Enabled_UARTE => 8);
 
    type Reg_ENABLE is record
       ENABLE : ENABLE_Enable;
@@ -65,7 +76,7 @@ private
      Size => 32;
 
    type Count is range 0 .. 255 with
-   Size => 8;
+     Size => 8;
 
    type Reg_TXD_MAXCNT is record
       MAXCNT : Count;
@@ -79,7 +90,7 @@ private
    type Reg_TXD_AMOUNT is record
       AMOUNT : Count;
    end record with
-        Size => 32;
+     Size => 32;
 
    for Reg_TXD_AMOUNT use record
       AMOUNT at 0 range 0 .. 7;
@@ -141,5 +152,14 @@ private
       BAUDRATE : BAUDRATE_Rate;
    end record with
      Size => 32;
+
+   type Reg_TXD is record
+      TXD : Character;
+   end record with
+     Size => 32;
+
+   for Reg_TXD use record
+      TXD at 0 range 0 .. 7;
+   end record;
 
 end Serial;
