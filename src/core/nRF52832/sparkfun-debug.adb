@@ -1,7 +1,10 @@
-package body Sparkfun.Debug with
-   SPARK_Mode
-  is
+with System.Storage_Elements;
 
+package body Sparkfun.Debug with
+SPARK_Mode
+is
+
+   package SSE renames System.Storage_Elements;
    procedure Initialize is
    begin
       for Pin of Pins loop
@@ -23,5 +26,24 @@ package body Sparkfun.Debug with
          GPIO.Write (Pins (I), Binary_Array (I));
       end loop;
    end Debug;
+
+   -------------------
+   -- Debug_Address --
+   -------------------
+
+   procedure Debug_Address (Adr : System.Address)
+   is
+      Address : SSE.Integer_Address := SSE.To_Integer (Adr);
+      procedure Address_Debug is new Debug (SSE.Integer_Address);
+      use type SSE.Integer_Address;
+   begin
+      while Address > 0 loop
+         Address_Debug (Address);
+         Address := Address / 256;
+         for I in Integer range 1 .. 10000000 loop
+            pragma Inspection_Point (I);
+         end loop;
+      end loop;
+   end Debug_Address;
 
 end Sparkfun.Debug;

@@ -1,3 +1,5 @@
+with System;
+
 package Sparkfun.Debug with
 SPARK_Mode
 is
@@ -7,6 +9,7 @@ is
    generic
       type T is (<>);
    procedure Debug (Value : T);
+   procedure Debug_Address (Adr : System.Address);
 
 private
 

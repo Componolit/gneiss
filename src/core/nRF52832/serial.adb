@@ -32,6 +32,10 @@ package body Serial is
      Import,
      Address => SSE.To_Address (Base + 16#50C#);
 
+   PSELTXD : Reg_PSELTXD with
+     Import,
+     Address => SSE.To_Address (Base + 16#50C#);
+
    TXD_MAXCNT : Reg_TXD_MAXCNT with
      Import,
      Address => SSE.To_Address (Base + 16#548#);
@@ -56,6 +60,14 @@ package body Serial is
      Import,
      Address => SSE.To_Address (Base + 16#150#);
 
+   TXD : Reg_TXD with
+     Import,
+     Address => SSE.To_Address (Base + 16#51C#);
+
+   EVENT_TXDRDY : Reg_EVENT with
+     Import,
+     Address => SSE.To_Address (Base + 16#11C#);
+
    ----------------
    -- Initialize --
    ----------------
@@ -63,11 +75,12 @@ package body Serial is
    procedure Initialize is
    begin
       ENABLE   := (ENABLE => Disabled);
-      GPIO.Configure (27, GPIO.Port_Out);
-      PSEL_TXD := (CONNECT => Connected, PIN => 27);
+      GPIO.Configure (6, GPIO.Port_Out);
+      GPIO.Write (6, GPIO.High);
+      PSEL_TXD := (CONNECT => Connected, PIN => 6);
       CONFIG   := (HWFC => False, PARITY => Excluded);
       BAUDRATE := (BAUDRATE => Baud115200);
-      ENABLE   := (ENABLE => Enabled);
+      ENABLE   := (ENABLE => Enabled_UARTE);
    end Initialize;
 
    -----------
@@ -75,11 +88,20 @@ package body Serial is
    -----------
 
    procedure Print (Str : String) is
+      --  Buffer : String (1 .. 32) := (others => Character'First);
    begin
-      TXD_PTR       := (PTR => Str'Address);
-      TXD_MAXCNT    := (MAXCNT => Str'Length);
+--        Sparkfun.Debug.Debug_Address (Buffer'Address);
+--        if Str'Length > Buffer'Length then
+--           TXD_MAXCNT := (MAXCNT => Buffer'Length);
+--           Buffer := Str (Str'First .. Str'First + Buffer'Length - 1);
+--        else
+--           TXD_MAXCNT := (MAXCNT => Str'Length);
+--           Buffer (Buffer'First .. Buffer'First + Str'Length - 1) := Str;
+--        end if;
+--        TXD_PTR       := (PTR => Buffer'Address);
+      TXD_PTR := (PTR => Str'Address);
+      TXD_MAXCNT := (MAXCNT => Str'Length);
       TASKS_STARTTX := (TSK => Trigger);
-
       while EVENT_ENDTX.EVENT = Clear  loop
          Debug (TXD_AMOUNT.AMOUNT);
       end loop;
