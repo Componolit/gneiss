@@ -23,5 +23,5 @@ TARGET=$(udisksctl mount -b /dev/$DEVICE | sed "s/.*at[[:space:]]//g" | rev | se
 
 echo mounted at $TARGET
 
-/usr/share/python3-intelhex/bin2hex.py $1 $TARGET/program.hex
-
+#/usr/share/python3-intelhex/bin2hex.py $1 $TARGET/program.hex
+arm-eabi-objcopy -O ihex $1 $TARGET/program.hex

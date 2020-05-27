@@ -88,38 +88,33 @@ is
    -----------
    -- Print --
    -----------
-   Buffer : String (1 .. 32) := (others => Character'First);
+   Buffer : String (1 .. 255);
 
    procedure Print (Str : String) is
-      StrI : Positive := Str'First;
+      StrI : Positive;
    begin
-      Sparkfun.Debug.Debug_Address (String_Address (Buffer));
       if Str'Length > Buffer'Length then
          TXD_MAXCNT := (MAXCNT => Buffer'Length);
-         Debug (1);
-         Buffer := Str (Str'First .. Str'First + Buffer'Length - 1);
-         Debug (2);
+         StrI := Buffer'First;
+         for B in Str'First .. Str'First + Buffer'Length - 1 loop
+            Buffer (StrI) := Str (B);
+            StrI := StrI + 1;
+         end loop;
       else
-         Debug (3);
          TXD_MAXCNT := (MAXCNT => Str'Length);
-         Debug (8);
+         StrI := Str'First;
          for B in Buffer'First .. Buffer'First + Str'Length - 1 loop
             Buffer (B) := Str (StrI);
             StrI := StrI + 1;
          end loop;
-
-         Debug (4);
       end if;
       TXD_PTR       := (PTR => String_Address (Buffer));
-      Debug (5);
       --   TXD_PTR := (PTR => String_Address (Str));
       --   TXD_MAXCNT := (MAXCNT => Str'Length);
       TASKS_STARTTX := (TSK => Trigger);
-      Debug (6);
       while EVENT_ENDTX.EVENT = Clear  loop
          Debug (TXD_AMOUNT.AMOUNT);
       end loop;
-      Debug (7);
       EVENT_ENDTX.EVENT := Clear;
    end Print;
 
