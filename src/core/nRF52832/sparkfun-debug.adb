@@ -1,7 +1,7 @@
 with System.Storage_Elements;
 
 package body Sparkfun.Debug with
-SPARK_Mode
+   SPARK_Mode
 is
 
    package SSE renames System.Storage_Elements;

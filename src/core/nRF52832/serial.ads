@@ -2,7 +2,7 @@ with Componolit.Runtime.Drivers.GPIO;
 with System;
 
 package Serial with
-SPARK_Mode
+   SPARK_Mode
 is
 
    package GPIO renames Componolit.Runtime.Drivers.GPIO;

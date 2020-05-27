@@ -3,7 +3,7 @@ with Componolit.Runtime.Drivers.GPIO;
 with Sparkfun.Debug;
 
 procedure Main with
-  SPARK_Mode
+   SPARK_Mode
 is
    package GPIO renames Componolit.Runtime.Drivers.GPIO;
    procedure Debug is new Sparkfun.Debug.Debug (Integer);
