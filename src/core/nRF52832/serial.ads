@@ -8,6 +8,7 @@ is
    package GPIO renames Componolit.Runtime.Drivers.GPIO;
    procedure Initialize;
    procedure Print (Str : String);
+   procedure Send;
 
 private
 
