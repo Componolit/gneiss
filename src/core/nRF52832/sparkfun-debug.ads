@@ -1,7 +1,7 @@
 with System;
 
 package Sparkfun.Debug with
-SPARK_Mode
+   SPARK_Mode
 is
 
    procedure Initialize;
