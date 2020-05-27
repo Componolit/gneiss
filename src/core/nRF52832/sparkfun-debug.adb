@@ -1,6 +1,6 @@
 package body Sparkfun.Debug with
    SPARK_Mode
-  is
+is
 
    procedure Initialize is
    begin
