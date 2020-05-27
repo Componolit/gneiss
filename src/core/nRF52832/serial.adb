@@ -1,12 +1,12 @@
 with System.Storage_Elements;
-with Sparkfun.Debug;
+with Basalt.Slicer;
 package body Serial with
 SPARK_Mode
 is
 
-   procedure Debug is new Sparkfun.Debug.Debug (Count);
    package SSE renames System.Storage_Elements;
    use type SSE.Integer_Address;
+   package Slicer is new Basalt.Slicer (Positive);
 
    Base : constant SSE.Integer_Address := 16#40002000#;
 
@@ -92,31 +92,47 @@ is
 
    procedure Print (Str : String) is
       StrI : Positive;
+      Slice : Slicer.Context;
+      R : Slicer.Slice;
    begin
-      if Str'Length > Buffer'Length then
-         TXD_MAXCNT := (MAXCNT => Buffer'Length);
+      if Str'Length < 1 then
+         return;
+      end if;
+      Slice := Slicer.Create (Str'First, Str'Last, Buffer'Length);
+      loop
+         pragma Loop_Invariant (Slicer.Get_Range (Slice).First = Str'First);
+         pragma Loop_Invariant (Slicer.Get_Range (Slice).Last = Str'Last);
+         R := Slicer.Get_Slice (Slice);
          StrI := Buffer'First;
-         for B in Str'First .. Str'First + Buffer'Length - 1 loop
+         TXD_MAXCNT := (MAXCNT => Count (R.Last - R.First + 1));
+         for B in R.First .. R.Last loop
+            pragma Loop_Invariant (B in Str'Range);
+            pragma Loop_Invariant (StrI <= Buffer'Last);
+            pragma Loop_Invariant (R.Last - R.First < Buffer'Length);
             Buffer (StrI) := Str (B);
             StrI := StrI + 1;
          end loop;
-      else
-         TXD_MAXCNT := (MAXCNT => Str'Length);
-         StrI := Str'First;
-         for B in Buffer'First .. Buffer'First + Str'Length - 1 loop
-            Buffer (B) := Str (StrI);
-            StrI := StrI + 1;
-         end loop;
-      end if;
+         Send;
+         exit when not Slicer.Has_Next (Slice);
+         Slicer.Next (Slice);
+      end loop;
+   end Print;
+
+   ----------
+   -- Send --
+   ----------
+
+   procedure Send is
+   begin
       TXD_PTR       := (PTR => String_Address (Buffer));
       --   TXD_PTR := (PTR => String_Address (Str));
       --   TXD_MAXCNT := (MAXCNT => Str'Length);
       TASKS_STARTTX := (TSK => Trigger);
       while EVENT_ENDTX.EVENT = Clear  loop
-         Debug (TXD_AMOUNT.AMOUNT);
+         pragma Inspection_Point (EVENT_ENDTX);
       end loop;
       EVENT_ENDTX.EVENT := Clear;
-   end Print;
+   end Send;
 
    --------------------
    -- String_Address --

@@ -1,4 +1,4 @@
-
+with "basalt";
 project Core is
 
    for Source_Dirs use (".");
