@@ -10,7 +10,10 @@ is
    function Get_Last is new Gneiss_Internal.Util.Get_Last (Buffer_Index);
 
    procedure Modify (Session : in out Server_Session;
-                     Ctx     : in out Context)
+                     Ctx     : in out Context) with
+      SPARK_Mode => Off
+      --  Object_Size cannot be annotated to Buffer
+      --  This causes a check in the Address overlay
    is
       Length : constant Integer      := Gneiss_Internal.Syscall.Stat_Size (Session.Fd);
       Last   : constant Buffer_Index := Get_Last (Length);
