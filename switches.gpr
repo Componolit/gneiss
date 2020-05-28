@@ -18,7 +18,8 @@ is
      ,"-gnatwa" -- turn on all info/warnings marked with + in gnatmake help
      ,"-gnatwe" -- treat all warnings (but not info) as errors
      ,"-gnatwd" -- turn on warnings for implicit dereference
-     ,"-gnatwh" -- turn on warnings for hiding declarations
+     --  WORKAROUND: Componolit/Workarounds#27
+     --  ,"-gnatwh" -- turn on warnings for hiding declarations
      ,"-gnatwk" -- turn on warnings for standard redefinition
      ,"-gnatwt" -- turn on warnings for tracking deleted code
      ,"-gnatwu" -- turn on warnings for unordered enumeration
