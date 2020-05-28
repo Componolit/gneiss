@@ -6,7 +6,7 @@ with Gneiss.Component;
 package Component with
    SPARK_Mode,
    Abstract_State => Platform_State,
-   Initializes    => (Platform_State)
+   Initializes    => (Platform_State, Main.Platform)
 is
 
    procedure Construct (Cap : Gneiss.Capability) with
