@@ -1,10 +1,19 @@
 
 project Message_Client extends "gneiss_component" is
 
+   Src_Dirs := ("message_client");
+
+   case GCC_Version is
+      when "9" =>
+         Src_Dirs := ("message_client/gnat_ce_2020") & Src_Dirs;
+      when others =>
+         null;
+   end case;
+
    case Build_Step is
       when "compile" =>
          for Runtime ("Ada") use Gneiss_Runtime;
-         for Source_Dirs use ("message_client");
+         for Source_Dirs use Src_Dirs;
          for Object_Dir use external ("CEMENT_OBJECT_DIR");
          for Library_Name use Gneiss_Component_Prefix & "message_client";
          for Library_Kind use "dynamic";
