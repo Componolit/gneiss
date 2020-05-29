@@ -1,10 +1,19 @@
 
 project Memory_Server extends "gneiss_component" is
 
+   Src_Dirs := ("memory_server");
+
+   case GCC_Version is
+      when "9" =>
+         Src_Dirs := ("memory_server/gnat_ce_2020") & Src_Dirs;
+      when others =>
+         null;
+   end case;
+
    case Build_Step is
       when "compile" =>
          for Runtime ("Ada") use Gneiss_Runtime;
-         for Source_Dirs use ("memory_server");
+         for Source_Dirs use Src_Dirs;
          for Object_Dir use external ("CEMENT_OBJECT_DIR");
          for Library_Name use Gneiss_Component_Prefix & "memory_server";
          for Library_Kind use "dynamic";

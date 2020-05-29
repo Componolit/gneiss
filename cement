@@ -31,6 +31,9 @@ prove_parser.add_argument("-u", "--unit", help="ada unit")
 prove_parser.add_argument("-s", "--steps", help="prove steps", default="8000")
 prove_parser.add_argument("paths", help="component search paths", nargs="*")
 
+def get_gcc_version():
+    return subprocess.check_output(["gcc", "-dumpversion"]).decode('utf-8').strip().split('.')[0]
+
 def get_component_name(libname):
     return libname[13:-3]
 
@@ -96,7 +99,8 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
     logger.info("Compiling...")
     components = get_component_files(config)
     logger.info("Preparing init...")
-    default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(gneiss_root, "gprconfig_db")]
+    default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(gneiss_root, "gprconfig_db"),
+                    "-XGCC_VERSION=" + get_gcc_version()]
     if args.verbose:
         default_args.append("-v")
     if build_init(gneiss_root, build_dir, default_args, platform, logger) > 0:
@@ -113,7 +117,8 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
             logger.error("Preparation of " + c + " failed")
             exit(1)
     logger.info("Compiling init...")
-    default_args = ["-p", "-XCEMENT_BUILD_STEP=compile"]
+    default_args = ["-p", "-XCEMENT_BUILD_STEP=compile",
+                    "-XGCC_VERSION=" + get_gcc_version()]
     if verbose:
         default_args.append("-v")
     if build_init(gneiss_root, build_dir, default_args, platform, logger) > 0:
@@ -157,7 +162,8 @@ def gpr_prepare(name, root, build_dir, paths):
             "-XCEMENT_OBJECT_DIR=" + os.path.join(build_dir, name[:-4] + "_obj"),
             "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(build_dir, name[:-4] + "_libobj"),
             "-XCEMENT_LIBRARY_DIR=" + os.path.join(build_dir, name[:-4] + "_lib"),
-            "-XCEMENT_COMPONENT_DIR=" + os.path.join(build_dir, name[:-4] + "_component")]
+            "-XCEMENT_COMPONENT_DIR=" + os.path.join(build_dir, name[:-4] + "_component"),
+            "-XGCC_VERSION=" + get_gcc_version()]
     project_path_file = "/tmp/cement_gpr_project_path." + str(os.getpid())
     with open(project_path_file, "w+") as ppf:
         for path in [root] + paths:

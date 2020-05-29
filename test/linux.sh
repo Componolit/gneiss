@@ -10,18 +10,14 @@ make -C ada-runtime
 
 set -e
 
-if [ "$(gcc -dumpversion)" = "9.3.1" ]
-then
-    # Only prove with GNAT CE 2020/GNAT Pro 21
-    ./cement prove test/message_client.gpr . lib test -u component
-    ./cement prove test/message_server.gpr . lib test -u component
-    ./cement prove test/hello_world.gpr . lib test -u component
-    ./cement prove test/log_proxy.gpr . lib test -u component
-    ./cement prove test/rom.gpr . lib test -u component
-    ./cement prove test/memory_client.gpr . lib test -u component
-    ./cement prove test/memory_server.gpr . lib test -u component
-    ./cement prove test/timer.gpr . lib test -u component
-fi
+./cement prove test/message_client.gpr . lib test -u component
+./cement prove test/message_server.gpr . lib test -u component
+./cement prove test/hello_world.gpr . lib test -u component
+./cement prove test/log_proxy.gpr . lib test -u component
+./cement prove test/rom.gpr . lib test -u component
+./cement prove test/memory_client.gpr . lib test -u component
+./cement prove test/memory_server.gpr . lib test -u component
+./cement prove test/timer.gpr . lib test -u component
 
 ./cement build test/message_client/message_client.xml . lib test
 ./cement build test/hello_world/hello_world.xml . lib test
