@@ -17,7 +17,7 @@ end Naming;
 
 package Compiler is
    for Driver ("rflx") use "rflx";
-   for Leading_Required_Switches ("rflx") use ("generate");
+   for Leading_Required_Switches ("rflx") use ("generate", "-t");
    for Object_File_Suffix ("rflx") use ".adb";
    for Object_File_Suffix ("rflx") use ".ads";
    for Object_File_Switches ("rflx") use ("-o", "");
