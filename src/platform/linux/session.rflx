@@ -19,14 +19,14 @@ package Session is
                if Name_Length > 0,
             then Label_Length
                if Name_Length = 0;
-         Name         : Payload;
+         Name         : Opaque;
          Label_Length : Length_Type
             then Label
                with Length => Label_Length * 8
                if Label_Length > 0,
             then null
                if Label_Length = 0;
-         Label        : Payload;
+         Label        : Opaque;
       end message;
 
 end Session;
