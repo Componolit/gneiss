@@ -14,6 +14,10 @@ git submodule update --init --recursive modules/basalt
 /genode/tool/create_builddir x86_64
 cd /genode/build/x86_64
 sed -i "s/^#REPOS/REPOS/g;s/^#MAKE.*$/MAKE += -j$(nproc)/g" etc/build.conf
+echo 'CUSTOM_ADA_CC := /opt/gnat/bin/gcc' >> etc/tools.conf
+echo 'CUSTOM_GNATBIND := /opt/gnat/bin/gnatbind' >> etc/tools.conf
+# We always compile from a clean state so we can replace ALI2DEP with /bin/true
+echo 'CUSTOM_ALI2DEP := /bin/true' >> etc/tools.conf
 echo 'REPOSITORIES += $(GENODE_DIR)/repos/componolit' >> etc/build.conf
 /genode/tool/ports/prepare_port ada-runtime
 make KERNEL=linux BOARD=linux run/gneiss/hello_world

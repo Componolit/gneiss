@@ -3,13 +3,6 @@ project Message_Server extends "gneiss_component" is
 
    Src_Dirs := ("message_server");
 
-   case GCC_Version is
-      when "9" =>
-         Src_Dirs := ("message_server/gnat_ce_2020") & Src_Dirs;
-      when others =>
-         null;
-   end case;
-
    case Build_Step is
       when "compile" =>
          for Languages use ("Ada", "C");
