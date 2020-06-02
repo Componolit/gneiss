@@ -5,13 +5,6 @@ project Log_Proxy extends "gneiss_component" is
 
    Src_Dirs := ("log_proxy");
 
-   case GCC_Version is
-      when "9" =>
-         Src_Dirs := ("log_proxy/gnat_ce_2020") & Src_Dirs;
-      when others =>
-         null;
-   end case;
-
    case Build_Step is
       when "compile" =>
          for Runtime ("Ada") use Gneiss_Runtime;

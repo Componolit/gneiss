@@ -3,13 +3,6 @@ project Timer extends "gneiss_component" is
 
    Src_Dirs := ("timer");
 
-   case GCC_Version is
-      when "9" =>
-         Src_Dirs := ("timer/gnat_ce_2020") & Src_Dirs;
-      when others =>
-         null;
-   end case;
-
    case Build_Step is
       when "compile" =>
          for Runtime ("Ada") use Gneiss_Runtime;
