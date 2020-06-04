@@ -1,12 +1,12 @@
 
-with Gneiss_Protocol.Session.Generic_PDU;
+with Gneiss_Protocol.Generic_PDU;
 
 package body Gneiss_Internal.Socket with
    SPARK_Mode,
    Refined_State => (Packet_State => null)
 is
 
-   package PDU is new Gneiss_Protocol.Session.Generic_PDU (Types);
+   package PDU is new Gneiss_Protocol.Generic_PDU (Types);
 
    generic
    package Generic_Buffer with
@@ -59,8 +59,8 @@ is
    end Set;
 
    procedure Send (Fd     : File_Descriptor;
-                   Action : Gneiss_Protocol.Session.Action_Type;
-                   Kind   : Gneiss_Protocol.Session.Kind_Type;
+                   Action : Gneiss_Protocol.Action_Type;
+                   Kind   : Gneiss_Protocol.Kind_Type;
                    Name   : Session_Label;
                    Label  : Session_Label;
                    Fds    : Fd_Array)
@@ -75,11 +75,11 @@ is
       PDU.Initialize (Context, Buffer.Ptr);
       PDU.Set_Action (Context, Action);
       PDU.Set_Kind (Context, Kind);
-      PDU.Set_Name_Length (Context, Gneiss_Protocol.Session.Length_Type (Name.Last));
+      PDU.Set_Name_Length (Context, Gneiss_Protocol.Length_Type (Name.Last));
       if Name.Last > 0 then
          Set_Name (Context);
       end if;
-      PDU.Set_Label_Length (Context, Gneiss_Protocol.Session.Length_Type (Label.Last));
+      PDU.Set_Label_Length (Context, Gneiss_Protocol.Length_Type (Label.Last));
       if Label.Last > 0 then
          Set_Label (Context);
       end if;
@@ -94,11 +94,11 @@ is
                       Fds   : out Fd_Array;
                       Block :     Boolean)
    is
-      use type Gneiss_Protocol.Session.Length_Type;
+      use type Gneiss_Protocol.Length_Type;
       package Buffer is new Generic_Buffer;
       Context : PDU.Context;
-      Action  : Gneiss_Protocol.Session.Action_Type;
-      Kind    : Gneiss_Protocol.Session.Kind_Type;
+      Action  : Gneiss_Protocol.Action_Type;
+      Kind    : Gneiss_Protocol.Kind_Type;
       Name    : Session_Label;
       Label   : Session_Label;
       Length  : Natural;

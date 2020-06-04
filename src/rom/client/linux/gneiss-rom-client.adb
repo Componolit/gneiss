@@ -3,7 +3,7 @@ with System;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Util;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 
 package body Gneiss.Rom.Client with
    SPARK_Mode
@@ -24,7 +24,7 @@ is
       if Initialized (Session) or else Label'Length > 255 then
          return;
       end if;
-      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Rom, Fds, Label);
+      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Rom, Fds, Label);
       if not Gneiss_Internal.Valid (Fds (Fds'First)) then
          return;
       end if;

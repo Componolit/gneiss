@@ -1,7 +1,7 @@
 
 with SXML;
 with SXML.Query;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 with Gneiss_Internal;
 
 package Gneiss.Broker.Lookup with
@@ -22,7 +22,7 @@ is
       Global => null;
 
    procedure Lookup_Request (State       :     Broker_State;
-                             Kind        :     Gneiss_Protocol.Session.Kind_Type;
+                             Kind        :     Gneiss_Protocol.Kind_Type;
                              Service     :     SXML.Query.State_Type;
                              Destination : out Integer;
                              Found       : out Boolean) with

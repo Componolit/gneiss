@@ -1,7 +1,7 @@
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Message_Syscall;
 with Gneiss_Internal.Client;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 
 package body Gneiss.Log.Client with
    SPARK_Mode
@@ -34,7 +34,7 @@ is
       if Initialized (Session) or else Label'Length > 255 then
          return;
       end if;
-      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Log, Fds, Label);
+      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Log, Fds, Label);
       if Fds (Fds'First) < 0 then
          return;
       end if;

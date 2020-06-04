@@ -1,6 +1,6 @@
 
 with System;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
@@ -54,7 +54,7 @@ is
       then
          return;
       end if;
-      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Message, Fds, Label);
+      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Message, Fds, Label);
       if not Gneiss_Internal.Valid (Fds (Fds'First)) then
          return;
       end if;

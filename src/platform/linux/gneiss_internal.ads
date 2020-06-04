@@ -1,10 +1,10 @@
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 private with System;
 
 package Gneiss_Internal with
    SPARK_Mode,
    Abstract_State => Platform_State,
-   Initializes => Platform_State,
+   Initializes    => Platform_State,
    Elaborate_Body
 is
 
@@ -25,8 +25,8 @@ is
    type Broker_Message (Valid : Boolean := False) is record
       case Valid is
          when True =>
-            Action : Gneiss_Protocol.Session.Action_Type;
-            Kind   : Gneiss_Protocol.Session.Kind_Type;
+            Action : Gneiss_Protocol.Action_Type;
+            Kind   : Gneiss_Protocol.Kind_Type;
             Name   : Session_Label;
             Label  : Session_Label;
          when False =>

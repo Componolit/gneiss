@@ -1,5 +1,6 @@
 
 with "basalt";
+with "recordflux";
 with "gneiss_protocol";
 with "SXML";
 with "switches";

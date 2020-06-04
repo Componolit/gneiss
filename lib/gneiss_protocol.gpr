@@ -1,4 +1,6 @@
 
+with "recordflux";
+
 project Gneiss_Protocol is
 
    Step := external ("CEMENT_BUILD_STEP");
@@ -15,14 +17,13 @@ project Gneiss_Protocol is
          for Library_Name use "gneiss_protocol";
          for Library_Dir use external ("CEMENT_LIBRARY_DIR");
          for Library_Kind use "static";
-         for Excluded_Source_Files use ("session.ads");
       when others =>
          for Languages use ();
    end case;
 
    package Compiler is
       for Default_Switches ("Ada") use ("-fPIC");
-      for Default_Switches ("rflx") use ("-p", "Gneiss_Protocol");
+      for Default_Switches ("rflx") use ("-p", " ", "-n");
    end Compiler;
 
 end Gneiss_Protocol;

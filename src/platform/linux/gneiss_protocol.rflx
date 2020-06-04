@@ -1,5 +1,5 @@
 
-package Session is
+package Gneiss_Protocol is
 
    type Action_Type is (Request, Confirm, Reject, Register) with
       Size => 8;
@@ -29,4 +29,4 @@ package Session is
          Label        : Opaque;
       end message;
 
-end Session;
+end Gneiss_Protocol;
