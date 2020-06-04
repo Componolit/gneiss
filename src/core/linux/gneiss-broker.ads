@@ -1,7 +1,7 @@
 
 with SXML;
 with SXML.Query;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 with Gneiss_Internal;
 
 package Gneiss.Broker with
@@ -16,7 +16,7 @@ is
       Disp   : Gneiss_Internal.File_Descriptor := -1;
    end record;
 
-   type Service_List is array (Gneiss_Protocol.Session.Kind_Type'Range) of Service_Entry;
+   type Service_List is array (Gneiss_Protocol.Kind_Type'Range) of Service_Entry;
 
    type Component_Definition is record
       Fd   : Gneiss_Internal.File_Descriptor := -1;

@@ -1,6 +1,6 @@
 
-with Gneiss_Protocol.Session;
-with Gneiss_Protocol.RFLX_Generic_Types;
+with Gneiss_Protocol;
+with RFLX_Generic_Types;
 with Gneiss_Internal.Linux;
 
 private package Gneiss_Internal.Socket with
@@ -10,16 +10,16 @@ is
 
    type Long_Natural is range 0 .. Natural'Last * 8;
    type String_Ptr is access String;
-   package Types is new Gneiss_Protocol.RFLX_Generic_Types (Positive,
-                                                            Character,
-                                                            String,
-                                                            String_Ptr,
-                                                            Natural,
-                                                            Long_Natural);
+   package Types is new RFLX_Generic_Types (Positive,
+                                            Character,
+                                            String,
+                                            String_Ptr,
+                                            Natural,
+                                            Long_Natural);
 
    procedure Send (Fd     : File_Descriptor;
-                   Action : Gneiss_Protocol.Session.Action_Type;
-                   Kind   : Gneiss_Protocol.Session.Kind_Type;
+                   Action : Gneiss_Protocol.Action_Type;
+                   Kind   : Gneiss_Protocol.Kind_Type;
                    Name   : Session_Label;
                    Label  : Session_Label;
                    Fds    : Fd_Array) with

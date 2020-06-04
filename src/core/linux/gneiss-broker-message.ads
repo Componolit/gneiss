@@ -1,6 +1,6 @@
 
 with Gneiss_Internal;
-private with Gneiss_Protocol.Session;
+private with Gneiss_Protocol;
 
 package Gneiss.Broker.Message with
    SPARK_Mode
@@ -21,17 +21,17 @@ is
 
 private
 
-   use type Gneiss_Protocol.Session.Length_Type;
+   use type Gneiss_Protocol.Length_Type;
 
-   type Gneiss_Protocol_String is array (Gneiss_Protocol.Session.Length_Type range <>) of Character;
+   type Gneiss_Protocol_String is array (Gneiss_Protocol.Length_Type range <>) of Character;
 
    function Convert_Message (S : String) return Gneiss_Protocol_String with
-      Pre => S'Length < Natural (Gneiss_Protocol.Session.Length_Type'Last);
+      Pre => S'Length < Natural (Gneiss_Protocol.Length_Type'Last);
 
    procedure Handle_Message (State  : in out Broker_State;
                              Source :        Positive;
-                             Action :        Gneiss_Protocol.Session.Action_Type;
-                             Kind   :        Gneiss_Protocol.Session.Kind_Type;
+                             Action :        Gneiss_Protocol.Action_Type;
+                             Kind   :        Gneiss_Protocol.Kind_Type;
                              Name   :        String;
                              Label  :        String;
                              Fds    :        Gneiss_Internal.Fd_Array) with
@@ -46,7 +46,7 @@ private
 
    procedure Process_Request (State  : in out Broker_State;
                               Source :        Positive;
-                              Kind   :        Gneiss_Protocol.Session.Kind_Type;
+                              Kind   :        Gneiss_Protocol.Kind_Type;
                               Label  :        String;
                               Fds    :        Gneiss_Internal.Fd_Array) with
       Pre  => Source in State.Components'Range
@@ -83,7 +83,7 @@ private
       Pre => Fds'Length > 0;
 
    procedure Process_Confirm (State : Broker_State;
-                              Kind  : Gneiss_Protocol.Session.Kind_Type;
+                              Kind  : Gneiss_Protocol.Kind_Type;
                               Name  : String;
                               Label : String;
                               Fds   : Gneiss_Internal.Fd_Array) with
@@ -92,7 +92,7 @@ private
              and then Label'Length < 256;
 
    procedure Process_Reject (State : Broker_State;
-                             Kind  : Gneiss_Protocol.Session.Kind_Type;
+                             Kind  : Gneiss_Protocol.Kind_Type;
                              Name  : String;
                              Label : String) with
       Pre => Is_Valid (State.Xml, State.Components)
@@ -100,7 +100,7 @@ private
 
    procedure Process_Register (State  : in out Broker_State;
                                Source :        Positive;
-                               Kind   :        Gneiss_Protocol.Session.Kind_Type) with
+                               Kind   :        Gneiss_Protocol.Kind_Type) with
       Pre  => Gneiss_Internal.Valid (State.Epoll_Fd)
               and then Is_Valid (State.Xml, State.Components)
               and then Is_Valid (State.Xml, State.Resources)
@@ -111,7 +111,7 @@ private
               and then Is_Valid (State.Xml, State.Resources);
 
    procedure Send_Request (Destination : Gneiss_Internal.File_Descriptor;
-                           Kind        : Gneiss_Protocol.Session.Kind_Type;
+                           Kind        : Gneiss_Protocol.Kind_Type;
                            Name        : String;
                            Label       : String;
                            Fds         : Gneiss_Internal.Fd_Array) with
@@ -120,14 +120,14 @@ private
              and then Gneiss_Internal.Valid (Destination);
 
    procedure Send_Confirm (Destination : Gneiss_Internal.File_Descriptor;
-                           Kind        : Gneiss_Protocol.Session.Kind_Type;
+                           Kind        : Gneiss_Protocol.Kind_Type;
                            Label       : String;
                            Fds         : Gneiss_Internal.Fd_Array) with
       Pre => Label'Length < 256
              and then Gneiss_Internal.Valid (Destination);
 
    procedure Send_Reject (Destination : Gneiss_Internal.File_Descriptor;
-                          Kind        : Gneiss_Protocol.Session.Kind_Type;
+                          Kind        : Gneiss_Protocol.Kind_Type;
                           Label       : String) with
       Pre => Label'Length < 256
              and then Gneiss_Internal.Valid (Destination);

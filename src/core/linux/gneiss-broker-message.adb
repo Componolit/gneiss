@@ -9,17 +9,17 @@ package body Gneiss.Broker.Message with
    SPARK_Mode
 is
 
-   function Image (V : Gneiss_Protocol.Session.Kind_Type) return String is
+   function Image (V : Gneiss_Protocol.Kind_Type) return String is
       (case V is
-         when Gneiss_Protocol.Session.Message => "Message",
-         when Gneiss_Protocol.Session.Log     => "Log",
-         when Gneiss_Protocol.Session.Memory  => "Memory",
-         when Gneiss_Protocol.Session.Rom     => "Rom",
-         when Gneiss_Protocol.Session.Timer   => "Timer",
-         when Gneiss_Protocol.Session.Packet  => "Packet");
+         when Gneiss_Protocol.Message => "Message",
+         when Gneiss_Protocol.Log     => "Log",
+         when Gneiss_Protocol.Memory  => "Memory",
+         when Gneiss_Protocol.Rom     => "Rom",
+         when Gneiss_Protocol.Timer   => "Timer",
+         when Gneiss_Protocol.Packet  => "Packet");
 
    procedure Setup_Service (State : in out Service_List;
-                            Kind  :        Gneiss_Protocol.Session.Kind_Type;
+                            Kind  :        Gneiss_Protocol.Kind_Type;
                             Efd   :        Gneiss_Internal.Epoll_Fd;
                             Valid :    out Boolean) with
       Pre  => Gneiss_Internal.Valid (Efd),
@@ -27,7 +27,7 @@ is
                               and then Gneiss_Internal.Valid (State (Kind).Disp)));
 
    procedure Setup_Service (State : in out Service_List;
-                            Kind  :        Gneiss_Protocol.Session.Kind_Type;
+                            Kind  :        Gneiss_Protocol.Kind_Type;
                             Efd   :        Gneiss_Internal.Epoll_Fd;
                             Valid :    out Boolean)
    is
@@ -60,7 +60,7 @@ is
 
    function Convert_Message (S : String) return Gneiss_Protocol_String
    is
-      R : Gneiss_Protocol_String (1 .. Gneiss_Protocol.Session.Length_Type (S'Length));
+      R : Gneiss_Protocol_String (1 .. Gneiss_Protocol.Length_Type (S'Length));
    begin
       for I in R'Range loop
          R (I) := S (S'First + Natural (I - R'First));
@@ -95,40 +95,40 @@ is
 
    procedure Handle_Message (State  : in out Broker_State;
                              Source :        Positive;
-                             Action :        Gneiss_Protocol.Session.Action_Type;
-                             Kind   :        Gneiss_Protocol.Session.Kind_Type;
+                             Action :        Gneiss_Protocol.Action_Type;
+                             Kind   :        Gneiss_Protocol.Kind_Type;
                              Name   :        String;
                              Label  :        String;
                              Fds    :        Gneiss_Internal.Fd_Array)
    is
    begin
       case Action is
-         when Gneiss_Protocol.Session.Request =>
+         when Gneiss_Protocol.Request =>
             if Label'Length >= 256 then
                Gneiss_Internal.Print.Warning ("Cannot process request");
                return;
             end if;
             Process_Request (State, Source, Kind, Label, Fds);
-         when Gneiss_Protocol.Session.Confirm =>
+         when Gneiss_Protocol.Confirm =>
             if Name'Length + Label'Length >= 256 then
                Gneiss_Internal.Print.Warning ("Cannot process confirm");
                return;
             end if;
             Process_Confirm (State, Kind, Name, Label, Fds);
-         when Gneiss_Protocol.Session.Reject =>
+         when Gneiss_Protocol.Reject =>
             if Name'Length + Label'Length >= 256 then
                Gneiss_Internal.Print.Warning ("Cannot process reject");
                return;
             end if;
             Process_Reject (State, Kind, Name, Label);
-         when Gneiss_Protocol.Session.Register =>
+         when Gneiss_Protocol.Register =>
             Process_Register (State, Source, Kind);
       end case;
    end Handle_Message;
 
    procedure Process_Request (State  : in out Broker_State;
                               Source :        Positive;
-                              Kind   :        Gneiss_Protocol.Session.Kind_Type;
+                              Kind   :        Gneiss_Protocol.Kind_Type;
                               Label  :        String;
                               Fds    :        Gneiss_Internal.Fd_Array)
    is
@@ -164,9 +164,9 @@ is
          return;
       end if;
       case Kind is
-         when Gneiss_Protocol.Session.Message
-            | Gneiss_Protocol.Session.Log
-            | Gneiss_Protocol.Session.Packet
+         when Gneiss_Protocol.Message
+            | Gneiss_Protocol.Log
+            | Gneiss_Protocol.Packet
             =>
             if Destination not in State.Components'Range then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
@@ -190,7 +190,7 @@ is
                           Source_Name (Source_Name'First .. Last),
                           Label,
                           Fds_Out (Fds_Out'First .. Fds_Out'First + 1));
-         when Gneiss_Protocol.Session.Rom =>
+         when Gneiss_Protocol.Rom =>
             if Destination in State.Components'Range then
                Gneiss_Internal.Print.Warning ("Rom server currently not supported");
             else
@@ -201,7 +201,7 @@ is
                   Send_Reject (State.Components (Source).Fd, Kind, Label);
                end if;
             end if;
-         when Gneiss_Protocol.Session.Memory =>
+         when Gneiss_Protocol.Memory =>
             if Destination not in State.Components'Range or else Fds'Length < 1 then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
                return;
@@ -224,7 +224,7 @@ is
                           Source_Name (Source_Name'First .. Last),
                           Label,
                           Fds_Out (Fds_Out'First .. Fds_Out'First + 2));
-         when Gneiss_Protocol.Session.Timer =>
+         when Gneiss_Protocol.Timer =>
             Process_Timer_Request (Fds_Out, Valid);
             if Valid then
                Send_Confirm (State.Components (Source).Fd, Kind, Label, Fds_Out (Fds_Out'First .. Fds_Out'First));
@@ -305,7 +305,7 @@ is
    end Process_Timer_Request;
 
    procedure Process_Confirm (State : Broker_State;
-                              Kind  : Gneiss_Protocol.Session.Kind_Type;
+                              Kind  : Gneiss_Protocol.Kind_Type;
                               Name  : String;
                               Label : String;
                               Fds   : Gneiss_Internal.Fd_Array)
@@ -316,10 +316,10 @@ is
       Lookup.Find_Component_By_Name (State, Name, Destination, Valid);
       if Valid then
          case Kind is
-            when Gneiss_Protocol.Session.Message
-               | Gneiss_Protocol.Session.Log
-               | Gneiss_Protocol.Session.Memory
-               | Gneiss_Protocol.Session.Packet
+            when Gneiss_Protocol.Message
+               | Gneiss_Protocol.Log
+               | Gneiss_Protocol.Memory
+               | Gneiss_Protocol.Packet
                =>
                if Fds'Length > 0 and then Fds (Fds'First) >= 0 then
                   Send_Confirm (State.Components (Destination).Fd, Kind, Label, Fds (Fds'First .. Fds'First));
@@ -327,7 +327,7 @@ is
                   Gneiss_Internal.Print.Warning ("Invalid Fd, rejecting");
                   Send_Reject (State.Components (Destination).Fd, Kind, Label);
                end if;
-            when Gneiss_Protocol.Session.Rom | Gneiss_Protocol.Session.Timer =>
+            when Gneiss_Protocol.Rom | Gneiss_Protocol.Timer =>
                Gneiss_Internal.Print.Warning ("Unexpected confirm");
          end case;
       else
@@ -336,7 +336,7 @@ is
    end Process_Confirm;
 
    procedure Process_Reject (State : Broker_State;
-                             Kind  : Gneiss_Protocol.Session.Kind_Type;
+                             Kind  : Gneiss_Protocol.Kind_Type;
                              Name  : String;
                              Label : String)
    is
@@ -353,7 +353,7 @@ is
 
    procedure Process_Register (State  : in out Broker_State;
                                Source :        Positive;
-                               Kind   :        Gneiss_Protocol.Session.Kind_Type)
+                               Kind   :        Gneiss_Protocol.Kind_Type)
    is
       Fds   : Gneiss_Internal.Fd_Array (1 .. 1);
       Valid : Boolean;
@@ -373,7 +373,7 @@ is
    end Process_Register;
 
    procedure Send_Request (Destination : Gneiss_Internal.File_Descriptor;
-                           Kind        : Gneiss_Protocol.Session.Kind_Type;
+                           Kind        : Gneiss_Protocol.Kind_Type;
                            Name        : String;
                            Label       : String;
                            Fds         : Gneiss_Internal.Fd_Array)
@@ -385,11 +385,11 @@ is
       S_Name.Value (S_Name.Value'First .. S_Name.Last) := Name;
       S_Label.Last := S_Label.Value'First + Label'Length - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Gneiss_Internal.Client.Send (Destination, Gneiss_Protocol.Session.Request, Kind, S_Name, S_Label, Fds);
+      Gneiss_Internal.Client.Send (Destination, Gneiss_Protocol.Request, Kind, S_Name, S_Label, Fds);
    end Send_Request;
 
    procedure Send_Confirm (Destination : Gneiss_Internal.File_Descriptor;
-                           Kind        : Gneiss_Protocol.Session.Kind_Type;
+                           Kind        : Gneiss_Protocol.Kind_Type;
                            Label       : String;
                            Fds         : Gneiss_Internal.Fd_Array)
    is
@@ -398,11 +398,11 @@ is
    begin
       S_Label.Last := S_Label.Value'First + Label'Length - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
-      Gneiss_Internal.Client.Send (Destination, Gneiss_Protocol.Session.Confirm, Kind, S_Name, S_Label, Fds);
+      Gneiss_Internal.Client.Send (Destination, Gneiss_Protocol.Confirm, Kind, S_Name, S_Label, Fds);
    end Send_Confirm;
 
    procedure Send_Reject (Destination : Gneiss_Internal.File_Descriptor;
-                          Kind        : Gneiss_Protocol.Session.Kind_Type;
+                          Kind        : Gneiss_Protocol.Kind_Type;
                           Label       : String)
    is
       S_Name  : Gneiss_Internal.Session_Label;
@@ -411,7 +411,7 @@ is
       S_Label.Last := S_Label.Value'First + Label'Length - 1;
       S_Label.Value (S_Label.Value'First .. S_Label.Last) := Label;
       Gneiss_Internal.Client.Send (Destination,
-                                   Gneiss_Protocol.Session.Reject,
+                                   Gneiss_Protocol.Reject,
                                    Kind, S_Name, S_Label, (1 .. 0 => -1));
    end Send_Reject;
 

@@ -3,7 +3,7 @@ with System;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Util;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 
 package body Gneiss.Memory.Client with
    SPARK_Mode
@@ -47,7 +47,7 @@ is
          return;
       end if;
       Fds (Fds'First) := Session.Fd;
-      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Session.Memory, Fds, Label);
+      Gneiss_Internal.Client.Initialize (Cap.Broker_Fd, Gneiss_Protocol.Memory, Fds, Label);
       if Fds (Fds'First) < 0 then
          Gneiss_Internal.Syscall.Munmap (Session.Fd, Session.Map);
          Gneiss_Internal.Syscall.Close (Session.Fd);

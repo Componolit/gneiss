@@ -88,7 +88,7 @@ is
    end Find_Resource_By_Name;
 
    procedure Lookup_Request (State       :     Broker_State;
-                             Kind        :     Gneiss_Protocol.Session.Kind_Type;
+                             Kind        :     Gneiss_Protocol.Kind_Type;
                              Service     :     SXML.Query.State_Type;
                              Destination : out Integer;
                              Found       : out Boolean)

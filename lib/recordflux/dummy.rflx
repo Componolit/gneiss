@@ -1,0 +1,5 @@
+package Dummy is
+
+   type Msg is null message;
+
+end Dummy;

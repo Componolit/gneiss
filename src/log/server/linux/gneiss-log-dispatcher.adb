@@ -1,5 +1,5 @@
 
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 with System;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
@@ -65,7 +65,7 @@ is
       if Fd = Session.Dispatch_Fd then
          Session.Accepted := False;
          Gneiss_Internal.Client.Dispatch (Session.Dispatch_Fd,
-                                          Gneiss_Protocol.Session.Log,
+                                          Gneiss_Protocol.Log,
                                           Name, Label, Fds);
          Dispatch (Session,
                    Dispatcher_Capability'(Client_Fd => Fds (1),
@@ -77,7 +77,7 @@ is
                    Label.Value (Label.Value'First .. Label.Last));
          if not Session.Accepted then
             Gneiss_Internal.Client.Reject (Session.Dispatch_Fd,
-                                           Gneiss_Protocol.Session.Log,
+                                           Gneiss_Protocol.Log,
                                            Name.Value (Name.Value'First .. Name.Last),
                                            Label.Value (Label.Value'First .. Label.Last));
          end if;
@@ -129,7 +129,7 @@ is
       if Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          return;
       end if;
-      Gneiss_Internal.Client.Register (Session.Broker_Fd, Gneiss_Protocol.Session.Log, Session.Dispatch_Fd);
+      Gneiss_Internal.Client.Register (Session.Broker_Fd, Gneiss_Protocol.Log, Session.Dispatch_Fd);
       if Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          Session.E_Cap      := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
          Gneiss_Internal.Epoll.Add (Session.Efd, Session.Dispatch_Fd,
@@ -170,7 +170,7 @@ is
    begin
       Gneiss_Internal.Epoll.Add (Session.Efd, Server_S.Fd, Event_Cap_Address (Server_S), Ignore_Success);
       Gneiss_Internal.Client.Confirm (Session.Dispatch_Fd,
-                                      Gneiss_Protocol.Session.Log,
+                                      Gneiss_Protocol.Log,
                                       Cap.Name.Value (Cap.Name.Value'First .. Cap.Name.Last),
                                       Cap.Label.Value (Cap.Label.Value'First .. Cap.Label.Last),
                                       (1 => Cap.Client_Fd));

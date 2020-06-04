@@ -4,7 +4,7 @@ with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Message_Syscall;
-with Gneiss_Protocol.Session;
+with Gneiss_Protocol;
 
 package body Gneiss.Message.Dispatcher with
    SPARK_Mode
@@ -88,7 +88,7 @@ is
       end if;
       if Fd = Session.Dispatch_Fd then
          Session.Accepted := False;
-         Gneiss_Internal.Client.Dispatch (Session.Dispatch_Fd, Gneiss_Protocol.Session.Message,
+         Gneiss_Internal.Client.Dispatch (Session.Dispatch_Fd, Gneiss_Protocol.Message,
                                           Name, Label, Fds);
          Dispatch (Session,
                    Dispatcher_Capability'(Client_Fd => Fds (1),
@@ -100,7 +100,7 @@ is
                    Label.Value (Label.Value'First .. Label.Last));
          if not Session.Accepted then
             Gneiss_Internal.Client.Reject (Session.Dispatch_Fd,
-                                           Gneiss_Protocol.Session.Message,
+                                           Gneiss_Protocol.Message,
                                            Name.Value (Name.Value'First .. Name.Last),
                                            Label.Value (Label.Value'First .. Label.Last));
          end if;
@@ -154,7 +154,7 @@ is
       if Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          return;
       end if;
-      Gneiss_Internal.Client.Register (Session.Broker_Fd, Gneiss_Protocol.Session.Message, Session.Dispatch_Fd);
+      Gneiss_Internal.Client.Register (Session.Broker_Fd, Gneiss_Protocol.Message, Session.Dispatch_Fd);
       if Gneiss_Internal.Valid (Session.Dispatch_Fd) then
          Session.E_Cap      := Dispatch_Cap (Session, Session, Session.Dispatch_Fd);
          Gneiss_Internal.Epoll.Add (Session.Efd, Session.Dispatch_Fd,
@@ -197,7 +197,7 @@ is
    begin
       Gneiss_Internal.Epoll.Add (Session.Efd, Server_S.Fd, Server_Event_Address (Server_S), Ignore_Success);
       Gneiss_Internal.Client.Confirm (Session.Dispatch_Fd,
-                                      Gneiss_Protocol.Session.Message,
+                                      Gneiss_Protocol.Message,
                                       Cap.Name.Value (Cap.Name.Value'First .. Cap.Name.Last),
                                       Cap.Label.Value (Cap.Label.Value'First .. Cap.Label.Last),
                                       (1 => Cap.Client_Fd));
