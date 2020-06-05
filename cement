@@ -37,6 +37,11 @@ def get_gcc_version():
 def get_component_name(libname):
     return libname[13:-3]
 
+def build_runtime(root, platform):
+    if platform == "nRF52832":
+        return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime"), "nrf52"])
+    return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime")])
+
 def build_init(root, outdir, default_args, platform, logger):
     args = default_args + ["-P", f"core",
             "-aP", root,
@@ -58,10 +63,10 @@ def build_component(name, root, paths, outdir, default_args, logger):
                            "-XCEMENT_COMPONENT_DIR=" + os.path.join(outdir, "libcomponents")]
     for p in paths:
         args.extend(["-aP", p])
-    logger.debug(args)
     return gprbuild(args)
 
 def gprbuild(args, env=None):
+    logger.debug(env if env else "" + " ".join(["gprbuild"] + args))
     return subprocess.call(["gprbuild"] + args, env=env)
 
 def find(name, path):
@@ -209,6 +214,10 @@ if __name__ == "__main__":
     logger.addHandler(sh)
     gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
     logger.info("Gneiss root at " + gprargs[0])
+    logger.info("Building runtime");
+    if build_runtime(args.gneiss_root, args.platform) != 0:
+        logger.error("Failed to build runtime")
+        exit(1)
     build_dir = os.path.abspath(args.build_dir)
     if args.command == "build":
         root_dir = os.path.abspath(args.root_fs)
