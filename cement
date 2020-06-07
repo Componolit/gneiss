@@ -47,10 +47,12 @@ def build_init(root, outdir, default_args, platform, logger):
             "-aP", root,
             "-aP", root + f"/src/core/{platform}",
             "-aP", root + "/lib",
+            "-aP", root + "/test",
             "-XGNEISS_ROOT=" + root,
             "-XCEMENT_OBJECT_DIR=" + os.path.join(outdir, f"core_{platform}"),
             "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(outdir, "libobjects/"),
-            "-XCEMENT_LIBRARY_DIR=" + os.path.join(outdir, "libs")]
+            "-XCEMENT_LIBRARY_DIR=" + os.path.join(outdir, "libs"),
+            "-XCEMENT_COMPONENT_DIR=" + os.path.join(outdir, "libcomponents")]
     logger.debug(args)
     return gprbuild(args)
 
@@ -105,7 +107,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
     components = get_component_files(config)
     logger.info("Preparing init...")
     default_args = ["-p", "-XCEMENT_BUILD_STEP=prepare", "--db", os.path.join(gneiss_root, "gprconfig_db"),
-                    "-XGCC_VERSION=" + get_gcc_version()]
+                    "-XGCC_VERSION=" + get_gcc_version(), "-XGNEISS_PLATFORM=" + platform]
     if args.verbose:
         default_args.append("-v")
     if build_init(gneiss_root, build_dir, default_args, platform, logger) > 0:
@@ -123,7 +125,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
             exit(1)
     logger.info("Compiling init...")
     default_args = ["-p", "-XCEMENT_BUILD_STEP=compile",
-                    "-XGCC_VERSION=" + get_gcc_version()]
+                    "-XGCC_VERSION=" + get_gcc_version(), "-XGNEISS_PLATFORM=" + platform]
     if verbose:
         default_args.append("-v")
     if build_init(gneiss_root, build_dir, default_args, platform, logger) > 0:
@@ -140,22 +142,25 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
             logger.error("Compilation of " + c + " failed")
             exit(1)
     logger.info("Extracting results...")
-    try:
-        os.mkdir(root_dir)
-    except FileExistsError:
+    if platform == "nRF52832":
         pass
-    bindir = os.path.join(root_dir, "bin")
-    try:
-        os.mkdir(bindir)
-    except FileExistsError:
-        pass
-    libdir = os.path.join(root_dir, "lib")
-    try:
-        os.mkdir(libdir)
-    except FileExistsError:
-        pass
-    extract_init(build_dir, bindir, platform)
-    extract_components(build_dir, libdir, components)
+    else:
+        try:
+            os.mkdir(root_dir)
+        except FileExistsError:
+            pass
+        bindir = os.path.join(root_dir, "bin")
+        try:
+            os.mkdir(bindir)
+        except FileExistsError:
+            pass
+        libdir = os.path.join(root_dir, "lib")
+        try:
+            os.mkdir(libdir)
+        except FileExistsError:
+            pass
+        extract_init(build_dir, bindir, platform)
+        extract_components(build_dir, libdir, components)
     logger.info("Finished.")
 
 def gpr_prepare(name, root, build_dir, paths):

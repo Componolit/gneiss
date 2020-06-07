@@ -7,52 +7,66 @@ with "switches";
 
 project Gneiss is
 
-   Step := external ("CEMENT_BUILD_STEP");
+   Step     := external ("CEMENT_BUILD_STEP");
+   Platform := external ("GNEISS_PLATFORM");
+
+   Src_Dirs := ("../src");
+
+   case Platform is
+      when "nRF52832" =>
+         Src_Dirs := Src_Dirs & ("../src/platform",
+                                 "../src/platform/nRF52832");
+      when others =>
+         Src_Dirs := Src_Dirs & ("../src/platform",
+                                 "../src/platform/linux",
+                                 "../src/log",
+                                 "../src/log/linux",
+                                 "../src/log/client",
+                                 "../src/log/client/linux",
+                                 "../src/log/server",
+                                 "../src/log/server/linux",
+                                 "../src/message",
+                                 "../src/message/linux",
+                                 "../src/message/client",
+                                 "../src/message/client/linux",
+                                 "../src/message/server",
+                                 "../src/message/server/linux",
+                                 "../src/rom",
+                                 "../src/rom/linux",
+                                 "../src/rom/client",
+                                 "../src/rom/client/linux",
+                                 "../src/memory",
+                                 "../src/memory/linux",
+                                 "../src/memory/client",
+                                 "../src/memory/client/linux",
+                                 "../src/memory/server",
+                                 "../src/memory/server/linux",
+                                 "../src/timer",
+                                 "../src/timer/linux",
+                                 "../src/timer/client",
+                                 "../src/timer/client/linux",
+                                 "../src/packet",
+                                 "../src/packet/linux",
+                                 "../src/packet/client",
+                                 "../src/packet/client/linux",
+                                 "../src/packet/server",
+                                 "../src/packet/server/linux");
+   end case;
 
    case Step is
       when "compile" =>
-         for Source_Dirs use ("../src",
-                              "../src/platform",
-                              "../src/platform/linux",
-                              "../src/log",
-                              "../src/log/linux",
-                              "../src/log/client",
-                              "../src/log/client/linux",
-                              "../src/log/server",
-                              "../src/log/server/linux",
-                              "../src/message",
-                              "../src/message/linux",
-                              "../src/message/client",
-                              "../src/message/client/linux",
-                              "../src/message/server",
-                              "../src/message/server/linux",
-                              "../src/rom",
-                              "../src/rom/linux",
-                              "../src/rom/client",
-                              "../src/rom/client/linux",
-                              "../src/memory",
-                              "../src/memory/linux",
-                              "../src/memory/client",
-                              "../src/memory/client/linux",
-                              "../src/memory/server",
-                              "../src/memory/server/linux",
-                              "../src/timer",
-                              "../src/timer/linux",
-                              "../src/timer/client",
-                              "../src/timer/client/linux",
-                              "../src/packet",
-                              "../src/packet/linux",
-                              "../src/packet/client",
-                              "../src/packet/client/linux",
-                              "../src/packet/server",
-                              "../src/packet/server/linux");
-
+         for Source_Dirs use Src_Dirs;
          for Create_Missing_Dirs use "True";
          for Object_Dir use external ("CEMENT_LIB_OBJECT_DIR") & "gneiss";
          for Library_Dir use external ("CEMENT_LIBRARY_DIR");
          for Library_Name use "gneiss";
          for Library_Kind use "static";
-         for Languages use ("Ada", "C");
+         case Platform is
+            when "nRF52832" =>
+               for Languages use ("Ada");
+            when others =>
+               for Languages use ("Ada", "C");
+         end case;
       when others =>
          for Languages use ();
    end case;
