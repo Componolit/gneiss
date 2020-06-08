@@ -4,7 +4,7 @@ with Gneiss.Log.Client;
 with Gneiss.Message;
 with Gneiss.Message.Client;
 
-package body Component with
+package body Message_Client.Component with
    SPARK_Mode,
    Refined_State => (Component_State => Capability,
                      Platform_State  => (Client, Log))
@@ -84,4 +84,4 @@ is
       Message_Client.Finalize (Client);
    end Destruct;
 
-end Component;
+end Message_Client.Component;

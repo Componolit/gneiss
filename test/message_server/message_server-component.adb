@@ -3,7 +3,7 @@ with Gneiss.Message;
 with Gneiss.Message.Dispatcher;
 with Gneiss.Message.Server;
 
-package body Component with
+package body Message_Server.Component with
    SPARK_Mode,
    Refined_State => (Component_State => Capability,
                      Platform_State  => (Dispatcher,
@@ -150,4 +150,4 @@ is
        then Context (Message.Index (Session).Value).Ready
        else False);
 
-end Component;
+end Message_Server.Component;

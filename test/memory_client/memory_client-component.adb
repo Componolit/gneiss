@@ -4,7 +4,7 @@ with Gneiss.Log.Client;
 with Gneiss.Memory;
 with Gneiss.Memory.Client;
 
-package body Component with
+package body Memory_Client.Component with
    SPARK_Mode,
    Refined_State => (Platform_State => (Log, Mem))
 is
@@ -71,4 +71,4 @@ is
       Log_Client.Finalize (Log);
    end Destruct;
 
-end Component;
+end Memory_Client.Component;

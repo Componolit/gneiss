@@ -3,7 +3,7 @@ with Gneiss.Packet;
 with Gneiss.Packet.Dispatcher;
 with Gneiss.Packet.Server;
 
-package body Component with
+package body Packet_Server.Component with
    SPARK_Mode
 is
 
@@ -202,4 +202,4 @@ is
        then Context.Slots (Packet.Index (Session).Value).Ready
        else False);
 
-end Component;
+end Packet_Server.Component;

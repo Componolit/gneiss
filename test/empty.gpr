@@ -15,7 +15,7 @@ project Empty extends "gneiss_component" is
             when others =>
                for Library_Kind use "dynamic";
                for Library_Standalone use "encapsulated";
-               for Library_Interface use ("component");
+               for Library_Interface use ("empty");
          end case;
          for Library_Dir use external ("CEMENT_COMPONENT_DIR");
       when others =>

@@ -2,7 +2,7 @@
 with Gneiss;
 with Gneiss.Component;
 
-package Component with
+package Linux_Log_Server.Component with
    SPARK_Mode
 is
 
@@ -11,4 +11,4 @@ is
 
    package Main is new Gneiss.Component (Construct, Destruct);
 
-end Component;
+end Linux_Log_Server.Component;

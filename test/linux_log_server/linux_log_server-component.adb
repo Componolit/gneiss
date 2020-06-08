@@ -3,7 +3,7 @@ with Gneiss.Log;
 with Gneiss.Log.Server;
 with Gneiss.Log.Dispatcher;
 
-package body Component with
+package body Linux_Log_Server.Component with
    SPARK_Mode
 is
 
@@ -145,4 +145,4 @@ is
        then Context (Log.Index (Session).Value).Ready
        else False);
 
-end Component;
+end Linux_Log_Server.Component;

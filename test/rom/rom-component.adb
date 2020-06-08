@@ -4,7 +4,7 @@ with Gneiss.Rom.Client;
 with Gneiss.Log;
 with Gneiss.Log.Client;
 
-package body Component with
+package body Rom.Component with
    SPARK_Mode,
    Refined_State => (Component_State => C,
                      Platform_State  => (Log, Config))
@@ -12,22 +12,22 @@ is
 
    package Gneiss_Log is new Gneiss.Log;
    package Log_Client is new Gneiss_Log.Client;
-   package Rom is new Gneiss.Rom (Character, Positive, String);
+   package Gneiss_Rom is new Gneiss.Rom (Character, Positive, String);
 
    C      : Gneiss.Capability;
    Log    : Gneiss_Log.Client_Session;
-   Config : Rom.Client_Session;
+   Config : Gneiss_Rom.Client_Session;
 
-   procedure Read (Session : in out Rom.Client_Session;
+   procedure Read (Session : in out Gneiss_Rom.Client_Session;
                    Data    :        String;
                    Ctx     : in out Gneiss_Log.Client_Session) with
-      Pre    => Rom.Initialized (Session)
+      Pre    => Gneiss_Rom.Initialized (Session)
                 and then Gneiss_Log.Initialized (Ctx),
-      Post   => Rom.Initialized (Session)
+      Post   => Gneiss_Rom.Initialized (Session)
                 and then Gneiss_Log.Initialized (Ctx),
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
-   package Rom_Client is new Rom.Client (Gneiss_Log.Client_Session, Read);
+   package Rom_Client is new Gneiss_Rom.Client (Gneiss_Log.Client_Session, Read);
    procedure Update is new Rom_Client.Update (Gneiss_Log.Initialized);
 
    procedure Construct (Capability : Gneiss.Capability)
@@ -36,7 +36,7 @@ is
       C := Capability;
       Log_Client.Initialize (Log, C, "rom");
       Rom_Client.Initialize (Config, C, "config");
-      if Gneiss_Log.Initialized (Log) and then Rom.Initialized (Config) then
+      if Gneiss_Log.Initialized (Log) and then Gneiss_Rom.Initialized (Config) then
          Update (Config, Log);
          Main.Vacate (C, Main.Success);
       else
@@ -44,7 +44,7 @@ is
       end if;
    end Construct;
 
-   procedure Read (Session : in out Rom.Client_Session;
+   procedure Read (Session : in out Gneiss_Rom.Client_Session;
                    Data    :        String;
                    Ctx     : in out Gneiss_Log.Client_Session)
    is
@@ -67,4 +67,4 @@ is
       Rom_Client.Finalize (Config);
    end Destruct;
 
-end Component;
+end Rom.Component;

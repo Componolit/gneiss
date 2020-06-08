@@ -3,7 +3,7 @@ with Gneiss;
 with Gneiss.Component;
 with Gneiss_Internal;
 
-package Component with
+package Rom.Component with
    SPARK_Mode,
    Abstract_State => (Component_State, Platform_State),
    Initializes    => (Platform_State, Main.Platform)
@@ -21,4 +21,4 @@ is
 
    package Main is new Gneiss.Component (Construct, Destruct);
 
-end Component;
+end Rom.Component;

@@ -69,8 +69,8 @@ is
          Status := 1;
          return;
       end if;
-      Construct_Sym := Gneiss_Internal.Linker.Symbol (Handle, "component__construct");
-      Destruct_Sym  := Gneiss_Internal.Linker.Symbol (Handle, "component__destruct");
+      Construct_Sym := Gneiss_Internal.Linker.Symbol (Handle, "gneiss_component_construct");
+      Destruct_Sym  := Gneiss_Internal.Linker.Symbol (Handle, "gneiss_component_destruct");
       if
          Construct_Sym = System.Null_Address
          or else Destruct_Sym = System.Null_Address

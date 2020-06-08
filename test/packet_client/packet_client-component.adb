@@ -4,7 +4,7 @@ with Gneiss.Log.Client;
 with Gneiss.Packet;
 with Gneiss.Packet.Client;
 
-package body Component with
+package body Packet_Client.Component with
    SPARK_Mode
 is
 
@@ -103,4 +103,4 @@ is
       Packet_Client.Finalize (Client);
    end Destruct;
 
-end Component;
+end Packet_Client.Component;

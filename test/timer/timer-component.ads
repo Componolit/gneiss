@@ -3,7 +3,7 @@ with Gneiss;
 with Gneiss.Component;
 with Gneiss_Internal;
 
-package Component with
+package Timer.Component with
    SPARK_Mode,
    Abstract_State => (Component_State, Platform_State),
    Initializes    => (Platform_State, Main.Platform)
@@ -16,8 +16,9 @@ is
                             Gneiss_Internal.Platform_State));
 
    procedure Destruct with
-      Global => null;
+      Global => (In_Out => (Platform_State,
+                            Gneiss_Internal.Platform_State));
 
    package Main is new Gneiss.Component (Construct, Destruct);
 
-end Component;
+end Timer.Component;
