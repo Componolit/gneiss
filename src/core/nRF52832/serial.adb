@@ -125,8 +125,6 @@ is
    procedure Send is
    begin
       TXD_PTR       := (PTR => String_Address (Buffer));
-      --   TXD_PTR := (PTR => String_Address (Str));
-      --   TXD_MAXCNT := (MAXCNT => Str'Length);
       TASKS_STARTTX := (TSK => Trigger);
       while EVENT_ENDTX.EVENT = Clear  loop
          pragma Inspection_Point (EVENT_ENDTX);
