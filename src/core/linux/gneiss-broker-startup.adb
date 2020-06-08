@@ -116,12 +116,14 @@ is
          C.Node := SXML.Query.Invalid_State;
          Gneiss_Internal.Syscall.Close (C.Fd);
       end loop;
-      SXML.Query.Attribute (Comp, State.Xml, "file", Result, Load_File_Name, Last);
+      SXML.Query.Attribute (Comp, State.Xml, "implementation", Result, Load_File_Name, Last);
       if Result /= SXML.Result_OK and then Last not in Load_File_Name'Range then
          Gneiss_Internal.Print.Error ("No file to load");
          return;
       end if;
-      Gneiss.Main.Run (Load_File_Name (Load_File_Name'First .. Last), Fd, Ret);
+      Gneiss.Main.Run ("libcomponent_"
+                       & Load_File_Name (Load_File_Name'First .. Last)
+                       & ".so", Fd, Ret);
    end Load;
 
    procedure Parse (Data     : String;

@@ -22,6 +22,7 @@ edit_parser = subparsers.add_parser("edit")
 edit_parser.add_argument("project", help="GPR project file")
 edit_parser.add_argument("gneiss_root", help="gneiss repository")
 edit_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
+edit_parser.add_argument("-p", "--platform", help="target platform", default="linux")
 edit_parser.add_argument("paths", help="component search paths", nargs="*")
 prove_parser = subparsers.add_parser("prove")
 prove_parser.add_argument("project", help="GPR project file")
@@ -29,13 +30,11 @@ prove_parser.add_argument("gneiss_root", help="gneiss repository")
 prove_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
 prove_parser.add_argument("-u", "--unit", help="ada unit")
 prove_parser.add_argument("-s", "--steps", help="prove steps", default="8000")
+prove_parser.add_argument("-p", "--platform", help="target platform", default="linux")
 prove_parser.add_argument("paths", help="component search paths", nargs="*")
 
 def get_gcc_version():
     return subprocess.check_output(["gcc", "-dumpversion"]).decode('utf-8').strip().split('.')[0]
-
-def get_component_name(libname):
-    return libname[13:-3]
 
 def build_runtime(root, platform):
     if platform == "nRF52832":
@@ -89,18 +88,10 @@ def extract_components(build_dir, target_dir, components):
     except FileExistsError:
         pass
     for c in components:
-        shutil.copy2(find(c, os.path.join(build_dir, "libcomponents")), target_dir)
+        shutil.copy2(find("libcomponent_" + c + ".so", os.path.join(build_dir, "libcomponents")), target_dir)
 
 def get_component_files(xml_file):
-    config_root = ET.parse(xml_file).getroot()
-    components = set()
-    for c_tag in config_root.findall("component"):
-        c = c_tag.get("file")
-        if c.startswith("libcomponent_") and c.endswith(".so"):
-            components.add(c)
-        else:
-            raise ValueError(c)
-    return components
+    return (set([c_tag.get("implementation") for c_tag in ET.parse(xml_file).getroot().findall("component")]))
 
 def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose):
     logger.info("Compiling...")
@@ -115,7 +106,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
         exit(1)
     for c in components:
         logger.info("Preparing " + c + "...")
-        if build_component(get_component_name(c),
+        if build_component(c,
                            gneiss_root,
                            [os.path.abspath(p) for p in paths],
                            build_dir,
@@ -133,7 +124,7 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
         exit(1)
     for c in components:
         logger.info("Compiling " + c + "...")
-        if build_component(get_component_name(c),
+        if build_component(c,
                            gneiss_root,
                            [os.path.abspath(p) for p in args.paths],
                            build_dir,
@@ -142,28 +133,25 @@ def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logge
             logger.error("Compilation of " + c + " failed")
             exit(1)
     logger.info("Extracting results...")
-    if platform == "nRF52832":
+    try:
+        os.mkdir(root_dir)
+    except FileExistsError:
         pass
-    else:
-        try:
-            os.mkdir(root_dir)
-        except FileExistsError:
-            pass
-        bindir = os.path.join(root_dir, "bin")
-        try:
-            os.mkdir(bindir)
-        except FileExistsError:
-            pass
-        libdir = os.path.join(root_dir, "lib")
-        try:
-            os.mkdir(libdir)
-        except FileExistsError:
-            pass
-        extract_init(build_dir, bindir, platform)
-        extract_components(build_dir, libdir, components)
+    bindir = os.path.join(root_dir, "bin")
+    try:
+        os.mkdir(bindir)
+    except FileExistsError:
+        pass
+    libdir = os.path.join(root_dir, "lib")
+    try:
+        os.mkdir(libdir)
+    except FileExistsError:
+        pass
+    extract_init(build_dir, bindir, platform)
+    extract_components(build_dir, libdir, components)
     logger.info("Finished.")
 
-def gpr_prepare(name, root, build_dir, paths):
+def gpr_prepare(name, root, build_dir, paths, platform):
     step_compile = ["-XCEMENT_BUILD_STEP=compile"]
     step_prepare = ["-XCEMENT_BUILD_STEP=prepare",
                     "--db", os.path.join(root, "gprconfig_db")]
@@ -173,7 +161,8 @@ def gpr_prepare(name, root, build_dir, paths):
             "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(build_dir, name[:-4] + "_libobj"),
             "-XCEMENT_LIBRARY_DIR=" + os.path.join(build_dir, name[:-4] + "_lib"),
             "-XCEMENT_COMPONENT_DIR=" + os.path.join(build_dir, name[:-4] + "_component"),
-            "-XGCC_VERSION=" + get_gcc_version()]
+            "-XGCC_VERSION=" + get_gcc_version(),
+            "-XGNEISS_PLATFORM=" + platform]
     project_path_file = "/tmp/cement_gpr_project_path." + str(os.getpid())
     with open(project_path_file, "w+") as ppf:
         for path in [root] + paths:
@@ -185,9 +174,9 @@ def gpr_prepare(name, root, build_dir, paths):
     return args, env, project_path_file
 
 
-def gpr_edit(name, root, build_dir, paths, logger):
+def gpr_edit(name, root, build_dir, paths, logger, platform):
     logger.info("Editing...")
-    args, env, project_path_file = gpr_prepare(name, root, build_dir, paths)
+    args, env, project_path_file = gpr_prepare(name, root, build_dir, paths, platform)
     logger.debug(args)
     logger.debug(env["GPR_PROJECT_PATH_FILE"])
     proc = subprocess.Popen(["gnatstudio"] + args + ["-XCEMENT_BUILD_STEP=compile"], env=env)
@@ -195,9 +184,9 @@ def gpr_edit(name, root, build_dir, paths, logger):
     proc.communicate()
     os.remove(project_path_file)
 
-def gpr_prove(name, root, build_dir, paths, steps, unit, logger):
+def gpr_prove(name, root, build_dir, paths, steps, unit, logger, platform):
     logger.info("Editing...")
-    args, env, project_path_file = gpr_prepare(name, root, build_dir, paths)
+    args, env, project_path_file = gpr_prepare(name, root, build_dir, paths, platform)
     logger.debug(args)
     logger.debug(env["GPR_PROJECT_PATH_FILE"])
     args.extend(["-j0", f"--steps={steps}", "--checks-as-errors", "--prover=cvc4,z3,altergo"])
@@ -235,9 +224,9 @@ if __name__ == "__main__":
                     logger,
                     args.verbose)
     elif args.command == "edit":
-        gpr_edit(args.project, os.path.abspath(args.gneiss_root), build_dir, args.paths, logger)
+        gpr_edit(args.project, os.path.abspath(args.gneiss_root), build_dir, args.paths, logger, args.platform)
     elif args.command == "prove":
-        exit(gpr_prove(args.project, os.path.abspath(args.gneiss_root), build_dir, args.paths, args.steps, args.unit, logger))
+        exit(gpr_prove(args.project, os.path.abspath(args.gneiss_root), build_dir, args.paths, args.steps, args.unit, logger, args.platform))
     else:
         logger.error(f"Command {args.command} not implemented")
         exit(1)
