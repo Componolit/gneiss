@@ -1,7 +1,7 @@
 <config>
     <resource name="config" type="File" location="/tmp/test.conf"/>
-    <component name="log_server" file="libcomponent_linux_log_server.so"/>
-    <component name="rom" file="libcomponent_rom.so">
+    <component name="log_server" implementation="linux_log_server"/>
+    <component name="rom" implementation="rom">
         <service name="Log" server="log_server"/>
         <service name="Rom" resource="config"/>
     </component>

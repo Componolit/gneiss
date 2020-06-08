@@ -6,7 +6,6 @@ apt-get install -y expect python3 python3-pip
 cd /gneiss
 git submodule update --init --recursive
 pip3 install -e tool/RecordFlux
-make -C ada-runtime
 
 set -e
 
