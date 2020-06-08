@@ -39,7 +39,7 @@ is
    procedure Construct (Cap : Capability) with
       Export,
       Convention => C,
-      External_Name => "componolit_interfaces_component_construct";
+      External_Name => "gneiss_component_construct";
 
    --  Exit method of a component.
    --
@@ -47,7 +47,7 @@ is
    procedure Destruct with
       Export,
       Convention => C,
-      External_Name => "componolit_interfaces_component_destruct";
+      External_Name => "gneiss_component_destruct";
 
    --  Signal component
    --

@@ -2,7 +2,7 @@
 with Gneiss.Log;
 with Gneiss.Log.Client;
 
-package body Component with
+package body Hello_World.Component with
    SPARK_Mode,
    Refined_State => (Platform_State  => Log,
                      Component_State => Cap)
@@ -38,4 +38,4 @@ is
       Log_Client.Finalize (Log);
    end Destruct;
 
-end Component;
+end Hello_World.Component;

@@ -3,7 +3,7 @@ with Gneiss.Memory;
 with Gneiss.Memory.Dispatcher;
 with Gneiss.Memory.Server;
 
-package body Component with
+package body Memory_Server.Component with
    SPARK_Mode,
    Refined_State => (Component_State => Capability,
                      Platform_State  => (Dispatcher,
@@ -163,4 +163,4 @@ is
        then Context (Memory.Index (Session).Value).Ready
        else False);
 
-end Component;
+end Memory_Server.Component;

@@ -3,7 +3,7 @@ with Gneiss;
 with Gneiss.Component;
 with Gneiss_Internal;
 
-package Component with
+package Memory_Server.Component with
    SPARK_Mode,
    Abstract_State => (Component_State, Platform_State),
    Initializes    => (Platform_State, Main.Platform)
@@ -16,9 +16,8 @@ is
                             Gneiss_Internal.Platform_State));
 
    procedure Destruct with
-      Global => (In_Out => (Platform_State,
-                            Gneiss_Internal.Platform_State));
+      Global => null;
 
    package Main is new Gneiss.Component (Construct, Destruct);
 
-end Component;
+end Memory_Server.Component;

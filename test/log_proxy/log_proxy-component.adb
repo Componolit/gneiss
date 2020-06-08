@@ -4,7 +4,7 @@ with Gneiss.Log.Client;
 with Gneiss.Log.Server;
 with Gneiss.Log.Dispatcher;
 
-package body Component with
+package body Log_Proxy.Component with
    SPARK_Mode,
    Refined_State => (Component_State => Capability,
                      Platform_State  => (Dispatcher,
@@ -294,4 +294,4 @@ is
       S.Flushed := True;
    end Flush;
 
-end Component;
+end Log_Proxy.Component;
