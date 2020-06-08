@@ -35,7 +35,8 @@ project Core is
    end Compiler;
 
    package Linker is
-      for Default_Switches ("Ada") use ("-Wl,--gc-sections", "-Wl,--print-memory-usage", "-T", "link.ld");
+      for Default_Switches ("Ada") use ("-Wl,--gc-sections", "-Wl,--print-memory-usage", "-T",
+                                        Gneiss_Root & "/src/core/nRF52832/link.ld");
    end Linker;
 
    package Binder is
