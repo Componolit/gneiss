@@ -94,6 +94,43 @@ def get_component_files(xml_file):
     return (set([c_tag.get("implementation") for c_tag in ET.parse(xml_file).getroot().findall("component")]))
 
 def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose):
+    if platform == "nRF52832":
+        gpr_compile_nrf52832(config, gneiss_root, build_dir, paths, platform, logger, verbose)
+    else:
+        gpr_compile_linux(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose)
+
+def gpr_compile_nrf52832(config, gneiss_root, build_dir, paths, platform, logger, verbose):
+    logger.info("Creating project...")
+    project_dir = os.path.join(build_dir, "nRF52832")
+    try:
+        os.mkdir(build_dir)
+        os.mkdir(project_dir)
+    except FileExistsError:
+        pass
+    args = ["-p",
+            "-P", "core",
+            "-XGNEISS_PLATFORM=" + platform,
+            "-XGCC_VERSION=" + get_gcc_version(),
+            "-XGNEISS_ROOT=" + gneiss_root,
+            "-XCEMENT_OBJECT_DIR=" + os.path.join(project_dir, "obj/"),
+            "-XCEMENT_LIB_OBJECT_DIR=" + os.path.join(project_dir, "libobj/"),
+            "-XCEMENT_LIBRARY_DIR=" + os.path.join(project_dir, "lib/"),
+            "-XCEMENT_COMPONENT_DIR=" + os.path.join(project_dir, "libcomponents/"),
+            "--db", os.path.join(gneiss_root, "gprconfig_db"),
+            "-aP", project_dir]
+    for p in paths:
+        args.extend(["-aP", p])
+    with open(os.path.join(project_dir, "core.gpr"), "w") as core_gpr:
+        core_gpr.write("\n".join([f"with \"{c}\";" for c in get_component_files(config)]))
+        core_gpr.write("\n\n")
+        with open(os.path.join(gneiss_root, f"src/core/{platform}/core.gpr"), "r") as core_template:
+            core_gpr.write(core_template.read())
+    for step in ["prepare", "compile"]:
+        args += ["-XCEMENT_BUILD_STEP=" + step]
+        logger.debug("gprbuild " + " ".join(args))
+        gprbuild(args)
+
+def gpr_compile_linux(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose):
     logger.info("Compiling...")
     components = get_component_files(config)
     logger.info("Preparing init...")
