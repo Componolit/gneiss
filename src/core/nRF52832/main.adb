@@ -1,27 +1,27 @@
 with Serial;
 with Componolit.Runtime.Drivers.GPIO;
-with Sparkfun.Debug;
 
 procedure Main with
    SPARK_Mode
 is
    package GPIO renames Componolit.Runtime.Drivers.GPIO;
-   procedure Debug is new Sparkfun.Debug.Debug (Integer);
-   A : String (1 .. 1024);
+   S1 : String (1 .. 128);
+   function F (P : Positive) return String;
+   function F (P : Positive) return String
+   is
+      S : constant String (1 .. P) := (others => 'X');
+   begin
+      return S & ASCII.CR & ASCII.LF;
+   end F;
 begin
    GPIO.Configure (18, GPIO.Port_Out);
    GPIO.Write (18, GPIO.Low);
-   Sparkfun.Debug.Initialize;
    Serial.Initialize;
-   Debug (1);
-   Serial.Print ("Hello World!");
-   Debug (2);
-   for I in A'Range loop
-      A (I) := 'A';
-   end loop;
-   Serial.Print (A);
-   Debug (3);
-   loop
-      null;
-   end loop;
+   Serial.Print ("Gneiss 0.3.0" & ASCII.CR & ASCII.LF);
+   Serial.Print ("Testing memcpy..." & ASCII.CR & ASCII.LF);
+   S1 := (others => 'X');
+   Serial.Print (S1 & ASCII.CR & ASCII.LF);
+   Serial.Print ("Testing secondary stack..." & ASCII.CR & ASCII.LF);
+   Serial.Print (F (64));
+   Serial.Print ("Finished." & ASCII.CR & ASCII.LF);
 end Main;
