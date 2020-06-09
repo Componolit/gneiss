@@ -9,14 +9,14 @@
 Genode::Env *__genode_env; // only required for ada-runtime
 
 extern "C" void adainit();
-extern "C" void componolit_interfaces_component_construct(Cai::Env *);
-extern "C" void componolit_interfaces_component_destruct();
+extern "C" void gneiss_component_construct(Cai::Env *);
+extern "C" void gneiss_component_destruct();
 
 struct Main
 {
     Genode::Env &_env;
     Genode::Signal_handler<Main> _exit;
-    Cai::Env _cai_env {Cai::Env::Status::RUNNING, &_env, &componolit_interfaces_component_destruct, _exit};
+    Cai::Env _cai_env {Cai::Env::Status::RUNNING, &_env, &gneiss_component_destruct, _exit};
 
     void exit_handler()
     {
@@ -32,7 +32,7 @@ struct Main
     {
         TLOG();
         adainit();
-        componolit_interfaces_component_construct(&_cai_env);
+        gneiss_component_construct(&_cai_env);
     }
 };
 
@@ -44,7 +44,7 @@ void Component::construct(Genode::Env &env)
 }
 
 extern "C" {
-    void componolit_interfaces_component_vacate(Cai::Env *env, int status)
+    void gneiss_component_vacate(Cai::Env *env, int status)
     {
         env->status = status;
         Genode::Signal_transmitter(env->exit_signal).submit();
