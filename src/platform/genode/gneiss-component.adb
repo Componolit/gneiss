@@ -16,7 +16,7 @@ is
                           S : Integer) with
          Import,
          Convention => C,
-         External_Name => "componolit_interfaces_component_vacate";
+         External_Name => "gneiss_component_vacate";
    begin
       if Status = Success then
          C_Vacate (Cap, 0);

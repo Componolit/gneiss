@@ -7,7 +7,7 @@ git fetch jklmnn
 git checkout 738b55ec140863660c247ed01fce12e26fac44e0
 git clone https://github.com/Componolit/genode-componolit.git /genode/repos/componolit
 cd /genode/repos/componolit
-git checkout 7f85fcdce498b45a4936e5ff914491b76c9cce0d
+git checkout 572bb97dc4f984539dfcae2e1b7f55cac0295e78
 rm -rf /genode/repos/componolit/modules/gneiss
 ln -fs /gneiss /genode/repos/componolit/modules/gneiss
 git submodule update --init --recursive modules/basalt
