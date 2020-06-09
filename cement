@@ -2,6 +2,7 @@
 
 import sys
 import os
+import dbus
 import argparse
 import subprocess
 import shutil
@@ -40,6 +41,25 @@ def build_runtime(root, platform):
     if platform == "nRF52832":
         return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime"), "nrf52"])
     return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime")])
+
+def find_segger_jlink():
+    for d in os.listdir("/sys/block"):
+        if d.startswith("sd"):
+            with open(f"/sys/block/{d}/device/vendor") as vendor:
+                if vendor.read().strip() == "SEGGER":
+                    return d
+    return ""
+
+def mount_segger_jlink(device):
+    mounts = [m.strip().split(' ') for m in subprocess.check_output(["mount", "-l"]).decode('utf-8').strip().split('\n')]
+    for m in mounts:
+        if m[0] == device:
+            return m[2]
+    bus = dbus.SystemBus()
+    obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2/block_devices/' + device)
+    iface = dbus.Interface(obj, 'org.freedesktop.UDisks2.Filesystem')
+    return iface.get_dbus_method('Mount', dbus_interface='org.freedesktop.UDisks2.Filesystem')([])
+
 
 def build_init(root, outdir, default_args, platform, logger):
     args = default_args + ["-P", f"core",
@@ -128,7 +148,19 @@ def gpr_compile_nrf52832(config, gneiss_root, build_dir, paths, platform, logger
     for step in ["prepare", "compile"]:
         args += ["-XCEMENT_BUILD_STEP=" + step]
         logger.debug("gprbuild " + " ".join(args))
-        gprbuild(args)
+        if gprbuild(args) != 0:
+            logger.error("Compilation failed")
+            return
+    jlink = find_segger_jlink()
+    if not jlink:
+        logger.error("No SEGGER JLink programmer found")
+        return
+    target = mount_segger_jlink(jlink)
+    logger.info(f"Programmer at {target}, flashing...")
+    subprocess.call(["arm-eabi-objcopy", "-O", "ihex",
+                     os.path.join(project_dir, "obj/core"),
+                     os.path.join(target, "core.hex")])
+    logger.info("Finished")
 
 def gpr_compile_linux(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose):
     logger.info("Compiling...")
