@@ -53,7 +53,7 @@ def find_segger_jlink():
 def mount_segger_jlink(device):
     mounts = [m.strip().split(' ') for m in subprocess.check_output(["mount", "-l"]).decode('utf-8').strip().split('\n')]
     for m in mounts:
-        if m[0] == device:
+        if m[0] == f"/dev/{device}":
             return m[2]
     bus = dbus.SystemBus()
     obj = bus.get_object('org.freedesktop.UDisks2', '/org/freedesktop/UDisks2/block_devices/' + device)
