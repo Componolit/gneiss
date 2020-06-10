@@ -7,11 +7,7 @@ package body Packet_Server.Component with
    SPARK_Mode
 is
 
-   subtype Desc_Index is Positive range 1 .. 10;
-
-   package Packet is new Gneiss.Packet (Positive, Character, String, Desc_Index);
-
-   type Descriptors is array (Desc_Index'Range) of Packet.Descriptor;
+   package Packet is new Gneiss.Packet (Positive, Character, String);
 
    type Server_Slot is record
       Ready : Boolean := False;
@@ -22,20 +18,8 @@ is
    type Server_Slots is array (Server_Index'Range) of Server_Slot;
 
    type Server_Meta is record
-      Slots : Server_Slots;
-      Buf   : String (1 .. 512);
-      Last  : Natural;
+      Slots  : Server_Slots;
    end record;
-
-   procedure Update (Session : in out Packet.Server_Session;
-                     Idx     :        Desc_Index;
-                     Buf     :    out String;
-                     Ctx     : in out Server_Meta);
-
-   procedure Read (Session : in out Packet.Server_Session;
-                   Idx     :        Desc_Index;
-                   Buf     :        String;
-                   Ctx     : in out Server_Meta);
 
    procedure Initialize (Session : in out Packet.Server_Session;
                          Context : in out Server_Meta) with
@@ -64,14 +48,15 @@ is
       Post   => Packet.Initialized (Session)
                 and then Packet.Registered (Session);
 
-   package Packet_Server is new Packet.Server (Server_Meta, Initialize, Finalize, Event, Ready, Update, Read);
+   package Packet_Server is new Packet.Server (Server_Meta, Initialize, Finalize, Event, Ready);
    package Packet_Dispatcher is new Packet.Dispatcher (Packet_Server, Dispatch);
 
    Dispatcher  : Packet.Dispatcher_Session;
    Capability  : Gneiss.Capability;
    Servers     : Server_Reg;
    Server_Data : Server_Meta;
-   Descs       : Descriptors;
+   Buf         : String (1 .. 512);
+   Length      : Natural;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -87,64 +72,18 @@ is
 
    procedure Event
    is
+      Ignore_Success : Boolean;
    begin
       for S of Servers loop
          if Packet.Initialized (S) then
-            for I in Descs'Range loop
-               Server_Data.Last := 0;
-               if not Packet_Server.Allocated (S, Descs (I), Server_Data) then
-                  Packet_Server.Receive (S, Descs (I), I, Server_Data);
-                  exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
-                  Packet_Server.Read (S, Descs (I), Server_Data);
-                  Packet_Server.Free (S, Descs (I), Server_Data);
-                  exit when Server_Data.Last < Server_Data.Buf'First;
-                  Packet_Server.Allocate (S, Descs (I),
-                                          Server_Data.Last - Server_Data.Buf'First + 1, I, Server_Data);
-               end if;
-               exit when not Packet_Server.Allocated (S, Descs (I), Server_Data);
-               Packet_Server.Update (S, Descs (I), Server_Data);
-               Packet_Server.Send (S, Descs (I), Server_Data);
-            end loop;
+            Packet_Server.Receive (S, Buf, Length, Server_Data);
+            if Length > Buf'Length then
+               Length := Buf'Length;
+            end if;
+            Packet_Server.Send (S, Buf (Buf'First .. Buf'First + Length - 1), Ignore_Success, Server_Data);
          end if;
       end loop;
    end Event;
-
-   procedure Update (Session : in out Packet.Server_Session;
-                     Idx     :        Desc_Index;
-                     Buf     :    out String;
-                     Ctx     : in out Server_Meta)
-   is
-      pragma Unreferenced (Session);
-      pragma Unreferenced (Idx);
-      Length : constant Natural := Ctx.Last - (Ctx.Buf'First - 1);
-   begin
-      Buf := (others => Character'First);
-      if Ctx.Last < Ctx.Buf'First then
-         return;
-      end if;
-      if Buf'Length <= Length then
-         Buf := Ctx.Buf (Ctx.Buf'First .. Ctx.Buf'First + Buf'Length - 1);
-      else
-         Buf (Buf'First .. Buf'First + Length - 1) := Ctx.Buf (Ctx.Buf'First .. Ctx.Last);
-      end if;
-   end Update;
-
-   procedure Read (Session : in out Packet.Server_Session;
-                   Idx     :        Desc_Index;
-                   Buf     :        String;
-                   Ctx     : in out Server_Meta)
-   is
-      pragma Unreferenced (Session);
-      pragma Unreferenced (Idx);
-   begin
-      if Buf'Length <= Ctx.Buf'Length then
-         Ctx.Last := Ctx.Buf'First + Buf'Length - 1;
-         Ctx.Buf (Ctx.Buf'First .. Ctx.Last) := Buf;
-      else
-         Ctx.Last := Ctx.Buf'Last;
-         Ctx.Buf := Buf (Buf'First .. Buf'First + Ctx.Buf'Length - 1);
-      end if;
-   end Read;
 
    procedure Destruct
    is

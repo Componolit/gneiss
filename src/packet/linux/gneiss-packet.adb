@@ -1,11 +1,8 @@
 with Gneiss_Internal;
-with System;
 
 package body Gneiss.Packet with
    SPARK_Mode
 is
-
-   use type System.Address;
 
    function Initialized (Session : Client_Session) return Boolean is
       (Gneiss_Internal.Valid (Session.Fd)
@@ -34,11 +31,5 @@ is
 
    function Registered (Session : Dispatcher_Session) return Boolean is
       (Gneiss_Internal.Valid (Session.Dispatch_Fd));
-
-   function Assigned (D : Descriptor) return Boolean is
-      (D.Addr /= System.Null_Address);
-
-   function Index (D : Descriptor) return Descriptor_Index is
-      (D.Index);
 
 end Gneiss.Packet;

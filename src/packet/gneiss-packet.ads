@@ -6,7 +6,6 @@ generic
    type Buffer_Index is range <>;
    type Byte is (<>);
    type Buffer is array (Buffer_Index range <>) of Byte;
-   type Descriptor_Index is range <>;
    pragma Warnings (Off, "* is not referenced");
 package Gneiss.Packet with
    SPARK_Mode
@@ -22,9 +21,6 @@ is
       Default_Initial_Condition => True;
 
    type Dispatcher_Capability is limited private;
-
-   type Descriptor is limited private with
-      Default_Initial_Condition => True;
 
    function Initialized (Session : Client_Session) return Boolean;
 
@@ -45,20 +41,11 @@ is
       Ghost,
       Pre => Initialized (Session);
 
-   function Assigned (D : Descriptor) return Boolean with
-      Ghost;
-
-   function Index (D : Descriptor) return Descriptor_Index with
-      Pre => Assigned (D);
-
 private
 
-   package Internal is new Gneiss_Internal.Packet (Descriptor_Index);
-
-   type Client_Session is new Internal.Client_Session;
-   type Server_Session is new Internal.Server_Session;
-   type Dispatcher_Session is new Internal.Dispatcher_Session;
-   type Dispatcher_Capability is new Internal.Dispatcher_Capability;
-   type Descriptor is new Internal.Descriptor;
+   type Client_Session is new Gneiss_Internal.Packet.Client_Session;
+   type Server_Session is new Gneiss_Internal.Packet.Server_Session;
+   type Dispatcher_Session is new Gneiss_Internal.Packet.Dispatcher_Session;
+   type Dispatcher_Capability is new Gneiss_Internal.Packet.Dispatcher_Capability;
 
 end Gneiss.Packet;
