@@ -116,7 +116,11 @@ is
          C.Node := SXML.Query.Invalid_State;
          Gneiss_Internal.Syscall.Close (C.Fd);
       end loop;
-      SXML.Query.Attribute (Comp, State.Xml, "implementation", Result, Load_File_Name, Last);
+      if SXML.Query.Has_Attribute (Comp, State.Xml, "implementation") then
+         SXML.Query.Attribute (Comp, State.Xml, "implementation", Result, Load_File_Name, Last);
+      else
+         SXML.Query.Attribute (Comp, State.Xml, "name", Result, Load_File_Name, Last);
+      end if;
       if Result /= SXML.Result_OK and then Last not in Load_File_Name'Range then
          Gneiss_Internal.Print.Error ("No file to load");
          return;

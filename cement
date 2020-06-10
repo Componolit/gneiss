@@ -111,7 +111,7 @@ def extract_components(build_dir, target_dir, components):
         shutil.copy2(find("libcomponent_" + c + ".so", os.path.join(build_dir, "libcomponents")), target_dir)
 
 def get_component_files(xml_file):
-    return (set([c_tag.get("implementation") for c_tag in ET.parse(xml_file).getroot().findall("component")]))
+    return (set([c_tag.get("implementation") if "implementation" in c_tag.keys() else c_tag.get("name") for c_tag in ET.parse(xml_file).getroot().findall("component")]))
 
 def gpr_compile(config, gneiss_root, build_dir, root_dir, paths, platform, logger, verbose):
     if platform == "nRF52832":

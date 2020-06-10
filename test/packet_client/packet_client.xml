@@ -1,9 +1,9 @@
 <config>
     <component name="log_server" implementation="linux_log_server"/>
-    <component name="packet_client" implementation="packet_client">
+    <component name="packet_client">
         <service name="Packet" server="packet_server"/>
         <service name="Log" server="log_server"/>
     </component>
-    <component name="packet_server" implementation="packet_server">
+    <component name="packet_server">
     </component>
 </config>

@@ -1,6 +1,6 @@
 <config>
     <component name="log_server" implementation="linux_log_server"/>
-    <component name="timer" implementation="timer">
+    <component name="timer">
         <service name="Log" server="log_server"/>
         <service name="Timer"/>
     </component>
