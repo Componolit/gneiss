@@ -5,16 +5,10 @@ with Gneiss_Internal.Client;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Syscall;
 with Gneiss_Internal.Packet_Session;
-with Gneiss_Internal.Util;
 
 package body Gneiss.Packet.Client with
    SPARK_Mode
 is
-
-   use type System.Address;
-
-   function Get_First is new Gneiss_Internal.Util.Get_First (Buffer_Index);
-   function Get_Last is new Gneiss_Internal.Util.Get_Last (Buffer_Index);
 
    function Get_Event_Address (Session : Client_Session) return System.Address;
 
@@ -85,81 +79,23 @@ is
       Session.Index := Session_Index_Option'(Valid => False);
    end Finalize;
 
-   function Allocated (Session : Client_Session;
-                       Desc    : Descriptor) return Boolean is
-      (Desc.Addr /= System.Null_Address);
-
-   function Writable (Session : Client_Session;
-                      Desc    : Descriptor) return Boolean is
-      (Desc.Writable);
-
-   procedure Allocate (Session : in out Client_Session;
-                       Desc    : in out Descriptor;
-                       Size    :        Buffer_Index;
-                       Idx     :        Descriptor_Index)
-   is
-      pragma Unreferenced (Session);
-   begin
-      if Buffer_Index'Pos (Size) < Natural'Pos (Natural'Last) then
-         Desc.Size := Natural (Size);
-      else
-         Desc.Size := Natural'Last;
-      end if;
-      Gneiss_Internal.Packet_Session.Gneiss_Packet_Allocate (Desc.Addr, Desc.Size);
-      Desc.Writable := True;
-      Desc.Index    := Idx;
-   end Allocate;
-
    procedure Send (Session : in out Client_Session;
-                   Desc    : in out Descriptor)
+                   Data    :        Buffer;
+                   Success :    out Boolean)
    is
+      Length : Natural := Data'Length;
    begin
-      Gneiss_Internal.Packet_Session.Gneiss_Packet_Send (Session.Fd, Desc.Addr, Desc.Size);
-      Gneiss_Internal.Packet_Session.Gneiss_Packet_Free (Desc.Addr);
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Send (Session.Fd, Data'Address, Length);
+      Success := Length = Data'Length;
    end Send;
 
    procedure Receive (Session : in out Client_Session;
-                      Desc    : in out Descriptor;
-                      Idx     :        Descriptor_Index)
+                      Data    :    out Buffer;
+                      Length  :    out Natural)
    is
    begin
-      Gneiss_Internal.Packet_Session.Gneiss_Packet_Receive (Session.Fd, Desc.Addr, Desc.Size);
-      Desc.Writable := False;
-      Desc.Index    := Idx;
+      Length := Data'Length;
+      Gneiss_Internal.Packet_Session.Gneiss_Packet_Receive (Session.Fd, Data'Address, Length);
    end Receive;
-
-   procedure Update (Session : in out Client_Session;
-                     Desc    :        Descriptor;
-                     Ctx     : in out Context)
-   is
-      First : constant Buffer_Index := Get_First (Desc.Size);
-      Last  : constant Buffer_Index := Get_Last (Desc.Size);
-      B     : Buffer (First .. Last) with
-         Import,
-         Address => Desc.Addr;
-   begin
-      Generic_Update (Session, Desc.Index, B, Ctx);
-   end Update;
-
-   procedure Read (Session : in out Client_Session;
-                   Desc    :        Descriptor;
-                   Ctx     : in out Context)
-   is
-      First : constant Buffer_Index := Get_First (Desc.Size);
-      Last  : constant Buffer_Index := Get_Last (Desc.Size);
-      B     : Buffer (First .. Last) with
-         Import,
-         Address => Desc.Addr;
-   begin
-      Generic_Read (Session, Desc.Index, B, Ctx);
-   end Read;
-
-   procedure Free (Session : in out Client_Session;
-                   Desc    : in out Descriptor)
-   is
-      pragma Unreferenced (Session);
-   begin
-      Gneiss_Internal.Packet_Session.Gneiss_Packet_Free (Desc.Addr);
-   end Free;
 
 end Gneiss.Packet.Client;

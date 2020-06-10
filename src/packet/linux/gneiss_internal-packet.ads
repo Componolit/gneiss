@@ -1,8 +1,5 @@
 with Gneiss;
-with System;
 
-generic
-   type Descriptor_Index is range <>;
 package Gneiss_Internal.Packet with
    SPARK_Mode
 is
@@ -35,13 +32,6 @@ is
       Clean_Fd  : File_Descriptor := -1;
       Name      : Session_Label;
       Label     : Session_Label;
-   end record;
-
-   type Descriptor is limited record
-      Addr     : System.Address   := System.Null_Address;
-      Size     : Natural          := 0;
-      Index    : Descriptor_Index := Descriptor_Index'First;
-      Writable : Boolean          := False;
    end record;
 
 end Gneiss_Internal.Packet;
