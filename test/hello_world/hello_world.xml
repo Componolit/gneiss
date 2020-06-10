@@ -1,6 +1,6 @@
 <config>
     <component name="log_server" implementation="linux_log_server"/>
-    <component name="hello_world" implementation="hello_world">
+    <component name="hello_world">
         <service name="Log" server="log_server"/>
     </component>
 </config>
