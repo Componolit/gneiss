@@ -15,6 +15,9 @@ package Gneiss with
    SPARK_Mode
 is
 
+   Name    : constant String := "Gneiss";
+   Version : constant String := "0.3.0";
+
    --  Session status type
    --
    --  @value Uninitialized  The session is not initialized and no initialization is in progress.
