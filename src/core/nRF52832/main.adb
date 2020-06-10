@@ -1,3 +1,4 @@
+with Gneiss;
 with Serial;
 with Componolit.Runtime.Drivers.GPIO;
 
@@ -17,7 +18,7 @@ begin
    GPIO.Configure (18, GPIO.Port_Out);
    GPIO.Write (18, GPIO.Low);
    Serial.Initialize;
-   Serial.Print ("Gneiss 0.3.0" & ASCII.CR & ASCII.LF);
+   Serial.Print (Gneiss.Name & " " & Gneiss.Version & ASCII.CR & ASCII.LF);
    Serial.Print ("Testing memcpy..." & ASCII.CR & ASCII.LF);
    S1 := (others => 'X');
    Serial.Print (S1 & ASCII.CR & ASCII.LF);
