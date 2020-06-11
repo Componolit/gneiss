@@ -1,5 +1,4 @@
 with System;
-with Gneiss_Internal;
 with Gneiss_Protocol;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Epoll;
@@ -57,7 +56,9 @@ is
       Session.E_Cap := Event_Cap (Session, Session, Fds (Fds'First));
       Gneiss_Internal.Epoll.Add (Cap.Efd, Fds (Fds'First), Get_Event_Address (Session), Success);
       if not Success then
+         pragma Warnings (Off, "unused assignment to ""Fds""");
          Gneiss_Internal.Syscall.Close (Fds (Fds'First));
+         pragma Warnings (On, "unused assignment to ""Fds""");
          Gneiss_Internal.Invalidate (Session.E_Cap);
          return;
       end if;
@@ -81,7 +82,8 @@ is
 
    procedure Send (Session : in out Client_Session;
                    Data    :        Buffer;
-                   Success :    out Boolean)
+                   Success :    out Boolean) with
+      SPARK_Mode => Off
    is
       Length : Natural := Data'Length;
    begin
@@ -91,7 +93,8 @@ is
 
    procedure Receive (Session : in out Client_Session;
                       Data    :    out Buffer;
-                      Length  :    out Natural)
+                      Length  :    out Natural) with
+      SPARK_Mode => Off
    is
    begin
       Length := Data'Length;

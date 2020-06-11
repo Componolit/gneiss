@@ -10,7 +10,8 @@ is
       Pre           => Valid (Fd),
       Import,
       Convention    => C,
-      External_Name => "gneiss_packet_send";
+      External_Name => "gneiss_packet_send",
+      Global        => (In_Out => Platform_State);
 
    procedure Gneiss_Packet_Receive (Fd   :        File_Descriptor;
                                     Addr :        System.Address;
@@ -18,6 +19,7 @@ is
       Pre           => Valid (Fd),
       Import,
       Convention    => C,
-      External_Name => "gneiss_packet_receive";
+      External_Name => "gneiss_packet_receive",
+      Global        => (In_Out => Platform_State);
 
 end Gneiss_Internal.Packet_Session;

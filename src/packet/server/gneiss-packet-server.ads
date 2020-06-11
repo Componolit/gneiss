@@ -1,3 +1,4 @@
+with Gneiss_Internal;
 
 generic
    pragma Warnings (Off, "* is not referenced");
@@ -20,18 +21,20 @@ is
                    Data    :        Buffer;
                    Success :    out Boolean;
                    Ctx     :        Context) with
-      Pre  => Ready (Session, Ctx)
-              and then Initialized (Session),
-      Post => Ready (Session, Ctx)
-              and then Initialized (Session);
+      Pre    => Ready (Session, Ctx)
+                and then Initialized (Session),
+      Post   => Ready (Session, Ctx)
+                and then Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
    procedure Receive (Session : in out Server_Session;
                       Data    :    out Buffer;
                       Length  :    out Natural;
                       Ctx     :        Context) with
-      Pre  => Ready (Session, Ctx)
-              and then Initialized (Session),
-      Post => Ready (Session, Ctx)
-              and then Initialized (Session);
+      Pre    => Ready (Session, Ctx)
+                and then Initialized (Session),
+      Post   => Ready (Session, Ctx)
+                and then Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State);
 
 end Gneiss.Packet.Server;
