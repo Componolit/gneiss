@@ -1,5 +1,4 @@
 with System;
-with Gneiss_Internal;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Syscall;

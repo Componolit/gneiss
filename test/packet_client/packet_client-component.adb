@@ -5,13 +5,21 @@ with Gneiss.Packet;
 with Gneiss.Packet.Client;
 
 package body Packet_Client.Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Client,
+                                         Log,
+                                         Buffer))
 is
 
    package Gneiss_Log is new Gneiss.Log;
    package Log_Client is new Gneiss_Log.Client;
 
-   procedure Event;
+   procedure Event with
+      Global => (In_Out => (Client, Log, Buffer,
+                            Gneiss_Internal.Platform_State,
+                            Main.Platform),
+                 Input  => Capability);
 
    package Packet is new Gneiss.Packet (Positive, Character, String);
 
@@ -20,7 +28,7 @@ is
    Client     : Packet.Client_Session;
    Log        : Gneiss_Log.Client_Session;
    Capability : Gneiss.Capability;
-   Buffer     : String (1 .. 128);
+   Buffer     : String (1 .. 128) := (others => Character'First);
 
    procedure Construct (Cap : Gneiss.Capability)
    is

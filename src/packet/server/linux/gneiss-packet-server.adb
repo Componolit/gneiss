@@ -7,7 +7,8 @@ is
    procedure Send (Session : in out Server_Session;
                    Data    :        Buffer;
                    Success :    out Boolean;
-                   Ctx     :        Context)
+                   Ctx     :        Context) with
+      SPARK_Mode => Off
    is
       pragma Unreferenced (Ctx);
       Length : Natural := Data'Length;
@@ -19,7 +20,8 @@ is
    procedure Receive (Session : in out Server_Session;
                       Data    :    out Buffer;
                       Length  :    out Natural;
-                      Ctx     :        Context)
+                      Ctx     :        Context) with
+      SPARK_Mode => Off
    is
       pragma Unreferenced (Ctx);
    begin

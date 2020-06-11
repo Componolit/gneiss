@@ -4,7 +4,13 @@ with Gneiss.Packet.Dispatcher;
 with Gneiss.Packet.Server;
 
 package body Packet_Server.Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Component_State => Capability,
+                     Platform_State  => (Dispatcher,
+                                         Servers,
+                                         Server_Data,
+                                         Buf,
+                                         Length))
 is
 
    package Packet is new Gneiss.Packet (Positive, Character, String);
@@ -33,7 +39,12 @@ is
       Post   => Packet.Initialized (Session),
       Global => null;
 
-   procedure Event;
+   procedure Event with
+      Global => (In_Out => (Servers,
+                            Buf,
+                            Length,
+                            Gneiss_Internal.Platform_State),
+                 Input  => Server_Data);
 
    function Ready (Session : Packet.Server_Session;
                    Context : Server_Meta) return Boolean with
@@ -46,7 +57,9 @@ is
       Pre    => Packet.Initialized (Session)
                 and then Packet.Registered (Session),
       Post   => Packet.Initialized (Session)
-                and then Packet.Registered (Session);
+                and then Packet.Registered (Session),
+      Global => (In_Out => (Servers, Server_Data,
+                            Gneiss_Internal.Platform_State));
 
    package Packet_Server is new Packet.Server (Server_Meta, Initialize, Finalize, Event, Ready);
    package Packet_Dispatcher is new Packet.Dispatcher (Packet_Server, Dispatch);
@@ -55,8 +68,8 @@ is
    Capability  : Gneiss.Capability;
    Servers     : Server_Reg;
    Server_Data : Server_Meta;
-   Buf         : String (1 .. 512);
-   Length      : Natural;
+   Buf         : String (1 .. 512) := (others => Character'First);
+   Length      : Natural           := 0;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -75,7 +88,7 @@ is
       Ignore_Success : Boolean;
    begin
       for S of Servers loop
-         if Packet.Initialized (S) then
+         if Packet.Initialized (S) and then Ready (S, Server_Data) then
             Packet_Server.Receive (S, Buf, Length, Server_Data);
             if Length > Buf'Length then
                Length := Buf'Length;
