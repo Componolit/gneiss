@@ -50,7 +50,13 @@ project Gneiss is
                                  "../src/packet/client",
                                  "../src/packet/client/linux",
                                  "../src/packet/server",
-                                 "../src/packet/server/linux");
+                                 "../src/packet/server/linux",
+                                 "../src/stream",
+                                 "../src/stream/linux",
+                                 "../src/stream/client",
+                                 "../src/stream/client/linux",
+                                 "../src/stream/server",
+                                 "../src/stream/server/linux");
    end case;
 
    case Step is

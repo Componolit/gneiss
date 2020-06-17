@@ -1,0 +1,9 @@
+<config>
+    <component name="log_server" implementation="linux_log_server"/>
+    <component name="stream_client">
+        <service name="Stream" server="stream_server"/>
+        <service name="Log" server="log_server"/>
+    </component>
+    <component name="stream_server">
+    </component>
+</config>

@@ -1,0 +1,7 @@
+
+set timeout 10
+spawn ./build/bin/core test/stream_client/stream_client.xml
+expect {
+    timeout { exit 1 }
+    "I: Component stream_client exited with status 0"
+}
