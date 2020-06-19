@@ -35,6 +35,10 @@ is
 
 private
 
+   function Valid_Length (L : Natural) return Boolean with
+      Post   => Valid_Length'Result,
+      Global => null;
+
    generic
       Field : in out String;
       Last  : in out Natural;

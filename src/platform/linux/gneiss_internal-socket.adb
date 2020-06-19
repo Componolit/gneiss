@@ -28,6 +28,13 @@ is
       Ptr := Buf'Unrestricted_Access;
    end Generic_Buffer;
 
+   function Valid_Length (L : Natural) return Boolean
+   is
+      pragma Unreferenced (L);
+   begin
+      return True;
+   end Valid_Length;
+
    procedure Get (Data : String)
    is
    begin
@@ -68,8 +75,8 @@ is
       package Buffer is new Generic_Buffer;
       procedure Buffer_Name is new Set (Name.Value (Name.Value'First .. Name.Last));
       procedure Buffer_Label is new Set (Label.Value (Label.Value'First .. Label.Last));
-      procedure Set_Name is new PDU.Set_Name (Buffer_Name);
-      procedure Set_Label is new PDU.Set_Label (Buffer_Label);
+      procedure Set_Name is new PDU.Set_Name (Buffer_Name, Valid_Length);
+      procedure Set_Label is new PDU.Set_Label (Buffer_Label, Valid_Length);
       Context : PDU.Context;
    begin
       PDU.Initialize (Context, Buffer.Ptr);
