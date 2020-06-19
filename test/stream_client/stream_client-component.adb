@@ -33,7 +33,7 @@ is
       Stream_Client.Initialize (Client, Capability, "log");
       if Gneiss_Log.Initialized (Log) and Stream.Initialized (Client) then
          Stream_Client.Send (Client, "Hello World!", Sent);
-         if Sent = 13 then
+         if Sent = 12 then
             Log_Client.Info (Log, "Stream sent: Hello World!");
          else
             Log_Client.Warning (Log, "Sent wrong number of bytes: "
@@ -59,6 +59,7 @@ is
                             & Basalt.Strings.Image (Read)
                             & " bytes: "
                             & Data);
+      Main.Vacate (Capability, Main.Success);
    end Receive;
 
    procedure Destruct
