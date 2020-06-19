@@ -8,6 +8,10 @@ is
                          Fd2 : out File_Descriptor) with
       Global => (In_Out => Gneiss_Internal.Platform_State);
 
+   procedure Socketpair_Stream (Fd1 : out File_Descriptor;
+                                Fd2 : out File_Descriptor) with
+      Global => (In_Out => Gneiss_Internal.Platform_State);
+
    procedure Fork (Pid : out Integer) with
       Global => (In_Out => Gneiss_Internal.Platform_State);
 

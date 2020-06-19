@@ -15,6 +15,13 @@ is
       External_Name => "gneiss_socketpair",
       Global        => (In_Out => Linux_State);
 
+   procedure Socketpair_Stream (Fd1 : out File_Descriptor;
+                                Fd2 : out File_Descriptor) with
+      Import,
+      Convention    => C,
+      External_Name => "gneiss_socketpair_stream",
+      Global        => (In_Out => Linux_State);
+
    procedure Fork (Pid : out Integer) with
       Import,
       Convention    => C,
