@@ -12,6 +12,13 @@ is
       Linux.Socketpair (Fd1, Fd2);
    end Socketpair;
 
+   procedure Socketpair_Stream (Fd1 : out File_Descriptor;
+                                Fd2 : out File_Descriptor)
+   is
+   begin
+      Linux.Socketpair_Stream (Fd1, Fd2);
+   end Socketpair_Stream;
+
    procedure Fork (Pid : out Integer)
    is
    begin

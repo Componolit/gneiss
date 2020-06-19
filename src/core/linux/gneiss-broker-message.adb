@@ -16,7 +16,8 @@ is
          when Gneiss_Protocol.Memory  => "Memory",
          when Gneiss_Protocol.Rom     => "Rom",
          when Gneiss_Protocol.Timer   => "Timer",
-         when Gneiss_Protocol.Packet  => "Packet");
+         when Gneiss_Protocol.Packet  => "Packet",
+         when Gneiss_Protocol.Stream  => "Stream");
 
    procedure Setup_Service (State : in out Service_List;
                             Kind  :        Gneiss_Protocol.Kind_Type;
@@ -133,6 +134,7 @@ is
                               Fds    :        Gneiss_Internal.Fd_Array)
    is
       use type SXML.Query.State_Type;
+      use type Gneiss_Protocol.Kind_Type;
       Serv_State  : SXML.Query.State_Type;
       Destination : Integer;
       Valid       : Boolean;
@@ -167,12 +169,13 @@ is
          when Gneiss_Protocol.Message
             | Gneiss_Protocol.Log
             | Gneiss_Protocol.Packet
+            | Gneiss_Protocol.Stream
             =>
             if Destination not in State.Components'Range then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
                return;
             end if;
-            Process_Message_Request (Fds_Out, Valid);
+            Process_Message_Request (Fds_Out, Kind = Gneiss_Protocol.Stream, Valid);
             if not Valid then
                Send_Reject (State.Components (Source).Fd, Kind, Label);
                return;
@@ -234,14 +237,19 @@ is
       end case;
    end Process_Request;
 
-   procedure Process_Message_Request (Fds   : out Gneiss_Internal.Fd_Array;
-                                      Valid : out Boolean)
+   procedure Process_Message_Request (Fds    : out Gneiss_Internal.Fd_Array;
+                                      Stream :     Boolean;
+                                      Valid  : out Boolean)
    is
       Fd1 : Gneiss_Internal.File_Descriptor;
       Fd2 : Gneiss_Internal.File_Descriptor;
    begin
       Fds := (others => -1);
-      Gneiss_Internal.Syscall.Socketpair (Fd1, Fd2);
+      if Stream then
+         Gneiss_Internal.Syscall.Socketpair_Stream (Fd1, Fd2);
+      else
+         Gneiss_Internal.Syscall.Socketpair (Fd1, Fd2);
+      end if;
       Valid := Gneiss_Internal.Valid (Fd1) and then Gneiss_Internal.Valid (Fd2);
       if not Valid then
          Gneiss_Internal.Syscall.Close (Fd1);
@@ -320,6 +328,7 @@ is
                | Gneiss_Protocol.Log
                | Gneiss_Protocol.Memory
                | Gneiss_Protocol.Packet
+               | Gneiss_Protocol.Stream
                =>
                if Fds'Length > 0 and then Fds (Fds'First) >= 0 then
                   Send_Confirm (State.Components (Destination).Fd, Kind, Label, Fds (Fds'First .. Fds'First));

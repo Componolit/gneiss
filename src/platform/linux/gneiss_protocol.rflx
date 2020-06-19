@@ -4,7 +4,7 @@ package Gneiss_Protocol is
    type Action_Type is (Request, Confirm, Reject, Register) with
       Size => 8;
 
-   type Kind_Type is (Message, Log, Memory, Rom, Timer, Packet) with
+   type Kind_Type is (Message, Log, Memory, Rom, Timer, Packet, Stream) with
       Size => 8;
 
    type Length_Type is mod 2 ** 8;

@@ -18,18 +18,28 @@
 #define min(a,b)            (((a) < (b)) ? (a) : (b))
 #endif
 
-void gneiss_socketpair(int *fd1, int *fd2)
+static void gneiss_socketpair_generic(int *fd1, int *fd2, int type)
 {
     int fds[2];
 
-    if(socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds) < 0){
-        warn("%s: socketpair(AF_UNIX, SOCK_SEQPACKET, 0, fds=%p)", __func__, fds);
+    if(socketpair(AF_UNIX, type, 0, fds) < 0){
+        warn("%s: socketpair(AF_UNIX, %d, 0, fds=%p)", __func__, type, fds);
         *fd1 = -1;
         *fd2 = -1;
     }else{
         *fd1 = fds[0];
         *fd2 = fds[1];
     }
+}
+
+void gneiss_socketpair(int *fd1, int *fd2)
+{
+    gneiss_socketpair_generic(fd1, fd2, SOCK_SEQPACKET);
+}
+
+void gneiss_socketpair_stream(int *fd1, int *fd2)
+{
+    gneiss_socketpair_generic(fd1, fd2, SOCK_STREAM);
 }
 
 void gneiss_fork(int *pid)

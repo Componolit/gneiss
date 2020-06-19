@@ -59,8 +59,9 @@ private
               and then Is_Valid (State.Xml, State.Resources)
               and then Gneiss_Internal.Valid (State.Epoll_Fd);
 
-   procedure Process_Message_Request (Fds   : out Gneiss_Internal.Fd_Array;
-                                      Valid : out Boolean) with
+   procedure Process_Message_Request (Fds    : out Gneiss_Internal.Fd_Array;
+                                      Stream :     Boolean;
+                                      Valid  : out Boolean) with
       Pre => Fds'Length > 1;
 
    procedure Process_Rom_Request (State       :     Broker_State;
