@@ -2,11 +2,14 @@ with System;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Syscall;
+with Gneiss_Internal.Stream_Session;
 with Gneiss_Protocol;
 
 package body Gneiss.Stream.Dispatcher with
    SPARK_Mode
 is
+
+   package Stream_Session is new Gneiss_Internal.Stream_Session (Buffer_Index, Byte, Buffer);
 
    function Server_Event_Address (Session : Server_Session) return System.Address;
    function Dispatch_Event_Address (Session : Dispatcher_Session) return System.Address;
@@ -45,8 +48,19 @@ is
    procedure Session_Event (Session : in out Server_Session;
                             Fd      :        Gneiss_Internal.File_Descriptor)
    is
+      use type Gneiss_Internal.File_Descriptor;
+      Buf : Buffer (Buffer_Index'First .. Buffer_Index'First + 1023);
+      Len : Natural;
    begin
-      null;
+      if not Initialized (Session) or else Session.Fd /= Fd then
+         return;
+      end if;
+      Stream_Session.Read (Session.Fd, Buf, Len);
+      if Len = 0 then
+         return;
+      end if;
+      Server_Instance.Generic_Receive (Session, Buf (Buf'First .. Buf'First + Buffer_Index (Len) - 1), Len);
+      Stream_Session.Drop (Session.Fd, Len);
    end Session_Event;
 
    procedure Dispatch_Event (Session : in out Dispatcher_Session;

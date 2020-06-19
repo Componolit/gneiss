@@ -3,10 +3,13 @@ with Gneiss_Protocol;
 with Gneiss_Internal.Client;
 with Gneiss_Internal.Epoll;
 with Gneiss_Internal.Syscall;
+with Gneiss_Internal.Stream_Session;
 
 package body Gneiss.Stream.Client with
    SPARK_Mode
 is
+
+   package Stream_Session is new Gneiss_Internal.Stream_Session (Buffer_Index, Byte, Buffer);
 
    function Get_Event_Address (Session : Client_Session) return System.Address;
 
@@ -30,8 +33,19 @@ is
    procedure Session_Event (Session : in out Client_Session;
                             Fd      :        Gneiss_Internal.File_Descriptor)
    is
+      use type Gneiss_Internal.File_Descriptor;
+      Buf : Buffer (Buffer_Index'First .. Buffer_Index'First + 1023);
+      Len : Natural;
    begin
-      null;
+      if not Initialized (Session) or else Session.Fd /= Fd then
+         return;
+      end if;
+      Stream_Session.Read (Session.Fd, Buf, Len);
+      if Len = 0 then
+         return;
+      end if;
+      Generic_Receive (Session, Buf (Buf'First .. Buf'First + Buffer_Index (Len) - 1), Len);
+      Stream_Session.Drop (Session.Fd, Len);
    end Session_Event;
 
    procedure Initialize (Session : in out Client_Session;
@@ -81,10 +95,8 @@ is
                    Data    :        Buffer;
                    Sent    :    out Natural)
    is
-      pragma Unreferenced (Session);
-      pragma Unreferenced (Data);
    begin
-      Sent := 0;
+      Stream_Session.Write (Session.Fd, Data, Sent);
    end Send;
 
 end Gneiss.Stream.Client;
