@@ -27,6 +27,7 @@ set -e
 ./cement build test/memory_client/memory_client.xml . lib test
 ./cement build test/timer/timer.xml . lib test
 ./cement build test/packet_client/packet_client.xml . lib test
+./cement build test/stream_client/stream_client.xml . lib test
 
 export LD_LIBRARY_PATH=build/lib
 expect test/message_client/message_client.expect
@@ -36,3 +37,4 @@ expect test/rom/rom.expect
 expect test/memory_client/memory_client.expect
 expect test/timer/timer.expect
 expect test/packet_client/packet_client.expect
+expect test/stream_client/stream_client.expect
