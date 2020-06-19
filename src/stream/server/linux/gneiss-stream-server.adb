@@ -8,8 +8,11 @@ is
                    Sent    :    out Natural;
                    Ctx     :        Context)
    is
+      pragma Unreferenced (Session);
+      pragma Unreferenced (Data);
+      pragma Unreferenced (Ctx);
    begin
-      null;
+      Sent := 0;
    end Send;
 
 end Gneiss.Stream.Server;
