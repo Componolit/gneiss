@@ -3,7 +3,11 @@ with Gneiss.Stream.Dispatcher;
 with Gneiss.Stream.Server;
 
 package body Stream_Server.Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Platform_State  => (Dispatcher,
+                                         Servers,
+                                         Server_Data),
+                     Component_State => Capability)
 is
 
    package Stream is new Gneiss.Stream (Positive, Character, String);
@@ -34,7 +38,11 @@ is
 
    procedure Receive (Session : in out Stream.Server_Session;
                       Data    :        String;
-                      Read    :    out Natural);
+                      Read    :    out Natural) with
+      Pre    => Stream.Initialized (Session),
+      Post   => Stream.Initialized (Session),
+      Global => (In_Out => Gneiss_Internal.Platform_State,
+                 Input  => Server_Data);
 
    function Ready (Session : Stream.Server_Session;
                    Context : Server_Meta) return Boolean with
@@ -56,8 +64,6 @@ is
    Capability  : Gneiss.Capability;
    Servers     : Server_Reg;
    Server_Data : Server_Meta;
-   Buf         : String (1 .. 512);
-   Length      : Natural;
 
    procedure Construct (Cap : Gneiss.Capability)
    is
@@ -76,6 +82,10 @@ is
                       Read    :    out Natural)
    is
    begin
+      Read := 0;
+      if not Ready (Session, Server_Data) then
+         return;
+      end if;
       Stream_Server.Send (Session, Data, Read, Server_Data);
    end Receive;
 

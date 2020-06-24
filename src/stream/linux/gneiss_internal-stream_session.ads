@@ -11,19 +11,22 @@ is
    procedure Read (Fd     :     File_Descriptor;
                    Data   : out Buffer;
                    Length : out Natural) with
-      Pre => Valid (Fd);
+      Pre    => Valid (Fd),
+      Global => (In_Out => Platform_State);
 
    procedure Write (Fd     :     File_Descriptor;
                     Data   :     Buffer;
                     Length : out Natural) with
-      Pre => Valid (Fd);
+      Pre    => Valid (Fd),
+      Global => (In_Out => Platform_State);
 
    procedure Drop (Fd     : File_Descriptor;
                    Length : Natural) with
       Pre           => Valid (Fd),
       Import,
       Convention    => C,
-      External_Name => "gneiss_stream_drop";
+      External_Name => "gneiss_stream_drop",
+      Global        => (In_Out => Platform_State);
 
 private
 
@@ -32,13 +35,15 @@ private
                    Length : in out Natural) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_stream_read";
+      External_Name => "gneiss_stream_read",
+      Global        => (In_Out => Platform_State);
 
    procedure Write (Fd     :        File_Descriptor;
                     Data   :        System.Address;
                     Length : in out Natural) with
       Import,
       Convention    => C,
-      External_Name => "gneiss_stream_write";
+      External_Name => "gneiss_stream_write",
+      Global        => (In_Out => Platform_State);
 
 end Gneiss_Internal.Stream_Session;
