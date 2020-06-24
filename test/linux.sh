@@ -17,8 +17,10 @@ set -e
 ./cement prove test/memory_client.gpr . lib test -u memory_client-component
 ./cement prove test/memory_server.gpr . lib test -u memory_server-component
 ./cement prove test/timer.gpr . lib test -u timer-component
-#./cement prove test/packet_client.gpr . lib test -u packet_client-component
-#./cement prove test/packet_server.gpr . lib test -u packet_server-component
+./cement prove test/packet_client.gpr . lib test -u packet_client-component
+./cement prove test/packet_server.gpr . lib test -u packet_server-component
+./cement prove test/stream_client.gpr . lib test -u stream_client-component
+./cement prove test/stream_server.gpr . lib test -u stream_server-component
 
 ./cement build test/message_client/message_client.xml . lib test
 ./cement build test/hello_world/hello_world.xml . lib test

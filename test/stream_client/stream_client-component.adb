@@ -6,7 +6,9 @@ with Gneiss.Stream.Client;
 with Basalt.Strings;
 
 package body Stream_Client.Component with
-   SPARK_Mode
+   SPARK_Mode,
+   Refined_State => (Platform_State  => (Client, Log),
+                     Component_State => Capability)
 is
 
    package Gneiss_Log is new Gneiss.Log;
@@ -16,7 +18,13 @@ is
 
    procedure Receive (Session : in out Stream.Client_Session;
                       Data    :        String;
-                      Read    :    out Natural);
+                      Read    :    out Natural) with
+      Pre    => Stream.Initialized (Session),
+      Post   => Stream.Initialized (Session),
+      Global => (In_Out => (Log,
+                            Gneiss_Internal.Platform_State,
+                            Main.Platform),
+                Input => Capability);
 
    package Stream_Client is new Stream.Client (Receive);
 
@@ -48,17 +56,22 @@ is
                       Data    :        String;
                       Read    :    out Natural)
    is
+      pragma Unreferenced (Session);
+      Last : Integer := Data'Last;
    begin
       Read := 0;
       if not Gneiss_Log.Initialized (Log) then
          Main.Vacate (Capability, Main.Failure);
          return;
       end if;
+      if Data'Length > 128 then
+         Last := Data'First + 127;
+      end if;
       Read := Data'Length;
       Log_Client.Info (Log, "Received "
                             & Basalt.Strings.Image (Read)
                             & " bytes: "
-                            & Data);
+                            & Data (Data'First .. Last));
       Main.Vacate (Capability, Main.Success);
    end Receive;
 

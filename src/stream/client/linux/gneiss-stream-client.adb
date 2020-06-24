@@ -44,6 +44,9 @@ is
       if Len = 0 then
          return;
       end if;
+      if Len > Buf'Length then
+         Len := Buf'Length;
+      end if;
       Generic_Receive (Session, Buf (Buf'First .. Buf'First + Buffer_Index (Len) - 1), Len);
       Stream_Session.Drop (Session.Fd, Len);
    end Session_Event;
