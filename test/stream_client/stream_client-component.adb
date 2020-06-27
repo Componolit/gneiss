@@ -1,4 +1,3 @@
-
 with Gneiss.Log;
 with Gneiss.Log.Client;
 with Gneiss.Stream;

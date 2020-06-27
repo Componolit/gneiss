@@ -1,4 +1,3 @@
-
 project Stream_Client extends "gneiss_component" is
 
    case Build_Step is

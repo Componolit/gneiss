@@ -1,4 +1,3 @@
-
 private with Gneiss_Internal.Stream;
 
 generic
