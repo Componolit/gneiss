@@ -1,4 +1,3 @@
-
 package body Gneiss_Internal.Stream_Session with
    SPARK_Mode
 is
