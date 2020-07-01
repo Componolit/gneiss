@@ -1,6 +1,7 @@
 with Gneiss;
 with Serial;
 with Componolit.Runtime.Drivers.GPIO;
+with Spi;
 
 procedure Main with
    SPARK_Mode
@@ -15,6 +16,7 @@ is
       return S & ASCII.CR & ASCII.LF;
    end F;
 begin
+   Spi.Initialize;
    GPIO.Configure (18, GPIO.Port_Out);
    GPIO.Write (18, GPIO.Low);
    Serial.Initialize;
