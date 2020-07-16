@@ -11,11 +11,10 @@ is
    procedure Receive;
 
    generic
-      type Byte is (<>);
+      type Byte is private;
       type Index is range <>;
       type Buffer is array (Index range <>) of Byte;
-
-   procedure Send (B : Buffer);
+   procedure Send (B : in out Buffer);
 
 private
 

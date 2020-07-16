@@ -102,7 +102,8 @@ is
       ENABLE := (ENABLE => Enabled);
    end Initialize;
 
-   procedure Send (B : Buffer) is
+   procedure Send (B : in out Buffer) is
+--  pragma Compile_Time_Error (Byte'Size /= 8, "Byte must be of size 8");
    begin
       TXD_PTR := (PTR => B'Address);
       TXD_MAXCNT := (MAXCNT => B'Length);

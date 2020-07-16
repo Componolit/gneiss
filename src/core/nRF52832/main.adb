@@ -2,11 +2,14 @@ with Gneiss;
 with Serial;
 with Componolit.Runtime.Drivers.GPIO;
 with Spi;
+with ST7789;
 
 procedure Main with
    SPARK_Mode
 is
    package GPIO renames Componolit.Runtime.Drivers.GPIO;
+   package Output is new ST7789 (12, 13, 14);
+
    S1 : String (1 .. 128);
    function F (P : Positive) return String;
    function F (P : Positive) return String
@@ -17,6 +20,7 @@ is
    end F;
 begin
    Spi.Initialize;
+   Output.Initialize;
    GPIO.Configure (18, GPIO.Port_Out);
    GPIO.Write (18, GPIO.Low);
    Serial.Initialize;
