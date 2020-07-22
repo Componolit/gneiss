@@ -1,4 +1,5 @@
 with Componolit.Runtime.Drivers.GPIO;
+with Interfaces;
 
 generic
    pragma Warnings (Off, "formal object * is not referenced");
@@ -12,18 +13,24 @@ SPARK_Mode
 is
    package GPIO renames Componolit.Runtime.Drivers.GPIO;
 
-   type Display is record
-      WIDTH  : Integer;
-      HEIGHT : Integer;
-      XSTART : Integer;
-      YSTART : Integer;
-   end record;
-
    procedure Initialize;
 
+   type Px5 is mod 2 ** 5;
+
+   type Px6 is mod 2 ** 6;
+
+   type Color is record
+      Red   : Px5;
+      Green : Px6;
+      Blue  : Px5;
+   end record;
+
+   procedure Draw_Pixel (X : Integer; Y : Integer; C : Color);
+
 private
+
    type Color_Mode is (RGB565) with
-   Size => 8;
+     Size => 8;
 
    for Color_Mode use (RGB565 => 16#55#);
 
@@ -72,21 +79,27 @@ private
       type Data is private;
    procedure Write_Data_CMD (Cmd : Command; D : Data);
 
-   --  procedure Set_Window (X0 : Integer;
-   --                        Y0 : Integer;
-   --                        X1 : Integer;
-   --                        Y1 : Integer);
-   --
-   type Px5 is mod 2 ** 5 with Size => 5;
+   procedure Set_Window (X0 : Integer;
+                         Y0 : Integer;
+                         X1 : Integer;
+                         Y1 : Integer);
 
-   type Px6 is mod 2 ** 6 with Size => 6;
+   procedure Hard_Reset;
 
-   type Color is record
-      Red   : Px5;
-      Green : Px6;
-      Blue  : Px5;
-   end record with
-     Size => 16, Pack;
+   procedure Soft_Reset;
+
+   type Display is record
+      WIDTH  : Integer;
+      HEIGHT : Integer;
+      XSTART : Integer;
+      YSTART : Integer;
+   end record;
+
+   subtype Byte is Interfaces.Unsigned_8;
+   type Data_Buffer is array (Positive range <>) of Byte;
+   type Color_Buffer is array (Positive range <>) of Color;
+
+   function Color_To_Byte (A : Color_Buffer) return Data_Buffer;
 
    --  procedure Fill_Color_Buffer (C : Color;
    --                               L : Integer);

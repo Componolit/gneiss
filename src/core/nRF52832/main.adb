@@ -31,4 +31,10 @@ begin
    Serial.Print ("Testing secondary stack..." & ASCII.CR & ASCII.LF);
    Serial.Print (F (64));
    Serial.Print ("Finished." & ASCII.CR & ASCII.LF);
+   for I in 0 .. 240 loop
+      for J in 0 .. 240 loop
+         Output.Draw_Pixel (0, 0, (0, 0, 0));
+      end loop;
+   end loop;
+   Serial.Print ("There should be a Pixel" & ASCII.CR & ASCII.LF);
 end Main;
