@@ -1,4 +1,5 @@
 with Spi;
+with Serial;
 package body ST7789 is
 
    Disp : constant Display := (240, 240, 0, 0);
@@ -47,10 +48,17 @@ package body ST7789 is
       Write_CMD (SLPOUT);
       Write_Color_Mode (COLMOD, RGB565);
       Write_Data (MADCTL, MLRGB);
+      Set_Window (0, 240, 0, 240);
       Write_CMD (INVON);
       Write_CMD (NORON);
       Write_CMD (DISPON);
    end Initialize;
+
+   procedure Turn_Off is
+   begin
+      Write_CMD (DISPOFF);
+      GPIO.Write (CS_PIN, GPIO.High);
+   end Turn_Off;
 
    procedure Write_CMD (Cmd : Command) is
       type CommandArray is array (Natural range <>) of Command;
@@ -68,17 +76,23 @@ package body ST7789 is
       procedure Send is new Spi.Send (Byte, Positive, Buf);
       Buffer : Buf (1 .. 4);
    begin
-      if X0 > X1 and X1 > Disp.WIDTH then
+      if X0 > X1 or X1 > Disp.WIDTH then
+         Serial.Print ("First IF is wrong" & ASCII.CR & ASCII.LF);
          return;
       end if;
-      if Y0 > Y1 and Y1 > Disp.HEIGHT then
+      if Y0 > Y1 or Y1 > Disp.HEIGHT then
+         Serial.Print ("Second IF is wrong" & ASCII.CR & ASCII.LF);
          return;
       end if;
-      Buffer := (0, 0, 0, 0);
+      --  Serial.Print ("Set_Window" & ASCII.CR & ASCII.LF);
+      Buffer := (0, Byte (X0), 0, Byte (X1));
       Write_CMD (CASET);
       GPIO.Write (DC_PIN, GPIO.High);
       Send (Buffer);
-      GPIO.Write (CS_PIN, GPIO.High);
+      Buffer := (0, Byte (Y0), 0, Byte (Y1));
+      Write_CMD (RASET);
+      GPIO.Write (DC_PIN, GPIO.High);
+      Send (Buffer);
       Write_CMD (RAMWR);
    end Set_Window;
 
@@ -90,9 +104,9 @@ package body ST7789 is
       for I in A'Range loop
          I2 := (I - A'First) * 2 + Buf'First;
          Buf (I2)     := Interfaces.Shift_Left (Interfaces.Unsigned_8 (A (I).Red), 3)
-                      + Interfaces.Shift_Right (Interfaces.Unsigned_8 (A (I).Green), 3);
+           + Interfaces.Shift_Right (Interfaces.Unsigned_8 (A (I).Green), 3);
          Buf (I2 + 1) := Interfaces.Shift_Left (Interfaces.Unsigned_8 (A (I).Green), 5)
-                      + Interfaces.Unsigned_8 (A (I).Blue);
+           + Interfaces.Unsigned_8 (A (I).Blue);
       end loop;
       return Buf;
    end Color_To_Byte;
@@ -101,6 +115,7 @@ package body ST7789 is
       procedure Send_Color is new Spi.Send (Byte, Positive, Data_Buffer);
       Buffer : Data_Buffer := Color_To_Byte ((1 => C));
    begin
+      --  Serial.Print ("Draw_Pixel" & ASCII.CR & ASCII.LF);
       Set_Window (X, Y, X, Y);
       GPIO.Write (DC_PIN, GPIO.High);
       GPIO.Write (CS_PIN, GPIO.Low);

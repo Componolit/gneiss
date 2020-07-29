@@ -27,6 +27,8 @@ is
 
    procedure Draw_Pixel (X : Integer; Y : Integer; C : Color);
 
+   procedure Turn_Off;
+
 private
 
    type Color_Mode is (RGB565) with
