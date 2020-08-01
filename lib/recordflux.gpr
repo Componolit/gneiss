@@ -1,5 +1,5 @@
 
-project RecordFlux is
+project RecordFlux extends "gneiss_library" is
 
    Step := external ("CEMENT_BUILD_STEP");
 
@@ -20,7 +20,7 @@ project RecordFlux is
    end case;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-fPIC");
+      for Default_Switches ("Ada") use Platform_Switches;
       for Default_Switches ("rflx") use ("-p", " ");
    end Compiler;
 

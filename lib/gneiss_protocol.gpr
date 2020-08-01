@@ -1,7 +1,6 @@
-
 with "recordflux";
 
-project Gneiss_Protocol is
+project Gneiss_Protocol extends "gneiss_library" is
 
    Step := external ("CEMENT_BUILD_STEP");
 
@@ -22,7 +21,7 @@ project Gneiss_Protocol is
    end case;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-fPIC");
+      for Default_Switches ("Ada") use Platform_Switches;
       for Default_Switches ("rflx") use ("-p", " ", "-n");
    end Compiler;
 

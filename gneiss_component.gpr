@@ -1,4 +1,4 @@
-
+with "switches";
 with "gneiss";
 
 abstract project Gneiss_Component is
@@ -10,9 +10,23 @@ abstract project Gneiss_Component is
    GCC_Version             := external ("GCC_VERSION");
    Platform                := external ("GNEISS_PLATFORM");
 
-   for Library_Options use ("-L" & Gneiss_Root & "/ada-runtime/build/posix/obj/adalib",
-                            "-nostdlib",
-                            "-nostdinc",
-                            "-lgnat");
+   case Platform is
+      when "linux" =>
+         for Library_Options use ("-L" & Gneiss_Root & "/ada-runtime/build/posix/obj/adalib",
+                                  "-nostdlib",
+                                  "-nostdinc",
+                                  "-lgnat");
+      when others =>
+         null;
+   end case;
+
+   package Compiler is
+      case Platform is
+         when "nRF52832" =>
+            for Default_Switches ("Ada") use Switches.Compiler_Switches & ("-g", "-mthumb", "-ffunction-sections", "-fdata-sections");
+         when others =>
+            null;
+      end case;
+   end Compiler;
 
 end Gneiss_Component;

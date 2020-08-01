@@ -1,0 +1,13 @@
+abstract project Gneiss_Library is
+   Step := external ("CEMENT_BUILD_STEP");
+   Platform := external ("GNEISS_PLATFORM");
+   Platform_Switches := ();
+   case Platform is
+      when "linux" =>
+         Platform_Switches := ("-fPIC");
+      when "nRF52832" =>
+         Platform_Switches := ("-g", "-mthumb", "-ffunction-sections", "-fdata-sections");
+      when others =>
+         null;
+   end case;
+end Gneiss_Library;

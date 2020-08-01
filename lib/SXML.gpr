@@ -1,6 +1,6 @@
 with "basalt";
 
-project SXML is
+project SXML extends "gneiss_library" is
 
    Step := external ("CEMENT_BUILD_STEP");
 
@@ -22,7 +22,7 @@ project SXML is
    end Builder;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-fPIC");
+      for Default_Switches ("Ada") use Platform_Switches;
    end Compiler;
 
 end SXML;

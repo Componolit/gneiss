@@ -1,7 +1,6 @@
+with "switches";
 
-project Basalt is
-
-   Step := external ("CEMENT_BUILD_STEP");
+project Basalt extends "gneiss_library" is
 
    case Step is
       when "compile" =>
@@ -16,7 +15,7 @@ project Basalt is
    end case;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-fPIC");
+      for Default_Switches ("Ada") use Switches.Compiler_Switches & Platform_Switches;
    end Compiler;
 
 end Basalt;

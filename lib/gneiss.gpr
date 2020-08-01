@@ -5,10 +5,7 @@ with "gneiss_protocol";
 with "SXML";
 with "switches";
 
-project Gneiss is
-
-   Step     := external ("CEMENT_BUILD_STEP");
-   Platform := external ("GNEISS_PLATFORM");
+project Gneiss extends "gneiss_library" is
 
    Src_Dirs := ("../src");
 
@@ -72,7 +69,7 @@ project Gneiss is
    end case;
 
    package Compiler is
-      for Default_Switches ("Ada") use ("-fPIC") & Switches.Compiler_Switches;
+      for Default_Switches ("Ada") use Switches.Compiler_Switches & Platform_Switches;
       for Switches ("C") use ("-fPIC");
    end Compiler;
 
