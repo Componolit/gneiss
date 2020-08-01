@@ -60,7 +60,8 @@ package body ST7789 is
       GPIO.Write (CS_PIN, GPIO.High);
    end Turn_Off;
 
-   procedure Write_CMD (Cmd : Command) is
+   procedure Write_CMD (Cmd     : Command;
+                        Stay_On : Boolean := False) is
       type CommandArray is array (Natural range <>) of Command;
       CmdArray : CommandArray (0 .. 0) := (0 => Cmd);
       procedure Send is new Spi.Send (Command, Natural, CommandArray);
@@ -68,7 +69,9 @@ package body ST7789 is
       GPIO.Write (CS_PIN, GPIO.Low);
       GPIO.Write (DC_PIN, GPIO.Low);
       Send (CmdArray);
-      GPIO.Write (CS_PIN, GPIO.High);
+      if not Stay_On then
+         GPIO.Write (CS_PIN, GPIO.High);
+      end if;
    end Write_CMD;
 
    procedure Set_Window (X0 : Integer; Y0 : Integer; X1 : Integer; Y1 : Integer) is
@@ -86,11 +89,11 @@ package body ST7789 is
       end if;
       --  Serial.Print ("Set_Window" & ASCII.CR & ASCII.LF);
       Buffer := (0, Byte (X0), 0, Byte (X1));
-      Write_CMD (CASET);
+      Write_CMD (CASET, True);
       GPIO.Write (DC_PIN, GPIO.High);
       Send (Buffer);
       Buffer := (0, Byte (Y0), 0, Byte (Y1));
-      Write_CMD (RASET);
+      Write_CMD (RASET, True);
       GPIO.Write (DC_PIN, GPIO.High);
       Send (Buffer);
       Write_CMD (RAMWR);

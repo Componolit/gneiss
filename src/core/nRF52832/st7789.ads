@@ -75,7 +75,8 @@ private
                     RDID3      => 16#DC#,
                     RDID4      => 16#DD#);
 
-   procedure Write_CMD (Cmd : Command);
+   procedure Write_CMD (Cmd     : Command;
+                        Stay_On : Boolean := False);
 
    generic
       type Data is private;
