@@ -106,15 +106,14 @@ package body ST7789 is
    begin
       for I in A'Range loop
          I2 := (I - A'First) * 2 + Buf'First;
-         Buf (I2)     := Interfaces.Shift_Left (Interfaces.Unsigned_8 (A (I).Red), 3)
-           + Interfaces.Shift_Right (Interfaces.Unsigned_8 (A (I).Green), 3);
-         Buf (I2 + 1) := Interfaces.Shift_Left (Interfaces.Unsigned_8 (A (I).Green), 5)
-           + Interfaces.Unsigned_8 (A (I).Blue);
+         Buf (I2)     := (A (I).Red and 16#F8#) + Interfaces.Shift_Right (A (I).Green, 5);
+         Buf (I2 + 1) := (Interfaces.Shift_Left (A (I).Green, 3) and 16#E0#)
+           + Interfaces.Shift_Right (A (I).Blue, 3);
       end loop;
       return Buf;
    end Color_To_Byte;
 
-   procedure Draw_Pixel (X : Integer; Y : Integer; C : Color) is
+   procedure Draw_Pixel (X : Integer; Y : Integer; C : Pixel) is
       procedure Send_Color is new Spi.Send (Byte, Positive, Data_Buffer);
       Buffer : Data_Buffer := Color_To_Byte ((1 => C));
    begin

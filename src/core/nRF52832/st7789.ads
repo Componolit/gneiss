@@ -15,17 +15,15 @@ is
 
    procedure Initialize;
 
-   type Px5 is mod 2 ** 5;
+   subtype Color is Interfaces.Unsigned_8;
 
-   type Px6 is mod 2 ** 6;
-
-   type Color is record
-      Red   : Px5;
-      Green : Px6;
-      Blue  : Px5;
+   type Pixel is record
+      Red   : Color;
+      Green : Color;
+      Blue  : Color;
    end record;
 
-   procedure Draw_Pixel (X : Integer; Y : Integer; C : Color);
+   procedure Draw_Pixel (X : Integer; Y : Integer; C : Pixel);
 
    procedure Turn_Off;
 
@@ -100,7 +98,7 @@ private
 
    subtype Byte is Interfaces.Unsigned_8;
    type Data_Buffer is array (Positive range <>) of Byte;
-   type Color_Buffer is array (Positive range <>) of Color;
+   type Color_Buffer is array (Positive range <>) of Pixel;
 
    function Color_To_Byte (A : Color_Buffer) return Data_Buffer;
 

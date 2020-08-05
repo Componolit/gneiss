@@ -33,9 +33,12 @@ begin
    Serial.Print ("Finished." & ASCII.CR & ASCII.LF);
    for I in 0 .. 240 loop
       for J in 0 .. 240 loop
-         Output.Draw_Pixel (I, J, (0, 0, 0));
+         Output.Draw_Pixel (I, J, (Output.Color (J), Output.Color (I), Output.Color (J)));
       end loop;
    end loop;
+   --  Output.Draw_Pixel (0, 0, (255, 0, 0));
+   --  Output.Draw_Pixel (0, 0, (0, 255, 0));
+   --  Output.Draw_Pixel (0, 0, (0, 0, 255));
    Serial.Print ("There should be a Pixel" & ASCII.CR & ASCII.LF);
    Output.Turn_Off;
 end Main;
