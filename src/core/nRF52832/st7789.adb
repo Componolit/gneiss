@@ -1,7 +1,8 @@
 with Spi;
-with Serial;
+with Componolit.Runtime.Debug;
 package body ST7789 is
 
+   package Debug renames Componolit.Runtime.Debug;
    Disp : constant Display := (240, 240, 0, 0);
 
    procedure Hard_Reset is
@@ -80,14 +81,14 @@ package body ST7789 is
       Buffer : Buf (1 .. 4);
    begin
       if X0 > X1 or X1 > Disp.WIDTH then
-         Serial.Print ("First IF is wrong" & ASCII.CR & ASCII.LF);
+         Debug.Log_Debug ("First IF is wrong" & ASCII.CR & ASCII.LF);
          return;
       end if;
       if Y0 > Y1 or Y1 > Disp.HEIGHT then
-         Serial.Print ("Second IF is wrong" & ASCII.CR & ASCII.LF);
+         Debug.Log_Debug ("Second IF is wrong" & ASCII.CR & ASCII.LF);
          return;
       end if;
-      --  Serial.Print ("Set_Window" & ASCII.CR & ASCII.LF);
+      --  Debug.Log_Debug ("Set_Window" & ASCII.CR & ASCII.LF);
       Buffer := (0, Byte (X0), 0, Byte (X1));
       Write_CMD (CASET, True);
       GPIO.Write (DC_PIN, GPIO.High);

@@ -18,6 +18,7 @@ build_parser.add_argument("gneiss_root", help="gneiss repository")
 build_parser.add_argument("-b", "--build_dir", help="build directory", default="build")
 build_parser.add_argument("-r", "--root_fs", help="use separate rootfs", default="build")
 build_parser.add_argument("-p", "--platform", help="target platform", default="linux")
+build_parser.add_argument("-d", "--board", help="target board", default="default")
 build_parser.add_argument("paths", help="component search paths", nargs="*")
 edit_parser = subparsers.add_parser("edit")
 edit_parser.add_argument("project", help="GPR project file")
@@ -37,9 +38,9 @@ prove_parser.add_argument("paths", help="component search paths", nargs="*")
 def get_gcc_version():
     return subprocess.check_output(["gcc", "-dumpversion"]).decode('utf-8').strip().split('.')[0]
 
-def build_runtime(root, platform):
+def build_runtime(root, platform, board):
     if platform == "nRF52832":
-        return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime"), "nrf52"])
+        return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime"), "nrf52", f"BOARD={board}"])
     return subprocess.call(["make", "-C", os.path.join(root, "ada-runtime")])
 
 def find_segger_jlink():
@@ -277,8 +278,12 @@ if __name__ == "__main__":
     logger.addHandler(sh)
     gprargs = ["-XGNEISS_ROOT=" + os.path.abspath(args.gneiss_root)]
     logger.info("Gneiss root at " + gprargs[0])
-    logger.info("Building runtime");
-    if build_runtime(args.gneiss_root, args.platform) != 0:
+    logger.info("Building runtime")
+    try:
+        board = args.board
+    except AttributeError:
+        board = "default"
+    if build_runtime(args.gneiss_root, args.platform, board) != 0:
         logger.error("Failed to build runtime")
         exit(1)
     build_dir = os.path.abspath(args.build_dir)
