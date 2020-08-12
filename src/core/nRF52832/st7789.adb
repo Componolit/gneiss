@@ -49,7 +49,7 @@ package body ST7789 is
       Write_CMD (SLPOUT);
       Write_Color_Mode (COLMOD, RGB565);
       Write_Data (MADCTL, MLRGB);
-      Set_Window (0, 240, 0, 240);
+      Set_Window (0, 239, 0, 239);
       Write_CMD (INVON);
       Write_CMD (NORON);
       Write_CMD (DISPON);
@@ -75,7 +75,8 @@ package body ST7789 is
       end if;
    end Write_CMD;
 
-   procedure Set_Window (X0 : Integer; Y0 : Integer; X1 : Integer; Y1 : Integer) is
+   procedure Set_Window (X0 : Display_Index; Y0 : Display_Index;
+                         X1 : Display_Index; Y1 : Display_Index) is
       type Buf is array (Positive range <>) of Byte;
       procedure Send is new Spi.Send (Byte, Positive, Buf);
       Buffer : Buf (1 .. 4);
@@ -100,7 +101,7 @@ package body ST7789 is
       Write_CMD (RAMWR);
    end Set_Window;
 
-   function Color_To_Byte (A : Color_Buffer) return Data_Buffer is
+   function Color_To_Byte (A : Frame) return Data_Buffer is
       use type Interfaces.Unsigned_8;
       Buf : Data_Buffer (1 .. A'Length * 2);
       I2  : Natural;
@@ -114,35 +115,17 @@ package body ST7789 is
       return Buf;
    end Color_To_Byte;
 
-   procedure Draw_Pixel (X : Integer; Y : Integer; C : Pixel) is
-      procedure Send_Color is new Spi.Send (Byte, Positive, Data_Buffer);
-      Buffer : Data_Buffer := Color_To_Byte ((1 => C));
+   procedure Render (X : Natural; Y : Natural; Width : Positive;
+                     Height : Positive; Window : Frame) is
+      Buffer : Data_Buffer := Color_To_Byte (Window);
+      procedure Render_Send is new Spi.Send (Byte, Positive, Data_Buffer);
    begin
-      --  Serial.Print ("Draw_Pixel" & ASCII.CR & ASCII.LF);
-      Set_Window (X, Y, X, Y);
+      Set_Window (Display_Index (X), Display_Index (Y),
+                  Display_Index (X + Width - 1), Display_Index (Y + Height - 1));
       GPIO.Write (DC_PIN, GPIO.High);
       GPIO.Write (CS_PIN, GPIO.Low);
-      Send_Color (Buffer);
+      Render_Send (Buffer);
       GPIO.Write (CS_PIN, GPIO.High);
-   end Draw_Pixel;
-
-   --  procedure Fill_Color_Buffer (C : Color; L : Integer) is
-   --     Buffer_Pixel : constant Integer := 128;
-   --     Chunks       : Integer          := Length / Buffer_Pixel;
-   --     Rest         : Integer          := Length mod Buffer_Pixel;
-   --  begin
-   --     null;
-   --  end Fill_Color_Buffer;
-   --
-   --  procedure Fill_Rect (X : Integer; Y : Integer; C : Color) is
-   --     W : Integer := Display.WIDTH;
-   --     H : Integer := Display.HEIGHT;
-   --  begin
-   --     Set_Window (X, Y, (X + W - 1), (Y + H - 1));
-   --     GPIO.Write (DC_PIN, GPIO.High);
-   --     GPIO.Write (CS_PIN, GPIO.Low);
-   --     Fill_Color_Buffer (C, (W * H));
-   --     GPIO.Write (CS_PIN, GPIO.High);
-   --  end Fill_Rect;
+   end Render;
 
 end ST7789;

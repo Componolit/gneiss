@@ -23,9 +23,17 @@ is
       Blue  : Color;
    end record;
 
-   procedure Draw_Pixel (X : Integer; Y : Integer; C : Pixel);
-
    procedure Turn_Off;
+
+   type Frame is array (Positive range <>) of Pixel;
+
+   procedure Render (X : Natural; Y : Natural; Width : Positive; Height : Positive;
+                     Window : Frame) with
+     Pre => X <= 240
+     and then Y <= 240
+     and then X + Width - 1 <= 240
+     and then Y + Height - 1 <= 240
+     and then Window'Length = Width * Height;
 
 private
 
@@ -80,27 +88,35 @@ private
       type Data is private;
    procedure Write_Data_CMD (Cmd : Command; D : Data);
 
-   procedure Set_Window (X0 : Integer;
-                         Y0 : Integer;
-                         X1 : Integer;
-                         Y1 : Integer);
+   type Display_Size is range 0 .. 240;
+   subtype Display_Index is Display_Size range 0 .. 239;
+
+   procedure Set_Window (X0 : Display_Index;
+                         Y0 : Display_Index;
+                         X1 : Display_Index;
+                         Y1 : Display_Index) with
+     Pre => X0 <= 240
+     and then X1 <= 240
+     and then X0 <= X1
+     and then Y0 <= 240
+     and then Y1 <= 240
+     and then Y0 <= Y1;
 
    procedure Hard_Reset;
 
    procedure Soft_Reset;
 
    type Display is record
-      WIDTH  : Integer;
-      HEIGHT : Integer;
-      XSTART : Integer;
-      YSTART : Integer;
+      WIDTH  : Display_Size;
+      HEIGHT : Display_Size;
+      XSTART : Display_Index;
+      YSTART : Display_Index;
    end record;
 
    subtype Byte is Interfaces.Unsigned_8;
    type Data_Buffer is array (Positive range <>) of Byte;
-   type Color_Buffer is array (Positive range <>) of Pixel;
 
-   function Color_To_Byte (A : Color_Buffer) return Data_Buffer;
+   function Color_To_Byte (A : Frame) return Data_Buffer;
 
    --  procedure Fill_Color_Buffer (C : Color;
    --                               L : Integer);

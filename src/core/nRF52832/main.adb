@@ -19,6 +19,23 @@ is
    begin
       return S;
    end F;
+
+   procedure Rainbow (Color : Output.Pixel; Line : Natural);
+   procedure Rainbow (Color : Output.Pixel; Line : Natural) is
+   begin
+      for I in Line .. Line + 39 loop
+         Output.Render (I, 0, 1, 120, (1 .. 120 => Color));
+         Output.Render (I, 120, 1, 120, (1 .. 120 => Color));
+      end loop;
+   end Rainbow;
+
+   Red    : constant Output.Pixel := (255, 0, 24);
+   Orange : constant Output.Pixel := (255, 165, 44);
+   Yellow : constant Output.Pixel := (255, 255, 65);
+   Green  : constant Output.Pixel := (0, 128, 24);
+   Blue   : constant Output.Pixel := (0, 0, 249);
+   Purple : constant Output.Pixel := (134, 0, 125);
+
 begin
    Spi.Initialize;
    Output.Initialize;
@@ -31,14 +48,20 @@ begin
    Debug.Log_Debug ("Testing secondary stack...");
    Debug.Log_Debug (F (64));
    Debug.Log_Debug ("Finished.");
-   for I in 0 .. 239 loop
-      for J in 0 .. 239 loop
-         Output.Draw_Pixel (I, J, (Output.Color (J), Output.Color (I), Output.Color (J)));
+   for I in 0 .. 23 loop
+      for J in 0 .. 23 loop
+         Output.Render (I * 10, J * 10, 10, 10,
+                        (1 .. 100 => (Output.Color (J * 10),
+                                      Output.Color ((I + J) * 5),
+                                      Output.Color (I * 10))));
       end loop;
    end loop;
-   --  Output.Draw_Pixel (0, 0, (255, 0, 0));
-   --  Output.Draw_Pixel (0, 0, (0, 255, 0));
-   --  Output.Draw_Pixel (0, 0, (0, 0, 255));
+   Rainbow (Red, 0);
+   Rainbow (Orange, 40);
+   Rainbow (Yellow, 80);
+   Rainbow (Green, 120);
+   Rainbow (Blue, 160);
+   Rainbow (Purple, 200);
    Debug.Log_Debug ("There should be a Pixel");
-   Output.Turn_Off;
+   --  Output.Turn_Off;
 end Main;
