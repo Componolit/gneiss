@@ -1,4 +1,5 @@
 with System.Storage_Elements;
+with Basalt.Slicer;
 
 package body Spi with
 SPARK_Mode
@@ -103,19 +104,42 @@ is
    end Initialize;
 
    procedure Send (B : in out Buffer) is
---  pragma Compile_Time_Error (Byte'Size /= 8, "Byte must be of size 8");
+      --  pragma Compile_Time_Error (Byte'Size /= 8, "Byte must be of size 8");
+      package Slicer is new Basalt.Slicer (Index);
+      BI : Index;
+      Slice : Slicer.Context;
+      R : Slicer.Slice;
    begin
-      TXD_PTR := (PTR => B'Address);
-      TXD_MAXCNT := (MAXCNT => B'Length);
-      TASK_START := (TSK => Trigger);
-      for I in B'Range loop
-         while EVENT_ENDTX.EVENT = Clear loop
-            pragma Inspection_Point (EVENT_ENDTX);
-            exit when TXD_AMOUNT.AMOUNT = TXD_MAXCNT.MAXCNT;
+      if B'Length < 1 then
+         return;
+      end if;
+      Slice := Slicer.Create (B'First, B'Last, 255);
+      loop
+         pragma Loop_Invariant (Slicer.Get_Range (Slice).First = B'First);
+         pragma Loop_Invariant (Slicer.Get_Range (Slice).Last  = B'Last);
+         R := Slicer.Get_Slice (Slice);
+         BI := B'First;
+         TXD_PTR := (PTR => B'Address);
+         TXD_MAXCNT := (MAXCNT => Count (R.Last - R.First + 1));
+         for I in R.First .. R.Last loop
+            pragma Loop_Invariant (I in B'Range);
+            pragma Loop_Invariant (BI <= B'Last);
+            pragma Loop_Invariant (R.Last - R.First < B'Length);
+            B (BI) := B (I);
+            BI := BI + 1;
          end loop;
-         EVENT_ENDTX.EVENT := Clear;
+         TASK_START := (TSK => Trigger);
+         for I in B'Range loop
+            while EVENT_ENDTX.EVENT = Clear loop
+               pragma Inspection_Point (EVENT_ENDTX);
+               exit when TXD_AMOUNT.AMOUNT = TXD_MAXCNT.MAXCNT;
+            end loop;
+            EVENT_ENDTX.EVENT := Clear;
+         end loop;
+         TASK_STOP := (TSK => Trigger);
+         exit when not Slicer.Has_Next (Slice);
+         Slicer.Next (Slice);
       end loop;
-      TASK_STOP := (TSK => Trigger);
    end Send;
 
    procedure Receive is

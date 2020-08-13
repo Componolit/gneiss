@@ -118,8 +118,4 @@ private
 
    function Color_To_Byte (A : Frame) return Data_Buffer;
 
-   --  procedure Fill_Color_Buffer (C : Color;
-   --                               L : Integer);
-   --  procedure Fill_Rect (X : Integer; Y : Integer; C : Color);
-
 end ST7789;

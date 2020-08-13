@@ -24,8 +24,7 @@ is
    procedure Rainbow (Color : Output.Pixel; Line : Natural) is
    begin
       for I in Line .. Line + 39 loop
-         Output.Render (I, 0, 1, 120, (1 .. 120 => Color));
-         Output.Render (I, 120, 1, 120, (1 .. 120 => Color));
+         Output.Render (I, 0, 1, 240, (1 .. 240 => Color));
       end loop;
    end Rainbow;
 
