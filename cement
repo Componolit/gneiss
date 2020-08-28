@@ -61,6 +61,48 @@ def mount_segger_jlink(device):
     iface = dbus.Interface(obj, 'org.freedesktop.UDisks2.Filesystem')
     return iface.get_dbus_method('Mount', dbus_interface='org.freedesktop.UDisks2.Filesystem')([])
 
+def generate_nrf52832_main(config, project_dir):
+    generated_dir = os.path.join(project_dir, "generated")
+    try:
+        os.mkdir(generated_dir)
+    except FileExistsError:
+        pass
+    components = ET.parse(config).getroot().findall("component")
+    implementations = {c.get("name"): c.get("implementation") if "implementation" in c.keys() else c.get("name") for c in components}
+    components = {c.get("name"): {(s.get("server"), s.get("name")) for s in c.findall("service")} for c in components}
+    started = [c for c, s in components.items() if not s]
+    while set(started) != set(components):
+        started.extend([c for c, s in components.items() if c not in started and {t[0] for t in s}.issubset(started)])
+    started = [implementations[s].title() for s in started]
+    with open(os.path.join(generated_dir, "gneiss_internal-main.adb"), "w") as main:
+        main.write(f"""with Gneiss.Init;
+{chr(10).join([f'with {c}.Component;' for c in started])}
+
+package body Gneiss_Internal.Main with
+   SPARK_Mode
+is
+
+   Registry : Component_Registry (0 .. {len(components) - 1}) :=
+    (
+       {("," + chr(10) + "       ").join(
+            [(f'{started.index(implementations[c].title())} => ({chr(10)}'
+              f'         Permits  => ('
+              f'{("," + chr(10) + " " * 22).join([f"({started.index(implementations[t[0]].title())}, Gneiss_Protocol.{t[1]})" for t in s] + ["(-1, Gneiss_Protocol.Message)"] * (8 - len(s)))}'
+              f'),{chr(10)}         Services => (others => System.Null_Address))')
+             for c, s in components.items()
+            ])}
+    );
+
+   procedure Run with
+      SPARK_Mode => Off
+   is
+   begin
+      {(chr(10) + "      ").join([f"{c}.Component.Main.Construct (Gneiss.Init.Create_Capability (Registry'Address, {started.index(c)}));" for c in started])}
+   end Run;
+
+end Gneiss_Internal.Main;
+""")
+    return generated_dir
 
 def build_init(root, outdir, default_args, platform, logger):
     args = default_args + ["-P", f"core",
@@ -147,7 +189,9 @@ def gpr_compile_nrf52832(config, gneiss_root, build_dir, paths, platform, logger
         with open(os.path.join(gneiss_root, f"src/core/{platform}/core.gpr"), "r") as core_template:
             core_gpr.write(core_template.read())
     for step in ["prepare", "compile"]:
-        args += ["-XCEMENT_BUILD_STEP=" + step]
+        args += [f"-XCEMENT_BUILD_STEP={step}"]
+        if step == "compile":
+            args += [f"-XCEMENT_GENERATED_SOURCE={generate_nrf52832_main(config, project_dir)}"]
         logger.debug("gprbuild " + " ".join(args))
         if gprbuild(args) != 0:
             logger.error("Compilation failed")

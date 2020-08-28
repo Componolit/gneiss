@@ -1,15 +1,17 @@
 with "switches";
 with "basalt";
 with "gneiss";
+with "gneiss_protocol";
 
 project Core is
 
    Gneiss_Root := external ("GNEISS_ROOT", ".");
    Step := external ("CEMENT_BUILD_STEP");
+   Generated := external("CEMENT_GENERATED_SOURCE", "");
 
    case Step is
       when "compile" =>
-         for Source_Dirs use (Gneiss_Root & "/src/core/nRF52832");
+         for Source_Dirs use (Gneiss_Root & "/src/core/nRF52832", Generated);
          for Object_Dir use external ("CEMENT_OBJECT_DIR");
          for Create_Missing_Dirs use "True";
          for Languages use ("Ada", "Asm_CPP");

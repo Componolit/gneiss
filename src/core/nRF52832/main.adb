@@ -3,6 +3,7 @@ with Componolit.Runtime.Drivers.GPIO;
 with Componolit.Runtime.Debug;
 with Spi;
 with ST7789;
+with Gneiss_Internal.Main;
 
 procedure Main with
    SPARK_Mode
@@ -63,4 +64,5 @@ begin
    Rainbow (Purple, 200);
    Debug.Log_Debug ("There should be a Pixel");
    --  Output.Turn_Off;
+   Gneiss_Internal.Main.Run;
 end Main;
